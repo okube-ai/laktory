@@ -16,7 +16,7 @@ def test_single_sink_purge(backend, tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        sources={"df": {"df": df0}},
+        sources=[{"df": df0}],
         sinks=[{"path": sink_path, "format": "PARQUET", "mode": mode}],
     )
     node.execute()
@@ -38,7 +38,7 @@ def test_multi_sink_purge(backend, tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        sources={"df": {"schema_name": "default", "table_name": "df0_purge"}},
+        sources=[{"schema_name": "default", "table_name": "df0_purge"}],
         sinks=[
             {"schema_name": "default", "table_name": "df1_purge", "table_type": "VIEW"},
             {"schema_name": "default", "table_name": "df2_purge", "table_type": "VIEW"},
@@ -61,7 +61,7 @@ def test_checkpoint_removed(tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        sources={"df": {"path": ss_path, "format": "DELTA", "as_stream": True}},
+        sources=[{"path": ss_path, "format": "DELTA", "as_stream": True}],
         expectations_checkpoint_path_=checkpoint_path,
         expectations=[
             models.DataQualityExpectation(name="warn", expr="x1 < 100", action="WARN")
@@ -80,7 +80,7 @@ def test_checkpoint_removed(tmp_path):
 def test_purge_never_executed(tmp_path):
     node = models.PipelineNode(
         name="node0",
-        sources={"df": {"format": "PARQUET", "path": str(tmp_path / "src/")}},
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[
             {"format": "PARQUET", "path": str(tmp_path / "sink/"), "mode": "OVERWRITE"}
         ],
@@ -96,7 +96,7 @@ def test_pipeline_purge(backend, tmp_path):
 
     node = models.PipelineNode(
         name="brz",
-        sources={"df": {"df": df0}},
+        sources=[{"df": df0}],
         sinks=[{"format": "PARQUET", "path": brz_path, "mode": mode}],
     )
     pl = models.Pipeline(name="pl", nodes=[node], dataframe_backend=backend)

@@ -136,13 +136,13 @@ class DataFrameExpr(BaseModel, PipelineChild):
                 )
 
             for source_key in re.findall(r"\{sources\.(.*?)\}", self.expr):
-                src = pl_node.sources.get(source_key)
+                src = next((s for s in pl_node.sources if s.name == source_key), None)
                 if src:
                     references["{sources." + source_key + "}"] = _source_full_name(src)
 
-            # {df} backward compat — resolves to first declared source table name
+            # {df} resolves to the primary (first) source — canonical for single unnamed sources
             if "{df}" in self.expr:
-                df_source = next(iter(pl_node.sources.values()), None)
+                df_source = next(iter(pl_node.sources), None)
                 if df_source:
                     references["{df}"] = _source_full_name(df_source)
 

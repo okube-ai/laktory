@@ -14,7 +14,7 @@ def _get_pl(tmp_path):
         nodes=[
             models.PipelineNode(name="brz", sinks=[_SINK]),
             models.PipelineNode(
-                name="slv", sources={"df": {"node_name": "brz"}}, sinks=[_SINK]
+                name="slv", sources=[{"node_name": "brz"}], sinks=[_SINK]
             ),
         ],
     )

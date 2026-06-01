@@ -42,8 +42,8 @@ orchestrator:
   database: default
 nodes:
   - name: brz
-    source:
-      format: JSON
+    sources:
+    - format: JSON
       path: {tmp_path}/brz_source/
     sinks:
       - table_name: brz
@@ -56,8 +56,8 @@ nodes:
             - zero
             - F.lit(0.0)
   - name: slv
-    source:
-      node_name: brz
+    sources:
+    - node_name: brz
     sinks:
       - table_name: slv
         format: PARQUET
@@ -69,8 +69,8 @@ nodes:
             - x2
             - F.col('x1')
   - name: slv_nw
-    source:
-      node_name: brz
+    sources:
+    - node_name: brz
     sinks:
       - table_name: slv_nw
         format: PARQUET
@@ -81,8 +81,8 @@ nodes:
           func_kwargs:
             y1: x1
   - name: gld_join
-    source:
-      node_name: slv
+    sources:
+    - node_name: slv
     sinks:
       - table_name: gld_join
         format: PARQUET
@@ -100,8 +100,8 @@ orchestrator:
   database: default
 nodes:
   - name: brz_stream
-    source:
-      format: DELTA
+    sources:
+    - format: DELTA
       path: {source_path}
       as_stream: true
     sinks:
@@ -127,14 +127,12 @@ def _get_pl(tmp_path=""):
             "nodes": [
                 {
                     "name": "brz",
-                    "sources": {
-                        "df": {"format": "JSON", "path": f"{tmp_path}/brz_source/"}
-                    },
+                    "sources": [{"format": "JSON", "path": f"{tmp_path}/brz_source/"}],
                     "sinks": [{"table_name": "brz"}],
                 },
                 {
                     "name": "slv",
-                    "sources": {"df": {"node_name": "brz"}},
+                    "sources": [{"node_name": "brz"}],
                     "sinks": [{"table_name": "slv"}],
                     "expectations": [
                         {"name": "x1 positive", "expr": "x1 > 0", "action": "WARN"},
@@ -152,12 +150,12 @@ def _get_pl(tmp_path=""):
                 },
                 {
                     "name": "slv_stream",
-                    "sources": {"df": {"node_name": "brz", "as_stream": True}},
+                    "sources": [{"node_name": "brz", "as_stream": True}],
                     "sinks": [{"table_name": "slv_stream"}],
                 },
                 {
                     "name": "gld_view",
-                    "sources": {"df": {"node_name": "slv"}},
+                    "sources": [{"node_name": "slv"}],
                     "sinks": [{"pipeline_view_name": "gld_view"}],
                 },
             ],

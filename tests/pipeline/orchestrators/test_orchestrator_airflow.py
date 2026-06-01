@@ -37,20 +37,20 @@ def _get_pl(tmp_path=""):
             "nodes": [
                 {
                     "name": "brz",
-                    "sources": {
-                        "df": {
+                    "sources": [
+                        {
                             "data": {
                                 "_idx": [0, 1, 2],
                                 "id": ["a", "b", "c"],
                                 "x1": [1, 2, 3],
                             }
                         }
-                    },
+                    ],
                     "sinks": [{"format": "PARQUET", "path": f"{tmp_path}/brz.parquet"}],
                 },
                 {
                     "name": "slv",
-                    "sources": {"df": {"node_name": "brz"}},
+                    "sources": [{"node_name": "brz"}],
                     "transformer": {
                         "nodes": [
                             {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},

@@ -45,13 +45,13 @@ def test_arg_source(backend):
 
     node = DataFrameMethod(
         func_name="join",
-        func_args=["{sources.ref}"],  # named reference resolved from named_dfs
+        func_args=["{df1}"],  # named reference resolved from named_dfs
         func_kwargs={
             "on": "id",
             "how": "left",
         },
     )
-    df = node.execute(df0, named_dfs={"sources.ref": df1})
+    df = node.execute(df0, named_dfs={"df1": df1})
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
     assert node.data_sources == []
 
@@ -63,10 +63,10 @@ def test_arg_source_native(backend):
 
     node = DataFrameMethod(
         func_name="union",
-        func_args=["{sources.other}"],
+        func_args=["{df1}"],
         dataframe_api="NATIVE",
     )
-    df = node.execute(df0, named_dfs={"sources.other": df1})
+    df = node.execute(df0, named_dfs={"df1": df1})
     assert_dfs_equal(df, df0.to_native().union(df1.to_native()))
 
 

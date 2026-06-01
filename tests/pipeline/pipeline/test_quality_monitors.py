@@ -18,7 +18,7 @@ def test_monitor_flag_enabled():
 def test_monitor_config_model():
     node = models.PipelineNode(
         name="node_with_qm",
-        sources={"df": {"table_name": "laktory.unit_tests.sin"}},
+        sources=[{"table_name": "laktory.unit_tests.sin"}],
         sinks=[
             models.UnityCatalogDataSink(
                 table_name="laktory.unit_tests.sin",
@@ -43,7 +43,7 @@ def test_update_quality_monitors_live(wsclient):
         nodes=[
             models.PipelineNode(
                 name="node_with_qm",
-                sources={"df": {"table_name": "laktory.unit_tests.sin"}},
+                sources=[{"table_name": "laktory.unit_tests.sin"}],
                 sinks=[
                     models.UnityCatalogDataSink(
                         table_name="laktory.unit_tests.sin",

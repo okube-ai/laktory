@@ -15,7 +15,7 @@ def _get_pl():
         nodes=[
             models.PipelineNode(
                 name="brz",
-                sources={"df": {"df": df0}},
+                sources=[{"df": df0}],
                 transformer={
                     "nodes": [
                         {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
@@ -26,7 +26,7 @@ def _get_pl():
             ),
             models.PipelineNode(
                 name="slv",
-                sources={"df": {"node_name": "brz"}},
+                sources=[{"node_name": "brz"}],
                 sinks=[_SINK],
             ),
         ],
@@ -43,7 +43,7 @@ def test_node_parent():
 def test_source_parent():
     pl = _get_pl()
     for node in pl.nodes:
-        for src in node.sources.values():
+        for src in node.sources:
             assert src.parent == node
             assert src.parent_pipeline_node == node
             assert src.parent_pipeline == pl
@@ -90,21 +90,21 @@ def test_orchestrator_parent():
 
 
 def test_source_backward_compat():
-    """Legacy `source:` key is auto-migrated to `sources: {df: ...}`."""
+    """Legacy `source:` key is auto-migrated to `sources: [...]`."""
     df0 = get_df0("POLARS")
     node = models.PipelineNode(
         name="brz",
         source={"df": df0},  # old API — must still work
     )
-    assert "df" in node.sources
-    assert node.sources["df"].df is not None
+    assert len(node.sources) == 1
+    assert node.sources[0].df is not None
 
 
 def test_bad_node_name_raises():
     pl = models.Pipeline(
         name="pl",
         nodes=[
-            models.PipelineNode(name="a", sources={"df": {"node_name": "nonexistent"}}),
+            models.PipelineNode(name="a", sources=[{"node_name": "nonexistent"}]),
         ],
     )
     with pytest.raises(ValueError, match="nonexistent"):
