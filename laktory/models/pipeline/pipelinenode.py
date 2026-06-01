@@ -51,8 +51,8 @@ class PipelineNode(BaseModel, PipelineChild):
 
     node_yaml = '''
         name: brz_stock_prices
-        source:
-          path: "./events/stock_prices/"
+        sources:
+        - path: "./events/stock_prices/"
           format: JSON
         sinks:
         - path: ./tables/brz_stock_prices/
@@ -73,8 +73,8 @@ class PipelineNode(BaseModel, PipelineChild):
 
     node_yaml = '''
         name: slv_stock_prices
-        source:
-          node_name: brz_stock_prices
+        sources:
+        - node_name: brz_stock_prices
         sinks:
         - schema_name: finance
           table_name: slv_stock_prices

@@ -125,6 +125,43 @@ def test_multi_sources(backend):
     assert len(result) == 2  # 'b' and 'c' after filtering 'a'
 
 
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_multi_sources_method_arg(backend):
+    """Named sources are referenceable as {sources.X} in DataFrameMethod args (e.g. join)."""
+
+    from laktory._testing import get_df0
+    from laktory._testing import get_df1
+
+    df0 = get_df0(backend)
+    df1 = get_df1(backend)
+
+    node = models.PipelineNode(
+        name="slv",
+        sources=[
+            {"name": "events", "df": df0},
+            {"name": "ref", "df": df1},
+        ],
+        transformer={
+            "nodes": [
+                {
+                    "func_name": "join",
+                    "func_kwargs": {
+                        "other": "{sources.ref}",
+                        "on": "id",
+                        "how": "left",
+                    },
+                },
+            ]
+        },
+    )
+
+    node.execute(write_sinks=False)
+    df = node.output_df
+    collected = df.collect() if isinstance(df, nw.LazyFrame) else df
+    assert len(collected) == 3  # all rows from events joined with ref
+    assert "x2" in collected.schema
+
+
 def test_has_streaming_source():
     """has_streaming_source is True when any source is streaming."""
     node_static = models.PipelineNode(

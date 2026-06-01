@@ -22,13 +22,22 @@ logger = get_logger(__name__)
 # --------------------------------------------------------------------------- #
 
 
+# Matches {sources.X}, {nodes.X}, or any bare {key} placeholder
 _SOURCE_REF_PATTERN = re.compile(r"^\{(nodes\..+|[^{}]+)\}$")
 
 
 class DataFrameMethodArg(BaseModel, PipelineChild):
     """
-    DataFrame method argument: a scalar, a column expression, or a
-    ``{key}`` / ``{nodes.X}`` reference to a pre-loaded named DataFrame.
+    DataFrame method argument: a scalar, a column expression, or a DataFrame
+    reference string. DataFrame references use the same placeholder syntax as
+    SQL expressions:
+
+    - ``{df}`` — the current flowing DataFrame (primary source for the first transformer step)
+    - ``{sources.name}`` — a named source declared on the pipeline node
+    - ``{nodes.X}`` — the output of upstream pipeline node ``X``
+
+    DataSources are **not** passed directly as objects; always use the string
+    reference syntax above.
     """
 
     value: Any = Field(..., description="Function argument")
@@ -50,7 +59,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
         v = self.value
 
         if isinstance(v, str):
-            # {nodes.X} or {key} → resolve from pre-loaded named_dfs
+            # {sources.X}, {nodes.X}, or {key} → resolve from pre-loaded named_dfs
             m = _SOURCE_REF_PATTERN.match(v.strip())
             if m:
                 key = m.group(1)
@@ -163,11 +172,11 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
     func_args: list[DataFrameMethodArg] = Field(
         [],
-        description="Arguments passed to method. Use ``{nodes.X}`` or ``{key}`` strings to pass pre-loaded DataFrames by reference.",
+        description="Arguments passed to method. Use ``{df}`` for the primary source, ``{sources.name}`` for a named source, or ``{nodes.X}`` for an upstream pipeline node output.",
     )
     func_kwargs: dict[str, DataFrameMethodArg] = Field(
         {},
-        description="Keyword arguments passed to method. Use ``{nodes.X}`` or ``{key}`` strings to pass pre-loaded DataFrames by reference.",
+        description="Keyword arguments passed to method. Use ``{df}`` for the primary source, ``{sources.name}`` for a named source, or ``{nodes.X}`` for an upstream pipeline node output.",
     )
     func_name: str = Field(
         ...,
