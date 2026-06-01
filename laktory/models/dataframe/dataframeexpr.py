@@ -99,7 +99,12 @@ class DataFrameExpr(BaseModel, PipelineChild):
 
     @property
     def data_sources(self):
-        """No inline data sources — upstream nodes are pre-loaded by PipelineNode.execute()."""
+        """
+        No inline data sources. All DataFrame references in the SQL expression
+        ({df}, {sources.X}, {nodes.X}) are pre-loaded by PipelineNode.execute()
+        before the transformer runs — {sources.X} from PipelineNode.sources,
+        {nodes.X} via upstream_node_names.
+        """
         return []
 
     def to_sql(self, references=None):
