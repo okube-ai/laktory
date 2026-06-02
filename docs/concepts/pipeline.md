@@ -55,16 +55,16 @@ Here is an example of a pipeline declaration:
 
     nodes:
     - name: brz_stock_prices
-      source:
-        path: ./data/stock_prices/
+      sources:
+      - path: ./data/stock_prices/
         format: JSONL
       sinks:
       - path: ./data/brz_stock_prices.parquet
         format: PARQUET
 
     - name: slv_stock_prices
-      source:
-        node_name: brz_stock_prices
+      sources:
+      - node_name: brz_stock_prices
         as_stream: false
       sinks:
       - path: ./data/slv_stock_prices.parquet
@@ -98,10 +98,12 @@ Here is an example of a pipeline declaration:
     
     brz = lk.models.PipelineNode(
         name="brz_stock_prices",
-        source=lk.models.FileDataSource(
-            path="./data/stock_prices/",
-            format="JSONL",
-        ),
+        sources=[
+            lk.models.FileDataSource(
+                path="./data/stock_prices/",
+                format="JSONL",
+            )
+        ],
         sinks=[
             lk.models.FileDataSink(
                 path="./data/brz_stock_prices.parquet",
@@ -113,7 +115,7 @@ Here is an example of a pipeline declaration:
     
     slv = lk.models.PipelineNode(
         name="slv_stock_prices",
-        source=lk.models.PipelineNodeDataSource(node_name="brz_stock_prices"),
+        sources=[lk.models.PipelineNodeDataSource(node_name="brz_stock_prices")],
         sinks=[
             lk.models.FileDataSink(
                 path="./data/slv_stock_prices.parquet",

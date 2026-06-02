@@ -1,29 +1,23 @@
 
-# Variables and Expressions
+# Variables, Expressions, and References
 
-When declaring models in Laktory, it's not always practical, desirable, or even possible to hardcode certain properties. For example, the catalog name in a pipeline declaration might depend on the deployment environment. In many cases, you'll also want to share properties across multiple objects. Laktory introduces **model variables** to solve this problem.
+Laktory uses three distinct mechanisms to make declarations dynamic. They share a curly-brace syntax but differ in purpose, resolution time, and where they are valid.
 
-## Syntax
+| Mechanism | Syntax | Resolved | Valid in |
+|-----------|--------|----------|----------|
+| **Variable** | `${vars.X}` · `${resources.X.id}` | Config / deployment time | Any model field |
+| **Expression** | `${{ python expr }}` | Config / deployment time | Any model field |
+| **Reference** | `{df}` · `{sources.X}` · `{nodes.X}` | Execution time | Transformer nodes only |
 
-To use a variable, follow this syntax: `${vars.VARIABLE_NAME}` or `${var.VARIABLE_NAME}`.
+**The `$` rule** — the dollar sign is the tell. Variables and Expressions always start with `$` and are resolved before the pipeline runs. References have no `$` and are resolved at runtime by the transformer engine when it has actual DataFrames in memory.
 
-## Declaration
+---
 
-When the same variable is declared in multiple places, the following priority applies (highest wins):
+## Variables
 
-| Priority      | Source                                                                       | Example                                     |
-|---------------|------------------------------------------------------------------------------|---------------------------------------------|
-| 1 *(highest)* | CLI `--var` flags                                                            | `--var env=dev`                             |
-| 2             | CLI variable file (`--var-file` or auto-discovered `variables[.<env>].yaml`) | `--var-file my_secrets.yaml`                |
-| 3             | Stack environment variables (`environments.<env>.variables`)                 | `stack.yaml` → `environments.dev.variables` |
-| 4             | Stack-level variables (`variables`)                                          | `stack.yaml` → `variables`                  |
-| 5             | OS environment variables                                                     | `$DATABRICKS_HOST`                          |
-| 6 *(lowest)*  | Laktory settings                                                             | `laktory.settings`                          |
+A Variable substitutes a named value into any model field. The syntax is `${vars.VARIABLE_NAME}` (or `${var.VARIABLE_NAME}`).
 
-### From Model
-Any object declared with Laktory can receive variables as part of its data model:
-
-```yaml title="cluster.yaml"
+```yaml
 name: cluster-${vars.env}
 size: ${vars.cluster_size}
 variables:
@@ -31,63 +25,54 @@ variables:
   cluster_size: 2
 ```
 
-When resolved:
+Resolves to `name: cluster-prd` and `size: 2`.
 
-- `name` becomes `cluster-prd`.
-- `size` becomes `2`.
+### Declaration sources
 
-### From Environment
-When resolving a variable, Laktory first searches for declared model variables. If not found, it falls back to environment variables.
+When the same variable is declared in multiple places, the following priority applies (highest wins):
 
-### From Settings
-If a variable has not been resolved from model variables nor environment variables, it looks up `laktory.settings` values.
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1 *(highest)* | CLI `--var` flags | `--var env=dev` |
+| 2 | CLI variable file (`--var-file` or auto-discovered `variables[.<env>].yaml`) | `--var-file my_secrets.yaml` |
+| 3 | Stack environment variables (`environments.<env>.variables`) | `stack.yaml` → `environments.dev.variables` |
+| 4 | Stack-level variables (`variables`) | `stack.yaml` → `variables` |
+| 5 | OS environment variables | `$DATABRICKS_HOST` |
+| 6 *(lowest)* | Laktory settings | `laktory.settings` |
 
-### From CLI
+**From model** — any Laktory object can declare its own variables:
 
-Variables can be injected at the CLI level, overriding anything declared in the stack YAML or variable files.
+```yaml title="cluster.yaml"
+name: cluster-${vars.env}
+variables:
+  env: prd
+```
 
-**Inline flags** (`--var`, repeatable):
+**From environment** — if a variable is not found in declared model variables, Laktory falls back to OS environment variables.
+
+**From settings** — final fallback to `laktory.settings` values.
+
+**From CLI** — variables passed at the CLI level override everything:
+
 ```bash
 laktory deploy --env dev --var profile=MY_PROFILE --var node_type=Standard_DS3_v2
 ```
 
-**Variable file** (`--var-file`):
+A variable file can be provided explicitly or auto-discovered next to the stack file:
+
 ```bash
 laktory deploy --env dev --var-file variables.yaml
+# or with auto-discovery:
+laktory deploy --env dev   # loads variables.dev.yaml or variables.yaml if present
 ```
 
-The file must be YAML and supports all variable types — including complex objects:
+CLI options are available on all commands: `deploy`, `preview`, `destroy`, `validate`, `build`, and `run`.
 
-```yaml title="variables.yaml"
-profile: MY_PROFILE
-node_type: Standard_DS3_v2
-default_cluster:
-  num_workers: 4
-  node_type_id: Standard_DS3_v2
-```
+### Properties
 
-**Auto-discovery** — when `--var-file` is not provided, Laktory automatically loads a variable file if one is present next to the stack file, in this order:
+**Case-insensitive** — variable names are not case-sensitive.
 
-1. `variables.<env>.yaml` — env-specific (e.g. `variables.dev.yaml`)
-2. `variables.yaml` — base fallback
-
-This makes per-environment secrets easy to manage: commit a `variables.yaml` template, add `variables.*.yaml` to `.gitignore`, and deploy with just:
-
-```bash
-laktory deploy --env dev
-```
-
-`--var` flags always take precedence over the variable file.
-
-These CLI options are available on all commands: `deploy`, `preview`, `destroy`, `validate`, `build`, and `run`.
-
-## Properties
-
-### Case Sensitivity
-All variables are **case-insensitive**.
-
-### Inheritance
-Models inherit variables from their parent. They can also declare new variables or override parent variables.
+**Inheritance** — models inherit variables from their parent and can override them:
 
 ```yaml title="stack.yaml"
 jobs:
@@ -96,68 +81,28 @@ jobs:
       - name: ingest
         cluster:
           size: ${vars.cluster_size}
-      - name: process
-        cluster:
-          size: ${vars.cluster_size}
   - name: export-${vars.env}
-    tasks:
-      - name: export
-        cluster:
-          size: ${vars.cluster_size}
     variables:
-      cluster_size: 1
+      cluster_size: 1   # override for this job only
 variables:
   env: prd
   cluster_size: 2
 ```
 
-In this example:
-
-- `pipeline-prd` tasks use clusters of size `2`.
-- `export-prd` tasks use clusters of size `1` due to the local override of `cluster_size`.
-
-### Nesting
-Variables can reference other variables:
+**Nesting** — variables can reference other variables:
 
 ```yaml title="stack.yaml"
-jobs:
-  - name: pipeline-${vars.env}
-    tasks:
-      - name: ${task_prefix}-ingest
-      - name: ${task_prefix}-process
-    variables:
-      task_prefix: ${user}-${env}
-providers:
-  databricks:
-    host: ${vars.databricks_host}
 variables:
   env: prd
   user: laktory
-  databricks_host: ${vars.DATABRICKS_HOST_DEV}
+  task_prefix: ${user}-${env}   # resolves to "laktory-prd"
 ```
 
-Results:
+### Types
 
-- Task names: `laktory-prd-ingest` and `laktory-prd-process`.
-- `databricks_host` resolves to the environment variable `DATABRICKS_HOST_DEV`.
-
-## Types
-
-### Simple
-Supports `int`, `float`, `string`, and `boolean`.
-
-### Complex
-Supports complex objects like lists and dictionaries:
+Variables support `int`, `float`, `string`, `boolean`, and complex objects (lists and dicts):
 
 ```yaml title="stack.yaml"
-jobs:
-  - name: pipeline-${vars.env}
-    tasks:
-      - name: ingest
-        cluster: ${vars.default_cluster}
-      - name: ${task_prefix}-process
-        cluster: ${vars.default_cluster}
-    tags: ${vars.job_tags}
 variables:
   env: dev
   job_tags:
@@ -168,13 +113,7 @@ variables:
     size: 2
 ```
 
-Here:
-
-- `job_tags` is a list of tags.
-- `default_cluster` defines reusable cluster configurations.
-
-### Regex
-For advanced substitutions, use regex patterns:
+For advanced substitutions, regex patterns are also supported:
 
 ```yaml title="stack.yaml"
 cluster:
@@ -183,11 +122,24 @@ variables:
   r"\$\{custom_prefix\.(.*?)\}": r"${\1}"
 ```
 
-Resolving the cluster name yields `catalog.schema`.
+### Resource variables
+
+The `resources.*` namespace exposes deployed resource output attributes as variables, automatically populated by Laktory from the Terraform backend:
+
+```yaml title="stack.yaml"
+tasks:
+  - task_key: pipeline
+    pipeline_task:
+      pipeline_id: ${resources.my-pipeline.id}
+```
+
+Here `${resources.my-pipeline.id}` resolves to the ID of the deployed `my-pipeline` resource. The resource must be part of the current stack.
+
+---
 
 ## Expressions
 
-Use `${{ PYTHON_EXPRESSION }}` for dynamic attribute values:
+An Expression evaluates an inline Python statement and injects the result into a field. The syntax is `${{ PYTHON_EXPRESSION }}`.
 
 ```yaml title="stack.yaml"
 cluster:
@@ -197,14 +149,10 @@ variables:
   env: prd
 ```
 
-Here, `size` evaluates to `4`. Any valid inline Python expression is supported.
+`size` evaluates to `4`. Any valid Python expression is supported, including dict lookups:
 
-You can also use variables as dictionary keys:
-
-```yaml title="stack.yaml"
-cluster:
-  - name: pipeline-${vars.env}
-    size: ${{ vars.sizes[vars.env] }}
+```yaml
+size: ${{ vars.sizes[vars.env] }}
 variables:
   env: prd
   sizes:
@@ -212,78 +160,81 @@ variables:
     prd: 4
 ```
 
-### Expressions Objects
-Under certain context, specific python objects are available when evaluating expressions
+### Context objects
 
-#### Pipeline
-When inside a pipeline and its child (node, source, sink, transformer, orchestrator, etc) the pipeline object is available.
+Certain Python objects are available inside expressions depending on context.
 
-```yaml title="pipeline.yaml"
-pipeline:
-  name: pl-stocks-prices
-  orchestrator:
-    type: DATABRICKS_JOB
-    name: job-${{ pipeline.name }}
-```
-
-
-#### Pipeline Node
-When inside a pipeline node and its child (source, sink, transformer, orchestrator, etc) the pipeline_node object is available.
+**`pipeline`** — available inside a pipeline and all its children:
 
 ```yaml title="pipeline.yaml"
-pipeline:
-  name: pl-stocks-prices
-  nodes:
-    - name: slv_prices
-      primary_keys:
-        - tstamp
-        - symbol
-      sink:
-        merge_cdc_options:
-          primary_keys: ${{ pipeline_node.primary_keys }}
+orchestrator:
+  type: DATABRICKS_JOB
+  name: job-${{ pipeline.name }}
 ```
 
-## Special Cases
+**`pipeline_node`** — available inside a pipeline node and all its children:
 
-### Pipeline Nodes
-When defining SQL transformations, Laktory allows referencing:
-
-- The previous node’s DataFrame using `{df}`.
-- Specific nodes using `{nodes.node_name}`.
-
-Example:
-
-```sql
-SELECT 
-  * 
-FROM 
-  {df} 
-UNION 
-  SELECT * FROM {nodes.node_01} 
-UNION 
-  SELECT * FROM {nodes.node_02}
+```yaml title="pipeline.yaml"
+nodes:
+  - name: slv_prices
+    primary_keys:
+      - tstamp
+      - symbol
+    sinks:
+    - merge_cdc_options:
+        primary_keys: ${{ pipeline_node.primary_keys }}
 ```
 
-### Resources
-Variables can reference deployed resource outputs:
+---
 
-```yaml title="stack.yaml"
-name: my-job-${vars.env}
-tasks:
-  - task_key: pipeline
-    pipeline_task:
-      pipeline_id: ${resources.my-pipeline.id}
+## References
+
+A Reference identifies a DataFrame inside a [transformer](transformer.md) expression or method argument. References use plain `{...}` with **no `$`** and are resolved at execution time when the DataFrames are live in memory. They are not variables and cannot appear in arbitrary model fields.
+
+Three references are available:
+
+| Reference | Points to |
+|-----------|-----------|
+| `{df}` | The flowing DataFrame — the primary source on the first transformer step, the output of the previous step on subsequent steps |
+| `{sources.name}` | A named source declared on the pipeline node |
+| `{nodes.X}` | The output DataFrame of upstream pipeline node `X` |
+
+```yaml
+nodes:
+- name: slv_stocks
+  sources:
+  - name: prices
+    node_name: brz_stock_prices
+  - name: metadata
+    node_name: brz_stock_metadata
+  transformer:
+    nodes:
+    # {sources.X} in a SQL expression
+    - expr: |
+        SELECT p.symbol, p.open, m.currency
+        FROM {sources.prices} p
+        LEFT JOIN {sources.metadata} m ON p.symbol = m.symbol
+
+    # {sources.X} in a method argument
+    - func_name: join
+      func_kwargs:
+        other: "{sources.metadata}"
+        on: symbol
+
+    # {df} refers to the output of the previous step
+    - expr: SELECT * FROM {df} WHERE open > 100
+
+    # {nodes.X} reaches any upstream node by name
+    - expr: SELECT * FROM {df} UNION ALL SELECT * FROM {nodes.brz_stock_prices}
 ```
 
-Here:
+See [Transformer — DataFrame References](transformer.md#dataframe-references) for the full reference.
 
-- `pipeline_id` dynamically references `my-pipeline`'s ID.
-
-**Note:** Resource variables are automatically populated by Laktory based on the Terraform backend. The resource must be deployed as part of the current stack.
+---
 
 ## Variable Injection
 
 ??? "API Documentation"
     [`laktory.models.BaseModel.inject_vars`][laktory.models.BaseModel]<br>
 
-Variables are injected during deployment, typically after serialization (`model_dump`). However, you can manually trigger injection using `job.inject_vars()`.
+Variables and Expressions are injected during deployment, typically after serialization (`model_dump`). You can manually trigger injection using `model.inject_vars()`.
