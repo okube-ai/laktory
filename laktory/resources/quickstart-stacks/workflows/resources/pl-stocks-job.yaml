@@ -19,8 +19,8 @@ nodes:
 
 # Bronze Table
 - name: brz_stock_prices
-  source:
-    path: dbfs:/laktory/data/stock_prices/
+  sources:
+  - path: dbfs:/laktory/data/stock_prices/
     as_stream: false
     format: JSONL
   sinks:
@@ -33,8 +33,8 @@ nodes:
   - name: positive_price
     expr: open > 0
     action: DROP
-  source:
-    node_name: brz_stock_prices
+  sources:
+  - node_name: brz_stock_prices
     as_stream: false
   sinks:
   - table_name: slv_stock_prices_job

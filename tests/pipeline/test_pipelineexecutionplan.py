@@ -16,20 +16,20 @@ def pl():
             models.PipelineNode(
                 name="slv_a1",
                 execution_task_name="slv_a",
-                source={"node_name": "brz_a"},
+                sources=[{"node_name": "brz_a"}],
                 tags=["slv", "a"],
                 sinks=[_SINK],
             ),
             models.PipelineNode(
                 name="slv_a2",
                 execution_task_name="slv_a",
-                source={"node_name": "brz_a"},
+                sources=[{"node_name": "brz_a"}],
                 tags=["slv", "a"],
                 sinks=[_SINK],
             ),
             models.PipelineNode(
                 name="gld_a",
-                source={"node_name": "slv_a1"},
+                sources=[{"node_name": "slv_a1"}],
                 tags=["gld", "a"],
                 sinks=[_SINK],
             ),
@@ -37,20 +37,20 @@ def pl():
             models.PipelineNode(
                 name="slv_b1",
                 execution_task_name="slv_b",
-                source={"node_name": "slv_b2"},
+                sources=[{"node_name": "slv_b2"}],
                 tags=["slv", "b"],
                 sinks=[_SINK],
             ),
             models.PipelineNode(
                 name="slv_b2",
                 execution_task_name="slv_b",
-                source={"node_name": "brz_b"},
+                sources=[{"node_name": "brz_b"}],
                 tags=["slv", "b"],
                 sinks=[_SINK],
             ),
             models.PipelineNode(
                 name="gld_b",
-                source={"node_name": "slv_b1"},
+                sources=[{"node_name": "slv_b1"}],
                 tags=["gld", "b"],
                 sinks=[_SINK],
             ),
@@ -64,11 +64,11 @@ def pl_with_views():
         name="test",
         nodes=[
             models.PipelineNode(name="brz", sinks=[_SINK]),
-            models.PipelineNode(name="slv", source={"node_name": "brz"}),
+            models.PipelineNode(name="slv", sources=[{"node_name": "brz"}]),
             models.PipelineNode(
-                name="gld1", source={"node_name": "slv"}, sinks=[_SINK]
+                name="gld1", sources=[{"node_name": "slv"}], sinks=[_SINK]
             ),
-            models.PipelineNode(name="gld2", source={"node_name": "slv"}),
+            models.PipelineNode(name="gld2", sources=[{"node_name": "slv"}]),
         ],
     )
 

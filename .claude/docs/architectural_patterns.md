@@ -352,3 +352,24 @@ Unity Catalog access control is expressed through four overlapping constructs. U
 - Databricks-only tests are marked: `@pytest.mark.databricks_connect` and excluded from standard test run
 - `conftest.py` provides `spark`, `wsclient`, and `assert_dfs_equal()` fixtures
 - Test data and fixtures are in `tests/` alongside test files; sample stack configs are in `tests/*/`
+
+---
+
+## 15. PipelineNode Sources (list design)
+
+`PipelineNode.sources` is `list[DataSourcesUnion]` (changed from `dict[str, DataSourcesUnion]` in v0.12, never released as dict). Each source has an optional `name: str` field from `BaseDataSource`.
+
+**Rules:**
+- Single unnamed source: no `name` needed; referenced as `{df}` (the flowing DataFrame) in transformer expressions
+- Named source: referenced as `{sources.name}` in transformer SQL expressions and method arguments
+- Multiple sources: each must have a `name` to be individually addressable; the first is still the primary (`{df}`)
+
+**Backward compat:** `_migrate_source` model_validator on `PipelineNode` converts the legacy singular `source:` key to `sources: [source]` (a single-item list). No dict backward compat — dict format was never released.
+
+**Critical execution bug (fixed):** `_stage_df` (the primary source DataFrame) must be selected as `named_dfs[f"sources.{self.sources[0].name or 'df'}"]` — NOT by scanning `named_dfs` for the first `sources.*` key. `pipeline.execute()` shares a single `named_dfs` dict across all nodes, so stale `sources.*` keys from previous nodes would be found first otherwise.
+
+**Key files:**
+- `laktory/models/pipeline/pipelinenode.py` — `sources` field, `_migrate_source`, `_validate_sources_types`, `execute()`
+- `laktory/models/datasources/basedatasource.py` — `name: str | None` field
+- `laktory/models/dataframe/dataframeexpr.py` — `{sources.X}` and `{df}` resolution in `to_sql()` and `to_df()`
+- `laktory/models/dataframe/dataframemethod.py` — `{sources.X}` resolution in `DataFrameMethodArg.eval()`

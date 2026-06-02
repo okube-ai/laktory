@@ -45,12 +45,12 @@ def _get_pl(orchestrator_dict, tmp_path=""):
             "nodes": [
                 {
                     "name": "brz",
-                    "source": {"format": "JSON", "path": f"{tmp_path}/brz_source/"},
+                    "sources": [{"format": "JSON", "path": f"{tmp_path}/brz_source/"}],
                     "sinks": [{"table_name": "brz"}],
                 },
                 {
                     "name": "slv",
-                    "source": {"node_name": "brz"},
+                    "sources": [{"node_name": "brz"}],
                     "sinks": [{"table_name": "slv"}],
                     "expectations": [
                         {"name": "x1 positive", "expr": "x1 > 0", "action": "WARN"},
@@ -68,12 +68,12 @@ def _get_pl(orchestrator_dict, tmp_path=""):
                 },
                 {
                     "name": "slv_stream",
-                    "source": {"node_name": "brz", "as_stream": True},
+                    "sources": [{"node_name": "brz", "as_stream": True}],
                     "sinks": [{"table_name": "slv_stream"}],
                 },
                 {
                     "name": "gld_view",
-                    "source": {"node_name": "slv"},
+                    "sources": [{"node_name": "slv"}],
                     "sinks": [{"pipeline_view_name": "gld_view"}],
                 },
             ],
@@ -304,7 +304,7 @@ def test_ldp_configuration_requirements_custom_dep():
             "nodes": [
                 {
                     "name": "brz",
-                    "source": {"format": "JSON", "path": "/src/"},
+                    "sources": [{"format": "JSON", "path": "/src/"}],
                     "sinks": [{"table_name": "brz"}],
                 }
             ],
@@ -342,12 +342,12 @@ def test_ldp_view_node_raises():
                 "nodes": [
                     {
                         "name": "brz",
-                        "source": {"format": "JSON", "path": "/src/"},
+                        "sources": [{"format": "JSON", "path": "/src/"}],
                         "sinks": [{"table_name": "brz"}],
                     },
                     {
                         "name": "gld_view",
-                        "source": {"node_name": "brz"},
+                        "sources": [{"node_name": "brz"}],
                         "sinks": [{"table_name": "gld_view", "table_type": "VIEW"}],
                     },
                 ],

@@ -262,10 +262,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         configured_as_stream = self.as_stream
         if configured_as_stream is None:
             node = self.parent_pipeline_node
-            if node is not None:
-                source = node.source
-                if source is not None:
-                    configured_as_stream = source.as_stream
+            if node is not None and node.sources:
+                configured_as_stream = node.has_streaming_source
 
         # Resolve conflict
         if df_is_streaming is not None and configured_as_stream is not None:

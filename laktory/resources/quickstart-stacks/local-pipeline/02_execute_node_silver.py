@@ -28,14 +28,15 @@ print("------------")
 # Execute Silver (low-level)                                                  #
 # --------------------------------------------------------------------------- #
 
-# The silver node reads from the bronze node as we see from its source
-print(f"Silver node source type: {type(node_slv.source)}")
-print(f"Silver node source node name: {node_slv.source.node_name}")
+# The silver node reads from the bronze node — accessible via its sources list
+source = node_slv.sources[0]
+print(f"Silver node source type: {type(source)}")
+print(f"Silver node source node name: {source.node_name}")
 
 # For an execution outside of a pipeline, we can mock its read method by
 # directly assigning it a dataframe.
-node_slv.source._df = node_brz.output_df
-df = node_slv.source.read()
+source._df = node_brz.output_df
+df = source.read()
 
 # Next, we apply the transformer
 df = node_slv.transformer.execute(df)

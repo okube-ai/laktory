@@ -40,6 +40,10 @@ class BaseDataSource(BaseModel, PipelineChild):
     Base class for data sources.
     """
 
+    name: str | None = Field(
+        None,
+        description="Source name used to reference this source in transformer expressions as `{sources.name}`.",
+    )
     as_stream: bool = Field(
         False,
         description="If `True`source is read as a streaming DataFrame. Currently only supported by Spark DataFrame backend.",

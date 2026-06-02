@@ -317,3 +317,11 @@ Changes applied:
 
 **Lakeflow Job dual-mode path** — how the SDP orchestrator selects between local (`spark-pipelines run`) and Databricks Job execution (DBR 16.x) is TBD. The generated artifacts are identical in both modes. Open question: orchestrator field, deploy-time flag, or context inference. Blocked on Databricks Job path testing.
 
+---
+
+## F6 Completion Status
+
+F6 ("Integration of Spark-native declarative pipelines") is complete as of 2026-06-01 on branch `feat/sources-refactoring`.
+
+The key change bundled with F6 completion is the `PipelineNode.sources` refactoring (dict → list). See [architectural_patterns.md — §15 PipelineNode Sources](architectural_patterns.md) for the full design.
+

@@ -117,11 +117,7 @@ class PipelineNodeDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self) -> AnyFrame:
-        stream_to_batch = (
-            not self.as_stream
-            and self.node.source is not None
-            and self.node.source.as_stream
-        )
+        stream_to_batch = not self.as_stream and self.node.has_streaming_source
         # When a streaming read is requested, always go to the primary sink so
         # that spark.readStream.table() is called. Returning a cached batch
         # output_df here would produce an invalid batch-relation-for-streaming-table

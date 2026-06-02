@@ -17,8 +17,8 @@ node = pipeline.nodes_dict["brz_stock_prices"]
 #  Low-level Node Execution                                                   #
 # --------------------------------------------------------------------------- #
 
-# Read source
-source_df = node.source.read()
+# Read primary source (first source in the list)
+source_df = node.sources[0].read()
 print(source_df.to_native().collect())
 
 # This node simply reads raw data from json files and output and consolidate
@@ -35,6 +35,6 @@ node.primary_sink.write(source_df)
 # --------------------------------------------------------------------------- #
 
 # Generally, a node is executed using the execute method. It is the equivalent
-# of calling the .source.read(), .transformer.execute() and sink.write()
+# of calling source.read(), transformer.execute() and sink.write()
 # sequence
 node.execute()

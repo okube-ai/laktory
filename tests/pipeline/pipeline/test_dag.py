@@ -13,8 +13,12 @@ def _linear_pl():
         name="pl-linear",
         nodes=[
             models.PipelineNode(name="brz", sinks=[_SINK]),
-            models.PipelineNode(name="slv", source={"node_name": "brz"}, sinks=[_SINK]),
-            models.PipelineNode(name="gld", source={"node_name": "slv"}, sinks=[_SINK]),
+            models.PipelineNode(
+                name="slv", sources=[{"node_name": "brz"}], sinks=[_SINK]
+            ),
+            models.PipelineNode(
+                name="gld", sources=[{"node_name": "slv"}], sinks=[_SINK]
+            ),
         ],
     )
 
@@ -25,14 +29,14 @@ def _diamond_pl():
         nodes=[
             models.PipelineNode(name="brz", sinks=[_SINK]),
             models.PipelineNode(
-                name="slv1", source={"node_name": "brz"}, sinks=[_SINK]
+                name="slv1", sources=[{"node_name": "brz"}], sinks=[_SINK]
             ),
             models.PipelineNode(
-                name="slv2", source={"node_name": "brz"}, sinks=[_SINK]
+                name="slv2", sources=[{"node_name": "brz"}], sinks=[_SINK]
             ),
             models.PipelineNode(
                 name="gld",
-                source={"node_name": "slv1"},
+                sources=[{"node_name": "slv1"}],
                 transformer={"nodes": [{"expr": "SELECT * from {nodes.slv2}"}]},
                 sinks=[_SINK],
             ),
@@ -105,8 +109,8 @@ def test_circular_dep_raises():
     pl = models.Pipeline(
         name="pl",
         nodes=[
-            models.PipelineNode(name="a", source={"node_name": "b"}),
-            models.PipelineNode(name="b", source={"node_name": "a"}),
+            models.PipelineNode(name="a", sources=[{"node_name": "b"}]),
+            models.PipelineNode(name="b", sources=[{"node_name": "a"}]),
         ],
     )
     with pytest.raises(ValueError, match="circular"):

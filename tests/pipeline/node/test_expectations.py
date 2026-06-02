@@ -13,7 +13,7 @@ def _node_with(action, expr="x1 < 3", backend="POLARS", lazy=True):
     df0 = get_df0(backend, lazy=lazy)
     return models.PipelineNode(
         name="node0",
-        source={"df": df0},
+        sources=[{"df": df0}],
         expectations=[
             models.DataQualityExpectation(name="check", expr=expr, action=action)
         ],
@@ -69,7 +69,7 @@ def test_aggregate_pass(backend):
     df0 = get_df0(backend, lazy=True)
     node = models.PipelineNode(
         name="node0",
-        source={"df": df0},
+        sources=[{"df": df0}],
         expectations=[
             models.DataQualityExpectation(
                 name="max ok",
@@ -89,7 +89,7 @@ def test_aggregate_fail_raises(backend):
     df0 = get_df0(backend, lazy=True)
     node = models.PipelineNode(
         name="node0",
-        source={"df": df0},
+        sources=[{"df": df0}],
         expectations=[
             models.DataQualityExpectation(
                 name="max too big",
@@ -109,7 +109,7 @@ def test_aggregate_on_stream_raises():
     with pytest.raises(DataQualityExpectationsNotSupported):
         models.PipelineNode(
             name="node0",
-            source={"path": "some_path", "format": "DELTA", "as_stream": True},
+            sources=[{"path": "some_path", "format": "DELTA", "as_stream": True}],
             expectations=[
                 {"name": "row count ok", "expr": "count(*) > 20", "type": "AGGREGATE"},
             ],
@@ -121,7 +121,7 @@ def test_tolerance_on_stream_raises():
     with pytest.raises(DataQualityExpectationsNotSupported):
         models.PipelineNode(
             name="node0",
-            source={"path": "some_path", "format": "DELTA", "as_stream": True},
+            sources=[{"path": "some_path", "format": "DELTA", "as_stream": True}],
             expectations=[
                 {
                     "name": "close ok",
@@ -139,7 +139,7 @@ def test_multi_expectations(backend):
     df0 = get_df0(backend, lazy=True)
     node = models.PipelineNode(
         name="node0",
-        source={"df": df0},
+        sources=[{"df": df0}],
         expectations=[
             models.DataQualityExpectation(
                 name="quarantine x>=3", expr="x1 < 3", action="QUARANTINE"
@@ -164,7 +164,7 @@ def test_checks_populated():
     df0 = get_df0("POLARS", lazy=True)
     node = models.PipelineNode(
         name="node0",
-        source={"df": df0},
+        sources=[{"df": df0}],
         expectations=[
             models.DataQualityExpectation(name="check", expr="x1 < 3", action="WARN")
         ],
@@ -183,7 +183,7 @@ def test_streaming_multi(tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        source={"path": source_path, "format": "DELTA", "as_stream": True},
+        sources=[{"path": source_path, "format": "DELTA", "as_stream": True}],
         expectations_checkpoint_path_=checkpoint_path,
         expectations=[
             models.DataQualityExpectation(name="id_b", expr="id != 'b'", action="WARN"),

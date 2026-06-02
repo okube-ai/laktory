@@ -58,7 +58,7 @@ def test_execute_view(tmp_path):
 
     node = models.PipelineNode(
         name="node0",
-        source={"schema_name": "default", "table_name": "df0"},
+        sources=[{"schema_name": "default", "table_name": "df0"}],
         sinks=[{"schema_name": "default", "table_name": "df1", "table_type": "VIEW"}],
         transformer={"nodes": [{"expr": "SELECT id FROM {df}"}]},
     )

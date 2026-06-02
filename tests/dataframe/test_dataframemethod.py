@@ -6,10 +6,8 @@ from laktory._testing import get_df1
 from laktory.api import register_anyframe_namespace
 from laktory.api import register_expr_namespace
 from laktory.enums import DataFrameBackends
-from laktory.models import DataFrameDataSource
 from laktory.models import DataFrameMethod
 from laktory.models import LaktoryContext
-from laktory.models.datasources import PipelineNodeDataSource
 
 from ..conftest import assert_dfs_equal
 
@@ -43,33 +41,33 @@ def test_kwarg_string(backend):
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_arg_source(backend):
     df0 = get_df0(backend)
-    source = DataFrameDataSource(df=get_df1(backend))
+    df1 = get_df1(backend)
 
     node = DataFrameMethod(
         func_name="join",
-        func_args=[source],
+        func_args=["{df1}"],  # named reference resolved from named_dfs
         func_kwargs={
             "on": "id",
             "how": "left",
         },
     )
-    df = node.execute(df0)
+    df = node.execute(df0, named_dfs={"df1": df1})
     assert_dfs_equal(df.select("x2"), pl.DataFrame({"x2": [None, 4, 9]}))
-    assert node.data_sources == [source]
+    assert node.data_sources == []
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_arg_source_native(backend):
     df0 = get_df0(backend)
-    source = DataFrameDataSource(df=get_df1(backend))
+    df1 = get_df1(backend)
 
     node = DataFrameMethod(
         func_name="union",
-        func_args=[source],
+        func_args=["{df1}"],
         dataframe_api="NATIVE",
     )
-    df = node.execute(df0)
-    assert_dfs_equal(df, df0.to_native().union(source.read().to_native()))
+    df = node.execute(df0, named_dfs={"df1": df1})
+    assert_dfs_equal(df, df0.to_native().union(df1.to_native()))
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -205,47 +203,24 @@ def test_json_roundtrip(backend):
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
 
 
-def test_json_roundtrip_datasource_kwarg():
+def test_json_roundtrip_named_ref_kwarg():
     """
-    Regression: a PipelineNodeDataSource in func_kwargs must survive the
-    pipeline config JSON serialize → deserialize round-trip as a
-    PipelineNodeDataSource instance, not a plain dict.
-
-    The pipeline config is serialized with exclude_unset=True (see
-    pipelineconfigworkspacefile.py), so the value dict contains only set fields
-    with dataframe_backend as a string ('PYSPARK'). Pydantic's smart-union uses
-    strict mode when trying each union candidate in DataSourcesUnion | Any, and
-    string-to-enum coercion fails in strict mode, causing it to fall through to
-    Any and return a plain dict. That dict is later passed directly to df.join()
-    raising: AttributeError: 'dict' object has no attribute '_jdf'.
+    Named DataFrame references ({nodes.X}, {key}) in func_kwargs must survive
+    JSON serialize → deserialize as plain strings.
     """
-
     node = DataFrameMethod(
         func_name="join",
         func_kwargs={
-            "other": PipelineNodeDataSource(
-                node_name="slv_stock_metadata",
-                selects=["symbol", "currency", "first_traded"],
-            ),
+            "other": "{nodes.slv_stock_metadata}",
             "on": ["symbol"],
         },
         dataframe_api="NATIVE",
     )
-
-    # Replicate the pipeline config export path (exclude_unset=True, mode='json')
     d = node.model_dump(exclude_unset=True, mode="json")
     node2 = DataFrameMethod.model_validate(d)
 
-    assert isinstance(node2.func_kwargs["other"].value, PipelineNodeDataSource), (
-        f"func_kwargs['other'].value should be PipelineNodeDataSource after round-trip, "
-        f"got {type(node2.func_kwargs['other'].value)}"
-    )
-    assert node2.func_kwargs["other"].value.node_name == "slv_stock_metadata"
-    assert node2.func_kwargs["other"].value.selects == [
-        "symbol",
-        "currency",
-        "first_traded",
-    ]
+    assert node2.func_kwargs["other"].value == "{nodes.slv_stock_metadata}"
+    assert node2.upstream_node_names == ["slv_stock_metadata"]
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])

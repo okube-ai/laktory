@@ -25,12 +25,12 @@ def test_node_ref_in_func_args(backend, tmp_path):
 
     brz = models.PipelineNode(
         name="brz",
-        source={"format": "JSON", "path": src_path},
+        sources=[{"format": "JSON", "path": src_path}],
         sinks=[{"format": "PARQUET", "path": brz_path, "mode": mode}],
     )
     slv = models.PipelineNode(
         name="slv",
-        source={"node_name": "brz"},
+        sources=[{"node_name": "brz"}],
         transformer={
             "nodes": [
                 {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
@@ -60,12 +60,11 @@ def test_sql_node_placeholder(backend, tmp_path):
 
     brz = models.PipelineNode(
         name="brz",
-        source={"format": "JSON", "path": src_path},
+        sources=[{"format": "JSON", "path": src_path}],
         sinks=[{"format": "PARQUET", "path": brz_path, "mode": mode}],
     )
     slv = models.PipelineNode(
         name="slv",
-        source=None,
         transformer={"nodes": [{"expr": "SELECT x1 FROM {nodes.brz}"}]},
         sinks=[{"format": "PARQUET", "path": slv_path, "mode": mode}],
     )
@@ -83,7 +82,7 @@ def test_upstream_node_names():
     )
     slv = models.PipelineNode(
         name="slv",
-        source={"node_name": "brz"},
+        sources=[{"node_name": "brz"}],
         sinks=[{"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}],
     )
     pl = models.Pipeline(name="pl", nodes=[brz, slv])
@@ -91,17 +90,127 @@ def test_upstream_node_names():
     assert pl.nodes_dict["slv"].upstream_node_names == ["brz"]
 
 
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_multi_sources(backend):
+    """Node with multiple named sources: each key accessible in SQL, {df} = first source."""
+
+    from laktory._testing import get_df0
+    from laktory._testing import get_df1
+
+    df0 = get_df0(backend)
+    df1 = get_df1(backend)
+
+    node = models.PipelineNode(
+        name="slv",
+        sources=[
+            {"name": "events", "df": df0},
+            {"name": "ref", "df": df1},
+        ],
+        transformer={
+            "nodes": [
+                {
+                    "expr": "SELECT {sources.events}.id, {sources.events}.x1, {sources.ref}.x2 FROM {sources.events} LEFT JOIN {sources.ref} ON {sources.events}.id = {sources.ref}.id"
+                },
+                # Second step: {df} is the flowing result, not the original source
+                {"expr": "SELECT * FROM {df} WHERE id != 'a'"},
+            ]
+        },
+    )
+
+    assert not node.has_streaming_source
+    assert node.upstream_node_names == []
+
+    node.execute(write_sinks=False)
+    result = node.output_df.collect().to_native()
+    assert len(result) == 2  # 'b' and 'c' after filtering 'a'
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_multi_sources_method_arg(backend):
+    """Named sources are referenceable as {sources.X} in DataFrameMethod args (e.g. join)."""
+
+    from laktory._testing import get_df0
+    from laktory._testing import get_df1
+
+    df0 = get_df0(backend)
+    df1 = get_df1(backend)
+
+    node = models.PipelineNode(
+        name="slv",
+        sources=[
+            {"name": "events", "df": df0},
+            {"name": "ref", "df": df1},
+        ],
+        transformer={
+            "nodes": [
+                {
+                    "func_name": "join",
+                    "func_kwargs": {
+                        "other": "{sources.ref}",
+                        "on": "id",
+                        "how": "left",
+                    },
+                },
+            ]
+        },
+    )
+
+    node.execute(write_sinks=False)
+    df = node.output_df
+    collected = df.collect() if isinstance(df, nw.LazyFrame) else df
+    assert len(collected) == 3  # all rows from events joined with ref
+    assert "x2" in collected.schema
+
+
+def test_has_streaming_source():
+    """has_streaming_source is True when any source is streaming."""
+    node_static = models.PipelineNode(
+        name="n",
+        sources=[{"format": "PARQUET", "path": "/tmp/x"}],
+    )
+    node_streaming = models.PipelineNode(
+        name="n",
+        sources=[{"format": "PARQUET", "path": "/tmp/x", "as_stream": True}],
+    )
+    node_mixed = models.PipelineNode(
+        name="n",
+        sources=[
+            {"name": "a", "format": "PARQUET", "path": "/tmp/a"},
+            {"name": "b", "format": "DELTA", "path": "/tmp/b", "as_stream": True},
+        ],
+    )
+    assert not node_static.has_streaming_source
+    assert node_streaming.has_streaming_source
+    assert node_mixed.has_streaming_source
+
+
+def test_sourceless_node():
+    """Node with no sources is valid; _stage_df starts as None."""
+    node = models.PipelineNode(
+        name="gen",
+        transformer={
+            "nodes": [
+                {"func_name": "with_columns", "func_kwargs": {"x": "nw.lit(1)"}},
+            ]
+        },
+    )
+    assert node.sources == []
+    assert not node.has_streaming_source
+
+
 def test_source_sink_validation_errors():
     with pytest.raises(ValidationError, match="FileDataSource"):
         models.PipelineNode.model_validate(
             {
                 "name": "test",
-                "source": {
-                    "type": "FILE",
-                    "path": "/data",
-                    "format": "BADFORMAT",
-                    "dataframe_backend": "POLARS",
-                },
+                "sources": [
+                    {
+                        "type": "FILE",
+                        "path": "/data",
+                        "format": "BADFORMAT",
+                        "dataframe_backend": "POLARS",
+                    }
+                ],
             }
         )
 

@@ -30,12 +30,12 @@ def _build_2node_pl(tmp_path, backend):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"format": "JSON", "path": src_path},
+                sources=[{"format": "JSON", "path": src_path}],
                 sinks=[_file_sink(brz_path, mode=mode)],
             ),
             models.PipelineNode(
                 name="slv",
-                source={"node_name": "brz"},
+                sources=[{"node_name": "brz"}],
                 sinks=[_file_sink(slv_path, mode=mode)],
             ),
         ],
@@ -73,7 +73,7 @@ def test_mixed_write_modes(backend, tmp_path):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"format": "JSON", "path": src_path},
+                sources=[{"format": "JSON", "path": src_path}],
                 transformer={
                     "nodes": [
                         {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}}
@@ -98,11 +98,13 @@ def test_streaming_e2e(tmp_path):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={
-                    "format": "DELTA",
-                    "path": str(tmp_path / "source"),
-                    "as_stream": True,
-                },
+                sources=[
+                    {
+                        "format": "DELTA",
+                        "path": str(tmp_path / "source"),
+                        "as_stream": True,
+                    }
+                ],
                 sinks=[
                     {
                         "format": "DELTA",
@@ -138,12 +140,12 @@ def test_partial_selects(backend, tmp_path):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"format": "JSON", "path": src_path},
+                sources=[{"format": "JSON", "path": src_path}],
                 sinks=[_file_sink(brz_path, mode=mode)],
             ),
             models.PipelineNode(
                 name="slv",
-                source={"node_name": "brz"},
+                sources=[{"node_name": "brz"}],
                 sinks=[_file_sink(slv_path, mode=mode)],
             ),
         ],
@@ -174,7 +176,7 @@ def test_full_refresh(backend, tmp_path):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"format": "JSON", "path": src_path},
+                sources=[{"format": "JSON", "path": src_path}],
                 sinks=[_file_sink(brz_path, mode=mode)],
             ),
         ],
@@ -206,12 +208,12 @@ def test_transformation_values(backend, tmp_path):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"format": "JSON", "path": src_path},
+                sources=[{"format": "JSON", "path": src_path}],
                 sinks=[_file_sink(brz_path, mode=mode)],
             ),
             models.PipelineNode(
                 name="slv",
-                source={"node_name": "brz"},
+                sources=[{"node_name": "brz"}],
                 transformer={
                     "nodes": [
                         {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
@@ -240,12 +242,12 @@ def test_incremental_append(tmp_path):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"df": get_df0("PYSPARK")},
+                sources=[{"df": get_df0("PYSPARK")}],
                 sinks=[{"format": "PARQUET", "path": brz_path, "mode": "APPEND"}],
             ),
             models.PipelineNode(
                 name="slv",
-                source={"node_name": "brz"},
+                sources=[{"node_name": "brz"}],
                 transformer={
                     "nodes": [
                         {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
@@ -279,12 +281,12 @@ def test_incremental_append_delta(tmp_path):
         nodes=[
             models.PipelineNode(
                 name="brz",
-                source={"df": get_df0("PYSPARK")},
+                sources=[{"df": get_df0("PYSPARK")}],
                 sinks=[{"format": "DELTA", "path": brz_path, "mode": "APPEND"}],
             ),
             models.PipelineNode(
                 name="slv",
-                source={"node_name": "brz"},
+                sources=[{"node_name": "brz"}],
                 transformer={
                     "nodes": [
                         {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}},
