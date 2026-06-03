@@ -75,48 +75,43 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
                     resolved.to_native() if self.dataframe_api == "NATIVE" else resolved
                 )
 
-            # Imports required to evaluate expressions
-            if self.dataframe_api == "NARWHALS":
-                import narwhals as nw  # noqa: F401
-                from narwhals import col  # noqa: F401
-                from narwhals import lit  # noqa: F401
+            # If the string contains a function call, evaluate it as a Python
+            # expression with backend-appropriate names in scope. SyntaxError
+            # means the string is a plain literal (e.g. "Walmart (Inc)") —
+            # fall back to returning it as-is. All other errors propagate.
+            if "(" in v:
+                if self.dataframe_api == "NARWHALS":
+                    import narwhals as nw  # noqa: F401
+                    from narwhals import col  # noqa: F401
+                    from narwhals import lit  # noqa: F401
 
-                from laktory.narwhals_ext.functions import sql_expr  # noqa: F401
+                    from laktory.narwhals_ext.functions import sql_expr  # noqa: F401
 
-                targets = ["lit(", "col(", "nw.", "sql_expr"]
-
-                # TODO: Review if we want to ducktype narwhals
-                v = v.replace("nw.sql_expr", "sql_expr")
-
-            else:
-                from laktory.enums import DataFrameBackends
-
-                if backend == DataFrameBackends.PYSPARK:
-                    # Imports required to evaluate expressions
-                    import pyspark.sql.functions as F  # noqa: F401
-                    import pyspark.sql.types as T  # noqa: F401
-                    from pyspark.sql.functions import col  # noqa: F401
-                    from pyspark.sql.functions import expr  # noqa: F401
-                    from pyspark.sql.functions import lit  # noqa: F401
-
-                    targets = ["lit(", "col(", "expr(", "F.", "T."]
-
-                elif backend == DataFrameBackends.POLARS:
-                    # Imports required to evaluate expressions
-                    import polars as pl  # noqa: F401
-                    from polars import col  # noqa: F401
-                    from polars import lit  # noqa: F401
-                    from polars import sql_expr  # noqa: F401
-
-                    targets = ["lit(", "col(", "sql_expr(", "pl."]
+                    v = v.replace("nw.sql_expr", "sql_expr")
 
                 else:
-                    raise NotImplementedError()
+                    if backend == DataFrameBackends.PYSPARK:
+                        import pyspark.sql.functions as F  # noqa: F401
+                        import pyspark.sql.types as T  # noqa: F401
+                        from pyspark.sql.functions import col  # noqa: F401
+                        from pyspark.sql.functions import expr  # noqa: F401
+                        from pyspark.sql.functions import lit  # noqa: F401
 
-            for f in targets:
-                if f in v:
+                    elif backend == DataFrameBackends.POLARS:
+                        import polars as pl  # noqa: F401
+                        from polars import col  # noqa: F401
+                        from polars import lit  # noqa: F401
+                        from polars import sql_expr  # noqa: F401
+
+                    else:
+                        raise NotImplementedError()
+
+                try:
                     v = eval(v)
-                    break
+                except SyntaxError:
+                    logger.warning(
+                        f"Could not evaluate '{v}' as a Python expression — treating as a plain string literal."
+                    )
 
         return v
 
