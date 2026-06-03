@@ -86,7 +86,7 @@ def _get_stack_resource_key(resource) -> str:
 def plan_resource(resource, env_name="dev"):
     """Wrap a resource in a minimal Stack and run terraform plan.
 
-    Requires DATABRICKS_HOST and DATABRICKS_TOKEN env vars — call
+    Requires DATABRICKS_HOST and DATABRICKS_TOKEN env vars - call
     skip_terraform_plan() before this function in tests.
     """
     from laktory.models.stacks.stack import Stack
