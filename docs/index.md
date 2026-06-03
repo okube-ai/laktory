@@ -23,15 +23,15 @@ operations, reducing complexity and enhancing productivity.
 <img src="images/diagrams/laktory_diagram.png" alt="what is laktory" width="800"/>
 
 Since Laktory pipelines are built on top of Narwhals, they can run in
-any environment that supports python—from your local machine to a Kubernetes 
+any environment that supports python-from your local machine to a Kubernetes 
 cluster. Pipelines can be orchestrated using tools like Apache Airflow or
 deployed directly as Databricks Jobs or
 [Lakeflow Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines),
 offering both flexible and fully managed execution options.
 
 But Laktory goes beyond data pipelines. It empowers you to define and deploy 
-your entire Databricks data platform—from Unity Catalog and access grants
-to compute and quality monitoring—providing a complete, modern solution
+your entire Databricks data platform-from Unity Catalog and access grants
+to compute and quality monitoring-providing a complete, modern solution
 for data platform management.
 
 ## Why Laktory?
@@ -54,8 +54,8 @@ Adopting a [DataOps](concepts/dataops.md) approach and writing data pipelines as
 more reliable production releases. With Laktory, you can run and debug your
 pipelines directly from your favorite IDE before deploying to Databricks,
 allowing for rapid iteration. With Laktory taking care of read, write and DAG
-generation, you can concentrate on what matters most—business logic and creating
-value—while minimizing boilerplate code.
+generation, you can concentrate on what matters most-business logic and creating
+value-while minimizing boilerplate code.
 
 <img src="images/diagrams/dataops_diagram.png" alt="dataops" width="400"/>
 

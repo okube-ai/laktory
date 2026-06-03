@@ -27,5 +27,5 @@ Okube is proud to partner with [Intelli5](https://www.intelli5.com/), a Montreal
 provider of strategic consulting services and advanced technology solutions.
 
 Intelli5 Consulting actively promotes Laktory and backs it with comprehensive, long-term
-support for businesses—ensuring that from initial deployment to ongoing maintenance, 
+support for businesses-ensuring that from initial deployment to ongoing maintenance, 
 they’ve got you covered.

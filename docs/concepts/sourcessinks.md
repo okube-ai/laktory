@@ -32,7 +32,7 @@ nodes:
 ```
 
 When a node has only one source, `name` is optional and the source is accessible as `{df}` in transformer
-expressions (which always refers to the flowing DataFrame — the primary source for the first step, and the output
+expressions (which always refers to the flowing DataFrame - the primary source for the first step, and the output
 of the previous step for subsequent ones).
 
 ```yaml

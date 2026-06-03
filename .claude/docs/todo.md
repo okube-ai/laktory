@@ -28,7 +28,7 @@ Issues that need to be resolved
 
 | # | Description                                          |
 |---|------------------------------------------------------|
-| ~~B1~~ | ~~`DataFrameMethodArg.value` deserialized as plain dict when `DataSourcesUnion \| Any` strict-mode enum coercion fails for `dataframe_backend` string — fixed via `parse_datasource_value` field_validator (PR #573)~~ ✓ |
+| ~~B1~~ | ~~`DataFrameMethodArg.value` deserialized as plain dict when `DataSourcesUnion \| Any` strict-mode enum coercion fails for `dataframe_backend` string - fixed via `parse_datasource_value` field_validator (PR #573)~~ ✓ |
 | ~~B2~~ | ~~`DType(name="Datetime").to_pyspark()` returns `TimestampNTZType()` instead of `TimestampType()`. Root cause: `to_narwhals()` calls `nw.Datetime()` with no `time_zone`, and Narwhals only maps to `TimestampType` when a timezone is set. Fix: add `time_unit` and `time_zone` fields to `DType` and thread them through `to_narwhals()` for `Datetime`/`Duration` types.~~ ✓ |
 | ~~B3~~ | ~~`TableDataSink.create(df)` is called before `write()` during pipeline node execution and creates the table from the raw DataFrame schema. When `merge_cdc_options.scd_type == 2`, the merge logic in `DataSinkMergeCDCOptions._init_target()` is responsible for creating the table with extra SCD type 2 columns (`__hash_cols`, `__start_at`, `__end_at`), but it is skipped because the table already exists. Fix: in `TableDataSink.create()`, when `merge_cdc_options` is set, delegate to `_init_target()` so the correct schema (including SCD2 extra columns) is used.~~ ✓ |
 
@@ -46,7 +46,7 @@ Internal improvements
 
  
 ## 4. Architecture
-
+ 
 Internal improvements
 
 
@@ -54,4 +54,4 @@ Internal improvements
 |----|-------------------------------------------------------------------------------------------------------------------|
 | A1 | How can I ensure that Claude / GPT knows Laktory and use cases so that users can benefit from it ? MCP?           |
 | A2 | How can I offer an AI first solution? Agents that understand lineage and proposes solutions from natural language |
-| ~~A3~~ | ~~**Refactor `DataFrameMethodArg.eval()` magic-token dispatch** — replaced backend-specific token lists with a `"(" in v` heuristic; `eval()` is now attempted for any string containing a function call, with `SyntaxError` caught and logged as a warning (plain string fallback). Problems 1 and 3 were already resolved prior to this fix.~~ ✓ |
+| ~~A3~~ | ~~**Refactor `DataFrameMethodArg.eval()` magic-token dispatch** - replaced backend-specific token lists with a `"(" in v` heuristic; `eval()` is now attempted for any string containing a function call, with `SyntaxError` caught and logged as a warning (plain string fallback). Problems 1 and 3 were already resolved prior to this fix.~~ ✓ |

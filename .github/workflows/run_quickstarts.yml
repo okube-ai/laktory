@@ -99,7 +99,7 @@ jobs:
 
   # ── Tier 5: destroy unity-catalog ──────────────────────────────────────────
   # Waits for both destroy-workflows and destroy-workspace to complete.
-  # Accepts 'skipped' for either destroy (meaning its deploy failed — nothing to wait for).
+  # Accepts 'skipped' for either destroy (meaning its deploy failed - nothing to wait for).
 
   destroy-unity-catalog:
     needs: [deploy-unity-catalog, destroy-workflows, destroy-workspace]

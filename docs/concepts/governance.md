@@ -4,8 +4,8 @@ workspace objects, and **grants** for data access through Unity Catalog.
 
 | Concern | Field | Objects | Examples |
 |---------|-------|---------|---------|
-| Workspace access control — who can run, manage, or view a workspace object | `access_controls` | Cluster, Job, Warehouse, Pipeline, Notebook, Dashboard, … | `CAN_RUN`, `CAN_MANAGE`, `CAN_VIEW` |
-| Data governance — who can access data | `grant` / `grants` | Catalog, Schema, Table, Volume, ExternalLocation, … | `SELECT`, `USE_CATALOG`, `WRITE_VOLUME` |
+| Workspace access control - who can run, manage, or view a workspace object | `access_controls` | Cluster, Job, Warehouse, Pipeline, Notebook, Dashboard, … | `CAN_RUN`, `CAN_MANAGE`, `CAN_VIEW` |
+| Data governance - who can access data | `grant` / `grants` | Catalog, Schema, Table, Volume, ExternalLocation, … | `SELECT`, `USE_CATALOG`, `WRITE_VOLUME` |
 
 These two concerns are completely independent: a user can have permission to run a job without
 having any access to the data it reads, and vice versa.
@@ -17,7 +17,7 @@ It provides a central location to administer and audit data access.
 
 More information available [here](https://learn.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog/best-practices)
 
-## Grants — Data Governance
+## Grants - Data Governance
 
 ??? "API Documentation"
     [`laktory.models.resources.databricks.Grant`][laktory.models.resources.databricks.Grant]<br>
@@ -26,7 +26,7 @@ More information available [here](https://learn.microsoft.com/en-us/azure/databr
 Grants define **who has access to what data**. A privilege (like `SELECT` or `WRITE_VOLUME`) is
 granted to a principal (user, group, or service principal) on a Unity Catalog securable object
 (catalog, schema, table, volume, external location, etc.). Grants are entirely decoupled from
-workspace operations — granting `SELECT` on a table does not allow a user to run the pipeline
+workspace operations - granting `SELECT` on a table does not allow a user to run the pipeline
 that produces it.
 
 The full list of privileges and securable objects is described
@@ -35,10 +35,10 @@ The full list of privileges and securable objects is described
 Resources that Laktory creates (Catalog, Schema, Table, Volume, etc.) expose two fields for
 defining grants inline:
 
-- `grant` — non-destructive: adds or updates privileges for the listed principal(s) without
+- `grant` - non-destructive: adds or updates privileges for the listed principal(s) without
   removing grants for other principals. Use when access is also managed from other sources
   (Databricks UI, another tool).
-- `grants` — full replacement: replaces **all** existing grants on the resource, including
+- `grants` - full replacement: replaces **all** existing grants on the resource, including
   those set outside Laktory. Use only when Laktory is the sole source of truth for this
   resource's access.
 
@@ -62,13 +62,13 @@ defining grants inline:
             - SELECT
 ```
 
-## Access Controls — Workspace Operations
+## Access Controls - Workspace Operations
 
 ??? "API Documentation"
     [`laktory.models.resources.databricks.Permissions`][laktory.models.resources.databricks.Permissions]<br>
     [`laktory.models.resources.databricks.AccessControl`][laktory.models.resources.databricks.AccessControl]<br>
 
-`access_controls` defines **who can perform operations on workspace objects** — execute a job,
+`access_controls` defines **who can perform operations on workspace objects** - execute a job,
 restart a cluster, view a notebook, manage a dashboard. This is fully independent of data access:
 a user with `CAN_RUN` on a job can trigger it without having any `SELECT` privilege on the tables
 it reads.
@@ -119,11 +119,11 @@ data grants:
 * `domain-engineering`
 
 Groups prefixed with `role-` govern workspace operations: who can run a pipeline, manage a
-cluster, or modify a dashboard — but they grant no access to data itself. Groups prefixed with
+cluster, or modify a dashboard - but they grant no access to data itself. Groups prefixed with
 `domain-` govern data access: who can read or write data in a given business domain.
 
-For example, John Doe — a data engineer working with the finance department — would be assigned
-to both `role-engineer` and `domain-finance`, while Jane Doe — an HR data analyst — would be
+For example, John Doe - a data engineer working with the finance department - would be assigned
+to both `role-engineer` and `domain-finance`, while Jane Doe - an HR data analyst - would be
 assigned to `role-analyst` and `domain-hr`.
 
 ## Implementation
