@@ -232,7 +232,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
             # previously_managed is read from the table's own TBLPROPERTIES (pipe-delimited
             # to avoid corrupting the DESCRIBE EXTENDED comma-based parser). This provides
             # cross-run state without external storage, so only Laktory-managed properties
-            # are ever unset — system properties are never touched.
+            # are ever unset - system properties are never touched.
             previously_managed = set(
                 k.strip()
                 for k in self.current.properties.get(_LAKTORY_MANAGED_KEY, "").split(

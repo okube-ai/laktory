@@ -30,7 +30,7 @@ class CustomWriter(BaseModel, PipelineChild):
 
     where `df` is the DataFrame (native or Narwhals depending on the sink's
     `dataframe_api` setting). Laktory optionally injects a `laktory_context`
-    keyword argument containing pipeline runtime objects — declare it in your
+    keyword argument containing pipeline runtime objects - declare it in your
     function signature to opt in.
 
     Examples

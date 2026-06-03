@@ -25,9 +25,9 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
 
     Generates three artifacts into `build_root/pipelines/`:
 
-    - `laktory_sdp.py` — Python definition script with `@dp.materialized_view` / `@dp.table` decorators
-    - `{pipeline_name}.json` — serialized pipeline configuration
-    - `{pipeline_name}-spec.yml` — SDP YAML spec pointing to the script and config
+    - `laktory_sdp.py` - Python definition script with `@dp.materialized_view` / `@dp.table` decorators
+    - `{pipeline_name}.json` - serialized pipeline configuration
+    - `{pipeline_name}-spec.yml` - SDP YAML spec pointing to the script and config
 
     References
     ----------
@@ -257,7 +257,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
                         warehouse_root = warehouse_root / f"{schema_name}.db"
 
                     if sink.catalog_name:
-                        # Unity Catalog — table accessible via catalog directly
+                        # Unity Catalog - table accessible via catalog directly
                         node._output_df = sink.as_source().read()
                     else:
                         dataframe_path = warehouse_root / sink.table_name

@@ -18,7 +18,7 @@ class CustomReader(BaseModel, PipelineChild):
     user full control over how data is read.
 
     The function must return a DataFrame (native or Narwhals). Laktory optionally injects
-    a `laktory_context` keyword argument — declare it in your function signature
+    a `laktory_context` keyword argument - declare it in your function signature
     to opt in:
 
     ```python
