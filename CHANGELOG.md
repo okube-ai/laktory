@@ -13,6 +13,8 @@
 * Refactored Lakehouse Declarative Pipeline script to use latest API (`apply_changes` -> `create_auto_cdc_flow`)
 * CLI `--dbks-job` / `--dbks-pipeline` flags replaced by `--databricks-job` / `--databricks-pipeline`
 * `PipelineNode.source` field removed — use `PipelineNode.sources` (dict) instead. YAML using `source:` is automatically migrated; Python code accessing `.source` directly must be updated.
+### Fixed
+* Table creation when cdc_merge_options with SCD_TYPE 2 is used
 
 ## [0.11.10] - 2026-05-20
 ### Added
