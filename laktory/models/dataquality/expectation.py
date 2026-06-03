@@ -80,7 +80,7 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     References
     ----------
     * [Data Quality](https://www.laktory.ai/concepts/dataquality/)
-    * [DLT Table Expectations](https://docs.databricks.com/en/delta-live-tables/expectations.html)
+    * [Pipeline Expectations](https://docs.databricks.com/aws/en/ldp/expectations)
     """
 
     action: Literal["WARN", "DROP", "QUARANTINE", "FAIL"] = Field(
@@ -187,27 +187,50 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_dlt_compatible(self) -> bool:
-        """Expectation is supported by DLT"""
+    def is_ldp_compatible(self) -> bool:
+        """Expectation is supported by LDP natively via @dp.expect_* decorators"""
         return self.expr.type == "SQL" and self.type == "ROW"
 
     @property
-    def is_dlt_managed(self) -> bool:
-        """Expectation is DLT-compatible and pipeline node is executed by DLT"""
+    def is_sdp_compatible(self) -> bool:
+        """Expectation is supported by SDP natively via @dp.expect_* decorators"""
+        # Open-source SDP (pyspark.pipelines) does not expose @dp.expect_* decorators yet.
+        return False
 
-        if not self.is_dlt_compatible:
+    @property
+    def is_ldp_managed(self) -> bool:
+        """Expectation is LDP-compatible and pipeline node is executing inside LDP"""
+
+        if not self.is_ldp_compatible:
             return False
 
         pl = self.parent_pipeline
         if pl is None:
             return False
 
-        if not pl.is_orchestrator_dlt:
+        if not pl.is_orchestrator_ldp:
             return False
 
-        from laktory import is_dlt_execute
+        from laktory import is_ldp_execute
 
-        return is_dlt_execute()
+        return is_ldp_execute()
+
+    @property
+    def is_sdp_managed(self) -> bool:
+        """True when the expectation is delegated to the SDP runtime via @dp.expect_*."""
+        if not self.is_sdp_compatible:
+            return False
+
+        pl = self.parent_pipeline
+        if pl is None:
+            return False
+
+        if not pl.is_orchestrator_sdp:
+            return False
+
+        from laktory import is_sdp_execute
+
+        return is_sdp_execute()
 
     @property
     def is_streaming_compatible(self):

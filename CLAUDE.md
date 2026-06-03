@@ -6,7 +6,7 @@ Laktory is a DataOps and ETL framework for building lakehouses on Databricks. It
 - **Data pipeline definitions** as code (transformations, sources, sinks)
 - **Infrastructure-as-Code** for Databricks resources (Unity Catalog, compute, access grants)
 - **Multi-backend dataframe support** via Narwhals (Spark and Polars)
-- **Multiple orchestrator support** (local, Databricks Jobs/DLT Pipelines, Apache Airflow)
+- **Multiple orchestrator support** (local, Databricks Jobs/Declarative Pipelines, Apache Airflow)
 
 ## Tech Stack
 
@@ -87,3 +87,5 @@ Check these files when working on related topics:
 | `.claude/docs/strategic_roadmap.md` | Planned direction: dropping Pulumi, DABs integration, Terraform schema generation, scope decisions |
 | `.claude/docs/documentation_system.md` | Full reference for the MkDocs stack, griffe extension, doc stub automation, and VariableType fix — Claude owns this system |
 | `.claude/docs/testing.md` | Test setup, markers, fixtures, backend parametrization, and live test credentials |
+| `.claude/docs/spark_declarative_pipelines.md` | SDP (`pyspark.pipelines`) API, dependency tracking, read patterns, constraints, and F6 integration notes |
+| `.claude/docs/placeholder_convention.md` | Variable / Expression / Reference naming convention; the `$` rule; where each applies |

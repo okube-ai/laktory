@@ -15,7 +15,8 @@ Things that would be nice for the user and enhance usability.
 | ~~F3~~ | ~~Add lookup existing resources on all relevant resources~~ ✓                                                                                              |
 | ~~F4~~ | ~~Better error message. During validation, it's almost impossible to understand what's going on because multiple models are possible (sources / sinks)~~ ✓ |
 | ~~F5~~ | ~~Let the user run SQL tasks on warehouse instead of job compute~~ Too complex (metadata, full refresh, local execution) for the added benefits.           |
-| F6     | Integration of Spark-native declarative piplines                                                                                                           |
+| ~~F6~~ | ~~Integration of Spark-native declarative piplines~~ ✓                                                                                                    |
+| F8     | Expand `TableDataSink.format` beyond `Literal["PARQUET", "DELTA"]` to include ORC and AVRO (Spark `USING` clause supports them for managed Hive tables)   |
 | ~~F7~~ | ~~Allow the user to pass variables through the CLI~~ `--var key=value` (repeatable) and `--var-file` (YAML); auto-discovers `variables.yaml` next to stack ✓ |
 
 
@@ -28,6 +29,8 @@ Issues that need to be resolved
 | # | Description                                          |
 |---|------------------------------------------------------|
 | ~~B1~~ | ~~`DataFrameMethodArg.value` deserialized as plain dict when `DataSourcesUnion \| Any` strict-mode enum coercion fails for `dataframe_backend` string — fixed via `parse_datasource_value` field_validator (PR #573)~~ ✓ |
+| B2 | `DType(name="Datetime").to_pyspark()` returns `TimestampNTZType()` instead of `TimestampType()`. Root cause: `to_narwhals()` calls `nw.Datetime()` with no `time_zone`, and Narwhals only maps to `TimestampType` when a timezone is set. Fix: add `time_unit` and `time_zone` fields to `DType` and thread them through `to_narwhals()` for `Datetime`/`Duration` types. |
+| B3 | `TableDataSink.create(df)` is called before `write()` during pipeline node execution and creates the table from the raw DataFrame schema. When `merge_cdc_options.scd_type == 2`, the merge logic in `DataSinkMergeCDCOptions._init_target()` is responsible for creating the table with extra SCD type 2 columns (`__hash_cols`, `__start_at`, `__end_at`), but it is skipped because the table already exists. Fix: in `TableDataSink.create()`, when `merge_cdc_options` is set, either skip table creation entirely (delegating to `_init_target()`) or append the SCD type 2 extra columns to the schema before creating. |
 
 ## 3. Internal
 

@@ -22,7 +22,7 @@ After running the quickstart command, the following structure is created:
 │   ├── pyproject.toml
 │   └── README.md
 ├── notebooks
-│   ├── dlt_laktory_pl.py
+│   ├── laktory_ldp.py
 │   └── job_hello.py
 ├── read_env.sh
 ├── requirements.txt
@@ -30,7 +30,7 @@ After running the quickstart command, the following structure is created:
 │   ├── dbfsfiles.yaml
 │   ├── job-hello.yaml
 │   ├── notebooks.yaml
-│   ├── pl-stocks-dlt.yaml
+│   ├── pl-stocks-ldp.yaml
 │   ├── pl-stocks-job.yaml
 │   └── pythonpackages.yaml
 ├── scripts
@@ -186,16 +186,16 @@ only showing top 10 rows
 You can now run your pipeline either from the Databricks UI or using the Laktory CLI:
 
 ```cmd
-laktory run --env dev --dbks-job pl-stock-job
+laktory run --env dev --databricks-job pl-stock-job
 ```
 This will start the pipeline run and provide real-time status updates for each task in the job. The output will show the
 job's progress, including any tasks that are pending, running, or completed.
 
 <div class="code-output">
 ```cmd
-(laktory) osoucy@countach workflows % laktory run --env dev --dbks-job job-pl-stocks
+(laktory) osoucy@countach workflows % laktory run --env dev --databricks-job job-pl-stocks
 INFO - Getting id for job job-pl-stocks
-INFO - Getting id for pipeline pl-stocks-dlt
+INFO - Getting id for pipeline pl-stocks-ldp
 INFO - Getting id for job job-hello
 INFO - Job job-pl-stocks run started...
 INFO - Job job-pl-stocks run URL: https://adb-2211091707396001.1.azuredatabricks.net/?o=2211091707396001#job/477749343826649/run/971871528017861

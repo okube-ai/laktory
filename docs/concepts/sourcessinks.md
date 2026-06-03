@@ -9,6 +9,42 @@ It is generally used as a component of a [pipeline](pipeline.md) node. In this
 context, the sink may be used to store the output of the node or some
 quarantined data if [expectations](dataquality.md) are set and not met.
 
+#### Naming Sources
+A pipeline node can declare one or more sources via its `sources` list. Each source accepts an optional `name` field.
+The name is used to reference that source inside [transformer](transformer.md) expressions using the
+`{sources.name}` placeholder:
+
+```yaml
+nodes:
+- name: slv_stocks
+  sources:
+  - name: prices        # referenced as {sources.prices}
+    node_name: brz_stock_prices
+  - name: metadata      # referenced as {sources.metadata}
+    node_name: brz_stock_metadata
+    selects: [symbol, currency]
+  transformer:
+    nodes:
+    - func_name: join
+      func_kwargs:
+        other: "{sources.metadata}"
+        on: symbol
+```
+
+When a node has only one source, `name` is optional and the source is accessible as `{df}` in transformer
+expressions (which always refers to the flowing DataFrame — the primary source for the first step, and the output
+of the previous step for subsequent ones).
+
+```yaml
+nodes:
+- name: slv_stock_prices
+  sources:
+  - node_name: brz_stock_prices   # no name needed for a single source
+  transformer:
+    nodes:
+    - expr: SELECT symbol, open, close FROM {df}
+```
+
 
 #### File Data Source
 ??? "API Documentation"
@@ -102,7 +138,7 @@ This type of data source adapts to its execution context.
   the upstream node.
 * Multi-Workers Execution: The source uses the upstream node sink as a source 
   for read the dataframe.
-* DLT Execution: The source uses `dlt.read()` and `dlt,read_stream()` to read 
+* Declarative Pipeline Execution: The source uses `spark.read()` and `spark.readStream()` to read 
   data from the upstream node.
      
 

@@ -633,7 +633,7 @@ def test_stream_scd2(tmp_path, backend):
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
-def test_dlt_kwargs(tmp_path, backend):
+def test_ldp_kwargs(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
 
@@ -656,7 +656,7 @@ def test_dlt_kwargs(tmp_path, backend):
     assert sink.merge_cdc_options.target_name == "my_table"
     assert sink.merge_cdc_options.target_path is None
 
-    assert sink.dlt_apply_changes_kwargs == {
+    assert sink.ldp_auto_cdc_flow_kwargs == {
         "apply_as_deletes": "_is_deleted = true",
         "column_list": None,
         "except_column_list": ["_is_deleted"],

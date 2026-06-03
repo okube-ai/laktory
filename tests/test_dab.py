@@ -2,15 +2,13 @@
 Tests for DABs integration features:
   - build_root setting
   - PipelineConfigWorkspaceFile.source / build()
-  - DatabricksPipelineOrchestrator.to_dab_resource()
-  - DatabricksJobOrchestrator.to_dab_resource()
+  - LakeflowDeclarativePipelineOrchestrator.to_dab_resource()
+  - LakeflowJobOrchestrator.to_dab_resource()
   - laktory.dab.build_resources() — folder-scan approach
   - ${var.x} syntax support (DABs-style variable prefix)
 """
 
-import io
 import json
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -24,22 +22,60 @@ from laktory._settings import settings
 # Helpers
 # ---------------------------------------------------------------------------
 
-data_dir = Path(__file__).parent / "data"
+_LDP_ORCH = {
+    "type": "LAKEFLOW_DECLARATIVE_PIPELINE",
+    "catalog": "dev",
+    "schema": "sandbox",
+}
 
 
 def _get_pl_dlt():
-    """Load DLT pipeline from pl_dlt.yaml."""
-    filepath = data_dir / "pl_dlt.yaml"
-    with open(filepath) as fp:
-        data = fp.read().replace("{tmp_path}", "")
-    return models.Pipeline.model_validate_yaml(io.StringIO(data))
+    """Minimal LDP pipeline for DABs resource tests."""
+    return models.Pipeline.model_validate(
+        {
+            "name": "pl-declarative",
+            "orchestrator": _LDP_ORCH,
+            "nodes": [
+                {
+                    "name": "brz",
+                    "sources": [{"format": "JSON", "path": "/brz_source/"}],
+                    "sinks": [{"table_name": "brz"}],
+                },
+                {
+                    "name": "slv",
+                    "sources": [{"node_name": "brz"}],
+                    "sinks": [{"table_name": "slv"}],
+                },
+            ],
+        }
+    )
 
 
 def _get_pl_job():
-    """Load Job pipeline from test helpers."""
-    from tests.resources.test_pipeline_orchestrators import get_pl_job
-
-    return get_pl_job()
+    """Minimal pipeline with a LakeflowJobOrchestrator for DABs resource tests."""
+    return models.Pipeline(
+        name="pl-job",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                sources=[{"format": "JSON", "path": "/brz_source/"}],
+                sinks=[{"format": "PARQUET", "mode": "APPEND", "path": "/brz_sink/"}],
+            ),
+        ],
+        orchestrator={
+            "type": "LAKEFLOW_JOB",
+            "name": "pl-job",
+            "job_clusters": [
+                {
+                    "job_cluster_key": "node-cluster",
+                    "new_cluster": {
+                        "node_type_id": "Standard_DS3_v2",
+                        "spark_version": "16.3.x-scala2.12",
+                    },
+                }
+            ],
+        },
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -87,7 +123,7 @@ def test_config_file_build_writes_json(monkeypatch, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# DatabricksPipelineOrchestrator.to_dab_resource()
+# LakeflowDeclarativePipelineOrchestrator.to_dab_resource()
 # ---------------------------------------------------------------------------
 
 
@@ -104,12 +140,12 @@ def test_dlt_to_dab_resource_returns_pipeline_type(monkeypatch, tmp_path):
 
 
 def test_dlt_to_dab_resource_copies_notebook(monkeypatch, tmp_path):
-    """to_dab_resource() copies dlt_laktory_pl.py to build_root/pipelines/."""
+    """to_dab_resource() copies ldp_laktory_pl.py to build_root/pipelines/."""
     monkeypatch.setattr(settings, "build_root", str(tmp_path))
     (tmp_path / "pipelines").mkdir(parents=True, exist_ok=True)
 
     _get_pl_dlt().orchestrator.to_dab_resource()
-    assert (tmp_path / "pipelines" / "dlt_laktory_pl.py").exists()
+    assert (tmp_path / "pipelines" / "laktory_ldp.py").exists()
 
 
 def test_dlt_to_dab_resource_notebook_path(monkeypatch, tmp_path):
@@ -122,11 +158,11 @@ def test_dlt_to_dab_resource_notebook_path(monkeypatch, tmp_path):
     resource = _get_pl_dlt().orchestrator.to_dab_resource()
     d = resource.as_dict()
     notebook_path = str(d["libraries"][0]["notebook"]["path"])
-    assert notebook_path == f"/Workspace{workspace_root}pipelines/dlt_laktory_pl"
+    assert notebook_path == f"/Workspace{workspace_root}pipelines/laktory_ldp"
 
 
 # ---------------------------------------------------------------------------
-# DatabricksJobOrchestrator.to_dab_resource()
+# LakeflowJobOrchestrator.to_dab_resource()
 # ---------------------------------------------------------------------------
 
 
@@ -157,13 +193,13 @@ _FAKE_WORKSPACE_ROOT = "/Workspace/Users/test/.bundle/myapp/dev"
 _PIPELINE_DLT_YAML = """\
 name: pl-stocks
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: dev
   schema: sandbox
 nodes:
   - name: brz_stocks
-    source:
-      table_name: samples.nyctaxi.trips
+    sources:
+    - table_name: samples.nyctaxi.trips
     sinks:
       - table_name: brz_stocks
 """
@@ -172,13 +208,13 @@ nodes:
 _PIPELINE_WITH_VAR_YAML = """\
 name: pl-${var.env}
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: ${var.env}
   schema: sandbox
 nodes:
   - name: brz_stocks
-    source:
-      table_name: samples.nyctaxi.trips
+    sources:
+    - table_name: samples.nyctaxi.trips
     sinks:
       - table_name: brz_stocks
 """
@@ -189,13 +225,13 @@ name: pl-${var.env}
 variables:
   env: prod
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   catalog: ${var.env}
   schema: sandbox
 nodes:
   - name: brz_stocks
-    source:
-      table_name: samples.nyctaxi.trips
+    sources:
+    - table_name: samples.nyctaxi.trips
     sinks:
       - table_name: brz_stocks
 """

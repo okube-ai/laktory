@@ -22,11 +22,14 @@ from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
 from laktory.models.pipeline.orchestrators.airfloworchestrator import (
     AirflowOrchestrator,
 )
-from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
-    DatabricksJobOrchestrator,
+from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
+    LakeflowDeclarativePipelineOrchestrator,
 )
-from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
-    DatabricksPipelineOrchestrator,
+from laktory.models.pipeline.orchestrators.lakeflowjoborchestrator import (
+    LakeflowJobOrchestrator,
+)
+from laktory.models.pipeline.orchestrators.sparkdeclarativepipelineorchestrator import (
+    SparkDeclarativePipelineOrchestrator,
 )
 from laktory.models.pipeline.pipelinenode import PipelineNode
 from laktory.models.pipelinechild import PipelineChild
@@ -177,7 +180,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         name: pl-stocks-job
         dataframe_backend: PYSPARK
         orchestrator:
-          type: DATABRICKS_JOB
+          type: LAKEFLOW_JOB
           serverless_environment_version: "5"
 
         nodes:
@@ -247,7 +250,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         """,
     )
     orchestrator: (
-        DatabricksJobOrchestrator | DatabricksPipelineOrchestrator | AirflowOrchestrator
+        LakeflowJobOrchestrator
+        | LakeflowDeclarativePipelineOrchestrator
+        | SparkDeclarativePipelineOrchestrator
+        | AirflowOrchestrator
     ) = Field(
         None,
         description="""
@@ -255,16 +261,16 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         selected option defines which resources are to be deployed.
         Supported options are instances of classes:
 
-        - `DatabricksJobOrchestrator`: When deployed through a Databricks Job, a task
+        - `LakeflowJobOrchestrator`: When deployed through a Lakeflow Job, a task
           is created for each pipeline node and all the required dependencies
           are set automatically. If a given task (or pipeline node) uses a
           `PipelineNodeDataSource` as the source, the data will be read from
           the upstream node sink.
-        - `DatabricksPipelineOrchestrator`: When orchestrated through Databricks DLT, each
-          pipeline node creates a DLT table (or view, if no sink is defined).
-          Behind the scenes, `PipelineNodeDataSource` leverages native `dlt`
-          `read` and `read_stream` functions to defined the interdependencies
-          between the tables as in a standard DLT pipeline.
+        - `LakeflowDeclarativePipelineOrchestrator`: When orchestrated through Lakeflow
+          Spark Declarative Pipelines, each pipeline node creates a table (or view). 
+          Behind the scenes, `PipelineNodeDataSource` leverages
+          native `spark` `read` and `read_stream` functions to define the
+          interdependencies between the tables as in a standard declarative pipeline.
         """,
         # discriminator="type",  # discriminator can't be used because BaseModel adds
         # str to Literal type to support variables
@@ -289,13 +295,28 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         pl_name = data.get("name", None)
 
+        # Hard break for 0.11 type strings
+        _renamed = {
+            "DATABRICKS_PIPELINE": "LAKEFLOW_DECLARATIVE_PIPELINE",
+            "DATABRICKS_JOB": "LAKEFLOW_JOB",
+        }
+        if o and isinstance(o, dict):
+            old_type = o.get("type", None)
+            if old_type in _renamed:
+                raise ValueError(
+                    f"Orchestrator type '{old_type}' was renamed in Laktory 0.12. "
+                    f"Update your pipeline YAML: type: {_renamed[old_type]}"
+                )
+
         # orchestrator as a dict
         if o and isinstance(o, dict):
-            if o.get("type", None) in ["DATABRICKS_JOB", "DATABRICKS_PIPELINE"]:
+            if o.get("type", None) in ["LAKEFLOW_JOB", "LAKEFLOW_DECLARATIVE_PIPELINE"]:
                 o["name"] = o.get("name", None) or pl_name
 
         # orchestrator as a model
-        elif isinstance(o, (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator)):
+        elif isinstance(
+            o, (LakeflowDeclarativePipelineOrchestrator, LakeflowJobOrchestrator)
+        ):
             o.name = o.name or pl_name
         return data
 
@@ -308,7 +329,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         o = self.orchestrator
 
         for n in self.nodes:
-            if isinstance(o, DatabricksPipelineOrchestrator):
+            if isinstance(o, LakeflowDeclarativePipelineOrchestrator):
                 for i, s in enumerate(n.sinks):
                     if not isinstance(
                         s,
@@ -319,7 +340,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                         ),
                     ):
                         raise ValueError(
-                            f"Node '{n.name}' sinks[{i}] ({type(s)}) is not supported with DLT orchestrator"
+                            f"Node '{n.name}' sinks[{i}] ({type(s)}) is not supported with Lakeflow Declarative Pipeline orchestrator"
                         )
 
         return self
@@ -392,9 +413,14 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def is_orchestrator_dlt(self) -> bool:
-        """If `True`, pipeline orchestrator is DLT"""
-        return isinstance(self.orchestrator, DatabricksPipelineOrchestrator)
+    def is_orchestrator_ldp(self) -> bool:
+        """If `True`, pipeline orchestrator is Lakeflow Declarative Pipelines"""
+        return isinstance(self.orchestrator, LakeflowDeclarativePipelineOrchestrator)
+
+    @property
+    def is_orchestrator_sdp(self) -> bool:
+        """If `True`, pipeline orchestrator is Spark Declarative Pipelines"""
+        return isinstance(self.orchestrator, SparkDeclarativePipelineOrchestrator)
 
     def to_airflow_dag(self, **dag_kwargs):
         return self.orchestrator.to_airflow(**dag_kwargs)
@@ -415,7 +441,11 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             and self.orchestrator
             and isinstance(
                 self.orchestrator,
-                (DatabricksPipelineOrchestrator, DatabricksJobOrchestrator),
+                (
+                    LakeflowDeclarativePipelineOrchestrator,
+                    LakeflowJobOrchestrator,
+                    SparkDeclarativePipelineOrchestrator,
+                ),
             )
         ):
             root = "/.laktory/"
@@ -549,9 +579,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         logger.info("Purging Pipeline")
 
         for inode, node in enumerate(self.sorted_nodes):
-            node.purge(
-                spark=spark,
-            )
+            node.purge()
 
     def get_execution_plan(
         self,
@@ -589,6 +617,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
+        use_orchestrator: bool = False,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -613,9 +642,35 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             - `*{node_name}`: Execute the node and its upstream dependencies.
             - `{node_name}*`: Execute the node and its downstream dependencies.
             - `*{node_name}*`: Execute the node, its upstream, and downstream dependencies.
+        use_orchestrator:
+            If `True` and an orchestrator is configured, execution is
+            delegated to the orchestrator (e.g. `spark-pipelines run` for SDP)
+            instead of running the pure-Python path. Defaults to `False` so
+            that `pl.execute()` always runs in-process unless explicitly
+            requested. This flag is ignored when already running inside an
+            orchestrator context (e.g. inside `laktory_sdp.py`).
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
+
+        if use_orchestrator:
+            if self.orchestrator is None:
+                raise NotImplementedError(
+                    "use_orchestrator=True requires an orchestrator to be configured."
+                )
+            if not self.is_orchestrator_sdp:
+                raise NotImplementedError(
+                    f"use_orchestrator=True is not supported for orchestrator type '{self.orchestrator.type}'. "
+                    "Only SPARK_DECLARATIVE_PIPELINE supports local execution via use_orchestrator."
+                )
+            from laktory import is_sdp_execute
+
+            if not is_sdp_execute():
+                self.orchestrator.execute(
+                    full_refresh=full_refresh,
+                    selects=selects,
+                )
+                return
 
         plan = self.get_execution_plan(selects=selects)
         node_names = plan.node_names
@@ -752,13 +807,13 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     @property
     def additional_core_resources(self) -> list:
         """
-        if orchestrator is `DLT`:
+        if orchestrator is `LAKEFLOW_DECLARATIVE_PIPELINE`:
 
-        - DLT Pipeline
+        - Lakeflow Declarative Pipeline
 
-        if orchestrator is `DATABRICKS_JOB`:
+        if orchestrator is `LAKEFLOW_JOB`:
 
-        - Databricks Job
+        - Lakeflow Job
         """
 
         resources = []

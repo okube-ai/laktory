@@ -17,26 +17,27 @@ from laktory.models.resources.databricks.pipeline import Pipeline
 logger = get_logger(__name__)
 
 
-class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
+class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
     """
-    Databricks Pipeline used as an orchestrator to execute a Laktory pipeline.
+    Lakeflow Spark Declarative Pipeline used as an orchestrator to execute a
+    Laktory pipeline.
 
-    DLT orchestrator does not support pipeline nodes with views (as opposed to
+    LDP orchestrator does not support pipeline nodes with views (as opposed to
     materialized tables). Also, it does not support writing to multiple
     schemas within the same pipeline.
 
     Selecting this orchestrator requires to add the supporting
-    [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py)
+    [notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/scripts/laktory_ldp.py)
     to the stack.
 
     References
     ----------
     * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
-    * [Databricks DLT](https://www.databricks.com/product/delta-live-tables)
+    * [Lakeflow Spark Declarative Pipelines](https://www.databricks.com/product/delta-live-tables)
     """
 
-    type: Literal["DATABRICKS_PIPELINE"] = Field(
-        "DATABRICKS_PIPELINE", description="Type of orchestrator"
+    type: Literal["LAKEFLOW_DECLARATIVE_PIPELINE"] = Field(
+        "LAKEFLOW_DECLARATIVE_PIPELINE", description="Type of orchestrator"
     )
     config_file: PipelineConfigWorkspaceFile = Field(
         PipelineConfigWorkspaceFile(),
@@ -44,7 +45,7 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
     )
 
     # ----------------------------------------------------------------------- #
-    # Update DLT                                                              #
+    # Update LDP                                                              #
     # ----------------------------------------------------------------------- #
 
     def update_from_parent(self):
@@ -53,7 +54,7 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         for node in pl.nodes:
             if node.is_view:
                 raise ValueError(
-                    f"Node '{node.name}' of pipeline '{pl.name}' is a view which is not supported with DLT orchestrator."
+                    f"Node '{node.name}' of pipeline '{pl.name}' is a view which is not supported with Lakeflow Declarative Pipeline orchestrator."
                 )
 
         for n in pl.nodes:
@@ -70,9 +71,10 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         )
         if self.configuration is None:
             self.configuration = {}
-        self.configuration["pipeline_name"] = pl.name  # only for reference
-        self.configuration["requirements"] = json.dumps(_requirements)
-        self.configuration["config_filepath"] = _path
+        self.configuration["laktory.pipeline_name"] = pl.name  # only for reference
+        self.configuration["laktory.executor"] = "LDP"
+        self.configuration["laktory.requirements"] = json.dumps(_requirements)
+        self.configuration["laktory.config_filepath"] = _path
         # This is to ensure configuration is flagged as set and part of
         # model_fields_set when injecting variables.
         self.configuration = self.configuration
@@ -104,22 +106,17 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
         source_filepath = (
             Path(__file__).parent.parent.parent.parent
             / "resources"
-            / "quickstart-stacks"
-            / "workflows"
-            / "workspacefiles"
-            / "notebooks"
-            / "dlt_laktory_pl.py"
+            / "scripts"
+            / "laktory_ldp.py"
         )
-        target_filepath = Path(settings.build_root) / "pipelines" / "dlt_laktory_pl.py"
+        target_filepath = Path(settings.build_root) / "pipelines" / "laktory_ldp.py"
         shutil.copy(source_filepath, target_filepath)
 
         # Laktory pipelines use a common notebook (copied above). Its path is
         # hardcoded here, but should probably be hardcoded in the base resource as well.
         # TODO: Allow for other libraries?
         notebook_filepath = (
-            Path("/Workspace" + settings.workspace_root)
-            / "pipelines"
-            / "dlt_laktory_pl"
+            Path("/Workspace" + settings.workspace_root) / "pipelines" / "laktory_ldp"
         )
         d["libraries"] = [{"notebook": {"path": notebook_filepath.as_posix()}}]
 
@@ -136,10 +133,6 @@ class DatabricksPipelineOrchestrator(Pipeline, PipelineChild):
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
-
-    @property
-    def resource_type_id(self) -> str:
-        return "dlt-pipeline"
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:

@@ -198,12 +198,13 @@ class FileDataSink(BaseDataSink):
                 )
 
     def _write_spark(self, df, mode) -> None:
+        is_streaming = self.is_streaming(df=df)
         df = df.to_native()
 
         # Format
-        methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)
+        methods = self._get_spark_writer_methods(mode=mode, is_streaming=is_streaming)
 
-        if df.isStreaming:
+        if is_streaming:
             logger.info(
                 f"Writing df to {self.path} with writeStream.{'.'.join([m.as_string for m in methods])}"
             )
@@ -227,6 +228,11 @@ class FileDataSink(BaseDataSink):
 
     def _write_polars(self, df, mode) -> None:
         import polars as pl
+
+        if self.is_streaming():
+            raise TypeError(
+                "Streaming writes are not supported for the Polars backend."
+            )
 
         kwargs, fmt = self._get_polars_kwargs(mode=mode)
 

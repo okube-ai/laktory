@@ -44,6 +44,11 @@ SUPPORTED_MODES = tuple(set(SPARK_MODES + SPARK_STREAMING_MODES + POLARS_DELTA_M
 class BaseDataSink(BaseModel, PipelineChild):
     """Base class for data sinks"""
 
+    as_stream: bool | None = Field(
+        None,
+        description="If `True` output DataFrame is written as Streaming DataFrame. If `None`, write mode is derived from"
+        "DataFrame.",
+    )
     databricks_quality_monitor: Literal[None] = Field(
         None, description="Databricks Quality Monitor"
     )
@@ -136,15 +141,16 @@ class BaseDataSink(BaseModel, PipelineChild):
                     "`custom_writer` and `merge_cdc_options` are mutually exclusive."
                 )
 
-            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
-                DatabricksPipelineOrchestrator,
+            from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
+                LakeflowDeclarativePipelineOrchestrator,
             )
 
             if (
                 self.parent_pipeline
                 and self.parent_pipeline.orchestrator
                 and isinstance(
-                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                    self.parent_pipeline.orchestrator,
+                    LakeflowDeclarativePipelineOrchestrator,
                 )
             ):
                 raise ValueError(
@@ -162,15 +168,16 @@ class BaseDataSink(BaseModel, PipelineChild):
             else:
                 self.merge_cdc_options._parent = self
 
-            from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
-                DatabricksPipelineOrchestrator,
+            from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
+                LakeflowDeclarativePipelineOrchestrator,
             )
 
             if (
                 self.parent_pipeline
                 and self.parent_pipeline.orchestrator
                 and isinstance(
-                    self.parent_pipeline.orchestrator, DatabricksPipelineOrchestrator
+                    self.parent_pipeline.orchestrator,
+                    LakeflowDeclarativePipelineOrchestrator,
                 )
             ):
                 if self.merge_cdc_options.order_by is None:
@@ -221,6 +228,59 @@ class BaseDataSink(BaseModel, PipelineChild):
     def serialize_path(self, value: Path) -> str:
         return value.as_posix()
 
+    def is_streaming(self, df=None) -> bool:
+        """
+        Return `True` if the write should use Spark Structured Streaming.
+
+        Resolution order:
+        1. If a Narwhals-wrapped PySpark DataFrame is provided, read its native
+           ``isStreaming`` attribute.
+        2. Fall back to ``self.as_stream`` (explicit sink configuration).
+        3. Fall back to the parent node's source ``as_stream`` flag.
+        4. Default to ``False`` (static write).
+
+        If both the DataFrame state and the configuration are set and they
+        disagree, a ``TypeError`` is raised to surface the misconfiguration
+        early.
+
+        Parameters
+        ----------
+        df:
+            Optional Narwhals DataFrame or LazyFrame. Must be passed before
+            calling ``.to_native()`` so that the Narwhals ``implementation``
+            attribute is still available.
+        """
+        # Check if DataFrame is streaming
+        df_is_streaming = None
+        if df is not None:
+            df = nw.from_native(df)
+            dataframe_backend = DataFrameBackends(df.implementation)
+            if dataframe_backend == DataFrameBackends.PYSPARK:
+                df_is_streaming = df.to_native().isStreaming
+
+        # Check if configured as stream from writer or source
+        configured_as_stream = self.as_stream
+        if configured_as_stream is None:
+            node = self.parent_pipeline_node
+            if node is not None and node.sources:
+                configured_as_stream = node.has_streaming_source
+
+        # Resolve conflict
+        if df_is_streaming is not None and configured_as_stream is not None:
+            if df_is_streaming != configured_as_stream:
+                if df_is_streaming:
+                    raise TypeError(
+                        "Sink configured as static, but received dataframe is streaming."
+                    )
+                else:
+                    raise TypeError(
+                        "Sink configured as stream, but received dataframe is not streaming."
+                    )
+
+        is_streaming = df_is_streaming or configured_as_stream or False
+
+        return is_streaming
+
     # -------------------------------------------------------------------------------- #
     # CDC                                                                              #
     # -------------------------------------------------------------------------------- #
@@ -234,21 +294,17 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self.merge_cdc_options is not None
 
     @property
-    def dlt_pre_merge_view_name(self):
+    def sdp_pre_merge_view_name(self):
         """
-        DLT view applying node transformer prior to applying CDC changes.
+        SPD view applying node transformer prior to applying CDC changes.
         """
-        return "_" + self.dlt_table_or_view_name.split(".")[-1]
+        return "_" + self.sdp_table_or_view_name.split(".")[-1]
 
     @property
-    def dlt_apply_changes_kwargs(self) -> dict[str, str]:
+    def ldp_auto_cdc_flow_kwargs(self) -> dict[str, str]:
         """
-        Keyword arguments for dlt.apply_changes function
+        Keyword arguments for dp.create_auto_cdc_flow function
         """
-
-        # if not isinstance(self, TableDataSink):
-        #     raise ValueError("DLT only supports `TableDataSink` class")
-
         cdc = self.merge_cdc_options
         return {
             "apply_as_deletes": cdc.delete_where,
@@ -258,7 +314,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             "ignore_null_updates": cdc.ignore_null_updates,
             "keys": cdc.primary_keys,
             "sequence_by": cdc.order_by,
-            "source": self.dlt_pre_merge_view_name,
+            "source": self.sdp_pre_merge_view_name,
             "stored_as_scd_type": cdc.scd_type,
             "target": self.table_name,
             # "track_history_column_list": cdc.track_history_columns,  # NOT SUPPORTED
@@ -388,7 +444,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             # Special Treatment for Spark Streaming
             if (
                 self.dataframe_backend == DataFrameBackends.PYSPARK
-                and df_native.isStreaming
+                and self.is_streaming(df=df)
             ):
                 if self.checkpoint_path is None:
                     raise ValueError(
@@ -460,7 +516,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     # -------------------------------------------------------------------------------- #
 
     def _validate_mode_spark(self, mode, df):
-        if df.to_native().isStreaming:
+        if self.is_streaming(df=df):
             if mode not in SPARK_STREAMING_MODES:
                 raise ValueError(
                     f"Mode '{mode}' is not supported for Spark Streaming DataFrame. Choose from {SPARK_STREAMING_MODES}"

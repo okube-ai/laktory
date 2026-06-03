@@ -3,7 +3,7 @@ up a stack that aligns with the resources you want to deploy. You can choose
 from several templates, each tailored to specific deployment needs:
 
 - `workflows-dab`: Sample Laktory pipelines for use with Databricks Asset Bundles. Configure with YAML. Deploy with DAB.
-- `workflows`: A workspace-based deployment that includes notebooks, notebook jobs and spark-based Laktory job/DLT pipelines.
+- `workflows`: A workspace-based deployment that includes notebooks, notebook jobs and spark-based Laktory job / declarative pipelines.
 - `workspace`: A deployment focused on your Databricks workspace, covering directories, secrets, and SQL warehouses.
 - `unity-catalog`: A deployment targeting your Databricks account, including resources like groups, users, catalogs, and schemas.
 - `local-pipeline`: A polars-based pipeline that can be executed locally.

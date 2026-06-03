@@ -55,16 +55,16 @@ Here is an example of a pipeline declaration:
 
     nodes:
     - name: brz_stock_prices
-      source:
-        path: ./data/stock_prices/
+      sources:
+      - path: ./data/stock_prices/
         format: JSONL
       sinks:
       - path: ./data/brz_stock_prices.parquet
         format: PARQUET
 
     - name: slv_stock_prices
-      source:
-        node_name: brz_stock_prices
+      sources:
+      - node_name: brz_stock_prices
         as_stream: false
       sinks:
       - path: ./data/slv_stock_prices.parquet
@@ -98,10 +98,12 @@ Here is an example of a pipeline declaration:
     
     brz = lk.models.PipelineNode(
         name="brz_stock_prices",
-        source=lk.models.FileDataSource(
-            path="./data/stock_prices/",
-            format="JSONL",
-        ),
+        sources=[
+            lk.models.FileDataSource(
+                path="./data/stock_prices/",
+                format="JSONL",
+            )
+        ],
         sinks=[
             lk.models.FileDataSink(
                 path="./data/brz_stock_prices.parquet",
@@ -113,7 +115,7 @@ Here is an example of a pipeline declaration:
     
     slv = lk.models.PipelineNode(
         name="slv_stock_prices",
-        source=lk.models.PipelineNodeDataSource(node_name="brz_stock_prices"),
+        sources=[lk.models.PipelineNodeDataSource(node_name="brz_stock_prices")],
         sinks=[
             lk.models.FileDataSink(
                 path="./data/slv_stock_prices.parquet",
@@ -248,7 +250,7 @@ configured directly within the pipeline.
 - name: stock_prices
   nodes: ...
   orchestrator: 
-    type: DATABRICKS_PIPELINE
+    type: LAKEFLOW_DECLARATIVE_PIPELINE
     catalog: dev
     target: finance
     
@@ -261,7 +263,7 @@ configured directly within the pipeline.
     
     libraries:
     - notebook:
-        path: /.laktory/dlt/dlt_laktory_pl.py
+        path: /.laktory/ldp/laktory_ldp.py
 ```
 
 The choice of orchestrator determines which resources are deployed when 
@@ -278,58 +280,104 @@ writing operation is entirely handled by Laktory source and sink.
 Each task will call a Laktory function that will read the pipeline configuration 
 and execute a node.
 
-Selecting the `DATABRICKS_JOB` orchestrator will deploy a pipeline json 
+Selecting the `LAKEFLOW_JOB` orchestrator will deploy a pipeline json 
 configuration file which can be found in your workspace under `/Workspace/{runtime_root}/pipelines/{pipeline_name}/`.
 
-#### Databricks Lakeflow Declarative Pipeline
+#### Lakeflow Declarative Pipeline
 [Lakeflow Declarative Pipelines](https://www.databricks.com/product/data-engineering/lakeflow-declarative-pipelines)
 offers features like automatic schema change management, continuous execution, advanced monitoring and 
 autoscaling. 
 
-![dlt](../images/screenshots/dlt_stock_prices.png)
+![ldp](../images/screenshots/ldp_stock_prices.png)
 
-Each pipeline node runs inside a dlt.table() or dlt.view() function. In the context of Declarative Pipelines, node
-execution does not trigger a sink write, as this operation is internally managed by Lakeflow. When a source is a 
-pipeline node, `dlt.read()` and `dlt.read_stream()` functions are called to ensure compatibility with the framework.
+Each pipeline node runs inside a `dp.materialized_view()` or `dp.table()` function. In the context of Declarative
+Pipelines, node execution does not trigger a sink write, as this operation is internally managed by Lakeflow. When
+a source is a pipeline node, `spark.table()` and `spark.readStream.table()` are used to ensure dependency tracking
+within the framework.
 
-To use the `DATABRICKS_PIPELINE` orchestrator, you must also add the supporting
-[notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/notebooks/dlt/dlt_laktory_pl.py) 
+To use the `LAKEFLOW_DECLARATIVE_PIPELINE` orchestrator, you must also add the supporting
+[notebook](https://github.com/okube-ai/laktory/blob/main/laktory/resources/quickstart-stacks/workflows/workspacefiles/notebooks/laktory_ldp.py) 
 to your stack. 
 
 Here is a simplified version:
-```py title="dlt_laktory_pl"
-import dlt
+```py title="laktory_ldp.py"
+from pyspark import pipelines as dp
 
 import laktory as lk
 
-with open("pipeline.yaml") as fp:
-    pl = lk.models.Pipeline.model_validate_yaml(fp.read())
+with open("pipeline.json") as fp:
+    pl = lk.models.Pipeline.model_validate_json(fp.read())
 
 
 def define_table(node, sink):
-    @dlt.table(**sink.dlt_table_or_view_kwargs)
+    @dp.table(**sink.sdp_table_or_view_kwargs)
     def get_df():
-        # Execute node
         node.execute()
-        if sink and sink.is_quarantine:
-            df = node.quarantine_df
-        else:
-            df = node.output_df
-
-        # Return
-        return df.to_native()
+        return node.output_df.to_native()
 
 
 # Build nodes
 for node in pl.nodes:
     for sink in node.sinks:
-        wrapper = define_table(node, sink)
-        df = lk.dlt.get_df(wrapper)
-        display(df)
+        define_table(node, sink)
 ```
 
-Selecting the `DATABRICKS_PIPELINE` orchestrator will deploy a pipeline json 
+Selecting the `LAKEFLOW_DECLARATIVE_PIPELINE` orchestrator will deploy a pipeline json 
 configuration file which can be found in your workspace under `/Workspace/{runtime_root}/pipelines/{pipeline_name}/`.
+
+#### Spark Declarative Pipeline
+[Spark Declarative Pipelines](https://spark.apache.org/docs/latest/declarative-pipelines.html)
+is the open-source counterpart of Lakeflow Declarative Pipelines, available from PySpark 4.1+. It runs entirely 
+locally — no Databricks account is required. The pipeline is executed via the `spark-pipelines` CLI, which is 
+included in `pyspark>=4.1.1`.
+
+```yaml title="pipeline.yaml"
+orchestrator:
+  type: SPARK_DECLARATIVE_PIPELINE
+  catalog: dev        # optional default catalog
+  schema: finance     # optional default schema
+```
+
+Laktory generates three artifacts into the pipeline root directory when `pl.execute()` is called:
+
+- `laktory_sdp.py` — Python definition script using `@dp.materialized_view` / `@dp.table` decorators
+- `{pipeline_name}.json` — serialized pipeline configuration
+- `spark-pipeline.yaml` — SDP spec file pointing to the script
+
+Here is a simplified version of the generated definition script:
+```py title="laktory_sdp.py"
+from pyspark import pipelines as dp
+from pyspark.sql import SparkSession
+
+import laktory as lk
+
+spark = SparkSession.getActiveSession()
+config_filepath = spark.conf.get("config_filepath")
+
+with open(config_filepath) as fp:
+    pl = lk.models.Pipeline.model_validate_json(fp.read())
+
+
+def define_table(node, sink):
+    table_or_view = dp.materialized_view
+    if isinstance(sink, lk.models.PipelineViewDataSink):
+        table_or_view = dp.temporary_view
+    elif sink.is_streaming():
+        table_or_view = dp.table
+
+    @table_or_view(**sink.sdp_table_or_view_kwargs)
+    def get_df():
+        node.execute()
+        return node.output_df.to_native()
+
+
+for node in pl.nodes:
+    for sink in node.sinks:
+        define_table(node, sink)
+```
+
+`pl.execute()` builds the artifacts and shells out to `spark-pipelines run`. Outputs are written to
+`spark-warehouse/` in the working directory as Parquet or Delta tables.
 
 #### Apache Airflow
 Apache Airflow is a widely used orchestrator for scheduling, monitoring, and managing data workflows. When used with

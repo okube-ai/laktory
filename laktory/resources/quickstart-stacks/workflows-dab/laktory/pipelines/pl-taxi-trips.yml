@@ -18,7 +18,7 @@ variables:
 orchestrator:
   resource_options:
     name: pl-taxi-trips
-  type: DATABRICKS_JOB
+  type: LAKEFLOW_JOB
   serverless_environment_version: "4"
   schedule:
     timezone_id: UTC
@@ -32,8 +32,8 @@ nodes:
 
   # Simple copy of trips with a derived duration column
   - name: sample_trips
-    source:
-      table_name: samples.nyctaxi.trips
+    sources:
+    - table_name: samples.nyctaxi.trips
       as_stream: False
     sinks:
     - table_name: ${var.catalog}.${var.schema}.sample_trips
@@ -50,8 +50,8 @@ nodes:
 
   # Custom transformation grouping trips by pickup zone
   - name: sample_zones
-    source:
-      node_name: sample_trips
+    sources:
+    - node_name: sample_trips
     sinks:
     - table_name: ${var.catalog}.${var.schema}.sample_zones
       mode: OVERWRITE
@@ -71,8 +71,8 @@ nodes:
 
   # View creation
   - name: short_trips
-    source:
-      node_name: sample_trips
+    sources:
+    - node_name: sample_trips
       as_stream: False
     sinks:
     - table_name: ${var.catalog}.${var.schema}.short_trips

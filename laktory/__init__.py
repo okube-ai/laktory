@@ -37,28 +37,43 @@ def register_spark_session(spark=None):
     if spark is None:
         # No active session — build one (local / test usage).
         # Requires pyspark pip metadata to determine Scala / Delta JAR versions.
-        # In managed environments (DLT, Databricks Connect) a session is always
+        # In managed environments (LDP, Databricks Connect) a session is always
         # active, so this branch is never reached there.
         from importlib.metadata import version as pkg_version
 
         from pyspark.sql import SparkSession
 
         pyspark_ver = pkg_version("pyspark")
-        spark_major = int(pyspark_ver.split(".")[0])
+        spark_major, spark_minor = (
+            int(pyspark_ver.split(".")[0]),
+            int(pyspark_ver.split(".")[1]),
+        )
         scala = "2.13" if spark_major >= 4 else "2.12"
 
-        # delta-spark Python package versions and Maven JAR versions are not 1:1.
-        # Only delta-spark_2.13:4.0.0 exists on Maven Central for Spark 4.x.
-        # For Spark 3.x the Python version matches the Maven JAR version.
-        _delta_jvm = {"4": "4.0.0"}
-        delta_jvm_ver = _delta_jvm.get(str(spark_major), pkg_version("delta_spark"))
+        delta_ver = pkg_version("delta_spark")
+        delta_major, delta_minor = (
+            int(delta_ver.split(".")[0]),
+            int(delta_ver.split(".")[1]),
+        )
+
+        # delta-spark >= 4.1 changed the Maven artifact ID to include the
+        # Spark major.minor version (e.g. delta-spark_4.1_2.13 for Spark 4.1.x).
+        # This matches the logic in delta-spark's own configure_spark_with_delta_pip.
+        if (delta_major, delta_minor) >= (4, 1):
+            delta_artifact_id = f"delta-spark_{spark_major}.{spark_minor}_{scala}"
+        else:
+            delta_artifact_id = f"delta-spark_{scala}"
 
         spark = (
             SparkSession.builder.appName("laktory")
             .config(
                 "spark.jars.packages",
                 f"org.apache.spark:spark-avro_{scala}:{pyspark_ver},"
-                f"io.delta:delta-spark_{scala}:{delta_jvm_ver}",
+                f"io.delta:{delta_artifact_id}:{delta_ver}",
+            )
+            .config(
+                "spark.sql.extensions",
+                "io.delta.sql.DeltaSparkSessionExtension",
             )
             .config(
                 "spark.sql.catalog.spark_catalog",
@@ -79,27 +94,25 @@ def get_spark_session():
     return _laktory._spark
 
 
-def is_dlt_execute() -> bool:
+def _laktory_executor() -> str:
     from pyspark.errors import AnalysisException
 
-    spark = get_spark_session()
-
-    # TODO: Review and make more robust (transition to spark pipelines)
     try:
-        is_dlt = False
-        for k in [
-            "pipelines.dbrVersion",
-            "spark.pipelines.flow.name",
-        ]:
-            if spark.conf.get(k, "na") != "na":
-                is_dlt = True
-                break
-
+        return get_spark_session().conf.get("laktory.executor", "")
     except AnalysisException:
-        # Default value is not supported on earlier versions of serverless
-        is_dlt = False
+        return ""
 
-    return is_dlt
+
+def is_sdp_execute() -> bool:
+    return _laktory_executor() == "SDP"
+
+
+def is_ldp_execute() -> bool:
+    return _laktory_executor() == "LDP"
+
+
+def is_declarative_execute() -> bool:
+    return _laktory_executor() in ("SDP", "LDP")
 
 
 def print_version():

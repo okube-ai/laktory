@@ -51,8 +51,8 @@ class PipelineNode(BaseModel, PipelineChild):
 
     node_yaml = '''
         name: brz_stock_prices
-        source:
-          path: "./events/stock_prices/"
+        sources:
+        - path: "./events/stock_prices/"
           format: JSON
         sinks:
         - path: ./tables/brz_stock_prices/
@@ -73,8 +73,8 @@ class PipelineNode(BaseModel, PipelineChild):
 
     node_yaml = '''
         name: slv_stock_prices
-        source:
-          node_name: brz_stock_prices
+        sources:
+        - node_name: brz_stock_prices
         sinks:
         - schema_name: finance
           table_name: slv_stock_prices
@@ -107,9 +107,9 @@ class PipelineNode(BaseModel, PipelineChild):
     * [Data Pipeline](https://www.laktory.ai/concepts/pipeline/)
     """
 
-    dlt_template: str | None = Field(
+    ldp_template: str | None = Field(
         "DEFAULT",
-        description="Specify which template (notebook) to use when Databricks pipeline is selected as the orchestrator.",
+        description="Specify which template (notebook) to use when Lakeflow Declarative Pipeline is selected as the orchestrator.",
     )
     execution_task_name_: str = Field(
         None,
@@ -150,8 +150,13 @@ class PipelineNode(BaseModel, PipelineChild):
         consistent and reliable.
         """,
     )
-    source: DataSourcesUnion | None = Field(
-        None, description="Definition of the data source(s)"
+    depends_on: list[str] = Field(
+        [],
+        description="Pipeline node names that must complete before this node executes. Use for DAG ordering when no data flows between nodes.",
+    )
+    sources: list[DataSourcesUnion] = Field(
+        [],
+        description="Data sources for this node. The first entry is the primary input fed into the transformer as `{df}`. Assign a `name` to each source to reference it as `{sources.name}` in transformer expressions.",
     )
     sinks: list[DataSinksUnion] = Field(
         None,
@@ -184,14 +189,30 @@ class PipelineNode(BaseModel, PipelineChild):
     _output_df: Any = None
     _quarantine_df: Any = None
 
-    @field_validator("source", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def _validate_source_type(cls, v):
-        if not isinstance(v, dict):
-            return v
-        source_type = v.get("type")
-        if source_type is None:
-            return v
+    def _check_deprecated_dlt_template(cls, data):
+        if isinstance(data, dict) and "dlt_template" in data:
+            raise ValueError(
+                "'dlt_template' was renamed to 'ldp_template' in v0.12. Please update your YAML."
+            )
+        return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def _migrate_source(cls, data):
+        """Accept legacy `source` key and normalise it to `sources: [...]`."""
+        if not isinstance(data, dict):
+            return data
+        if "source" in data and "sources" not in data:
+            source = data.pop("source")
+            if source is not None:
+                data["sources"] = [source]
+        return data
+
+    @field_validator("sources", mode="before")
+    @classmethod
+    def _validate_sources_types(cls, v):
         from laktory.models.datasources.customdatasource import CustomDataSource
         from laktory.models.datasources.dataframedatasource import DataFrameDataSource
         from laktory.models.datasources.filedatasource import FileDataSource
@@ -213,13 +234,28 @@ class PipelineNode(BaseModel, PipelineChild):
             "PIPELINE_NODE": PipelineNodeDataSource,
             "UNITY_CATALOG": UnityCatalogDataSource,
         }
-        target_cls = _source_map.get(source_type)
-        if target_cls is None:
+
+        if not isinstance(v, list):
             return v
-        try:
-            return target_cls.model_validate(v)
-        except ValidationError as e:
-            raise ValueError(str(e)) from None
+
+        result = []
+        for i, item in enumerate(v):
+            if not isinstance(item, dict):
+                result.append(item)
+                continue
+            source_type = item.get("type")
+            if source_type is None:
+                result.append(item)
+                continue
+            target_cls = _source_map.get(source_type)
+            if target_cls is None:
+                result.append(item)
+                continue
+            try:
+                result.append(target_cls.model_validate(item))
+            except ValidationError as e:
+                raise ValueError(f"sources[{i}]: {e}") from None
+        return result
 
     @field_validator("sinks", mode="before")
     @classmethod
@@ -266,11 +302,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_expectations(self):
-        if (
-            self.source
-            and isinstance(self.source, BaseDataSource)
-            and self.source.as_stream
-        ):
+        if self.has_streaming_source:
             # Expectations type
             for e in self.expectations:
                 if not e.is_streaming_compatible:
@@ -288,18 +320,21 @@ class PipelineNode(BaseModel, PipelineChild):
         if not self.is_view:
             return self
 
-        # Validate Source
-        if self.source:
+        # Validate Sources
+        for isource, source in enumerate(self.sources):
+            label = source.name or str(isource)
             if not (
-                isinstance(self.source, TableDataSource)
-                or isinstance(self.source, PipelineNodeDataSource)
+                isinstance(source, TableDataSource)
+                or isinstance(source, PipelineNodeDataSource)
             ):
                 raise ValueError(
-                    "VIEW sink only supports Table or Pipeline Node with Table sink Data Source"
+                    f"Source '{label}' for node '{self.name}' is not supported. VIEW sink only supports Table or Pipeline Node with a Table sink"
                 )
 
-            if self.source.as_stream:
-                raise ValueError("VIEW sink does not support stream read.")
+            if source.as_stream:
+                raise ValueError(
+                    f"Source '{label}' for node '{self.name}' is not supported. VIEW sink does not support streaming sources."
+                )
 
         # Validate Sinks
         m = f"node '{self.name}': "
@@ -321,6 +356,11 @@ class PipelineNode(BaseModel, PipelineChild):
         return self
 
     @property
+    def has_streaming_source(self) -> bool:
+        """True if any declared source is read as a stream."""
+        return any(s.as_stream for s in self.sources)
+
+    @property
     def view_definition(self):
         """Transformer View Definition (when applicable)"""
         if self.transformer is None:
@@ -334,7 +374,7 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def children_names(self):
         return [
-            "source",
+            "sources",
             "data_sources",
             "expectations",
             "transformer",
@@ -355,20 +395,36 @@ class PipelineNode(BaseModel, PipelineChild):
         return f"node-{self.name}"
 
     @property
-    def is_orchestrator_dlt(self) -> bool:
-        """If `True`, pipeline node is used in the context of a DLT pipeline"""
+    def is_orchestrator_ldp(self) -> bool:
+        """If `True`, pipeline node is used in the context of a Lakeflow Declarative Pipeline"""
         pl = self.parent_pipeline
         if pl:
-            return pl.is_orchestrator_dlt
+            return pl.is_orchestrator_ldp
         return False
 
     @property
-    def is_dlt_execute(self) -> bool:
-        if not self.is_orchestrator_dlt:
-            return False
-        from laktory import is_dlt_execute
+    def is_orchestrator_sdp(self) -> bool:
+        """If `True`, pipeline node is used in the context of a Spark Declarative Pipeline"""
+        pl = self.parent_pipeline
+        if pl:
+            return pl.is_orchestrator_sdp
+        return False
 
-        return is_dlt_execute()
+    @property
+    def is_ldp_execute(self) -> bool:
+        if not self.is_orchestrator_ldp:
+            return False
+        from laktory import is_ldp_execute
+
+        return is_ldp_execute()
+
+    @property
+    def is_sdp_execute(self) -> bool:
+        if not self.is_orchestrator_sdp:
+            return False
+        from laktory import is_sdp_execute
+
+        return is_sdp_execute()
 
     # ----------------------------------------------------------------------- #
     # Paths                                                                   #
@@ -522,26 +578,50 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
-    def dlt_warning_expectations(self) -> dict[str, str]:
+    def ldp_warning_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.is_dlt_compatible and e.action == "WARN":
+            if e.is_ldp_compatible and e.action == "WARN":
                 expectations[e.name] = e.expr.expr
         return expectations
 
     @property
-    def dlt_drop_expectations(self) -> dict[str, str]:
+    def ldp_drop_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.is_dlt_compatible and e.action in ["DROP", "QUARANTINE"]:
+            if e.is_ldp_compatible and e.action in ["DROP", "QUARANTINE"]:
                 expectations[e.name] = e.expr.expr
         return expectations
 
     @property
-    def dlt_fail_expectations(self) -> dict[str, str]:
+    def ldp_fail_expectations(self) -> dict[str, str]:
         expectations = {}
         for e in self.expectations:
-            if e.is_dlt_compatible and e.action == "FAIL":
+            if e.is_ldp_compatible and e.action == "FAIL":
+                expectations[e.name] = e.expr.expr
+        return expectations
+
+    @property
+    def sdp_warning_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.is_sdp_compatible and e.action == "WARN":
+                expectations[e.name] = e.expr.expr
+        return expectations
+
+    @property
+    def sdp_drop_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.is_sdp_compatible and e.action in ["DROP", "QUARANTINE"]:
+                expectations[e.name] = e.expr.expr
+        return expectations
+
+    @property
+    def sdp_fail_expectations(self) -> dict[str, str]:
+        expectations = {}
+        for e in self.expectations:
+            if e.is_sdp_compatible and e.action == "FAIL":
                 expectations[e.name] = e.expr.expr
         return expectations
 
@@ -567,19 +647,15 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to execute current node."""
-        from laktory.models.datasources.pipelinenodedatasource import (
-            PipelineNodeDataSource,
-        )
-
-        names = []
-
-        if isinstance(self.source, PipelineNodeDataSource):
-            names += [self.source.node_name]
-
+        names = [
+            src.node_name
+            for src in self.sources
+            if isinstance(src, PipelineNodeDataSource)
+        ]
+        names += self.depends_on
         if self.transformer:
             names += self.transformer.upstream_node_names
-
-        return names
+        return list(dict.fromkeys(names))  # deduplicate, preserve order
 
     # ----------------------------------------------------------------------- #
     # Data Sources                                                            #
@@ -587,15 +663,10 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @property
     def data_sources(self) -> list[BaseDataSource]:
-        """Get all sources feeding the pipeline node"""
+        """Get all sources feeding the pipeline node (transformer-level inline sources only)."""
         sources = []
-
-        if isinstance(self.source, BaseDataSource):
-            sources += [self.source]
-
         if self.transformer:
             sources += self.transformer.data_sources
-
         return sources
 
     # ----------------------------------------------------------------------- #
@@ -706,9 +777,11 @@ class PipelineNode(BaseModel, PipelineChild):
                     logger.info(f"Importing {package_name} failed.")
             pl._imports_imported = True
 
-        # Parse DLT
-        if self.is_orchestrator_dlt:
-            logger.info("DLT orchestrator selected. Sinks writing will be skipped.")
+        # Skip sink writes when a declarative pipeline framework owns them
+        if self.is_orchestrator_ldp or self.is_orchestrator_sdp:
+            logger.info(
+                "Declarative pipeline orchestrator selected. Sinks writing will be skipped."
+            )
             write_sinks = False
             full_refresh = False
 
@@ -716,14 +789,52 @@ class PipelineNode(BaseModel, PipelineChild):
         if full_refresh:
             self.purge()
 
-        # Read Source
-        self._stage_df = None
-        if self.source:
-            self._stage_df = self.source.read()
-
-        # Apply transformer
+        # Read all declared sources into named_dfs with "sources." prefix
         if named_dfs is None:
             named_dfs = {}
+        for src in self.sources:
+            src_key = src.name if src.name else "df"
+            named_dfs[f"sources.{src_key}"] = src.read()
+
+        # Primary df: always the first declared source of THIS node
+        if self.sources:
+            first_src_key = self.sources[0].name if self.sources[0].name else "df"
+            self._stage_df = named_dfs.get(f"sources.{first_src_key}")
+        else:
+            self._stage_df = None
+
+        # Pre-load upstream nodes referenced in transformer ({nodes.X} in SQL/method args)
+        if apply_transformer and self.transformer and self.parent_pipeline:
+            for upstream_name in self.transformer.upstream_node_names:
+                key = f"nodes.{upstream_name}"
+                if key not in named_dfs:
+                    # Reuse if already loaded via a sources entry for the same node
+                    existing = next(
+                        (
+                            df
+                            for src, df in (
+                                (
+                                    src,
+                                    named_dfs.get(
+                                        f"sources.{src.name if src.name else 'df'}"
+                                    ),
+                                )
+                                for src in self.sources
+                                if isinstance(src, PipelineNodeDataSource)
+                                and src.node_name == upstream_name
+                            )
+                            if df is not None
+                        ),
+                        None,
+                    )
+                    if existing is not None:
+                        named_dfs[key] = existing
+                    else:
+                        tmp = PipelineNodeDataSource(node_name=upstream_name)
+                        tmp._parent = self
+                        named_dfs[key] = tmp.read()
+
+        # Apply transformer
         if apply_transformer and self.transformer:
             self._stage_df = self.transformer.execute(
                 self._stage_df, named_dfs=named_dfs
@@ -748,7 +859,7 @@ class PipelineNode(BaseModel, PipelineChild):
                 s.create(df=_df)
 
                 _is_update_metadata = (
-                    update_tables_metadata and s.metadata and not self.is_dlt_execute
+                    update_tables_metadata and s.metadata and not self.is_ldp_execute
                 )
 
                 if self.is_view:
@@ -773,10 +884,10 @@ class PipelineNode(BaseModel, PipelineChild):
         filtered and quarantine DataFrames.
 
         Some actions have to be disabled when selected orchestrator is
-        Databricks DLT:
+        Databricks LDP:
 
-        * Raising error on Failure when expectation is supported by DLT
-        * Dropping rows when expectation is supported by DLT
+        * Raising error on Failure when expectation is supported by LDP
+        * Dropping rows when expectation is supported by LDP
         """
 
         # Data Quality Checks
@@ -785,14 +896,25 @@ class PipelineNode(BaseModel, PipelineChild):
         if self._stage_df is None:
             # Node without source or transformer
             return
-        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
         if not self.expectations:
             return
+        if self.is_sdp_execute:
+            # SDP blocks DataFrame analysis (AnalyzePlan RPCs) inside decorated
+            # functions. SDP-compatible expectations are enforced via @dp.expect_*
+            # decorators in laktory_sdp.py; Laktory cannot run checks in-process.
+            names = [e.name for e in self.expectations if not e.is_sdp_compatible]
+            if names:
+                raise TypeError(
+                    f"Expectations {names} are not natively supported by SDP and "
+                    "cannot be enforced inside an SDP decorated function."
+                )
+            return
+        is_streaming = getattr(nw.to_native(self._stage_df), "isStreaming", False)
 
         def _batch_check(df, node):
             for e in node.expectations:
                 # Run Check: this only warn or raise exceptions.
-                if not e.is_dlt_managed:
+                if not e.is_sdp_managed:
                     e.run_check(
                         df,
                         raise_or_warn=True,
@@ -816,14 +938,14 @@ class PipelineNode(BaseModel, PipelineChild):
         else:
             skip = False
 
-            if self.is_dlt_execute:
+            if self.is_ldp_execute:
                 names = []
                 for e in self.expectations:
-                    if not e.is_dlt_compatible:
+                    if not e.is_ldp_compatible:
                         names += [e.name]
                 if names:
                     raise TypeError(
-                        f"Expectations {names} are not natively supported by DLT and can't be computed on a streaming DataFrame with DLT executor."
+                        f"Expectations {names} are not natively supported by Lakeflow and can't be computed on a streaming DataFrame with Lakeflow executor."
                     )
 
                 skip = True
@@ -859,7 +981,7 @@ class PipelineNode(BaseModel, PipelineChild):
         # Build Filters
         for e in self.expectations:
             # Update Keep Filter
-            if not e.is_dlt_managed:
+            if not e.is_sdp_managed:
                 _filter = e.keep_filter
                 if _filter is not None:
                     if kfilter is None:

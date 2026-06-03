@@ -40,11 +40,13 @@ def test_sql_with_nodes():
         expr="SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}"
     )
 
+    # data_sources is always empty — upstream nodes are pre-loaded by PipelineNode.execute()
     assert e1.data_sources == []
-    assert e2.data_sources == [
-        lk.models.PipelineNodeDataSource(node_name="node_01"),
-        lk.models.PipelineNodeDataSource(node_name="node_02"),
-    ]
+    assert e2.data_sources == []
+
+    # upstream_node_names reports which nodes are referenced in the SQL
+    assert e1.upstream_node_names == []
+    assert e2.upstream_node_names == ["node_01", "node_02"]
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK"])

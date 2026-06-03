@@ -10,10 +10,10 @@ from laktory.dispatcher.dispatcher import Dispatcher
 @app.command()
 def run(
     databricks_job: Annotated[
-        str, typer.Option("--dbks-job", "-dbksj", help="Job name")
+        str, typer.Option("--databricks-job", help="Databricks job name")
     ] = None,
     databricks_pipeline: Annotated[
-        str, typer.Option("--dbks-pipeline", "-dbksp", help="Job name")
+        str, typer.Option("--databricks-pipeline", help="Databricks pipeline name")
     ] = None,
     timeout: Annotated[
         float,
@@ -26,9 +26,7 @@ def run(
     ] = True,
     full_refresh: Annotated[
         bool,
-        typer.Option(
-            "--full-refresh", "--fr", help="Full tables refresh (pipeline only)"
-        ),
+        typer.Option("--full-refresh", help="Full tables refresh (pipeline only)"),
     ] = False,
     current_run_action: Annotated[
         str,
@@ -88,8 +86,8 @@ def run(
     Examples
     --------
     ```cmd
-    laktory run --env dev --dbks-pipeline pl-stock-prices --full_refresh --action CANCEL
-    laktory run --env dev --dbks-job my-job --var profile=MY_PROFILE
+    laktory run --env dev --databricks-pipeline pl-stock-prices --full-refresh --action CANCEL
+    laktory run --env dev --databricks-job my-job --var profile=MY_PROFILE
     ```
 
     References
@@ -122,8 +120,8 @@ def run(
         )
 
     if databricks_pipeline:
-        dispatcher.run_databricks_dlt(
-            dlt_name=databricks_pipeline,
+        dispatcher.run_databricks_pipeline(
+            pipeline_name=databricks_pipeline,
             timeout=timeout,
             raise_exception=raise_exception,
             current_run_action=current_run_action,

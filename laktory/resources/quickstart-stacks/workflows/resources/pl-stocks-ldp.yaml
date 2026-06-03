@@ -4,7 +4,7 @@
 # new files are incrementally pushed downstream as new rows instead of
 # re-computing entirely the downstream tables.
 #
-name: pl-stocks-dlt
+name: pl-stocks-ldp
 
 dependencies:
   - laktory==<laktory_version>
@@ -12,22 +12,22 @@ dependencies:
 
 # Configure Orchestrator
 orchestrator:
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   development: ${vars.is_dev}
   serverless: true
   catalog: dev
   schema: default
   libraries:
   - notebook:
-      path: /.laktory/notebooks/dlt_laktory_pl.py
+      path: /.laktory/notebooks/laktory_ldp.py
 
 # Define nodes (each node is a table or a view)
 nodes:
 
 # Bronze Table
 - name: brz_stock_prices
-  source:
-    path: dbfs:/laktory/data/stock_prices/
+  sources:
+  - path: dbfs:/laktory/data/stock_prices/
     as_stream: true
     format: JSONL
     infer_schema: true
@@ -40,8 +40,8 @@ nodes:
   - name: positive_price
     expr: open > 0
     action: FAIL
-  source:
-    node_name: brz_stock_prices
+  sources:
+  - node_name: brz_stock_prices
     as_stream: true
   sinks:
   - table_name: slv_stock_prices

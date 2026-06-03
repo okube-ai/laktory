@@ -143,12 +143,12 @@ class DataFrameTransformer(BaseModel, PipelineChild):
             )
 
             if isinstance(node, DataFrameMethod):
-                df = node.execute(df)
+                df = node.execute(df, named_dfs=named_dfs)
             elif isinstance(node, DataFrameExpr):
-                dfs = {}
+                # named_dfs first so the flowing df always wins on key collision
+                dfs = dict(named_dfs)
                 if df is not None:
                     dfs["df"] = df
-                dfs = dfs | named_dfs
                 df = node.to_df(dfs)
             else:
                 raise NotImplementedError()

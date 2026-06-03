@@ -17,7 +17,7 @@ variables:
 orchestrator:
   resource_options:
     name: pl-tpch
-  type: DATABRICKS_PIPELINE
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
   serverless: true
   catalog: ${var.catalog}
   schema: tpch
@@ -30,15 +30,15 @@ nodes:
 
 # Bronze: Simple copy of line items
 - name: brz_line_items
-  source:
-    table_name: samples.tpch.lineitem
+  sources:
+  - table_name: samples.tpch.lineitem
   sinks:
   - table_name: brz_line_items
 
 # Silver: Columns selection and renaming
 - name: slv_line_items
-  source:
-    node_name: brz_line_items
+  sources:
+  - node_name: brz_line_items
   sinks:
   - table_name: slv_line_items
 
@@ -60,8 +60,8 @@ nodes:
 
 # Gold: Aggregation by order key
 - name: gld_order_revenue
-  source:
-    node_name: slv_line_items
+  sources:
+  - node_name: slv_line_items
   sinks:
   - table_name: gld_order_revenue
 

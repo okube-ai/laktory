@@ -14,7 +14,7 @@ resources:
       name: pl-stock-prices
       libraries:
         - notebook:
-            path: /pipelines/dlt_brz_template.py
+            path: /pipelines/laktory_ldp.py
   jobs:
     job-stock-prices:
       name: job-stock-prices

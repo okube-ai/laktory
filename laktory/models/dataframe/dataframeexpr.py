@@ -1,6 +1,5 @@
 # import abc
 import re
-from typing import TYPE_CHECKING
 from typing import Literal
 
 # from typing import Callable
@@ -16,9 +15,6 @@ from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
 
-if TYPE_CHECKING:
-    from laktory.models.datasources.pipelinenodedatasource import PipelineNodeDataSource
-
 
 # --------------------------------------------------------------------------- #
 # Helper Functions                                                            #
@@ -30,12 +26,13 @@ def to_safe_expr(expr, df_names=None):
         df_names = []
     df_names += ["df"]
 
-    # Update nodes
-    pattern = r"\{nodes\.(.*?)\}"
-    repl = r"__nodes_\1___"
-    expr = re.sub(pattern, repl, expr)
+    # {nodes.X} → __nodes_X___
+    expr = re.sub(r"\{nodes\.(.*?)\}", r"__nodes_\1___", expr)
 
-    # Replace df names
+    # {sources.X} → __sources_X___
+    expr = re.sub(r"\{sources\.(.*?)\}", r"__sources_\1___", expr)
+
+    # Replace remaining bare {name} placeholders (e.g. {df}, legacy bare keys)
     for df_name in df_names:
         expr = expr.replace("{" + df_name + "}", f"__{df_name}__")
 
@@ -87,7 +84,6 @@ class DataFrameExpr(BaseModel, PipelineChild):
         "SQL",
         description="Expression type. Only SQL is currently supported, but `DF` could be added in the future.",
     )
-    _data_sources: list["PipelineNodeDataSource"] = None
 
     @property
     def is_sql_expressible(self) -> bool:
@@ -95,37 +91,21 @@ class DataFrameExpr(BaseModel, PipelineChild):
 
     @property
     def upstream_node_names(self) -> list[str]:
-        """Get all upstream nodes"""
+        """Get all upstream nodes referenced in the SQL expression."""
         if self.expr is None:
             return []
-
-        names = []
-
         pattern = r"\{nodes\.(.*?)\}"
-        matches = re.findall(pattern, self.expr)
-        for m in matches:
-            names += [m]
-
-        return names
+        return re.findall(pattern, self.expr)
 
     @property
     def data_sources(self):
-        """Get all sources required by SQL Expression"""
-        if self._data_sources is None:
-            from laktory.models.datasources.pipelinenodedatasource import (
-                PipelineNodeDataSource,
-            )
-
-            sources = []
-
-            pattern = r"\{nodes\.(.*?)\}"
-            matches = re.findall(pattern, self.expr)
-            for m in matches:
-                sources += [PipelineNodeDataSource(node_name=m)]
-
-            self._data_sources = sources
-
-        return self._data_sources
+        """
+        No inline data sources. All DataFrame references in the SQL expression
+        ({df}, {sources.X}, {nodes.X}) are pre-loaded by PipelineNode.execute()
+        before the transformer runs — {sources.X} from PipelineNode.sources,
+        {nodes.X} via upstream_node_names.
+        """
+        return []
 
     def to_sql(self, references=None):
         from laktory.models.datasources.pipelinenodedatasource import (
@@ -136,67 +116,46 @@ class DataFrameExpr(BaseModel, PipelineChild):
         if references is None:
             references = {}
 
-        # Resolve Data Sources (references to other nodes)
-        for s in self.data_sources:
-            references["{nodes." + s.node.name + "}"] = s.sink_table_full_name
+        # Resolve {nodes.X} references via pipeline node registry
+        pl = self.parent_pipeline
+        pattern = r"\{nodes\.(.*?)\}"
+        for node_name in re.findall(pattern, self.expr):
+            if pl and node_name in pl.nodes_dict:
+                upstream = pl.nodes_dict[node_name]
+                if upstream.primary_sink:
+                    references["{nodes." + node_name + "}"] = (
+                        upstream.primary_sink.full_name
+                    )
 
-        # Add node data source
+        # Resolve {sources.X} and backward-compat {df} to physical table names
         pl_node = self.parent_pipeline_node
-        if pl_node and pl_node.source:
-            s = pl_node.source
-            if isinstance(s, TableDataSource):
-                full_name = s.full_name
-            elif isinstance(s, PipelineNodeDataSource):
-                full_name = s.sink_table_full_name
-            else:
+        if pl_node:
+
+            def _source_full_name(src):
+                if isinstance(src, TableDataSource):
+                    return src.full_name
+                if isinstance(src, PipelineNodeDataSource):
+                    return src.sink_table_full_name
                 raise ValueError(
                     "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
                 )
-            references["{df}"] = full_name
+
+            for source_key in re.findall(r"\{sources\.(.*?)\}", self.expr):
+                src = next((s for s in pl_node.sources if s.name == source_key), None)
+                if src:
+                    references["{sources." + source_key + "}"] = _source_full_name(src)
+
+            # {df} resolves to the primary (first) source — canonical for single unnamed sources
+            if "{df}" in self.expr:
+                df_source = next(iter(pl_node.sources), None)
+                if df_source:
+                    references["{df}"] = _source_full_name(df_source)
 
         expr = self.expr
         for k, v in references.items():
             expr = expr.replace(k, v)
 
         return expr
-        #
-        # from laktory.models.datasources.tabledatasource import TableDataSource
-        #
-        # expr = self.sql_expr
-        #
-        # pl_node = self.parent_pipeline_node
-        #
-        # if pl_node and pl_node.source:
-        #     source = pl_node.source
-        #     if isinstance(source, TableDataSource):
-        #         full_name = source.full_name
-        #     elif isinstance(source, PipelineNodeDataSource):
-        #         full_name = source.sink_table_full_name
-        #     else:
-        #         raise ValueError(
-        #             "VIEW sink only supports Table or Pipeline Node with Table sink data sources"
-        #         )
-        #     expr = expr.replace("{df}", full_name)
-        #
-        # pl = self.parent_pipeline
-        # if pl:
-        #     from laktory.models.datasinks.tabledatasink import TableDataSink
-        #
-        #     pattern = r"\{nodes\.(.*?)\}"
-        #     matches = re.findall(pattern, expr)
-        #     for m in matches:
-        #         if m not in pl.nodes_dict:
-        #             raise ValueError(
-        #                 f"Node '{m}' is not available from pipeline '{pl.name}'"
-        #             )
-        #         sink = pl.nodes_dict[m].primary_sink
-        #         if not isinstance(sink, TableDataSink):
-        #             raise ValueError(
-        #                 f"Node '{m}' used in view creation does not have a Table sink"
-        #             )
-        #         expr = expr.replace("{nodes." + m + "}", sink.full_name)
-        #
-        # return expr
 
     def to_df(self, dfs: dict[str, AnyFrame]) -> AnyFrame:
         """
@@ -214,10 +173,6 @@ class DataFrameExpr(BaseModel, PipelineChild):
 
         # From SQL expression
         logger.info(f"DataFrame as \n{self.expr.strip()}")
-
-        # Read Data Sources
-        for s in self.data_sources:
-            dfs[f"nodes.{s.node.name}"] = s.read()
 
         # Convert to Native
         dfs = {k: nw.from_native(v).to_native() for k, v in dfs.items()}
@@ -250,21 +205,46 @@ class DataFrameExpr(BaseModel, PipelineChild):
         elif backend == DataFrameBackends.PYSPARK:
             _spark = df0.sparkSession
 
-            # Create views
-            # TODO: Using parametrized queries would be ideal, but it is not compatible
-            #       with older versions of spark or Delta Live Tables.
-            # Because PySpark does not support view names with {}, we replaced them
-            # with double underscores (__)
-            for k, _df in dfs.items():
-                _k = "{" + k + "}"
-                _df.createOrReplaceTempView(to_safe_expr(_k, df_names=[k]))
+            from laktory import is_sdp_execute
 
-            # Run query
             _df = None
-            for expr in self.expr.split(";"):
-                if expr.replace("\n", " ").strip() == "":
-                    continue
-                _df = _spark.sql(to_safe_expr(expr, df_names=list(dfs.keys())))
+            if is_sdp_execute():
+                # Spark Connect (SDP): createOrReplaceTempView is forbidden inside
+                # @dp.* decorated functions. Use spark.sql(**kwargs) instead —
+                # PySpark creates SubqueryAlias plans internally without registering
+                # temp views.
+                #
+                # {nodes.X} contains a dot which is not a valid Python kwarg key, so
+                # use to_safe_expr(): {df} → __df__, {nodes.X} → __nodes_X___.
+                # Escape all braces first so SQL patterns like {8,8} in regex literals
+                # are not treated as format placeholders, then restore only our known
+                # DataFrame placeholders as {safe_k}.
+                sql_kwargs = {}
+                query = self.expr.replace("{", "{{").replace("}", "}}")
+                for k, v in dfs.items():
+                    safe_k = to_safe_expr("{" + k + "}", df_names=[k])
+                    sql_kwargs[safe_k] = v
+                    query = query.replace("{{" + k + "}}", "{" + safe_k + "}")
+
+                for stmt in query.split(";"):
+                    if stmt.replace("\n", " ").strip() == "":
+                        continue
+                    _df = _spark.sql(stmt, **sql_kwargs)
+            else:
+                # Local / LDP: use createOrReplaceTempView.
+                # LDP monkey-patches spark.sql() and does not support **kwargs.
+                # createOrReplaceTempView is safe outside Spark Connect.
+                query = self.expr
+                for k, v in dfs.items():
+                    safe_k = to_safe_expr("{" + k + "}", df_names=[k])
+                    query = query.replace("{" + k + "}", safe_k)
+                    v.createOrReplaceTempView(safe_k)
+
+                for stmt in query.split(";"):
+                    if stmt.replace("\n", " ").strip() == "":
+                        continue
+                    _df = _spark.sql(stmt)
+
             if _df is None:
                 raise ValueError(f"SQL Expression '{self.expr}' is invalid")
             return nw.from_native(_df)

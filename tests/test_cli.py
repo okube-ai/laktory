@@ -310,7 +310,7 @@ def test_run_job(monkeypatch):
                 "dev",
                 "--filepath",
                 stack_filepath,
-                "--dbks-job",
+                "--databricks-job",
                 "job-stock-prices-ut-stack",
             ],
         )
@@ -337,14 +337,14 @@ def test_run_pipeline(monkeypatch):
                 "dev",
                 "--filepath",
                 stack_filepath,
-                "--dbks-pipeline",
+                "--databricks-pipeline",
                 "pl-stock-prices-ut-stack",
             ],
         )
     assert result.exit_code == 0
     mock_dispatcher.get_resource_ids.assert_called_once()
-    mock_dispatcher.run_databricks_dlt.assert_called_once_with(
-        dlt_name="pl-stock-prices-ut-stack",
+    mock_dispatcher.run_databricks_pipeline.assert_called_once_with(
+        pipeline_name="pl-stock-prices-ut-stack",
         timeout=1200,
         raise_exception=True,
         current_run_action="WAIT",
@@ -365,13 +365,13 @@ def test_run_full_refresh(monkeypatch):
                 "dev",
                 "--filepath",
                 stack_filepath,
-                "--dbks-pipeline",
+                "--databricks-pipeline",
                 "pl-stock-prices-ut-stack",
                 "--full-refresh",
             ],
         )
     assert result.exit_code == 0
-    _, kwargs = mock_dispatcher.run_databricks_dlt.call_args
+    _, kwargs = mock_dispatcher.run_databricks_pipeline.call_args
     assert kwargs.get("full_refresh") is True
 
 
@@ -398,9 +398,9 @@ def test_run_both_targets(monkeypatch):
                 "dev",
                 "--filepath",
                 stack_filepath,
-                "--dbks-job",
+                "--databricks-job",
                 "job-stock-prices-ut-stack",
-                "--dbks-pipeline",
+                "--databricks-pipeline",
                 "pl-stock-prices-ut-stack",
             ],
         )

@@ -9,6 +9,7 @@ from laktory._logger import get_logger
 
 logger = get_logger(__name__)
 
+
 # Update this when the test workspace changes.
 DATABRICKS_HOST = "https://adb-2211091707396001.1.azuredatabricks.net/"
 

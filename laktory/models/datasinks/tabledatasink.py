@@ -22,6 +22,7 @@ class TableDataSink(BaseDataSink):
         None,
         description="Sink table catalog name",
     )
+    # TODO: consider expanding to include ORC, AVRO (Spark USING clause supports them for managed tables)
     format: Literal["PARQUET", "DELTA"] = Field(
         "DELTA", description="Storage format for data table."
     )
@@ -185,12 +186,13 @@ class TableDataSink(BaseDataSink):
     # ----------------------------------------------------------------------- #
 
     def _write_spark(self, df, mode) -> None:
+        is_streaming = self.is_streaming(df=df)
         df = df.to_native()
 
         # Format
-        methods = self._get_spark_writer_methods(mode=mode, is_streaming=df.isStreaming)
+        methods = self._get_spark_writer_methods(mode=mode, is_streaming=is_streaming)
 
-        if df.isStreaming:
+        if is_streaming:
             logger.info(
                 f"Writing df to {self.full_name} with writeStream.{'.'.join([m.as_string for m in methods])}"
             )
@@ -321,14 +323,14 @@ class TableDataSink(BaseDataSink):
         return source
 
     # ----------------------------------------------------------------------- #
-    # Lakeflow Declarative Pipelines DLT                                      #
+    # Lakeflow Declarative Pipelines LDP                                      #
     # ----------------------------------------------------------------------- #
 
     @property
-    def dlt_table_or_view_name(self) -> str:
+    def sdp_table_or_view_name(self) -> str:
         if self.catalog_name:
             # Unity catalog is used only when catalog is defined. In this case
-            # DLT allows full name specification
+            # LDP allows full name specification
             return self.full_name
 
         # If catalog is not defined, table is written to Hive Metastore and only table
@@ -336,8 +338,10 @@ class TableDataSink(BaseDataSink):
         return self.table_name
 
     @property
-    def dlt_table_or_view_kwargs(self):
-        kwargs = {"name": self.dlt_table_or_view_name}
+    def sdp_table_or_view_kwargs(self):
+        kwargs = {"name": self.sdp_table_or_view_name}
+        if self.format and self.format.upper() != "DELTA":
+            kwargs["format"] = self.format.lower()
         if self.metadata:
             if self.metadata.comment:
                 kwargs["comment"] = self.metadata.comment
@@ -346,22 +350,43 @@ class TableDataSink(BaseDataSink):
         return kwargs
 
     @property
-    def dlt_warning_expectations(self):
+    def ldp_warning_expectations(self):
         e = {}
         if not self.is_quarantine:
-            e = self.parent_pipeline_node.dlt_warning_expectations
+            e = self.parent_pipeline_node.ldp_warning_expectations
         return e
 
     @property
-    def dlt_drop_expectations(self):
+    def ldp_drop_expectations(self):
         e = {}
         if not self.is_quarantine:
-            e = self.parent_pipeline_node.dlt_drop_expectations
+            e = self.parent_pipeline_node.ldp_drop_expectations
         return e
 
     @property
-    def dlt_fail_expectations(self):
+    def ldp_fail_expectations(self):
         e = {}
         if not self.is_quarantine:
-            e = self.parent_pipeline_node.dlt_fail_expectations
+            e = self.parent_pipeline_node.ldp_fail_expectations
+        return e
+
+    @property
+    def sdp_warning_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.sdp_warning_expectations
+        return e
+
+    @property
+    def sdp_drop_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.sdp_drop_expectations
+        return e
+
+    @property
+    def sdp_fail_expectations(self):
+        e = {}
+        if not self.is_quarantine:
+            e = self.parent_pipeline_node.sdp_fail_expectations
         return e

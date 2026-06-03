@@ -55,23 +55,23 @@ class Dispatcher:
     def init_resources(self):
         """Set resource for each of the resources defined in the stack"""
 
-        from laktory.models.pipeline.orchestrators.databricksjoborchestrator import (
-            DatabricksJobOrchestrator,
+        from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
+            LakeflowDeclarativePipelineOrchestrator,
         )
-        from laktory.models.pipeline.orchestrators.databrickspipelineorchestrator import (
-            DatabricksPipelineOrchestrator,
+        from laktory.models.pipeline.orchestrators.lakeflowjoborchestrator import (
+            LakeflowJobOrchestrator,
         )
 
         for k, pl in self.stack.resources.pipelines.items():
             if not pl.resource_options.is_enabled:
                 continue
 
-            if isinstance(pl.orchestrator, DatabricksPipelineOrchestrator):
+            if isinstance(pl.orchestrator, LakeflowDeclarativePipelineOrchestrator):
                 self.resources[pl.orchestrator.name] = DatabricksPipelineRunner(
                     dispatcher=self, name=pl.orchestrator.name
                 )
 
-            if isinstance(pl.orchestrator, DatabricksJobOrchestrator):
+            if isinstance(pl.orchestrator, LakeflowJobOrchestrator):
                 self.resources[pl.orchestrator.name] = DatabricksJobRunner(
                     dispatcher=self, name=pl.orchestrator.name
                 )
@@ -167,18 +167,18 @@ class Dispatcher:
         job = self.resources[job_name]
         job.run(*args, **kwargs)
 
-    def run_databricks_dlt(self, dlt_name: str, *args, **kwargs):
+    def run_databricks_pipeline(self, pipeline_name: str, *args, **kwargs):
         """
-        Run Databricks pipeline with name `dlt_name`
+        Run Databricks pipeline with name `pipeline_name`
 
         Parameters
         ----------
-        dlt_name:
-            Name of the DLT pipeline
+        pipeline_name:
+            Name of the Databricks pipeline
         *args:
             Arguments passed to `JobRunner.run()`
         **kwargs:
             Keyword arguments passed to `JobRunner.run()`
         """
-        pl = self.resources[dlt_name]
+        pl = self.resources[pipeline_name]
         pl.run(*args, **kwargs)

@@ -67,10 +67,10 @@ from laktory import models
 
 node_brz = models.PipelineNode(
     name="brz_stock_prices",
-    source={
+    sources=[{
         "format": "PARQUET",
         "path": "./data/brz_stock_prices/"
-    },
+    }],
     transformer={
         "nodes": []
     }
@@ -78,9 +78,9 @@ node_brz = models.PipelineNode(
 
 node_slv = models.PipelineNode(
     name="slv_stock_prices",
-    source={
+    sources=[{
         "node_name": "brz_stock_prices"
-    },
+    }],
     sinks=[{
         "path": "./data/slv_stock_prices",
         "mode": "OVERWRITE",

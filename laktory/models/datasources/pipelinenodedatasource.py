@@ -20,7 +20,7 @@ class PipelineNodeDataSource(BaseDataSource):
 
     - memory
     - upstream node sink
-    - DLT table
+    - LDP table
 
     Examples
     ---------
@@ -117,33 +117,12 @@ class PipelineNodeDataSource(BaseDataSource):
     # ----------------------------------------------------------------------- #
 
     def _read_spark(self) -> AnyFrame:
-        stream_to_batch = (
-            not self.as_stream
-            and self.node.source is not None
-            and self.node.source.as_stream
-        )
-        is_dlt = False
-
-        pl = self.parent_pipeline
-        is_orchestrator_dlt = pl is not None and pl.is_orchestrator_dlt
-
-        if is_orchestrator_dlt:
-            from laktory import is_dlt_execute
-
-            is_dlt = is_dlt_execute()
-
-        # Reading from DLT
-        if is_dlt:
-            import dlt
-
-            if self.as_stream:
-                logger.info(f"Reading pipeline node {self._id} with DLT as stream")
-                df = dlt.read_stream(self.node.primary_sink.dlt_table_or_view_name)
-            else:
-                logger.info(f"Reading pipeline node {self._id} with DLT as static")
-                df = dlt.read(self.node.primary_sink.dlt_table_or_view_name)
-
-        elif stream_to_batch or self.node.output_df is None:
+        stream_to_batch = not self.as_stream and self.node.has_streaming_source
+        # When a streaming read is requested, always go to the primary sink so
+        # that spark.readStream.table() is called. Returning a cached batch
+        # output_df here would produce an invalid batch-relation-for-streaming-table
+        # error in SDP (and incorrect behavior in any streaming context).
+        if stream_to_batch or self.node.output_df is None or self.as_stream:
             if self.node.has_sinks:
                 logger.info(f"Reading pipeline node {self._id} from primary sink")
                 df = self.node.primary_sink.read(
@@ -156,12 +135,9 @@ class PipelineNodeDataSource(BaseDataSource):
                 self.node.execute()
                 df = self.node.output_df
 
-        elif self.node.output_df is not None:
+        else:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
             df = self.node.output_df
-
-        else:
-            raise ValueError(f"Pipeline Node {self._id} can't read DataFrame")
 
         return df
 
