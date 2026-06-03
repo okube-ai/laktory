@@ -39,7 +39,7 @@ PROVIDER_KEY = "registry.terraform.io/databricks/databricks"
 # Also skips any attribute starting with "__" (internal Terraform provider fields)
 ALWAYS_SKIP_ATTRS = {"id"}
 
-# Field names reserved by BaseResource / BaseModel — must be renamed to avoid shadowing
+# Field names reserved by BaseResource / BaseModel - must be renamed to avoid shadowing
 # Format: {terraform_attr_name: python_field_name}
 # The generated class will use `serialization_alias` so Terraform output is unchanged.
 RESERVED_FIELD_RENAMES: dict[str, str] = {
@@ -127,7 +127,7 @@ def tf_type_to_python(tf_type, field_name: str = "") -> str:
         if container == "map":
             return f"dict[str, {tf_type_to_python(inner)}]"
         if container == "object":
-            # inline object — use dict rather than a named model
+            # inline object - use dict rather than a named model
             return "dict[str, Any]"
 
     return "Any"
@@ -396,7 +396,7 @@ def emit_resource_module(
     main_lines.append('    """')
     main_lines.append(f"    Generated base class for `{resource_key}`.")
     main_lines.append(
-        "    DO NOT EDIT — regenerate from `scripts/build_resources/01_build.py`."
+        "    DO NOT EDIT - regenerate from `scripts/build_resources/01_build.py`."
     )
     main_lines.append('    """')
     main_lines.append("")
@@ -493,7 +493,7 @@ def main():
         all_descriptions = json.loads(DESCRIPTIONS_PATH.read_text())
     else:
         print(
-            f"[WARN] {DESCRIPTIONS_PATH.name} not found — run scripts/build_resources/00_fetch.py to add field descriptions"
+            f"[WARN] {DESCRIPTIONS_PATH.name} not found - run scripts/build_resources/00_fetch.py to add field descriptions"
         )
 
     out_dir = OUTPUT_DIR
@@ -502,7 +502,7 @@ def main():
 
     for resource_key in DEFAULT_TARGETS:
         if resource_key not in resource_schemas:
-            print(f"[SKIP] {resource_key} — not found in schema")
+            print(f"[SKIP] {resource_key} - not found in schema")
             continue
 
         descriptions = all_descriptions.get(resource_key, {})

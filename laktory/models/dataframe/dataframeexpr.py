@@ -102,7 +102,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
         """
         No inline data sources. All DataFrame references in the SQL expression
         ({df}, {sources.X}, {nodes.X}) are pre-loaded by PipelineNode.execute()
-        before the transformer runs — {sources.X} from PipelineNode.sources,
+        before the transformer runs - {sources.X} from PipelineNode.sources,
         {nodes.X} via upstream_node_names.
         """
         return []
@@ -145,7 +145,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
                 if src:
                     references["{sources." + source_key + "}"] = _source_full_name(src)
 
-            # {df} resolves to the primary (first) source — canonical for single unnamed sources
+            # {df} resolves to the primary (first) source - canonical for single unnamed sources
             if "{df}" in self.expr:
                 df_source = next(iter(pl_node.sources), None)
                 if df_source:
@@ -210,7 +210,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
             _df = None
             if is_sdp_execute():
                 # Spark Connect (SDP): createOrReplaceTempView is forbidden inside
-                # @dp.* decorated functions. Use spark.sql(**kwargs) instead —
+                # @dp.* decorated functions. Use spark.sql(**kwargs) instead -
                 # PySpark creates SubqueryAlias plans internally without registering
                 # temp views.
                 #

@@ -28,7 +28,7 @@ def test_parse_cli_vars_inline(tmp_path):
 
 
 def test_parse_cli_vars_value_with_equals(tmp_path):
-    # value itself contains '=' — only split on first '='
+    # value itself contains '=' - only split on first '='
     result = parse_cli_vars(["conn=host=localhost"], None, str(tmp_path))
     assert result == {"conn": "host=localhost"}
 

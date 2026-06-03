@@ -1,4 +1,4 @@
-"""Tests for DataQualityExpectation on PipelineNode — WARN/DROP/QUARANTINE/FAIL, AGGREGATE, streaming, tolerance."""
+"""Tests for DataQualityExpectation on PipelineNode - WARN/DROP/QUARANTINE/FAIL, AGGREGATE, streaming, tolerance."""
 
 import pytest
 

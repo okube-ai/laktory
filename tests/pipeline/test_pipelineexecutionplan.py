@@ -1,4 +1,4 @@
-"""Tests for PipelineExecutionPlan — node selection, task grouping, and task DAG."""
+"""Tests for PipelineExecutionPlan - node selection, task grouping, and task DAG."""
 
 import pytest
 
@@ -196,7 +196,7 @@ def test_task_dag_partial_downstream(pl):
 
 
 # --------------------------------------------------------------------------- #
-# Views plan — nodes without sinks are excluded from tasks                   #
+# Views plan - nodes without sinks are excluded from tasks                   #
 # --------------------------------------------------------------------------- #
 
 

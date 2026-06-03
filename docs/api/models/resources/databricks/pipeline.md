@@ -147,6 +147,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsConfluenceOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptions
 
 ---
@@ -163,6 +167,38 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsJiraOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformer
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformer
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptions
 
 ---
@@ -175,7 +211,15 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSmartsheetOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsZendeskSupportOptions
 
 ---
 
@@ -207,6 +251,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsConfluenceOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptions
 
 ---
@@ -223,6 +271,38 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsJiraOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformer
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformer
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptions
 
 ---
@@ -235,7 +315,15 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsSmartsheetOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsZendeskSupportOptions
 
 ---
 
@@ -272,6 +360,10 @@
 ---
 
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionSourceConfigurationsCatalogPostgresSlotConfig
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionSourceConfigurationsGoogleAdsConfig
 
 ---
 
@@ -316,6 +408,10 @@
 ---
 
 ::: laktory.models.resources.databricks.pipeline.PipelineLibraryNotebook
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineLookup
 
 ---
 

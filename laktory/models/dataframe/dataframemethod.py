@@ -32,9 +32,9 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
     reference string. DataFrame references use the same placeholder syntax as
     SQL expressions:
 
-    - ``{df}`` — the current flowing DataFrame (primary source for the first transformer step)
-    - ``{sources.name}`` — a named source declared on the pipeline node
-    - ``{nodes.X}`` — the output of upstream pipeline node ``X``
+    - ``{df}`` - the current flowing DataFrame (primary source for the first transformer step)
+    - ``{sources.name}`` - a named source declared on the pipeline node
+    - ``{nodes.X}`` - the output of upstream pipeline node ``X``
 
     DataSources are **not** passed directly as objects; always use the string
     reference syntax above.
@@ -46,7 +46,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
     @classmethod
     def wrap_scalar(cls, data: Any) -> Any:
         # Dicts that already have a 'value' key are serialized DataFrameMethodArg
-        # instances — pass them through so Pydantic parses them normally.
+        # instances - pass them through so Pydantic parses them normally.
         # Everything else is wrapped into {"value": ...}.
         if isinstance(data, dict) and "value" in data:
             return data
@@ -77,7 +77,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
 
             # If the string contains a function call, evaluate it as a Python
             # expression with backend-appropriate names in scope. SyntaxError
-            # means the string is a plain literal (e.g. "Walmart (Inc)") —
+            # means the string is a plain literal (e.g. "Walmart (Inc)") -
             # fall back to returning it as-is. All other errors propagate.
             if "(" in v:
                 if self.dataframe_api == "NARWHALS":
@@ -110,7 +110,7 @@ class DataFrameMethodArg(BaseModel, PipelineChild):
                     v = eval(v)
                 except SyntaxError:
                     logger.warning(
-                        f"Could not evaluate '{v}' as a Python expression — treating as a plain string literal."
+                        f"Could not evaluate '{v}' as a Python expression - treating as a plain string literal."
                     )
 
         return v
@@ -297,7 +297,7 @@ class DataFrameMethod(BaseModel, PipelineChild):
             if namespace:
                 f = getattr(getattr(df, namespace), func_name, None)
             else:
-                # getattr requires schema analysis — which SDP blocks. hasattr is safe
+                # getattr requires schema analysis - which SDP blocks. hasattr is safe
                 if hasattr(type(df), func_name):
                     f = getattr(df, func_name)
 

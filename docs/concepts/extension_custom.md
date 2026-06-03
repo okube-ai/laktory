@@ -56,7 +56,7 @@ nodes:
 ## Spark namespaces
 
 Use Spark namespaces when your team works exclusively with PySpark and you want to write pure Spark
-code — no Narwhals imports required.
+code - no Narwhals imports required.
 
 ```py
 import pyspark.sql.functions as F

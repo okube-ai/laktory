@@ -4,7 +4,7 @@
 
 | Marker | Meaning | Included in `make test`? |
 |--------|---------|--------------------------|
-| `databricks_connect` | Requires a live Databricks workspace (DatabricksSession or SDK calls) | No — excluded |
+| `databricks_connect` | Requires a live Databricks workspace (DatabricksSession or SDK calls) | No - excluded |
 | `parametrize` | Standard pytest parametrization | Yes |
 
 Tests that call `skip_dbks_test()` inside the test body also skip automatically when no credentials are available, without a marker.
@@ -79,24 +79,24 @@ def test_something(backend, spark):
 
 ```
 tests/
-  conftest.py              — shared fixtures
-  data/                    — static test data files (parquet, CSV)
-  dataframe/               — DataFrameTransformer / DataFrameMethod tests
-  dataframe_ext/           — Narwhals extension tests
-  dataquality/             — DataQualityExpectation tests
-  datasinks/               — DataSink tests
-  datasources/             — DataSource tests
+  conftest.py              - shared fixtures
+  data/                    - static test data files (parquet, CSV)
+  dataframe/               - DataFrameTransformer / DataFrameMethod tests
+  dataframe_ext/           - Narwhals extension tests
+  dataquality/             - DataQualityExpectation tests
+  datasinks/               - DataSink tests
+  datasources/             - DataSource tests
   pipeline/
-    node/                  — PipelineNode execution tests
-    orchestrators/         — One file per orchestrator type (sdp, ldp, job, airflow)
-    pipeline/              — Pipeline-level tests (quality monitors, etc.)
-  resources/               — Databricks resource model tests
-  stack/                   — Stack / TerraformStack / DABs tests
-  test_cli.py              — CLI command tests (all 7 commands mocked)
-  test_perf.py             — Performance regression tests
-  test_recursiveloader.py  — YAML loader tests
-  test_stack.py            — Stack serialization and variable injection
-  test_quickstarts.py      — Quickstart template smoke tests
+    node/                  - PipelineNode execution tests
+    orchestrators/         - One file per orchestrator type (sdp, ldp, job, airflow)
+    pipeline/              - Pipeline-level tests (quality monitors, etc.)
+  resources/               - Databricks resource model tests
+  stack/                   - Stack / TerraformStack / DABs tests
+  test_cli.py              - CLI command tests (all 7 commands mocked)
+  test_perf.py             - Performance regression tests
+  test_recursiveloader.py  - YAML loader tests
+  test_stack.py            - Stack serialization and variable injection
+  test_quickstarts.py      - Quickstart template smoke tests
 ```
 
 ---
@@ -105,23 +105,23 @@ tests/
 
 One test file per orchestrator type. All run without a live Databricks connection unless marked `databricks_connect`. End-to-end execution tests that spawn a subprocess are conditionally skipped when the required CLI is not installed.
 
-### `test_orchestrator_sdp.py` — SparkDeclarativePipelineOrchestrator
+### `test_orchestrator_sdp.py` - SparkDeclarativePipelineOrchestrator
 
 Structure mirrors the feature surface of the orchestrator:
 
 | Section | What it covers |
 |---------|---------------|
 | Build / `spec_dict` | `spec_dict` shape, `storage` path, `laktory.executor = "SDP"` injected, `laktory.config_filepath` present |
-| `is_sdp_execute` Spark conf | `test_is_sdp_execute_flag_true/false` — set/unset `laktory.executor` in Spark conf, assert function return value |
+| `is_sdp_execute` Spark conf | `test_is_sdp_execute_flag_true/false` - set/unset `laktory.executor` in Spark conf, assert function return value |
 | `is_declarative_execute` | Parametrized over `"SDP"` → True, `"LDP"` → True, `"AIRFLOW"` → False, `""` → False |
 | `is_orchestrator_sdp` | Property propagates to nodes and sinks |
 | `is_streaming` | Sink picks up `as_stream` from source |
-| Expectations | `test_expectations_raise_on_sdp_execute` — monkeypatches `laktory.is_sdp_execute` to `True`, asserts `TypeError` |
+| Expectations | `test_expectations_raise_on_sdp_execute` - monkeypatches `laktory.is_sdp_execute` to `True`, asserts `TypeError` |
 | CLI flags | `spark-pipelines` CLI args assembled correctly |
-| End-to-end execution | `test_execute`, `test_execute_declarative`, `test_streaming_incremental` — run the full pipeline locally via `orchestrator.execute()`; guarded by `is_sdp_available()` |
-| Sentinel file | `test_is_sdp_execute_true_during_execution` — `laktory_sdp.py` writes `.laktory_is_sdp_execute` to `root_path`; test reads it after execution. Robust to future changes in `is_sdp_compatible` |
+| End-to-end execution | `test_execute`, `test_execute_declarative`, `test_streaming_incremental` - run the full pipeline locally via `orchestrator.execute()`; guarded by `is_sdp_available()` |
+| Sentinel file | `test_is_sdp_execute_true_during_execution` - `laktory_sdp.py` writes `.laktory_is_sdp_execute` to `root_path`; test reads it after execution. Robust to future changes in `is_sdp_compatible` |
 
-**Key pattern — testing runtime flag detection:**
+**Key pattern - testing runtime flag detection:**
 ```python
 def test_is_sdp_execute_flag_true(spark):
     _spark = laktory.get_spark_session()
@@ -133,7 +133,7 @@ def test_is_sdp_execute_flag_true(spark):
 ```
 Always clean up with `try/finally`; the `spark` fixture is required to ensure a session exists.
 
-### `test_orchestrator_lakeflow_declarative.py` — LakeflowDeclarativePipelineOrchestrator
+### `test_orchestrator_lakeflow_declarative.py` - LakeflowDeclarativePipelineOrchestrator
 
 Parametrized across both orchestrator types (`ldp` / `sdp`) where behaviour is shared, and LDP-only tests for features specific to Lakeflow.
 
@@ -143,17 +143,17 @@ Parametrized across both orchestrator types (`ldp` / `sdp`) where behaviour is s
 | Schema propagation | `catalog_name` / `schema_name` pushed to sinks; SDP pushes only `schema_name` |
 | `sdp_table_or_view_kwargs` | LDP uses fully-qualified UC name (`dev.sandbox.brz`); SDP uses table name only |
 | `is_streaming` | Same as SDP; parametrized |
-| Expectations — LDP | `ldp_warning/drop/fail_expectations` dicts on node and sink; empty on `brz` |
-| Expectations — SDP | All expectation dicts are empty under SDP orchestrator |
-| Expectations — SDP execute | Monkeypatches `is_sdp_execute`; asserts `TypeError` |
-| Expectations — LDP streaming | Monkeypatches `is_ldp_execute`; asserts `TypeError` for AGGREGATE on streaming df |
+| Expectations - LDP | `ldp_warning/drop/fail_expectations` dicts on node and sink; empty on `brz` |
+| Expectations - SDP | All expectation dicts are empty under SDP orchestrator |
+| Expectations - SDP execute | Monkeypatches `is_sdp_execute`; asserts `TypeError` |
+| Expectations - LDP streaming | Monkeypatches `is_ldp_execute`; asserts `TypeError` for AGGREGATE on streaming df |
 | LDP configuration | `laktory.executor = "LDP"` injected; `laktory.requirements` is valid JSON list containing laktory; `laktory.config_filepath` starts with `/Workspace` and encodes pipeline name |
 | Custom dependencies | Extra `dependencies` on Pipeline appear in `laktory.requirements` |
 | View node guard | `TableDataSink(table_type="VIEW")` raises `ValueError` / `ValidationError` |
 
-`_get_pl()` is the shared pipeline factory — four nodes: `brz` (file source), `slv` (node source + expectations), `slv_stream` (streaming), `gld_view` (pipeline view sink).
+`_get_pl()` is the shared pipeline factory - four nodes: `brz` (file source), `slv` (node source + expectations), `slv_stream` (streaming), `gld_view` (pipeline view sink).
 
-### `test_orchestrator_lakeflow_job.py` — LakeflowJobOrchestrator
+### `test_orchestrator_lakeflow_job.py` - LakeflowJobOrchestrator
 
 | Section | What it covers |
 |---------|---------------|
@@ -171,7 +171,7 @@ Parametrized across both orchestrator types (`ldp` / `sdp`) where behaviour is s
 
 ### Existing tests (no orchestrator context)
 
-`test_expectations_abs/rel/agg/empty/exceptions_warnings` — all parametrized over `POLARS` / `PYSPARK`. Cover `run_check()` result counts, filter expressions, `WARN` / `DROP` / `QUARANTINE` / `FAIL` actions, and `DataQualityCheckFailedError`.
+`test_expectations_abs/rel/agg/empty/exceptions_warnings` - all parametrized over `POLARS` / `PYSPARK`. Cover `run_check()` result counts, filter expressions, `WARN` / `DROP` / `QUARANTINE` / `FAIL` actions, and `DataQualityCheckFailedError`.
 
 ### `is_ldp_managed` / `is_sdp_managed` (feat/sdp addition)
 
@@ -179,7 +179,7 @@ These properties combine three conditions (compatibility + orchestrator type + r
 
 | Test | Condition forced to False | Expected |
 |------|--------------------------|----------|
-| `test_is_ldp_managed_true` | — (all True via monkeypatch) | `True` |
+| `test_is_ldp_managed_true` | - (all True via monkeypatch) | `True` |
 | `test_is_ldp_managed_false_not_compatible` | AGGREGATE expectation (not `is_ldp_compatible`) | `False` |
 | `test_is_ldp_managed_false_wrong_orchestrator` | SDP orchestrator (not `is_orchestrator_ldp`) | `False` |
 | `test_is_ldp_managed_false_not_executing` | no monkeypatch (`is_ldp_execute()` → False) | `False` |
@@ -291,4 +291,4 @@ PULUMI_ACCESS_TOKEN=pul-...
 set -a && source secrets/.env.dev && set +a && uv run pytest -m "databricks_connect" tests/
 ```
 
-On CI, these variables are injected automatically as environment secrets — no sourcing needed.
+On CI, these variables are injected automatically as environment secrets - no sourcing needed.

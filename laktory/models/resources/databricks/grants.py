@@ -7,11 +7,11 @@ class Grants(GrantsBase):
     Databricks Grants
 
     Full grant replacement. Sets the complete list of grants for a securable and removes every
-    existing grant not listed here — including those set outside Laktory.
+    existing grant not listed here - including those set outside Laktory.
 
     Use this standalone resource when you need authoritative grant management on a securable that
     Laktory does not create. For resources that Laktory creates, prefer the embedded `grants` field
-    on the resource itself (e.g., `Catalog.grants`, `Schema.grants`) — it generates the same
+    on the resource itself (e.g., `Catalog.grants`, `Schema.grants`) - it generates the same
     Terraform resource but keeps the grant definition co-located with the resource.
 
     Warning: because this resource replaces all grants, any access granted through the Databricks

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel, PluralField
+from laktory.models.basemodel import BaseModel
 from laktory.models.resources.terraformresource import TerraformResource
 
 
 class VectorSearchEndpointScalingInfo(BaseModel):
-    requested_min_qps: int | None = Field(None)
+    requested_target_qps: int | None = Field(None)
     state: str | None = Field(
         None,
         description="Current state of the endpoint. Currently following values are supported: `PROVISIONING`, `ONLINE`, and `OFFLINE`",

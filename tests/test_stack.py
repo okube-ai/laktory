@@ -511,9 +511,9 @@ def test_substitute_terraform_refs():
     # Mirror the pattern+replacer construction that model_dump() uses.
     resource_map = {
         "my_cat": "databricks_catalog",
-        "my.cat": "databricks_catalog",  # dot in name — must not match my_cat
+        "my.cat": "databricks_catalog",  # dot in name - must not match my_cat
         "foo": "databricks_schema",
-        "foobar": "databricks_schema",  # prefix of "foo" — must not corrupt foo
+        "foobar": "databricks_schema",  # prefix of "foo" - must not corrupt foo
     }
     tf_names = {
         "my_cat": "databricks_catalog.my_cat",
@@ -613,11 +613,11 @@ def test_check_depends_on():
             self.resource_options.name = name
 
     resources = {
-        # valid ${resources.X} reference — should not warn
+        # valid ${resources.X} reference - should not warn
         "child": _R("child", ["${resources.parent}"]),
-        # unknown ${resources.X} reference — should warn
+        # unknown ${resources.X} reference - should warn
         "orphan": _R("orphan", ["${resources.does-not-exist}"]),
-        # non-${resources.X} string (Terraform data source) — should not warn
+        # non-${resources.X} string (Terraform data source) - should not warn
         "external": _R("external", ["data.databricks_notebook.foo"]),
     }
     providers = {"parent": _R("parent", [])}

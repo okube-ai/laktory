@@ -2,8 +2,8 @@
     [`laktory.models.Pipeline`][laktory.models.pipeline.pipeline.Pipeline]<br>
 
 The Pipeline model is the cornerstone of Laktory, orchestrating the process of reading, transforming, and writing data. 
-It is built around the concept of the DataFrame—a two-dimensional, tabular data structure with labeled rows and 
-columns—commonly used in data analysis for efficient data manipulation. While Pandas, Spark, and Polars are popular 
+It is built around the concept of the DataFrame-a two-dimensional, tabular data structure with labeled rows and 
+columns-commonly used in data analysis for efficient data manipulation. While Pandas, Spark, and Polars are popular 
 DataFrame backends, Laktory primarily operates on [Narwhals DataFrames](https://narwhals-dev.github.io/narwhals/basics/dataframe/).
 This abstraction allows seamless integration with multiple engines (e.g., Spark, Polars) and enables selecting the most
 suitable backend for each operation.
@@ -328,7 +328,7 @@ configuration file which can be found in your workspace under `/Workspace/{runti
 #### Spark Declarative Pipeline
 [Spark Declarative Pipelines](https://spark.apache.org/docs/latest/declarative-pipelines.html)
 is the open-source counterpart of Lakeflow Declarative Pipelines, available from PySpark 4.1+. It runs entirely 
-locally — no Databricks account is required. The pipeline is executed via the `spark-pipelines` CLI, which is 
+locally - no Databricks account is required. The pipeline is executed via the `spark-pipelines` CLI, which is 
 included in `pyspark>=4.1.1`.
 
 ```yaml title="pipeline.yaml"
@@ -340,9 +340,9 @@ orchestrator:
 
 Laktory generates three artifacts into the pipeline root directory when `pl.execute()` is called:
 
-- `laktory_sdp.py` — Python definition script using `@dp.materialized_view` / `@dp.table` decorators
-- `{pipeline_name}.json` — serialized pipeline configuration
-- `spark-pipeline.yaml` — SDP spec file pointing to the script
+- `laktory_sdp.py` - Python definition script using `@dp.materialized_view` / `@dp.table` decorators
+- `{pipeline_name}.json` - serialized pipeline configuration
+- `spark-pipeline.yaml` - SDP spec file pointing to the script
 
 Here is a simplified version of the generated definition script:
 ```py title="laktory_sdp.py"

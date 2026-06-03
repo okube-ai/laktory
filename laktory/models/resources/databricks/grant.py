@@ -12,7 +12,7 @@ class Grant(GrantBase):
     Use this standalone resource when you need to manage grants on a securable that Laktory
     does not create (e.g., a pre-existing catalog or an externally managed table). For resources
     that Laktory creates, prefer the embedded `grant` field on the resource itself (e.g.,
-    `Catalog.grant`, `Schema.grant`) — it generates the same Terraform resource but keeps the
+    `Catalog.grant`, `Schema.grant`) - it generates the same Terraform resource but keeps the
     grant definition co-located with the resource.
 
     Examples

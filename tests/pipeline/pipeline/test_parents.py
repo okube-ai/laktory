@@ -94,7 +94,7 @@ def test_source_backward_compat():
     df0 = get_df0("POLARS")
     node = models.PipelineNode(
         name="brz",
-        source={"df": df0},  # old API — must still work
+        source={"df": df0},  # old API - must still work
     )
     assert len(node.sources) == 1
     assert node.sources[0].df is not None

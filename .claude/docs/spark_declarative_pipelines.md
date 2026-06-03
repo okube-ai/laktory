@@ -19,7 +19,7 @@ spark-pipelines dry-run --spec path/to/spark-pipeline.yml
 spark-pipelines init --name my_pipeline
 ```
 
-The `spark-pipelines` CLI is the only execution entry point — there is no programmatic Python runner API.
+The `spark-pipelines` CLI is the only execution entry point - there is no programmatic Python runner API.
 
 ---
 
@@ -97,7 +97,7 @@ configuration:
 
 **Glob constraints:**
 - Path is relative to the directory of the spec file (not the working directory)
-- Only file paths or folder paths ending with `/**` are allowed — `*.py` is not valid
+- Only file paths or folder paths ending with `/**` are allowed - `*.py` is not valid
 - Absolute paths are not supported in globs
 
 **Storage:** must include a URI scheme: `file://`, `s3a://`, `hdfs://`, etc.
@@ -110,8 +110,8 @@ SDP does NOT require explicit dependency declarations. Dependencies are inferred
 
 1. Each decorated function is called during registration inside two context managers:
    - `add_pipeline_analysis_context`: attaches a `PipelineAnalysisContext` protobuf extension to the Spark Connect session so the JVM server knows it's analyzing a pipeline flow
-   - `block_spark_connect_execution_and_analysis`: intercepts `AnalyzePlan` and `ExecutePlan` RPCs — **no data is read or analyzed** at registration time
-2. The function runs and produces a lazy `ConnectDataFrame` — a client-side logical plan with `UnresolvedRelation` nodes
+   - `block_spark_connect_execution_and_analysis`: intercepts `AnalyzePlan` and `ExecutePlan` RPCs - **no data is read or analyzed** at registration time
+2. The function runs and produces a lazy `ConnectDataFrame` - a client-side logical plan with `UnresolvedRelation` nodes
 3. SDP serializes that plan as a protobuf `Relation` and sends it to the Spark Connect JVM server via `DefineFlow`
 4. The server resolves all `UnresolvedRelation` nodes against the known pipeline datasets, inferring the dependency graph
 
@@ -130,7 +130,7 @@ These are the SDP equivalents of DLT's `dlt.read()` / `dlt.read_stream()`:
 | `dlt.read("brz")` | `spark.table("brz")` | Batch read from pipeline dataset |
 | `dlt.read_stream("brz")` | `spark.readStream.table("brz")` | Streaming read from pipeline dataset |
 
-SDP has **no special read functions** — standard Spark DataFrame APIs are used. The dependency is inferred from the reference in the logical plan.
+SDP has **no special read functions** - standard Spark DataFrame APIs are used. The dependency is inferred from the reference in the logical plan.
 
 ---
 
@@ -143,8 +143,8 @@ SDP's Spark Connect server spins up its own isolated catalog. Tables created in 
 | `spark.table("pipeline_dataset")` | ✓ | Yes | In-pipeline datasets only |
 | `spark.table("external_table")` | ✗ locally | No | Fails `TABLE_OR_VIEW_NOT_FOUND` unless in a shared catalog (e.g. Unity Catalog on Databricks) |
 | `spark.read.parquet(path)` | ✓ | No | Correct pattern for file sources |
-| `spark.read.format(...).load(path)` | ✓ | No | Same — any Spark format works |
-| `spark.sql("CREATE TABLE ...")` | ✗ | — | Blocked: `UNSUPPORTED_PIPELINE_SPARK_SQL_COMMAND` |
+| `spark.read.format(...).load(path)` | ✓ | No | Same - any Spark format works |
+| `spark.sql("CREATE TABLE ...")` | ✗ | - | Blocked: `UNSUPPORTED_PIPELINE_SPARK_SQL_COMMAND` |
 
 **Rule:** external data must be read via `spark.read.*`, not `spark.table()`. On Databricks, Unity Catalog tables (`catalog.schema.table`) resolve fine as external sources.
 
@@ -156,9 +156,9 @@ SDP's Spark Connect server spins up its own isolated catalog. Tables created in 
 |---|---|---|
 | `PipelineNodeDataSource` (batch) | `spark.table("sink_name")` | Yes |
 | `PipelineNodeDataSource` (streaming) | `spark.readStream.table("sink_name")` | Yes |
-| `FileDataSource` | `spark.read.format(...).load(path)` | No — leaf source |
-| `UnityCatalogDataSource` | `spark.table("cat.schema.table")` | No — external catalog |
-| `HiveMetastoreDataSource` | `spark.table("schema.table")` | No — external catalog |
+| `FileDataSource` | `spark.read.format(...).load(path)` | No - leaf source |
+| `UnityCatalogDataSource` | `spark.table("cat.schema.table")` | No - external catalog |
+| `HiveMetastoreDataSource` | `spark.table("schema.table")` | No - external catalog |
 
 This maps cleanly onto Laktory's existing source architecture. Only `PipelineNodeDataSource` needs special SDP handling; all other sources use their existing `_read_spark()` methods unchanged.
 
@@ -166,7 +166,7 @@ This maps cleanly onto Laktory's existing source architecture. Only `PipelineNod
 
 ## Output location (local)
 
-Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or Delta if configured. The `storage` path stores streaming checkpoints only — it is not the table data location.
+Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or Delta if configured. The `storage` path stores streaming checkpoints only - it is not the table data location.
 
 ---
 
@@ -176,7 +176,7 @@ Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or De
 - **No DAG visualization:** the dependency graph is maintained server-side (JVM); no Python-accessible graph object
 - **No DDL in pipeline code:** `spark.sql("CREATE TABLE ...")` and other DDL is blocked at module level
 - **Isolated catalog:** external tables from other sessions are not visible; use `spark.read.*` for external data
-- **`spark` must be obtained explicitly:** `SparkSession.getActiveSession()` — it is not injected into the module namespace
+- **`spark` must be obtained explicitly:** `SparkSession.getActiveSession()` - it is not injected into the module namespace
 - **Glob paths are relative to spec file directory**, not the working directory where the CLI is invoked
 - **CDC / `create_auto_cdc_flow`:** not available in open-source SDP (Databricks-only via LDP)
 - **`collect()`, `count()`, `toPandas()`** are forbidden inside dataset functions (would trigger blocked RPCs)
@@ -194,26 +194,26 @@ Tables are written to `spark-warehouse/<table_name>/` as Parquet (default) or De
 | **Local** | `spark-pipelines run --spec …` via subprocess | Local PySpark 4.1+ install |
 | **Lakeflow Job** | Same Python script as a Databricks Job task | DBR 16.x cluster; **no DLT license required** |
 
-The generated artifacts are identical in both modes — the orchestrator does not branch on mode at artifact-generation time. The difference is only at execution time.
+The generated artifacts are identical in both modes - the orchestrator does not branch on mode at artifact-generation time. The difference is only at execution time.
 
 > **Open question:** how the mode is selected (e.g. a field on the orchestrator, deploy-time flag, or inferred from context) is TBD pending testing of the Databricks Job path.
 
 1. **New orchestrator type** `SPARK_DECLARATIVE_PIPELINE` (class `SparkDeclarativePipelineOrchestrator`) generates three artifacts per pipeline:
-   - `sdp_laktory_pl.py` — Python definition script using `@dp.materialized_view` / `@dp.table`
-   - `{pipeline_name}.json` — serialized pipeline config (reuses `PipelineConfigWorkspaceFile`)
-   - `{pipeline_name}-spec.yml` — SDP YAML spec pointing to the script and config
+   - `sdp_laktory_pl.py` - Python definition script using `@dp.materialized_view` / `@dp.table`
+   - `{pipeline_name}.json` - serialized pipeline config (reuses `PipelineConfigWorkspaceFile`)
+   - `{pipeline_name}-spec.yml` - SDP YAML spec pointing to the script and config
 
-2. **Local execution** — `pl.execute()` shells out via `subprocess.run(["spark-pipelines", "run", "--spec", spec_path])`. No programmatic Python runner exists; subprocess is the only viable approach.
+2. **Local execution** - `pl.execute()` shells out via `subprocess.run(["spark-pipelines", "run", "--spec", spec_path])`. No programmatic Python runner exists; subprocess is the only viable approach.
 
-3. **Lakeflow Job execution** — the same `sdp_laktory_pl.py` script is submitted as a task in a Databricks Job on a DBR 16.x cluster (PySpark 4.1+). No DLT/Lakeflow Declarative Pipelines license required — this is plain Spark.
+3. **Lakeflow Job execution** - the same `sdp_laktory_pl.py` script is submitted as a task in a Databricks Job on a DBR 16.x cluster (PySpark 4.1+). No DLT/Lakeflow Declarative Pipelines license required - this is plain Spark.
 
-4. **Narwhals fit:** unchanged — `node.execute()` runs inside the decorated function body; `node.output_df.to_native()` returns a PySpark DataFrame to SDP. Same boundary as Lakeflow today.
+4. **Narwhals fit:** unchanged - `node.execute()` runs inside the decorated function body; `node.output_df.to_native()` returns a PySpark DataFrame to SDP. Same boundary as Lakeflow today.
 
-5. **SDP execution detection** — `is_sdp_execute()` checks:
-   - `spark.conf.get("spark.pipelines.flow.name")` — set by SDP runtime
-   - `spark.conf.get("laktory.is_sdp_execute")` — set via the generated YAML `configuration` block as fallback
+5. **SDP execution detection** - `is_sdp_execute()` checks:
+   - `spark.conf.get("spark.pipelines.flow.name")` - set by SDP runtime
+   - `spark.conf.get("laktory.is_sdp_execute")` - set via the generated YAML `configuration` block as fallback
 
-6. **Source handling:** no special SDP logic needed in `PipelineNodeDataSource._read_spark()` — the normal reader path (`primary_sink.read()`) produces the `spark.table()` call that SDP uses for dependency tracking.
+6. **Source handling:** no special SDP logic needed in `PipelineNodeDataSource._read_spark()` - the normal reader path (`primary_sink.read()`) produces the `spark.table()` call that SDP uses for dependency tracking.
 
 ---
 
@@ -229,7 +229,7 @@ Part of a major 0.12 release with intentional breaking changes. Orchestrator typ
 | `DATABRICKS_JOB` | `LAKEFLOW_JOB` | LJ | `LakeflowJobOrchestrator` |
 | *(new)* | `SPARK_DECLARATIVE_PIPELINE` | SDP | `SparkDeclarativePipelineOrchestrator` |
 
-**Rationale:** LDP/SDP pair cleanly — Lakeflow-hosted vs open-source Spark. "Lakeflow" encodes "Databricks + Spark + production." Including "SPARK" in the Databricks variant (`LAKEFLOW_SPARK_DECLARATIVE_PIPELINE`) would make the type string too long and produce an awkward LSDP acronym.
+**Rationale:** LDP/SDP pair cleanly - Lakeflow-hosted vs open-source Spark. "Lakeflow" encodes "Databricks + Spark + production." Including "SPARK" in the Databricks variant (`LAKEFLOW_SPARK_DECLARATIVE_PIPELINE`) would make the type string too long and produce an awkward LSDP acronym.
 
 ### Migration (hard break)
 
@@ -250,7 +250,7 @@ Part of a major 0.12 release with intentional breaking changes. Orchestrator typ
 
 ### `import dlt` → `from pyspark import pipelines as dp`
 
-All direct `dlt.*` calls have been replaced with `dp.*` equivalents in `ldp_laktory_pl.py`. The `dlt` module is no longer imported anywhere in Laktory source. `dp.expect_all`, `dp.create_auto_cdc_flow`, etc. are Databricks-only extensions to `pyspark.pipelines` — not in open-source PySpark, but available on Databricks DBR 16.x via the same import.
+All direct `dlt.*` calls have been replaced with `dp.*` equivalents in `ldp_laktory_pl.py`. The `dlt` module is no longer imported anywhere in Laktory source. `dp.expect_all`, `dp.create_auto_cdc_flow`, etc. are Databricks-only extensions to `pyspark.pipelines` - not in open-source PySpark, but available on Databricks DBR 16.x via the same import.
 
 Internal property renames:
 
@@ -279,12 +279,12 @@ Template notebook renamed: `dlt_laktory_pl.py` → `ldp_laktory_pl.py`.
 
 ### `apply_changes` → `create_auto_cdc_flow` ✓ Done (2026-05-26)
 
-Databricks confirmed (docs) that `dp.apply_changes()` is replaced by `dp.create_auto_cdc_flow()` with **identical signature** — no parameter changes. The earlier note about `dp.auto_merge()` was incorrect.
+Databricks confirmed (docs) that `dp.apply_changes()` is replaced by `dp.create_auto_cdc_flow()` with **identical signature** - no parameter changes. The earlier note about `dp.auto_merge()` was incorrect.
 
 Changes applied:
 - `dp.apply_changes(...)` → `dp.create_auto_cdc_flow(...)` in both `laktory_ldp.py` scripts
 - `ldp_apply_changes_kwargs` property on `BaseDataSink` renamed to `ldp_auto_cdc_flow_kwargs`
-- `dp.create_streaming_table()` confirmed still current — required before `create_auto_cdc_flow`
+- `dp.create_streaming_table()` confirmed still current - required before `create_auto_cdc_flow`
 
 ---
 
@@ -292,7 +292,7 @@ Changes applied:
 
 ### Completed ✓
 
-**`SparkDeclarativePipelineOrchestrator`** — `laktory/models/pipeline/orchestrators/sparkdeclarativepipelineorchestrator.py`
+**`SparkDeclarativePipelineOrchestrator`** - `laktory/models/pipeline/orchestrators/sparkdeclarativepipelineorchestrator.py`
 - Generates three artifacts: `laktory_sdp.py`, `{pipeline_name}.json`, `spark-pipeline.yaml`
 - `build()` and `execute()` (subprocess `spark-pipelines run`) both wired; `full_refresh` / `selects` flags passed through
 - `read_output=True` reads node outputs from `spark-warehouse/` after execution
@@ -303,11 +303,11 @@ Changes applied:
 
 **Expectations scaffolding**
 - `is_sdp_compatible` → `False` (single place to flip when SDP ships `@dp.expect_*`)
-- `is_sdp_managed` — independent implementation: checks `is_sdp_compatible` + `is_orchestrator_sdp` + `is_sdp_execute()`
-- `check_expectations()` raises `TypeError` for non-SDP-compatible expectations when `is_sdp_execute` — mirrors LDP streaming behavior; test added
+- `is_sdp_managed` - independent implementation: checks `is_sdp_compatible` + `is_orchestrator_sdp` + `is_sdp_execute()`
+- `check_expectations()` raises `TypeError` for non-SDP-compatible expectations when `is_sdp_execute` - mirrors LDP streaming behavior; test added
 - `laktory_sdp.py` has a comment marking where `@dp.expect_*` decorators should be added
 
-**CDC rename** — `dp.apply_changes` → `dp.create_auto_cdc_flow` (identical signature, confirmed via Databricks docs)
+**CDC rename** - `dp.apply_changes` → `dp.create_auto_cdc_flow` (identical signature, confirmed via Databricks docs)
 
 **Bug fixes**
 - `update_from_parent()` in `SparkDeclarativePipelineOrchestrator`: removed stale `or self.target` reference (LDP-only field)
@@ -315,7 +315,7 @@ Changes applied:
 
 ### Remaining open item
 
-**Lakeflow Job dual-mode path** — how the SDP orchestrator selects between local (`spark-pipelines run`) and Databricks Job execution (DBR 16.x) is TBD. The generated artifacts are identical in both modes. Open question: orchestrator field, deploy-time flag, or context inference. Blocked on Databricks Job path testing.
+**Lakeflow Job dual-mode path** - how the SDP orchestrator selects between local (`spark-pipelines run`) and Databricks Job execution (DBR 16.x) is TBD. The generated artifacts are identical in both modes. Open question: orchestrator field, deploy-time flag, or context inference. Blocked on Databricks Job path testing.
 
 ---
 
@@ -323,5 +323,5 @@ Changes applied:
 
 F6 ("Integration of Spark-native declarative pipelines") is complete as of 2026-06-01 on branch `feat/sources-refactoring`.
 
-The key change bundled with F6 completion is the `PipelineNode.sources` refactoring (dict → list). See [architectural_patterns.md — §15 PipelineNode Sources](architectural_patterns.md) for the full design.
+The key change bundled with F6 completion is the `PipelineNode.sources` refactoring (dict → list). See [architectural_patterns.md - §15 PipelineNode Sources](architectural_patterns.md) for the full design.
 

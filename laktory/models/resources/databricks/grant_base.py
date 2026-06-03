@@ -2,9 +2,10 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_grant
 from __future__ import annotations
 
-from pydantic import Field, AliasChoices
+from pydantic import AliasChoices
+from pydantic import Field
 
-from laktory.models.basemodel import BaseModel, PluralField
+from laktory.models.basemodel import BaseModel
 from laktory.models.resources.terraformresource import TerraformResource
 
 

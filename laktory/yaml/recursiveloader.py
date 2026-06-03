@@ -39,7 +39,7 @@ class RecursiveLoader(yaml.SafeLoader):
                     "The `${include.}` syntax has been deprecated in laktory 0.6.0. Please use `!use`, `!update` and `!extend` tags instead."
                 )
             # Only replace <<: at the start of line content (after optional
-            # whitespace) — the only valid YAML position for a merge key.
+            # whitespace) - the only valid YAML position for a merge key.
             _lines += [re.sub(r"^(\s*)<<:", r"\g<1>" + MERGE_KEY + ":", line)]
 
         return "\n".join(_lines)

@@ -128,7 +128,7 @@ def test_complex_types():
 
 
 def test_datetime_types():
-    # Default Datetime (time_zone="UTC") → TimestampType — B2 regression check
+    # Default Datetime (time_zone="UTC") → TimestampType - B2 regression check
     t = DType(name="Datetime")
     assert t.time_zone == "UTC"
     assert t.to_pyspark() == T.TimestampType()

@@ -33,14 +33,14 @@ After running the quickstart command, the following structure is created:
 #### Pipelines Directory
 The `laktory/pipelines/` directory contains two example Laktory pipeline definitions:
 
-- **`pl-taxi-trips.yml`** — A Databricks Job pipeline ingesting from `samples.nyctaxi.trips`.
+- **`pl-taxi-trips.yml`** - A Databricks Job pipeline ingesting from `samples.nyctaxi.trips`.
   Demonstrates DataFrame API transformations (derived columns, custom aggregations) and SQL-based
   view creation.
-- **`pl-tpch.yml`** — A Lakeflow Declarative Pipeline ingesting from `samples.tpch`. Demonstrates
+- **`pl-tpch.yml`** - A Lakeflow Declarative Pipeline ingesting from `samples.tpch`. Demonstrates
   column selection and renaming using the DataFrame API, SQL aggregation.
 
 Both pipelines source data from the built-in `samples` Unity Catalog, available in every
-Databricks workspace — no data upload required.
+Databricks workspace - no data upload required.
 
 #### Resources Directory
 The `resources/tpch.job.yml` file defines a raw DAB Databricks Job that triggers the `pl-tpch`
@@ -78,7 +78,7 @@ python:
 
 The `laktory.dab:build_resources` hook reads your pipeline YAML files at bundle deployment time,
 generates the corresponding Databricks resources (Jobs, Declarative Pipelines, workspace files),
-and injects them into the bundle — no manual resource authoring required.
+and injects them into the bundle - no manual resource authoring required.
 
 ### Deploy
 

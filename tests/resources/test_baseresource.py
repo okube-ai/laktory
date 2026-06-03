@@ -95,7 +95,7 @@ def test_compat_options_warns():
 
 
 def test_compat_options_no_warn_on_native_options_field():
-    # Catalog has a native `options` field — `options:` must NOT be redirected
+    # Catalog has a native `options` field - `options:` must NOT be redirected
     # to resource_options and must NOT trigger a DeprecationWarning.
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")

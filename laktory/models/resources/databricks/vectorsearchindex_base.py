@@ -2,9 +2,10 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_vector_search_index
 from __future__ import annotations
 
-from pydantic import Field, AliasChoices
+from pydantic import AliasChoices
+from pydantic import Field
 
-from laktory.models.basemodel import BaseModel, PluralField
+from laktory.models.basemodel import BaseModel
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -27,6 +28,8 @@ class VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumns(BaseModel):
 
 
 class VectorSearchIndexDeltaSyncIndexSpec(BaseModel):
+    columns_to_index: list[str] | None = Field(None)
+    columns_to_sync: list[str] | None = Field(None)
     embedding_writeback_table: str | None = Field(
         None,
         description="(optional) Automatically sync the vector index contents and computed embeddings to the specified Delta table. The only supported table name is the index name with the suffix `_writeback_table`",

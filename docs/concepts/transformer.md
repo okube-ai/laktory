@@ -91,16 +91,16 @@ and
 ## DataFrame References
 
 Both `DataFrameExpr` (SQL) and `DataFrameMethod` (API) transformer nodes support a set of `{placeholder}` references
-to identify which DataFrame to read from or pass as an argument. These are **not** model [variables](variables.md) —
+to identify which DataFrame to read from or pass as an argument. These are **not** model [variables](variables.md) -
 they are resolved at execution time by the transformer engine and only work inside transformer expressions and method
 arguments.
 
-### `{df}` — the flowing DataFrame
+### `{df}` - the flowing DataFrame
 
 `{df}` always refers to the DataFrame currently flowing through the transformer chain:
 
-- **First transformer node** — `{df}` is the primary source (the first entry in the node's `sources` list).
-- **Subsequent nodes** — `{df}` is the output of the previous step.
+- **First transformer node** - `{df}` is the primary source (the first entry in the node's `sources` list).
+- **Subsequent nodes** - `{df}` is the output of the previous step.
 
 ```yaml
 transformer:
@@ -109,10 +109,10 @@ transformer:
   - expr: SELECT * FROM {df} WHERE open > 100    # {df} = output of previous step
   - func_name: with_columns
     func_kwargs:
-      spread: nw.col('high') - nw.col('low')     # no {df} needed — method acts on flowing df
+      spread: nw.col('high') - nw.col('low')     # no {df} needed - method acts on flowing df
 ```
 
-### `{sources.name}` — a named pipeline node source
+### `{sources.name}` - a named pipeline node source
 
 When a pipeline node declares multiple [sources](sourcessinks.md), each source can be assigned a `name`. That name
 can then be used as a placeholder in both SQL expressions and method arguments:
@@ -142,9 +142,9 @@ nodes:
         how: left
 ```
 
-When a node has a single source, a `name` is not required — use `{df}` instead.
+When a node has a single source, a `name` is not required - use `{df}` instead.
 
-### `{nodes.node_name}` — an upstream pipeline node's output
+### `{nodes.node_name}` - an upstream pipeline node's output
 
 Any upstream pipeline node's output DataFrame can be referenced directly by name, without declaring it as a source
 on the current node. This is useful for ad-hoc lookups or unions across branches of the pipeline DAG:

@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 class CustomDataSource(BaseDataSource):
     """
     Data source backed by a fully user-supplied read function. Use this when
-    no built-in source type fits — REST APIs, proprietary databases, custom
+    no built-in source type fits - REST APIs, proprietary databases, custom
     formats, etc.
 
     Laktory calls the function and wraps the returned DataFrame in Narwhals.

@@ -143,7 +143,7 @@ Follow these guidelines:
 
 The 50+ classes under `laktory/models/resources/databricks/` that end in `_base.py`
 (e.g. `catalog_base.py`, `job_base.py`) are **auto-generated** from the Databricks
-Terraform provider schema. Do not edit them by hand — they will be overwritten on the
+Terraform provider schema. Do not edit them by hand - they will be overwritten on the
 next run.
 
 ### Scripts
@@ -162,10 +162,10 @@ All scripts live in `scripts/build_resources/`:
 Regenerate when upgrading the Databricks Terraform provider version (set in `DEFAULT_VERSION` inside `00_fetch.py`):
 
 ```bash
-# Step 1 — fetch schema + descriptions for the new provider version
+# Step 1 - fetch schema + descriptions for the new provider version
 python scripts/build_resources/00_fetch.py 1.120.0
 
-# Step 2 — regenerate *_base.py files and update API docs
+# Step 2 - regenerate *_base.py files and update API docs
 #           (02_update_api.py is called automatically at the end)
 python scripts/build_resources/01_build.py
 ```

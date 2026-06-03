@@ -98,8 +98,8 @@ class StorageCredential(StorageCredentialBase):
     grants: list[StorageCredentialGrant] = Field(
         None,
         description="""
-    Authoritative grant list for all principals. Replaces every existing grant on this Storage Credential — including
-    those set outside Laktory — with only the entries listed here. Use only when Laktory owns all access management
+    Authoritative grant list for all principals. Replaces every existing grant on this Storage Credential - including
+    those set outside Laktory - with only the entries listed here. Use only when Laktory owns all access management
     for this resource. Mutually exclusive with `grant`.
     """,
     )

@@ -4,7 +4,7 @@ Tests for DABs integration features:
   - PipelineConfigWorkspaceFile.source / build()
   - LakeflowDeclarativePipelineOrchestrator.to_dab_resource()
   - LakeflowJobOrchestrator.to_dab_resource()
-  - laktory.dab.build_resources() — folder-scan approach
+  - laktory.dab.build_resources() - folder-scan approach
   - ${var.x} syntax support (DABs-style variable prefix)
 """
 
@@ -266,7 +266,7 @@ def _make_pipelines_dir(tmp_path, yaml_content, filename="pl-stocks.yaml"):
 
 
 # ---------------------------------------------------------------------------
-# dabs.load_resources() — folder scan
+# dabs.load_resources() - folder scan
 # ---------------------------------------------------------------------------
 
 
@@ -370,7 +370,7 @@ def test_load_resources_default_dir(tmp_path, mock_bundle, monkeypatch):
     (laktory_pipelines_dir / "pl-stocks.yaml").write_text(_PIPELINE_DLT_YAML)
 
     monkeypatch.chdir(tmp_path)
-    # Do NOT set laktory_pipelines_dir — should use default
+    # Do NOT set laktory_pipelines_dir - should use default
 
     resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 1

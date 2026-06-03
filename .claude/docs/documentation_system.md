@@ -35,9 +35,9 @@ Each class gets a `.md` file under `docs/api/models/` mirroring the source direc
 ```
 
 **Import path rules**:
-- Use the **shortest griffe-resolvable path** — i.e., the shallowest `__init__.py` that explicitly (non-wildcard) re-exports the class
+- Use the **shortest griffe-resolvable path** - i.e., the shallowest `__init__.py` that explicitly (non-wildcard) re-exports the class
 - Example: `laktory.models.datasinks.TableDataSink` (via `datasinks/__init__.py`) not `laktory.models.datasinks.tabledatasink.TableDataSink`
-- `laktory/models/__init__.py` uses `from .datasinks import *` — griffe cannot follow wildcards statically, so `laktory.models.TableDataSink` does NOT work even though it's importable at runtime
+- `laktory/models/__init__.py` uses `from .datasinks import *` - griffe cannot follow wildcards statically, so `laktory.models.TableDataSink` does NOT work even though it's importable at runtime
 - Exception: classes with name collisions across sub-packages use the full module path (e.g., `laktory.models.resources.databricks.pipeline.Pipeline` vs `laktory.models.pipeline.Pipeline`)
 - Primary class appears first; helper/nested classes follow, separated by `---`
 
@@ -62,15 +62,15 @@ python docs/gen_api_docs.py --nav-all
 
 ### How it works
 
-1. **`_collect_documented_classes()`** — scans all `docs/api/models/*.md` for `:::` directives; registers `{ClassName: md_file}`. Detection is class-name-based, not file-path-based, to avoid false positives when a class is documented under an abbreviated filename.
+1. **`_collect_documented_classes()`** - scans all `docs/api/models/*.md` for `:::` directives; registers `{ClassName: md_file}`. Detection is class-name-based, not file-path-based, to avoid false positives when a class is documented under an abbreviated filename.
 
-2. **`_build_import_map()`** — scans `laktory/models/**/` `__init__.py` files **shallowest-first** (ascending path depth), skipping wildcard imports (`from .X import *`). Produces `{ClassName: shortest_griffe_resolvable_path}`. This is AST-based (not runtime introspection) because griffe resolves paths statically.
+2. **`_build_import_map()`** - scans `laktory/models/**/` `__init__.py` files **shallowest-first** (ascending path depth), skipping wildcard imports (`from .X import *`). Produces `{ClassName: shortest_griffe_resolvable_path}`. This is AST-based (not runtime introspection) because griffe resolves paths statically.
 
-3. **`_primary_class(classes, stem)`** — heuristic: match the file stem (lowercased, underscores removed) against class names. Exact match first, then substring, then fallback to first class in file.
+3. **`_primary_class(classes, stem)`** - heuristic: match the file stem (lowercased, underscores removed) against class names. Exact match first, then substring, then fallback to first class in file.
 
-4. **`_md_content(classes, primary, py_file, import_map)`** — generates stub content with primary class first, helpers alphabetically after.
+4. **`_md_content(classes, primary, py_file, import_map)`** - generates stub content with primary class first, helpers alphabetically after.
 
-5. **`_build_nav(records)`** — generates YAML nav entries grouped by top-level directory. Paste output into `mkdocs.yml` under `API Reference > Models`.
+5. **`_build_nav(records)`** - generates YAML nav entries grouped by top-level directory. Paste output into `mkdocs.yml` under `API Reference > Models`.
 
 ### Skip lists
 
@@ -80,7 +80,7 @@ SKIP_FILES   = {"basechild.py"}                         # files to ignore entire
 SKIP_DIRS    = {"azurenative"}                          # dirs without __init__.py (griffe can't resolve)
 ```
 
-**`azurenative/` is skipped** because it has no `__init__.py` and no public exports — griffe cannot statically traverse to its classes.
+**`azurenative/` is skipped** because it has no `__init__.py` and no public exports - griffe cannot statically traverse to its classes.
 
 ### After running `--write`
 1. Add the printed nav YAML entries to `mkdocs.yml` in the appropriate section
@@ -129,14 +129,14 @@ class MyModel(SomeParent):
     __hidden_doc_fields__: ClassVar[set[str]] = {"field_to_hide", "another_field"}
 ```
 
-This accumulates across the MRO — each class in the chain can add its own set.
+This accumulates across the MRO - each class in the chain can add its own set.
 
 ### 3. Split fields by origin for generated resource classes (`__doc_generated_base__`)
 
 Resource classes that inherit from a generated base (e.g. `Catalog(CatalogBase)`) have their visible fields split into two labeled parameter sections:
 
-- **Base** — fields whose names appear in the `*Base` class (i.e., come from the Terraform schema)
-- **Laktory** — fields defined only in the hand-written override class
+- **Base** - fields whose names appear in the `*Base` class (i.e., come from the Terraform schema)
+- **Laktory** - fields defined only in the hand-written override class
 
 The split is triggered by `__doc_generated_base__ = True` on the base class. The extension walks the MRO to find the nearest such base, collects its annotated field names, and uses that set to partition the fields.
 
@@ -152,7 +152,7 @@ All visible fields within each section (Base, Laktory, or unsplit) are sorted al
 
 **Fix**: In `on_class`, after all field sections are populated:
 1. Get the `laktory.typing` griffe module via `cls.package["typing"]`
-2. Create `ExprName("VariableType", parent=typing_module)` — this gives `canonical_path = "laktory.typing.VariableType"`
+2. Create `ExprName("VariableType", parent=typing_module)` - this gives `canonical_path = "laktory.typing.VariableType"`
 3. Recursively walk all parameter annotation expression trees (`_replace_expr_name`) replacing bare `ExprName("VariableType")` with the qualified version
 
 `_replace_expr_name` handles `ExprBinOp` (e.g., `bool | VariableType`), `ExprSubscript` (e.g., `list[VariableType]`), and base `ExprName` nodes.
@@ -165,7 +165,7 @@ All visible fields within each section (Base, Laktory, or unsplit) are sorted al
 
 ## Resource Doc Stub Generation
 
-`docs/api/models/resources/databricks/*.md` stubs are **auto-generated** by `scripts/build_resources/02_update_api.py`. Do not hand-edit them — they are overwritten the next time the generation pipeline runs.
+`docs/api/models/resources/databricks/*.md` stubs are **auto-generated** by `scripts/build_resources/02_update_api.py`. Do not hand-edit them - they are overwritten the next time the generation pipeline runs.
 
 The script is part of the resource build workflow:
 ```bash
@@ -186,7 +186,7 @@ Non-Databricks resource stubs (e.g. `docs/api/models/stacks/`, `docs/api/models/
 ## Model Class Conventions for Documentation
 
 ### `__doc_generated_base__ = True`
-Add to auto-generated base classes (i.e., all `*Base` resource classes in `*_base.py`). Tells the griffe extension to split the child class's fields into "Base" (Terraform-originated) and "Laktory" (hand-written) sections. Set by `scripts/build_resources/01_build.py` — do not add or remove manually.
+Add to auto-generated base classes (i.e., all `*Base` resource classes in `*_base.py`). Tells the griffe extension to split the child class's fields into "Base" (Terraform-originated) and "Laktory" (hand-written) sections. Set by `scripts/build_resources/01_build.py` - do not add or remove manually.
 
 ### `__doc_hide_base__ = True`
 Add to a base class when ALL its fields and methods should be invisible in child class docs. The base class gets its own documentation page (its fields are shown there), but children don't repeat them.

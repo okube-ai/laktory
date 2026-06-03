@@ -51,8 +51,8 @@ class Connection(ConnectionBase):
     grants: list[ConnectionGrant] = Field(
         None,
         description="""
-    Authoritative grant list for all principals. Replaces every existing grant on this Connection — including those
-    set outside Laktory — with only the entries listed here. Use only when Laktory owns all access management for
+    Authoritative grant list for all principals. Replaces every existing grant on this Connection - including those
+    set outside Laktory - with only the entries listed here. Use only when Laktory owns all access management for
     this resource. Mutually exclusive with `grant`.
     """,
     )

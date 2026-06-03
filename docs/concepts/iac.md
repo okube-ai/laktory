@@ -8,7 +8,7 @@ Infrastructure as Code (IaC) backends to provide a robust and proven experience.
 [Declarative Automation Bundles](https://docs.databricks.com/en/dev-tools/bundles/index.html) is Databricks' native 
 IaC solution, built directly into the Databricks CLI. Laktory integrates with DAB through a Python resource hook: 
 declare your pipelines as individual YAML files, register the hook in `databricks.yml`, and run 
-`databricks bundle deploy`. Laktory generates the required Job and Declarative Pipeline resources automatically — no 
+`databricks bundle deploy`. Laktory generates the required Job and Declarative Pipeline resources automatically - no 
 `stack.yaml` file required.
 
 If your team already uses the Databricks CLI and DAB to manage workspace resources, this is the fastest path to 
@@ -62,7 +62,7 @@ Terraform tracks deployed resources in a **state file**. By default the state is
 
 #### Databricks workspace backend
 
-For Databricks users, Laktory provides a built-in shortcut that stores the state file directly in the Databricks workspace — the same mechanism used by Databricks Asset Bundles (DABs). No external storage account or additional credentials are required.
+For Databricks users, Laktory provides a built-in shortcut that stores the state file directly in the Databricks workspace - the same mechanism used by Databricks Asset Bundles (DABs). No external storage account or additional credentials are required.
 
 ```yaml title="stack.yaml"
 terraform:
@@ -80,7 +80,7 @@ Credentials are taken automatically from the `DatabricksProvider` already define
 
 #### Other backends
 
-Any standard Terraform backend is also supported — just provide the backend block directly:
+Any standard Terraform backend is also supported - just provide the backend block directly:
 
 ```yaml title="stack.yaml"
 terraform:
@@ -133,8 +133,8 @@ See the [DAB concept page](dab.md) for full details including orchestrator optio
 
 Every resource in a Laktory stack has a **logical name** that serves two purposes:
 
-1. **State tracking** — the IaC backend uses it to identify the resource across deployments. Changing the name is treated as a deletion + recreation.
-2. **Cross-referencing** — other resources can reference this resource's attributes using `${resources.<name>.<property>}` (e.g., `${resources.catalog-dev.id}`).
+1. **State tracking** - the IaC backend uses it to identify the resource across deployments. Changing the name is treated as a deletion + recreation.
+2. **Cross-referencing** - other resources can reference this resource's attributes using `${resources.<name>.<property>}` (e.g., `${resources.catalog-dev.id}`).
 
 ### Auto-generated names
 
@@ -169,7 +169,7 @@ Common properties are `.id`, `.name`, and `.full_name`. The available properties
 
 ### Pinning a name
 
-If you need to control the exact name — for example, to keep a stable reference when the `name` field changes, or to use a shorter key for frequent cross-references — set `resource_options.name`:
+If you need to control the exact name - for example, to keep a stable reference when the `name` field changes, or to use a shorter key for frequent cross-references - set `resource_options.name`:
 
 ```yaml title="stack.yaml"
 resources:
@@ -197,4 +197,4 @@ resources:
         display_name: admins
 ```
 
-Which fields to provide in `lookup_existing` depends on the resource type — each resource's API reference documents the available lookup key(s) on its `lookup_existing` field.
+Which fields to provide in `lookup_existing` depends on the resource type - each resource's API reference documents the available lookup key(s) on its `lookup_existing` field.

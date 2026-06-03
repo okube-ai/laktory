@@ -18,7 +18,7 @@ class VariableType(str):
     allows values to be specified as variable references or expressions in
     YAML configs and resolved at deploy time.
 
-    The string **must** start with `${` — arbitrary strings are not accepted.
+    The string **must** start with `${` - arbitrary strings are not accepted.
     Two syntaxes are supported:
 
     - Simple substitution: `${vars.my_variable_name}`

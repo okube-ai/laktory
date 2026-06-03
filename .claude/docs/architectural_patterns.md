@@ -7,11 +7,11 @@ All models follow a strict inheritance chain:
 ```
 pydantic.BaseModel
   └── BaseModel (laktory/models/basemodel.py)
-        ├── PipelineChild (laktory/models/pipelinechild.py) — tracks pipeline context
-        ├── BaseChild (laktory/models/basechild.py) — tracks parent reference
-        └── BaseResource (laktory/models/resources/baseresource.py) — adds options, lookup_existing
-              └── XyzBase(BaseModel, TerraformResource) — generated base (e.g. catalog_base.py)
-                    └── Xyz(XyzBase) — hand-written override (e.g. catalog.py)
+        ├── PipelineChild (laktory/models/pipelinechild.py) - tracks pipeline context
+        ├── BaseChild (laktory/models/basechild.py) - tracks parent reference
+        └── BaseResource (laktory/models/resources/baseresource.py) - adds options, lookup_existing
+              └── XyzBase(BaseModel, TerraformResource) - generated base (e.g. catalog_base.py)
+                    └── Xyz(XyzBase) - hand-written override (e.g. catalog.py)
 ```
 
 - `BaseModel` uses a custom metaclass (`ModelMetaclass`) that injects `VariableType` into every field, enabling `${vars.x}` substitution in all string values.
@@ -27,16 +27,16 @@ Key files: `laktory/models/basemodel.py`, `laktory/models/basechild.py`, `laktor
 All Databricks resource base classes inherit from `TerraformResource`:
 
 ```python
-# generated — laktory/models/resources/databricks/catalog_base.py
+# generated - laktory/models/resources/databricks/catalog_base.py
 class CatalogBase(BaseModel, TerraformResource):
     ...
 
-# hand-written — laktory/models/resources/databricks/catalog.py
+# hand-written - laktory/models/resources/databricks/catalog.py
 class Catalog(CatalogBase):
     ...
 ```
 
-- `TerraformResource` (`laktory/models/resources/terraformresource.py`) — provides `terraform_dump()`, HCL serialization, and the `terraform_resource_type` property
+- `TerraformResource` (`laktory/models/resources/terraformresource.py`) - provides `terraform_dump()`, HCL serialization, and the `terraform_resource_type` property
 - Pulumi was dropped in v0.11 (PR #537). There is no `PulumiResource` mixin.
 - The `iac_backend` property on `Stack` identifies which backend to use (only `"terraform"` is valid now)
 
@@ -47,9 +47,9 @@ class Catalog(CatalogBase):
 Instead of a single abstract base class with polymorphism, related types are combined into `Union` type aliases used in model fields. Pydantic uses the `discriminator` field for efficient dispatch.
 
 Examples:
-- `laktory/models/datasources/__init__.py` — `DataSourcesUnion`
-- `laktory/models/datasinks/__init__.py` — `DataSinksUnion`
-- `laktory/models/grants/__init__.py` — `GrantsUnion`
+- `laktory/models/datasources/__init__.py` - `DataSourcesUnion`
+- `laktory/models/datasinks/__init__.py` - `DataSinksUnion`
+- `laktory/models/grants/__init__.py` - `GrantsUnion`
 
 ```python
 source: DataSourcesUnion = Field(..., discriminator="source_type")
@@ -109,8 +109,8 @@ class Table(TableBase):
 All model fields accept `${vars.name}` (simple substitution) and `${{ expression }}` (evaluated Python expression) syntax. This is enabled by the custom metaclass in `BaseModel`.
 
 Key methods on every model:
-- `inject_vars(vars: dict)` — recursively substitutes variables in all fields
-- `push_vars(vars: dict)` — propagates variables down to child models
+- `inject_vars(vars: dict)` - recursively substitutes variables in all fields
+- `push_vars(vars: dict)` - propagates variables down to child models
 
 Usage pattern in YAML configs:
 ```yaml
@@ -142,7 +142,7 @@ A `Pipeline` (`laktory/models/pipeline/pipeline.py`) contains a list of `Pipelin
 
 Each `PipelineNode`:
 - Has one `source` (a `DataSource` or another node via `PipelineNodeDataSource`)
-- Has a `transformer` (`DataFrameTransformer`) — an ordered list of `DataFrameMethod` or `DataFrameExpr` steps
+- Has a `transformer` (`DataFrameTransformer`) - an ordered list of `DataFrameMethod` or `DataFrameExpr` steps
 - Has zero or more `sinks` (list of `DataSink`)
 
 Transformation chain (applied sequentially):
@@ -159,7 +159,7 @@ source_df → method1(df) → expr2(df) → method3(df) → sink
 
 A `Stack` (`laktory/models/stacks/stack.py`) is the top-level deployment unit combining:
 - Named `Pipeline` objects (`dict[str, Pipeline]`)
-- Named resource objects via `StackResources` — which contains one `dict[str, XyzResource]` field per resource type (50+ fields)
+- Named resource objects via `StackResources` - which contains one `dict[str, XyzResource]` field per resource type (50+ fields)
 
 This flat dictionary structure (rather than nesting) means all resources are directly addressable and can be iterated uniformly.
 
@@ -171,7 +171,7 @@ This flat dictionary structure (rather than nesting) means all resources are dir
 
 All Databricks resource models follow a two-file split: a generated base and a hand-written override.
 
-**Generated base** (`*_base.py`) — produced by `scripts/build_resources/01_build.py`:
+**Generated base** (`*_base.py`) - produced by `scripts/build_resources/01_build.py`:
 ```python
 class CatalogBase(BaseModel, TerraformResource):
     """Generated base class for `databricks_catalog`."""
@@ -187,7 +187,7 @@ class CatalogBase(BaseModel, TerraformResource):
         return "databricks_catalog"
 ```
 
-**Hand-written override** (`catalog.py`) — adds Laktory-specific logic:
+**Hand-written override** (`catalog.py`) - adds Laktory-specific logic:
 ```python
 from laktory.models.resources.databricks.catalog_base import *  # NOQA: F403
 from laktory.models.resources.databricks.catalog_base import CatalogBase
@@ -197,7 +197,7 @@ class Catalog(CatalogBase):
 ```
 
 Rules:
-- **Never hand-edit `*_base.py` files** — they are overwritten the next time `01_build.py` runs
+- **Never hand-edit `*_base.py` files** - they are overwritten the next time `01_build.py` runs
 - To add or fix a field, either update the generation script or override it in the hand-written class
 - `__doc_generated_base__ = True` on the base class tells the griffe extension to split documentation into "Base" and "Laktory" field sections
 
@@ -217,7 +217,7 @@ Key files: `scripts/build_resources/`, `laktory/models/resources/databricks/*_ba
 
 Databricks Declarative Automation Bundles (DABs) is a second deployment path for pipeline-level resources (Jobs, DLT Pipelines). Unity Catalog and account-level resources still require Terraform.
 
-**Entry point**: `laktory/dab.py` — exports `build_resources(bundle)`, which the Databricks CLI calls via `databricks.yml`:
+**Entry point**: `laktory/dab.py` - exports `build_resources(bundle)`, which the Databricks CLI calls via `databricks.yml`:
 
 ```yaml
 variables:
@@ -244,8 +244,8 @@ Key files: `laktory/dab.py`, `laktory/models/orchestrators/databricksjoborchestr
 ## 13. Resource Naming
 
 Every resource has a `resource_name` property that serves two roles:
-1. **IaC state address** — the IaC backend uses it to track the resource across deployments. Renaming a resource causes destroy-and-recreate.
-2. **Cross-reference key** — other resources and YAML configs reference this resource via `${resources.<name>.<property>}` (e.g., `${resources.catalog-dev.id}`).
+1. **IaC state address** - the IaC backend uses it to track the resource across deployments. Renaming a resource causes destroy-and-recreate.
+2. **Cross-reference key** - other resources and YAML configs reference this resource via `${resources.<name>.<property>}` (e.g., `${resources.catalog-dev.id}`).
 
 ### Auto-generated name algorithm
 
@@ -286,7 +286,7 @@ The override value must start with a letter and contain only letters, digits, hy
 Use `${resources.<name>.<property>}` to inject a resource attribute as the value of another field:
 
 ```yaml
-# In stack.yaml — reference the catalog's id in a grant
+# In stack.yaml - reference the catalog's id in a grant
 grant:
   principal: account users
   privileges: [USE_CATALOG]
@@ -295,7 +295,7 @@ catalog: ${resources.catalog-dev.id}
 
 Common properties: `.id`, `.name`, `.full_name`, `.path`. The available properties depend on the resource type.
 
-Key files: `laktory/models/resources/baseresource.py` — `resource_name`, `resource_type_id`, `resource_key`, `to_safe_name()`
+Key files: `laktory/models/resources/baseresource.py` - `resource_name`, `resource_type_id`, `resource_key`, `to_safe_name()`
 
 ---
 
@@ -321,14 +321,14 @@ Unity Catalog access control is expressed through four overlapping constructs. U
 
 **Use `grants` (plural) when:**
 - Laktory is the single source of truth for all access on this resource
-- You want a "complete picture" declaration — exactly this list, nothing more
+- You want a "complete picture" declaration - exactly this list, nothing more
 - Be aware: any grant not in the list is deleted on the next `terraform apply`
 
 **Use standalone `Grant` / `Grants` when:**
 - The target securable is not created by Laktory (pre-existing catalog, external table)
 - You need to manage grants without owning the resource definition
 
-**For resources Laktory creates, always prefer the embedded fields** (`Catalog.grant`, `Schema.grants`, etc.) — they render the same Terraform resource but keep grants co-located with the resource definition.
+**For resources Laktory creates, always prefer the embedded fields** (`Catalog.grant`, `Schema.grants`, etc.) - they render the same Terraform resource but keep grants co-located with the resource definition.
 
 ### Mutual exclusivity
 
@@ -364,12 +364,12 @@ Unity Catalog access control is expressed through four overlapping constructs. U
 - Named source: referenced as `{sources.name}` in transformer SQL expressions and method arguments
 - Multiple sources: each must have a `name` to be individually addressable; the first is still the primary (`{df}`)
 
-**Backward compat:** `_migrate_source` model_validator on `PipelineNode` converts the legacy singular `source:` key to `sources: [source]` (a single-item list). No dict backward compat — dict format was never released.
+**Backward compat:** `_migrate_source` model_validator on `PipelineNode` converts the legacy singular `source:` key to `sources: [source]` (a single-item list). No dict backward compat - dict format was never released.
 
-**Critical execution bug (fixed):** `_stage_df` (the primary source DataFrame) must be selected as `named_dfs[f"sources.{self.sources[0].name or 'df'}"]` — NOT by scanning `named_dfs` for the first `sources.*` key. `pipeline.execute()` shares a single `named_dfs` dict across all nodes, so stale `sources.*` keys from previous nodes would be found first otherwise.
+**Critical execution bug (fixed):** `_stage_df` (the primary source DataFrame) must be selected as `named_dfs[f"sources.{self.sources[0].name or 'df'}"]` - NOT by scanning `named_dfs` for the first `sources.*` key. `pipeline.execute()` shares a single `named_dfs` dict across all nodes, so stale `sources.*` keys from previous nodes would be found first otherwise.
 
 **Key files:**
-- `laktory/models/pipeline/pipelinenode.py` — `sources` field, `_migrate_source`, `_validate_sources_types`, `execute()`
-- `laktory/models/datasources/basedatasource.py` — `name: str | None` field
-- `laktory/models/dataframe/dataframeexpr.py` — `{sources.X}` and `{df}` resolution in `to_sql()` and `to_df()`
-- `laktory/models/dataframe/dataframemethod.py` — `{sources.X}` resolution in `DataFrameMethodArg.eval()`
+- `laktory/models/pipeline/pipelinenode.py` - `sources` field, `_migrate_source`, `_validate_sources_types`, `execute()`
+- `laktory/models/datasources/basedatasource.py` - `name: str | None` field
+- `laktory/models/dataframe/dataframeexpr.py` - `{sources.X}` and `{df}` resolution in `to_sql()` and `to_df()`
+- `laktory/models/dataframe/dataframemethod.py` - `{sources.X}` resolution in `DataFrameMethodArg.eval()`

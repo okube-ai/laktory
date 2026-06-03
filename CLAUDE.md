@@ -25,7 +25,7 @@ Laktory is a DataOps and ETL framework for building lakehouses on Databricks. It
 
 | Path | Purpose |
 |------|---------|
-| `laktory/models/` | All Pydantic models — the core of the library |
+| `laktory/models/` | All Pydantic models - the core of the library |
 | `laktory/models/resources/databricks/` | 50+ Databricks resource definitions (Catalog, Job, Cluster, etc.) |
 | `laktory/models/pipeline/` | Pipeline, PipelineNode, and execution plan |
 | `laktory/models/datasources/` | Input sources (file, Unity Catalog, Hive, DataFrame, node) |
@@ -69,13 +69,13 @@ The sibling okube-growth repo lives at `../okube-growth/`
 - A release or milestone should be logged as a content opportunity in `../okube-growth/strategy/content_calendar.md`
 - Laktory's public messaging (README, docs) should stay in sync with the growth strategy in `../okube-growth/strategy/positioning.md`
 
-Do not touch okube-growth's tooling code or LinkedIn config files from this context — only `.md` strategy and documentation files.
+Do not touch okube-growth's tooling code or LinkedIn config files from this context - only `.md` strategy and documentation files.
 
 The okube-growth CLAUDE.md has a reciprocal instruction allowing it to write into this repo.
 
 ## Git policy
 
-**Never run `git commit`, `git push`, or any git write operation** — make file edits locally and let the user decide when to commit and push.
+**Never run `git commit`, `git push`, or any git write operation** - make file edits locally and let the user decide when to commit and push.
 
 ## Additional Documentation
 
@@ -85,7 +85,7 @@ Check these files when working on related topics:
 |------|----------------|
 | `.claude/docs/architectural_patterns.md` | Model hierarchy, resource patterns, pipeline composition, variable injection, YAML tags |
 | `.claude/docs/strategic_roadmap.md` | Planned direction: dropping Pulumi, DABs integration, Terraform schema generation, scope decisions |
-| `.claude/docs/documentation_system.md` | Full reference for the MkDocs stack, griffe extension, doc stub automation, and VariableType fix — Claude owns this system |
+| `.claude/docs/documentation_system.md` | Full reference for the MkDocs stack, griffe extension, doc stub automation, and VariableType fix - Claude owns this system |
 | `.claude/docs/testing.md` | Test setup, markers, fixtures, backend parametrization, and live test credentials |
 | `.claude/docs/spark_declarative_pipelines.md` | SDP (`pyspark.pipelines`) API, dependency tracking, read patterns, constraints, and F6 integration notes |
 | `.claude/docs/placeholder_convention.md` | Variable / Expression / Reference naming convention; the `$` rule; where each applies |

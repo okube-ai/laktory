@@ -41,7 +41,7 @@ GITHUB_RAW = (
     "https://raw.githubusercontent.com/databricks/terraform-provider-databricks"
 )
 
-DEFAULT_VERSION = "1.113.0"
+DEFAULT_VERSION = "1.117.0"
 
 # Resources whose descriptions come from Go model struct comments.
 # Format: resource_key → {service dir, primary struct, fallback structs}
@@ -84,57 +84,54 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_dashboard",
     "databricks_dbfs_file",
     "databricks_directory",
+    "databricks_entitlements",
     "databricks_external_location",
+    "databricks_git_credential",
+    "databricks_global_init_script",
+    "databricks_grant",
+    "databricks_grants",
     "databricks_group",
     "databricks_group_member",
+    "databricks_instance_pool",
+    "databricks_ip_access_list",
+    "databricks_job",
+    "databricks_library",
     "databricks_metastore_assignment",
     "databricks_metastore_data_access",
     "databricks_mlflow_experiment",
     "databricks_mlflow_model",
     "databricks_mlflow_webhook",
+    "databricks_model_serving",
     "databricks_mws_ncc_binding",
     "databricks_mws_network_connectivity_config",
     "databricks_mws_permission_assignment",
     "databricks_notebook",
     "databricks_notification_destination",
     "databricks_obo_token",
+    "databricks_online_table",
+    "databricks_permissions",
+    "databricks_pipeline",
     "databricks_quality_monitor",
     "databricks_query",
     "databricks_recipient",
+    "databricks_registered_model",
     "databricks_repo",
+    "databricks_secret",
+    "databricks_secret_acl",
+    "databricks_secret_scope",
     "databricks_service_principal",
     "databricks_service_principal_role",
+    "databricks_share",
     "databricks_sql_endpoint",
+    "databricks_sql_table",
     "databricks_storage_credential",
+    "databricks_token",
     "databricks_user",
     "databricks_user_role",
     "databricks_vector_search_endpoint",
     "databricks_vector_search_index",
-    "databricks_workspace_file",
-    # Phase 2 — resources with grants/child resources
-    "databricks_grant",
-    "databricks_grants",
-    "databricks_permissions",
-    "databricks_registered_model",
-    "databricks_secret",
-    "databricks_secret_acl",
-    "databricks_secret_scope",
-    "databricks_share",
-    "databricks_sql_table",
     "databricks_workspace_binding",
-    # Phase 3 — complex resources
-    "databricks_job",
-    "databricks_pipeline",
-    # Other commonly used resources
-    "databricks_entitlements",
-    "databricks_git_credential",
-    "databricks_global_init_script",
-    "databricks_instance_pool",
-    "databricks_ip_access_list",
-    "databricks_library",
-    "databricks_model_serving",
-    "databricks_online_table",
-    "databricks_token",
+    "databricks_workspace_file",
 ]
 
 MAIN_TF_TEMPLATE = """\
@@ -365,7 +362,7 @@ def generate_descriptions(version: str) -> None:
         cache[resource_key] = descs
         print(f"    {resource_key}: {len(descs)} field descriptions (go structs)")
 
-    # --- Markdown docs approach — fetch all remaining resources in parallel ---
+    # --- Markdown docs approach - fetch all remaining resources in parallel ---
     remaining = [rk for rk in MARKDOWN_TARGETS if rk not in cache]
     print(f"\n  Fetching {len(remaining)} markdown description files in parallel ...")
     with ThreadPoolExecutor(max_workers=10) as executor:

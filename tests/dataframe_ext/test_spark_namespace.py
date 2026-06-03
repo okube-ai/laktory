@@ -10,7 +10,7 @@ from laktory._testing import get_df0
 from ..conftest import assert_dfs_equal
 
 # --------------------------------------------------------------------------- #
-# Fixtures — registered once per module to avoid re-patching PySpark classes  #
+# Fixtures - registered once per module to avoid re-patching PySpark classes  #
 # --------------------------------------------------------------------------- #
 
 

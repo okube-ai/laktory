@@ -211,7 +211,7 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         Create an instance that references an existing resource without managing it.
 
         Required fields are filled with placeholder values so Pydantic validation
-        passes — only `lookup_existing` is used at deploy time. Prefer this over
+        passes - only `lookup_existing` is used at deploy time. Prefer this over
         passing `lookup_existing` directly to the constructor to make the intent
         explicit.
         """
@@ -235,7 +235,7 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
     @property
     def resource_name(self) -> str:
         """
-        Logical name of the resource within the stack — auto-generated as
+        Logical name of the resource within the stack - auto-generated as
         `{resource_type_id}-{resource_safe_key}` unless overridden via
         `resource_options.name`. Used as the IaC state address and as the key
         for `${resources.<name>.<property>}` cross-references.

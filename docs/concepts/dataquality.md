@@ -2,8 +2,8 @@
 
 Laktory elevates data quality to a first-class citizen by integrating it
 directly into the dataflow, ensuring issues are caught before data reaches
-production. Instead of merely monitoring data quality post-factum—when it may be
-too late—Laktory provides mechanisms to intercept and handle data quality issues
+production. Instead of merely monitoring data quality post-factum-when it may be
+too late-Laktory provides mechanisms to intercept and handle data quality issues
 during execution. Whether by failing a pipeline before corrupted data is
 written, or by quarantining invalid records, Laktory guarantees that only clean,
 reliable data enters your analytics.

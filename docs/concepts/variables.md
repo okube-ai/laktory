@@ -9,7 +9,7 @@ Laktory uses three distinct mechanisms to make declarations dynamic. They share 
 | **Expression** | `${{ python expr }}` | Config / deployment time | Any model field |
 | **Reference** | `{df}` · `{sources.X}` · `{nodes.X}` | Execution time | Transformer nodes only |
 
-**The `$` rule** — the dollar sign is the tell. Variables and Expressions always start with `$` and are resolved before the pipeline runs. References have no `$` and are resolved at runtime by the transformer engine when it has actual DataFrames in memory.
+**The `$` rule** - the dollar sign is the tell. Variables and Expressions always start with `$` and are resolved before the pipeline runs. References have no `$` and are resolved at runtime by the transformer engine when it has actual DataFrames in memory.
 
 ---
 
@@ -40,7 +40,7 @@ When the same variable is declared in multiple places, the following priority ap
 | 5 | OS environment variables | `$DATABRICKS_HOST` |
 | 6 *(lowest)* | Laktory settings | `laktory.settings` |
 
-**From model** — any Laktory object can declare its own variables:
+**From model** - any Laktory object can declare its own variables:
 
 ```yaml title="cluster.yaml"
 name: cluster-${vars.env}
@@ -48,11 +48,11 @@ variables:
   env: prd
 ```
 
-**From environment** — if a variable is not found in declared model variables, Laktory falls back to OS environment variables.
+**From environment** - if a variable is not found in declared model variables, Laktory falls back to OS environment variables.
 
-**From settings** — final fallback to `laktory.settings` values.
+**From settings** - final fallback to `laktory.settings` values.
 
-**From CLI** — variables passed at the CLI level override everything:
+**From CLI** - variables passed at the CLI level override everything:
 
 ```bash
 laktory deploy --env dev --var profile=MY_PROFILE --var node_type=Standard_DS3_v2
@@ -70,9 +70,9 @@ CLI options are available on all commands: `deploy`, `preview`, `destroy`, `vali
 
 ### Properties
 
-**Case-insensitive** — variable names are not case-sensitive.
+**Case-insensitive** - variable names are not case-sensitive.
 
-**Inheritance** — models inherit variables from their parent and can override them:
+**Inheritance** - models inherit variables from their parent and can override them:
 
 ```yaml title="stack.yaml"
 jobs:
@@ -89,7 +89,7 @@ variables:
   cluster_size: 2
 ```
 
-**Nesting** — variables can reference other variables:
+**Nesting** - variables can reference other variables:
 
 ```yaml title="stack.yaml"
 variables:
@@ -164,7 +164,7 @@ variables:
 
 Certain Python objects are available inside expressions depending on context.
 
-**`pipeline`** — available inside a pipeline and all its children:
+**`pipeline`** - available inside a pipeline and all its children:
 
 ```yaml title="pipeline.yaml"
 orchestrator:
@@ -172,7 +172,7 @@ orchestrator:
   name: job-${{ pipeline.name }}
 ```
 
-**`pipeline_node`** — available inside a pipeline node and all its children:
+**`pipeline_node`** - available inside a pipeline node and all its children:
 
 ```yaml title="pipeline.yaml"
 nodes:
@@ -195,7 +195,7 @@ Three references are available:
 
 | Reference | Points to |
 |-----------|-----------|
-| `{df}` | The flowing DataFrame — the primary source on the first transformer step, the output of the previous step on subsequent steps |
+| `{df}` | The flowing DataFrame - the primary source on the first transformer step, the output of the previous step on subsequent steps |
 | `{sources.name}` | A named source declared on the pipeline node |
 | `{nodes.X}` | The output DataFrame of upstream pipeline node `X` |
 
@@ -228,7 +228,7 @@ nodes:
     - expr: SELECT * FROM {df} UNION ALL SELECT * FROM {nodes.brz_stock_prices}
 ```
 
-See [Transformer — DataFrame References](transformer.md#dataframe-references) for the full reference.
+See [Transformer - DataFrame References](transformer.md#dataframe-references) for the full reference.
 
 ---
 
