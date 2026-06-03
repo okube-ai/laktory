@@ -8,6 +8,7 @@
 * All laktory-injected Spark conf / pipeline configuration keys now use `laktory.` namespace prefix (`laktory.executor`, `laktory.requirements`, `laktory.config_filepath`, `laktory.pipeline_name`)
 * `PipelineNode.execute()` now reads all `sources` entries before invoking the transformer. Upstream nodes referenced via `{nodes.X}` SQL placeholders are pre-loaded here rather than inside `DataFrameExpr`
 * `Dtype` class now supports `time_unit` and `time_zone` properties.
+* 
 ### Breaking changes
 * Renamed Databricks Pipelines orchestrator to Lakehouse Declarative Pipeline
 * Refactored Lakehouse Declarative Pipeline script to use latest API (`apply_changes` -> `create_auto_cdc_flow`)
@@ -15,6 +16,7 @@
 * `PipelineNode.source` field removed — use `PipelineNode.sources` (dict) instead. YAML using `source:` is automatically migrated; Python code accessing `.source` directly must be updated.
 ### Fixed
 * Table creation when cdc_merge_options with SCD_TYPE 2 is used
+* `TableDataSink` supports "ORC" and "AVRO" formats
 
 ## [0.11.10] - 2026-05-20
 ### Added

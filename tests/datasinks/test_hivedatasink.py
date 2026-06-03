@@ -76,3 +76,22 @@ def test_full_name():
     )
     assert sink.schema_name == "default"
     assert sink.table_name == "df"
+
+
+@pytest.mark.parametrize("fmt", ["ORC", "AVRO"])
+def test_orc_avro_formats_accepted(fmt):
+    sink = HiveMetastoreDataSink(table_name="default.df", format=fmt)
+    assert sink.format == fmt
+
+
+@pytest.mark.parametrize("fmt", ["ORC", "AVRO"])
+def test_orc_avro_merge_rejected(fmt):
+    from laktory.models import DataSinkMergeCDCOptions
+
+    with pytest.raises(Exception):
+        HiveMetastoreDataSink(
+            table_name="default.df",
+            format=fmt,
+            mode="MERGE",
+            merge_cdc_options=DataSinkMergeCDCOptions(primary_keys=["id"]),
+        )
