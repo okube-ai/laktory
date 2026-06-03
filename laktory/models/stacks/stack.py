@@ -96,7 +96,7 @@ def _get_cached_ws_token(wc, cache_path: str) -> str:
             expires_at = cached.get("expires_at")
             if expires_at is None or expires_at > time.time() + 86400:
                 return cached["token"]
-            # Token expires within 24 hours — delete and rotate
+            # Token expires within 24 hours - delete and rotate
             try:
                 wc.tokens.delete(token_id=cached["token_id"])
             except Exception:

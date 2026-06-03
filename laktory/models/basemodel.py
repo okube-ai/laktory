@@ -36,7 +36,7 @@ if _pydantic_minor != _KNOWN_PYDANTIC_MINOR:
     # warnings.warn(
     #     f"laktory uses pydantic._internal internals; tested against "
     #     f"{'.'.join(str(x) for x in _KNOWN_PYDANTIC_MINOR)}.x, "
-    #     f"found {pydantic.__version__} — run the full test suite before deploying.",
+    #     f"found {pydantic.__version__} - run the full test suite before deploying.",
     #     stacklevel=2,
     # )
 
@@ -90,7 +90,7 @@ def annotation_contains_list_of_basemodel(annotation, mymodel_cls) -> bool:
 _VARTYPE_EXCLUDED_FIELDS: set[str] = {"variables", "dataframe_backend"}
 
 # Per-class fields excluded from VariableType injection (e.g. discriminator fields
-# that Pydantic uses to select a union variant — injecting VariableType breaks the
+# that Pydantic uses to select a union variant - injecting VariableType breaks the
 # discriminator logic at class-construction time).
 _VARTYPE_EXCLUDED_CLASS_FIELDS: dict[str, set[str]] = {
     "UnityCatalogDataSink": {"type"},
@@ -357,7 +357,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         directly to Python's base attribute-setting primitive, which Pydantic
         does not intercept.
 
-        Do not use this outside of model validators — prefer normal attribute
+        Do not use this outside of model validators - prefer normal attribute
         assignment so that validation stays active.
         """
         object.__setattr__(self, name, value)
@@ -458,7 +458,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # unprotected; merging into a new dict first and copying once covers both.
         vars = deepcopy({**(vars or {}), **self.variables})
 
-        # Fetching objs — subclasses override _inject_vars_objs() to inject
+        # Fetching objs - subclasses override _inject_vars_objs() to inject
         # context objects (e.g. pipeline, pipeline_node) without circular imports
         _caller_objs = objs
         if objs is None:
@@ -557,7 +557,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         * [variables](https://www.laktory.ai/concepts/variables/)
         """
 
-        # Setting vars — same merge-then-copy pattern as inject_vars()
+        # Setting vars - same merge-then-copy pattern as inject_vars()
         vars = deepcopy({**(vars or {}), **self.variables})
 
         # Create copy

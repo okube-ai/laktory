@@ -137,7 +137,7 @@ class TerraformStack(BaseModel):
         }
         if resource_lookup:
             # Sort longest-first so that e.g. "databricks.dev" is tried before
-            # "databricks" — otherwise the shorter name wins in the alternation
+            # "databricks" - otherwise the shorter name wins in the alternation
             # and ".dev" is misread as a property reference.
             names_alt = "|".join(
                 re.escape(n) for n in sorted(resource_lookup, key=len, reverse=True)
