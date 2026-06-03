@@ -88,3 +88,4 @@ Check these files when working on related topics:
 | `.claude/docs/documentation_system.md` | Full reference for the MkDocs stack, griffe extension, doc stub automation, and VariableType fix — Claude owns this system |
 | `.claude/docs/testing.md` | Test setup, markers, fixtures, backend parametrization, and live test credentials |
 | `.claude/docs/spark_declarative_pipelines.md` | SDP (`pyspark.pipelines`) API, dependency tracking, read patterns, constraints, and F6 integration notes |
+| `.claude/docs/placeholder_convention.md` | Variable / Expression / Reference naming convention; the `$` rule; where each applies |

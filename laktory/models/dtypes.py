@@ -115,6 +115,14 @@ class DType(BaseModel):
     shape: int | list[int] = Field(
         None, description="Definition of shape for `Array` type."
     )
+    time_unit: str | None = Field(
+        None,
+        description="Time unit for `Datetime` or `Duration` types (e.g., 'us', 'ms', 'ns').",
+    )
+    time_zone: str | None = Field(
+        "UTC",
+        description="Time zone for `Datetime` type (e.g., 'UTC', 'America/New_York'). Set to None for timezone-naive (TimestampNTZ in Spark).",
+    )
     category: Literal["NUMERIC", "STRING", "STRUCT"] = Field(
         "NUMERIC", description="Data type category"
     )
@@ -189,6 +197,15 @@ class DType(BaseModel):
                 for f in nw_dtype.fields
             ]
             return DType(name="Struct", fields=fields)
+        if isinstance(nw_dtype, nw_dtypes.Datetime):
+            return DType(
+                name="Datetime",
+                time_unit=nw_dtype.time_unit,
+                time_zone=nw_dtype.time_zone,
+            )
+        if isinstance(nw_dtype, nw_dtypes.Duration):
+            return DType(name="Duration", time_unit=nw_dtype.time_unit)
+
         # Simple types are stored as classes in nw.Schema; complex types as instances
         name = (
             nw_dtype.__name__ if isinstance(nw_dtype, type) else type(nw_dtype).__name__
@@ -216,6 +233,15 @@ class DType(BaseModel):
                 fields += [nw.Field(name=field.name, dtype=field.dtype.to_narwhals())]
             return nw_dtypes.Struct(fields)
 
+        if _type == "Datetime":
+            return nw_dtypes.Datetime(
+                time_unit=self.time_unit or "us",
+                time_zone=self.time_zone,
+            )
+
+        if _type == "Duration":
+            return nw_dtypes.Duration(time_unit=self.time_unit or "us")
+
         if hasattr(nw_dtypes, _type):
             return getattr(nw_dtypes, _type)()
 
@@ -228,6 +254,12 @@ class DType(BaseModel):
         from narwhals._spark_like.utils import narwhals_to_native_dtype
 
         from laktory import get_spark_session
+
+        # Narwhals rejects time zones that differ from the session's, so bypass
+        # it for Datetime: None → TimestampNTZType (explicit TZ-naive),
+        # any time zone → TimestampType (timezone-aware).
+        if self.name == "Datetime":
+            return T.TimestampNTZType() if self.time_zone is None else T.TimestampType()
 
         spark = get_spark_session()
         return narwhals_to_native_dtype(
@@ -355,10 +387,13 @@ class Enum(SpecificDType):
 # Date & Time types
 class Datetime(SpecificDType):
     name: str = Field("Datetime", frozen=True)
+    time_unit: str | None = None
+    time_zone: str | None = "UTC"
 
 
 class Duration(SpecificDType):
     name: str = Field("Duration", frozen=True)
+    time_unit: str | None = None
 
 
 class Date(SpecificDType):

@@ -127,6 +127,44 @@ def test_complex_types():
     )
 
 
+def test_datetime_types():
+    # Default Datetime (time_zone="UTC") → TimestampType — B2 regression check
+    t = DType(name="Datetime")
+    assert t.time_zone == "UTC"
+    assert t.to_pyspark() == T.TimestampType()
+    assert t.to_narwhals() == nw.Datetime("us", "UTC")
+
+    # Explicit time_zone → TimestampType
+    t_tz = DType(name="Datetime", time_zone="America/New_York")
+    assert t_tz.to_pyspark() == T.TimestampType()
+
+    # Explicit time_zone=None → TimestampNTZType (TZ-naive)
+    t_ntz = DType(name="Datetime", time_zone=None)
+    assert t_ntz.to_pyspark() == T.TimestampNTZType()
+    assert t_ntz.to_narwhals() == nw.Datetime("us")
+
+    # "timestamp" alias maps to Datetime → TimestampType
+    t_alias = DType(name="timestamp")
+    assert t_alias.to_pyspark() == T.TimestampType()
+
+    # time_unit propagates to narwhals
+    t_ms = DType(name="Datetime", time_unit="ms")
+    assert t_ms.to_narwhals() == nw.Datetime("ms", "UTC")
+
+    # Duration
+    t_dur = DType(name="Duration")
+    assert t_dur.to_narwhals() == nw.Duration("us")
+    t_dur_ms = DType(name="Duration", time_unit="ms")
+    assert t_dur_ms.to_narwhals() == nw.Duration("ms")
+
+    # from_narwhals round-trip preserves time_unit and time_zone
+    nw_dt = nw.Datetime("ms", "UTC")
+    rt = DType.from_narwhals(nw_dt)
+    assert rt.name == "Datetime"
+    assert rt.time_unit == "ms"
+    assert rt.time_zone == "UTC"
+
+
 def test_explicit_types():
     assert DType(name="int32") == dtypes.Int32().to_generic()
     assert DType(name="double") == dtypes.Float64().to_generic()
