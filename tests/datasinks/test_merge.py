@@ -490,6 +490,43 @@ def test_create_skipped_for_merge(tmp_path, backend):
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_null_equals_null(tmp_path, backend):
+    """Merge with nullable primary keys must update rather than insert (issue #586)."""
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
+
+    schema = T.StructType(
+        [
+            T.StructField("symbol", T.StringType()),
+            T.StructField("segment", T.StringType()),
+            T.StructField("close", T.DoubleType()),
+        ]
+    )
+
+    # Target with one row whose composite PK contains a NULL
+    target = spark.createDataFrame([("S0", None, 1.0)], schema=schema)
+    target.write.format("DELTA").mode("OVERWRITE").save(str(tmp_path))
+
+    # Source updates that same row
+    source = spark.createDataFrame([("S0", None, 2.0)], schema=schema)
+
+    sink = models.FileDataSink(
+        format="DELTA",
+        mode="MERGE",
+        path=str(tmp_path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "segment"],
+            null_equals_null=True,
+        ),
+    )
+    sink.write(nw.from_native(source))
+
+    result = read(tmp_path).toPandas()
+    assert len(result) == 1, "null-safe merge must update, not insert a duplicate"
+    assert result.iloc[0]["close"] == 2.0
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_scd2_with_delete(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
