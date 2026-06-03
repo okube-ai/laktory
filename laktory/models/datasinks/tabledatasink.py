@@ -150,6 +150,19 @@ class TableDataSink(BaseDataSink):
             return False
 
         self._update_backend_from_df(df)
+
+        # For merge CDC sinks, delegate to _init_target() which builds the correct
+        # schema (including SCD2 extra columns). Using the raw df schema here would
+        # produce a table without those columns, causing the first merge to fail.
+        if self.merge_cdc_options is not None:
+            if df is None:
+                logger.info("Schema is empty and `df` is None. Skipping table.")
+                return False
+            native_df = df.to_native()
+            self.merge_cdc_options._source_schema = native_df.schema
+            self.merge_cdc_options._init_target(native_df)
+            return True
+
         schema = self._get_create_schema(df)
 
         if schema is None:

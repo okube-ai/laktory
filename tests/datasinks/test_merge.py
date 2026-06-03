@@ -448,6 +448,48 @@ def test_scd2(tmp_path, backend):
 
 
 @pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
+def test_create_skipped_for_merge(tmp_path, backend):
+    """create() must be a no-op when merge_cdc_options is set (B3 regression check).
+
+    Pipeline node execution calls sink.create(df) before sink.write(df).  If
+    create() actually writes the table, _init_target() inside merge CDC options
+    is skipped because the table already exists, so SCD2 extra columns are
+    never added and the subsequent merge fails.
+    """
+    if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
+        pytest.skip(f"Backend '{backend}' not implemented.")
+
+    delta_path = tmp_path / "delta_table"
+    df = build_target(path=delta_path, backend=backend, write_target=False, index=1)
+
+    sink = models.FileDataSink(
+        format="DELTA",
+        mode="MERGE",
+        path=str(delta_path),
+        merge_cdc_options=models.DataSinkMergeCDCOptions(
+            primary_keys=["symbol", "date"],
+            order_by="index",
+            scd_type=2,
+        ),
+    )
+
+    # create() must delegate to _init_target() so SCD2 extra columns are included
+    created = sink.create(df=df)
+    assert created is True
+    assert sink.exists()
+
+    result = read(delta_path)
+    assert result.count() == 0
+    assert "__hash_cols" in result.columns
+    assert "__start_at" in result.columns
+    assert "__end_at" in result.columns
+
+    # Second call on existing table must be a no-op
+    created2 = sink.create(df=df)
+    assert created2 is False
+
+
+@pytest.mark.parametrize("backend", ["PYSPARK", "POLARS"])
 def test_scd2_with_delete(tmp_path, backend):
     if DataFrameBackends(backend) not in SUPPORTED_BACKENDS:
         pytest.skip(f"Backend '{backend}' not implemented.")
