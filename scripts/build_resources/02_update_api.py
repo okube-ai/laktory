@@ -148,18 +148,18 @@ def main(targets: list[str] | None = None) -> None:
 
         base_file = DATABRICKS_DIR / f"{bstem}_base.py"
         if not base_file.exists():
-            print(f"[SKIP] {resource_key} — {base_file.name} not found")
+            print(f"[SKIP] {resource_key} - {base_file.name} not found")
             continue
 
         if bstem not in override_map:
-            print(f"[SKIP] {resource_key} — no override file found for {bstem}_base")
+            print(f"[SKIP] {resource_key} - no override file found for {bstem}_base")
             continue
         override_file, text = override_map[bstem]
 
         public_class = extract_public_class(text)
         if public_class is None:
             print(
-                f"[SKIP] {resource_key} — could not find public class in {override_file.name}"
+                f"[SKIP] {resource_key} - could not find public class in {override_file.name}"
             )
             continue
 
