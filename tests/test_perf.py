@@ -113,7 +113,7 @@ def test_inject_vars_cache_speedup():
     n = 20
 
     vars_fixed = {f"var_{k}": f"value_{k}" for k in range(10)}
-    pipeline.inject_vars(vars=vars_fixed)  # warm — populates cache
+    pipeline.inject_vars(vars=vars_fixed)  # warm - populates cache
 
     t0 = time.perf_counter()
     for _ in range(n):
@@ -129,7 +129,7 @@ def test_inject_vars_cache_speedup():
 
 
 # --------------------------------------------------------------------------- #
-# YAML large-directory load (P3 — rglob)                                      #
+# YAML large-directory load (P3 - rglob)                                      #
 # --------------------------------------------------------------------------- #
 
 
@@ -230,7 +230,7 @@ def test_terraform_ref_substitution_scale():
 
     assert elapsed < 0.5, (
         f"_substitute_terraform_refs took {elapsed:.2f}s for {n} resources "
-        f"(threshold 0.5s — O(N×M) regression?)"
+        f"(threshold 0.5s - O(N×M) regression?)"
     )
 
     # Correctness spot-checks

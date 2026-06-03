@@ -40,7 +40,7 @@ def test_sql_with_nodes():
         expr="SELECT * FROM {df} UNION SELECT * FROM {nodes.node_01} UNION SELECT * FROM {nodes.node_02}"
     )
 
-    # data_sources is always empty — upstream nodes are pre-loaded by PipelineNode.execute()
+    # data_sources is always empty - upstream nodes are pre-loaded by PipelineNode.execute()
     assert e1.data_sources == []
     assert e2.data_sources == []
 

@@ -92,7 +92,7 @@ nodes:
  {nodes.slv_nw} ON {df}.id = {nodes.slv_nw}.id"
 """
 
-# Single streaming node — used for the incremental accumulation test.
+# Single streaming node - used for the incremental accumulation test.
 _STREAMING_PIPELINE_YAML = """\
 name: pl-sdp-stream
 orchestrator:
@@ -432,7 +432,7 @@ def test_execute(tmp_path, monkeypatch, spark):
     df_slv = df_brz.withColumn("x2", F.col("x1"))
     assert_dfs_equal(nd["slv"].output_df, df_slv)
 
-    # slv_nw: NARWHALS transformer adds y1=x1 (same value as x2 — different API)
+    # slv_nw: NARWHALS transformer adds y1=x1 (same value as x2 - different API)
     expected_slv_nw = nw.from_native(df_brz).with_columns(y1=nw.col("x1"))
     assert_dfs_equal(nd["slv_nw"].output_df, expected_slv_nw)
 
@@ -460,7 +460,7 @@ def test_is_sdp_execute_true_during_execution(tmp_path, monkeypatch, spark):
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
     StreamingSource("PYSPARK").write_to_json(tmp_path / "brz_source")
 
-    pl = _get_pl_exec(tmp_path)  # no expectations — pipeline completes successfully
+    pl = _get_pl_exec(tmp_path)  # no expectations - pipeline completes successfully
     pl.orchestrator.execute()
 
     sentinel = pl.root_path / ".laktory_is_sdp_execute"
@@ -498,7 +498,7 @@ def test_execute_declarative(tmp_path, monkeypatch, spark):
     # slv_stream: streaming table accumulates 3 rows from one run
     assert nw.from_native(nd["slv_stream"].output_df).collect().shape[0] == 3
 
-    # gld_view: temporary pipeline view — not persisted to warehouse
+    # gld_view: temporary pipeline view - not persisted to warehouse
     assert nd["gld_view"].output_df is None
 
 

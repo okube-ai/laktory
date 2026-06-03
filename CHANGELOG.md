@@ -3,7 +3,7 @@
 ## [0.12.0] - Unreleased
 ### Added
 * Spark Declarative Pipeline Orchestrator
-* `PipelineNode.sources` — a named dict of data sources replacing the single `source` field. All existing `source:` YAML is automatically migrated to `sources: {df: ...}`.
+* `PipelineNode.sources` - a named dict of data sources replacing the single `source` field. All existing `source:` YAML is automatically migrated to `sources: {df: ...}`.
 * `null_equals_null` option for `cdc_merge_options` [[#586](https://github.com/okube-ai/laktory/issues/586)]
 ### Updated
 * All laktory-injected Spark conf / pipeline configuration keys now use `laktory.` namespace prefix (`laktory.executor`, `laktory.requirements`, `laktory.config_filepath`, `laktory.pipeline_name`)
@@ -13,7 +13,7 @@
 * Renamed Databricks Pipelines orchestrator to Lakehouse Declarative Pipeline
 * Refactored Lakehouse Declarative Pipeline script to use latest API (`apply_changes` -> `create_auto_cdc_flow`)
 * CLI `--dbks-job` / `--dbks-pipeline` flags replaced by `--databricks-job` / `--databricks-pipeline`
-* `PipelineNode.source` field removed — use `PipelineNode.sources` (dict) instead. YAML using `source:` is automatically migrated; Python code accessing `.source` directly must be updated.
+* `PipelineNode.source` field removed - use `PipelineNode.sources` (dict) instead. YAML using `source:` is automatically migrated; Python code accessing `.source` directly must be updated.
 ### Fixed
 * Table creation when cdc_merge_options with SCD_TYPE 2 is used
 * `TableDataSink` supports "ORC" and "AVRO" formats
@@ -143,9 +143,9 @@
 ## [0.9.2] - 2026-03-27
 ### Added
 * Support for `TableDataSource` `reader_kwargs` attribute [[#513](https://github.com/okube-ai/laktory/issues/513)]
-* `CustomWriter` class and `custom_writer` field on `BaseDataSink` — fully replaces Laktory's built-in write logic with a user-supplied function; Laktory manages the streaming query lifecycle (foreachBatch, trigger, checkpoint) [[#514](https://github.com/okube-ai/laktory/issues/514)]
-* `CustomDataSource` source type and `CustomReader` class — fully user-supplied read function as a first-class source alongside `FileDataSource`, `UnityCatalogDataSource`, etc.
-* `LaktoryContext` dataclass — runtime context object (`node`, `pipeline`, `sink`, `source`) optionally injected into user-supplied functions in `CustomWriter`, `CustomReader`, and `DataFrameMethod` by declaring `laktory_context=None` in the function signature [[#515](https://github.com/okube-ai/laktory/issues/515)]
+* `CustomWriter` class and `custom_writer` field on `BaseDataSink` - fully replaces Laktory's built-in write logic with a user-supplied function; Laktory manages the streaming query lifecycle (foreachBatch, trigger, checkpoint) [[#514](https://github.com/okube-ai/laktory/issues/514)]
+* `CustomDataSource` source type and `CustomReader` class - fully user-supplied read function as a first-class source alongside `FileDataSource`, `UnityCatalogDataSource`, etc.
+* `LaktoryContext` dataclass - runtime context object (`node`, `pipeline`, `sink`, `source`) optionally injected into user-supplied functions in `CustomWriter`, `CustomReader`, and `DataFrameMethod` by declaring `laktory_context=None` in the function signature [[#515](https://github.com/okube-ai/laktory/issues/515)]
 ### Fixed
 * `cluster`.`init_scripts`.`volumes` property for Terraform (plural form instead of singular) [[#516](https://github.com/okube-ai/laktory/issues/516)]
 * Table properties not set before first write [[#507](https://github.com/okube-ai/laktory/issues/507)]

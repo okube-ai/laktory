@@ -1,4 +1,4 @@
-"""Tests for PipelineNode.execute() — batch, streaming, and chaining."""
+"""Tests for PipelineNode.execute() - batch, streaming, and chaining."""
 
 import narwhals as nw
 import pytest
