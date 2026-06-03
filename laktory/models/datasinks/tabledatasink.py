@@ -22,8 +22,7 @@ class TableDataSink(BaseDataSink):
         None,
         description="Sink table catalog name",
     )
-    # TODO: consider expanding to include ORC, AVRO (Spark USING clause supports them for managed tables)
-    format: Literal["PARQUET", "DELTA"] = Field(
+    format: Literal["PARQUET", "DELTA", "ORC", "AVRO"] = Field(
         "DELTA", description="Storage format for data table."
     )
     schema_name: str | None = Field(
@@ -51,6 +50,15 @@ class TableDataSink(BaseDataSink):
             raise ValueError(
                 "Table data sink does not support the Polars backend. "
                 "Use FileDataSink with DELTA format for Polars file-based writes."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def validate_format_merge(self) -> Any:
+        if self.merge_cdc_options is not None and self.format != "DELTA":
+            raise ValueError(
+                f"MERGE mode requires DELTA format, got '{self.format}'. "
+                "ORC and AVRO do not support merge operations."
             )
         return self
 
