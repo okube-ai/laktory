@@ -28,7 +28,7 @@ print("------------")
 # Execute Silver (low-level)                                                  #
 # --------------------------------------------------------------------------- #
 
-# The silver node reads from the bronze node — accessible via its sources list
+# The silver node reads from the bronze node - accessible via its sources list
 source = node_slv.sources[0]
 print(f"Silver node source type: {type(source)}")
 print(f"Silver node source node name: {source.node_name}")
