@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from laktory.models.basemodel import BaseModel, PluralField
+from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -36,6 +37,7 @@ class PermissionsBase(BaseModel, TerraformResource):
     experiment_id: str | None = Field(None)
     instance_pool_id: str | None = Field(None)
     job_id: str | None = Field(None)
+    knowledge_assistant_id: str | None = Field(None)
     notebook_id: str | None = Field(None)
     notebook_path: str | None = Field(None)
     object_type: str | None = Field(None)
@@ -48,6 +50,7 @@ class PermissionsBase(BaseModel, TerraformResource):
     sql_dashboard_id: str | None = Field(None)
     sql_endpoint_id: str | None = Field(None)
     sql_query_id: str | None = Field(None)
+    supervisor_agent_id: str | None = Field(None)
     vector_search_endpoint_id: str | None = Field(None)
     workspace_file_id: str | None = Field(None)
     workspace_file_path: str | None = Field(None)

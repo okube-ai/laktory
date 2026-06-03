@@ -2,9 +2,11 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_job
 from __future__ import annotations
 
-from pydantic import Field, AliasChoices
+from pydantic import AliasChoices
+from pydantic import Field
 
-from laktory.models.basemodel import BaseModel, PluralField
+from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -52,8 +54,10 @@ class JobDbtTask(BaseModel):
 
 
 class JobDeployment(BaseModel):
+    deployment_id: str | None = Field(None)
     kind: str = Field(...)
     metadata_file_path: str | None = Field(None)
+    version_id: str | None = Field(None)
 
 
 class JobEmailNotifications(BaseModel):
@@ -250,6 +254,7 @@ class JobJobClusterNewClusterDriverNodeTypeFlexibility(BaseModel):
 class JobJobClusterNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
     boot_disk_size: int | None = Field(None)
+    confidential_compute_type: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
     local_ssd_count: int | None = Field(None)
@@ -517,6 +522,7 @@ class JobNewClusterDriverNodeTypeFlexibility(BaseModel):
 class JobNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
     boot_disk_size: int | None = Field(None)
+    confidential_compute_type: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
     local_ssd_count: int | None = Field(None)
@@ -1261,6 +1267,7 @@ class JobTaskForEachTaskTaskNewClusterDriverNodeTypeFlexibility(BaseModel):
 class JobTaskForEachTaskTaskNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
     boot_disk_size: int | None = Field(None)
+    confidential_compute_type: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
     local_ssd_count: int | None = Field(None)
@@ -1446,7 +1453,15 @@ class JobTaskForEachTaskTaskPipelineTask(BaseModel):
         None,
         description="(Bool) Specifies if there should be full refresh of the pipeline",
     )
+    full_refresh_selection: list[str] | None = Field(None)
+    parameters: dict[str, str] | None = Field(
+        None,
+        description="(Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters",
+    )
     pipeline_id: str = Field(..., description="The pipeline's unique ID")
+    refresh_flow_selection: list[str] | None = Field(None)
+    refresh_selection: list[str] | None = Field(None)
+    reset_checkpoint_selection: list[str] | None = Field(None)
 
 
 class JobTaskForEachTaskTaskPowerBiTaskPowerBiModel(BaseModel):
@@ -1485,6 +1500,24 @@ class JobTaskForEachTaskTaskPowerBiTask(BaseModel):
     tables: list[JobTaskForEachTaskTaskPowerBiTaskTables] | None = Field(None)
 
 
+class JobTaskForEachTaskTaskPythonOperatorTaskParameters(BaseModel):
+    name: str | None = Field(
+        None,
+        description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
+    )
+    value: str | None = Field(
+        None, description="integer value used to compare to the given metric"
+    )
+
+
+class JobTaskForEachTaskTaskPythonOperatorTask(BaseModel):
+    main: str | None = Field(None)
+    parameters: list[JobTaskForEachTaskTaskPythonOperatorTaskParameters] | None = Field(
+        None,
+        description="(Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters",
+    )
+
+
 class JobTaskForEachTaskTaskPythonWheelTask(BaseModel):
     entry_point: str | None = Field(
         None, description="Python function as entry point for the task"
@@ -1504,6 +1537,10 @@ class JobTaskForEachTaskTaskRunJobTaskPipelineParams(BaseModel):
         None,
         description="(Bool) Specifies if there should be full refresh of the pipeline",
     )
+    full_refresh_selection: list[str] | None = Field(None)
+    refresh_flow_selection: list[str] | None = Field(None)
+    refresh_selection: list[str] | None = Field(None)
+    reset_checkpoint_selection: list[str] | None = Field(None)
 
 
 class JobTaskForEachTaskTaskRunJobTask(BaseModel):
@@ -1790,6 +1827,7 @@ class JobTaskForEachTaskTask(BaseModel):
     )
     pipeline_task: JobTaskForEachTaskTaskPipelineTask | None = Field(None)
     power_bi_task: JobTaskForEachTaskTaskPowerBiTask | None = Field(None)
+    python_operator_task: JobTaskForEachTaskTaskPythonOperatorTask | None = Field(None)
     python_wheel_task: JobTaskForEachTaskTaskPythonWheelTask | None = Field(None)
     run_job_task: JobTaskForEachTaskTaskRunJobTask | None = Field(None)
     spark_jar_task: JobTaskForEachTaskTaskSparkJarTask | None = Field(None)
@@ -1972,6 +2010,7 @@ class JobTaskNewClusterDriverNodeTypeFlexibility(BaseModel):
 class JobTaskNewClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
     boot_disk_size: int | None = Field(None)
+    confidential_compute_type: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
     local_ssd_count: int | None = Field(None)
@@ -2153,7 +2192,15 @@ class JobTaskPipelineTask(BaseModel):
         None,
         description="(Bool) Specifies if there should be full refresh of the pipeline",
     )
+    full_refresh_selection: list[str] | None = Field(None)
+    parameters: dict[str, str] | None = Field(
+        None,
+        description="(Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters",
+    )
     pipeline_id: str = Field(..., description="The pipeline's unique ID")
+    refresh_flow_selection: list[str] | None = Field(None)
+    refresh_selection: list[str] | None = Field(None)
+    reset_checkpoint_selection: list[str] | None = Field(None)
 
 
 class JobTaskPowerBiTaskPowerBiModel(BaseModel):
@@ -2192,6 +2239,24 @@ class JobTaskPowerBiTask(BaseModel):
     tables: list[JobTaskPowerBiTaskTables] | None = Field(None)
 
 
+class JobTaskPythonOperatorTaskParameters(BaseModel):
+    name: str | None = Field(
+        None,
+        description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
+    )
+    value: str | None = Field(
+        None, description="integer value used to compare to the given metric"
+    )
+
+
+class JobTaskPythonOperatorTask(BaseModel):
+    main: str | None = Field(None)
+    parameters: list[JobTaskPythonOperatorTaskParameters] | None = Field(
+        None,
+        description="(Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters",
+    )
+
+
 class JobTaskPythonWheelTask(BaseModel):
     entry_point: str | None = Field(
         None, description="Python function as entry point for the task"
@@ -2211,6 +2276,10 @@ class JobTaskRunJobTaskPipelineParams(BaseModel):
         None,
         description="(Bool) Specifies if there should be full refresh of the pipeline",
     )
+    full_refresh_selection: list[str] | None = Field(None)
+    refresh_flow_selection: list[str] | None = Field(None)
+    refresh_selection: list[str] | None = Field(None)
+    reset_checkpoint_selection: list[str] | None = Field(None)
 
 
 class JobTaskRunJobTask(BaseModel):
@@ -2482,6 +2551,7 @@ class JobTask(BaseModel):
     )
     pipeline_task: JobTaskPipelineTask | None = Field(None)
     power_bi_task: JobTaskPowerBiTask | None = Field(None)
+    python_operator_task: JobTaskPythonOperatorTask | None = Field(None)
     python_wheel_task: JobTaskPythonWheelTask | None = Field(None)
     run_job_task: JobTaskRunJobTask | None = Field(None)
     spark_jar_task: JobTaskSparkJarTask | None = Field(None)
@@ -2935,6 +3005,8 @@ __all__ = [
     "JobTaskForEachTaskTaskPowerBiTask",
     "JobTaskForEachTaskTaskPowerBiTaskPowerBiModel",
     "JobTaskForEachTaskTaskPowerBiTaskTables",
+    "JobTaskForEachTaskTaskPythonOperatorTask",
+    "JobTaskForEachTaskTaskPythonOperatorTaskParameters",
     "JobTaskForEachTaskTaskPythonWheelTask",
     "JobTaskForEachTaskTaskRunJobTask",
     "JobTaskForEachTaskTaskRunJobTaskPipelineParams",
@@ -2998,6 +3070,8 @@ __all__ = [
     "JobTaskPowerBiTask",
     "JobTaskPowerBiTaskPowerBiModel",
     "JobTaskPowerBiTaskTables",
+    "JobTaskPythonOperatorTask",
+    "JobTaskPythonOperatorTaskParameters",
     "JobTaskPythonWheelTask",
     "JobTaskRunJobTask",
     "JobTaskRunJobTaskPipelineParams",

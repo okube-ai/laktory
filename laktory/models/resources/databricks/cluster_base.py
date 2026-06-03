@@ -2,9 +2,11 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_cluster
 from __future__ import annotations
 
-from pydantic import Field, AliasChoices
+from pydantic import AliasChoices
+from pydantic import Field
 
-from laktory.models.basemodel import BaseModel, PluralField
+from laktory.models.basemodel import BaseModel
+from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
@@ -92,6 +94,7 @@ class ClusterDriverNodeTypeFlexibility(BaseModel):
 class ClusterGcpAttributes(BaseModel):
     availability: str | None = Field(None)
     boot_disk_size: int | None = Field(None)
+    confidential_compute_type: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     google_service_account: str | None = Field(None)
     local_ssd_count: int | None = Field(None)

@@ -48,3 +48,7 @@
 ---
 
 ::: laktory.models.resources.databricks.storagecredential.StorageCredentialGcpServiceAccountKey
+
+---
+
+::: laktory.models.resources.databricks.storagecredential.StorageCredentialLookup

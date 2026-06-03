@@ -61,8 +61,8 @@ class Table(UnityCatalogMixin, TableBase):
     grants: list[TableGrant] = Field(
         None,
         description="""
-    Authoritative grant list for all principals. Replaces every existing grant on this Table — including those set
-    outside Laktory — with only the entries listed here. Use only when Laktory owns all access management for this
+    Authoritative grant list for all principals. Replaces every existing grant on this Table - including those set
+    outside Laktory - with only the entries listed here. Use only when Laktory owns all access management for this
     resource. Mutually exclusive with `grant`.
     """,
     )

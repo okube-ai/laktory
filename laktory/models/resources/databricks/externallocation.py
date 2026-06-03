@@ -67,8 +67,8 @@ class ExternalLocation(ExternalLocationBase):
     grants: list[ExternalLocationGrant] = Field(
         None,
         description="""
-    Authoritative grant list for all principals. Replaces every existing grant on this External Location — including
-    those set outside Laktory — with only the entries listed here. Use only when Laktory owns all access management
+    Authoritative grant list for all principals. Replaces every existing grant on this External Location - including
+    those set outside Laktory - with only the entries listed here. Use only when Laktory owns all access management
     for this resource. Mutually exclusive with `grant`.
     """,
     )

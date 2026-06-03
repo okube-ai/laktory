@@ -3,6 +3,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.mlflowmodel.MLflowModelLookup
+
+---
+
 ::: laktory.models.resources.databricks.mlflowmodel.MlflowModelTag
 
 ---

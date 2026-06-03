@@ -655,6 +655,14 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskPythonOperatorTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskPythonOperatorTaskParameters
+
+---
+
 ::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskPythonWheelTask
 
 ---
@@ -904,6 +912,14 @@
 ---
 
 ::: laktory.models.resources.databricks.job.JobTaskPowerBiTaskTables
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskPythonOperatorTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskPythonOperatorTaskParameters
 
 ---
 

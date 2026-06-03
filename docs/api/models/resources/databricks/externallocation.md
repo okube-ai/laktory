@@ -64,3 +64,7 @@
 ---
 
 ::: laktory.models.resources.databricks.externallocation.ExternalLocationFileEventQueueProvidedSqs
+
+---
+
+::: laktory.models.resources.databricks.externallocation.ExternalLocationLookup
