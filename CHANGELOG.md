@@ -7,6 +7,7 @@
 ### Updated
 * All laktory-injected Spark conf / pipeline configuration keys now use `laktory.` namespace prefix (`laktory.executor`, `laktory.requirements`, `laktory.config_filepath`, `laktory.pipeline_name`)
 * `PipelineNode.execute()` now reads all `sources` entries before invoking the transformer. Upstream nodes referenced via `{nodes.X}` SQL placeholders are pre-loaded here rather than inside `DataFrameExpr`
+* `Dtype` class now supports `time_unit` and `time_zone` properties.
 ### Breaking changes
 * Renamed Databricks Pipelines orchestrator to Lakehouse Declarative Pipeline
 * Refactored Lakehouse Declarative Pipeline script to use latest API (`apply_changes` -> `create_auto_cdc_flow`)
