@@ -98,6 +98,14 @@ class DataSinkMergeCDCOptions(BaseModel):
         identify which CDC events apply to specific records in the target table.
         """,
     )
+    null_equals_null: bool = Field(
+        False,
+        description="""
+        When `True`, primary key matching uses null-safe equality (`<=>`) instead of standard equality (`=`).
+        Enable this when primary keys may contain NULL values and two NULL keys should be considered equal.
+        Spark's default treats NULL as not equal to NULL, which causes duplicate inserts instead of updates.
+        """,
+    )
     scd_type: Literal[1, 2] = Field(
         1, description="Whether to store records as SCD type 1 or SCD type 2."
     )
@@ -363,7 +371,8 @@ class DataSinkMergeCDCOptions(BaseModel):
                 not_delete_condition = ~delete_condition
 
             # Define merge
-            conditions = [f"source.{c} = target.{c}" for c in self.primary_keys]
+            eq = "<=>" if self.null_equals_null else "="
+            conditions = [f"source.{c} {eq} target.{c}" for c in self.primary_keys]
             merge = table_target.alias("target").merge(
                 source.alias("source"),
                 condition=" AND ".join(conditions),
@@ -426,17 +435,23 @@ class DataSinkMergeCDCOptions(BaseModel):
                 _target = target.withColumn("__to_delete", F.lit(False))
                 _on += ["__to_delete"]
 
-            upsert_or_delete = _source.join(
-                other=_target,
-                on=_on,
-                how="leftanti",
-            )
+            if self.null_equals_null:
+                _src = _source.alias("_src")
+                _tgt = _target.alias("_tgt")
+                join_cond = F.col(f"_src.{_on[0]}").eqNullSafe(F.col(f"_tgt.{_on[0]}"))
+                for c in _on[1:]:
+                    join_cond = join_cond & F.col(f"_src.{c}").eqNullSafe(
+                        F.col(f"_tgt.{c}")
+                    )
+                upsert_or_delete = _src.join(other=_tgt, on=join_cond, how="leftanti")
+            else:
+                upsert_or_delete = _source.join(other=_target, on=_on, how="leftanti")
 
             # Merge
-            conditions = []
+            eq = "<=>" if self.null_equals_null else "="
             condition = F.expr(f"target.{self.end_at} IS NULL")
             for c in self.primary_keys:
-                condition = condition & F.expr(f"source.{c} = target.{c}")
+                condition = condition & F.expr(f"source.{c} {eq} target.{c}")
             merge = table_target.alias("target").merge(
                 upsert_or_delete.filter(F.col(self.end_at).isNull()).alias("source"),
                 condition=condition,
