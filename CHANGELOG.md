@@ -20,7 +20,7 @@
 * `PipelineNode.source` field removed - use `PipelineNode.sources` (dict) instead. YAML using `source:` is automatically migrated; Python code accessing `.source` directly must be updated.
 * Renamed data sink `databricks_quality_monitor` to `databricks_data_profiling_config`
 * Removed pipeline `databricks_quality_monitors_enabled` flag (now auto-detected)
-* Pipeline Lakeflow Job orchestrator data profiling configuration task is no longer active by default. Needs to set `data_profiling_configuration_task` to `True`
+* Pipeline Lakeflow Job orchestrator data profiling configuration task is no longer active by default. Needs to set `data_profiling_config_task` to `True`
 * `QualityMonitor` resource renamed to `DataQualityMonitor` to be aligned with Databricks latest naming convention
 * Lakeflow Job data profiling task key renamed from `post-execute` to `data-profiling-configs`
 

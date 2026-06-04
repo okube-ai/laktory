@@ -63,7 +63,7 @@ def _get_pl():
         orchestrator={
             "type": "LAKEFLOW_JOB",
             "name": "pl-job",
-            "data_profiling_configuration_task": True,
+            "data_profiling_config_task": True,
             "job_clusters": [
                 {
                     "job_cluster_key": "node-cluster",
