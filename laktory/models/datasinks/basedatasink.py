@@ -49,8 +49,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         description="If `True` output DataFrame is written as Streaming DataFrame. If `None`, write mode is derived from"
         "DataFrame.",
     )
-    databricks_quality_monitor: Literal[None] = Field(
-        None, description="Databricks Quality Monitor"
+    databricks_data_profiling_config: Literal[None] = Field(
+        None, description="Databricks Data Quality Monitor data profiling configuration"
     )
     checkpoint_path_: str | Path = Field(
         None,
