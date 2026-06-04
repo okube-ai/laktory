@@ -182,6 +182,46 @@ class DataFrameMethod(BaseModel, PipelineChild):
         ),
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def check_direct_datasource_args(cls, data: Any) -> Any:
+        # Migration guard: older pipeline configs passed DataSource objects directly
+        # as func_args/func_kwargs values instead of using the string reference syntax
+        # ({nodes.X} for pipeline nodes, {sources.<name>} for named sources).
+        # This validator catches those patterns early and provides a clear migration
+        # message rather than a confusing runtime error.
+        # TODO: Remove once most users have migrated to the string reference syntax.
+        if not isinstance(data, dict):
+            return data
+
+        _DATASOURCE_TYPES = frozenset(
+            {"PIPELINE_NODE", "FILE", "DATAFRAME", "UNITY_CATALOG", "HIVE_METASTORE"}
+        )
+
+        def _check(v: Any, location: str) -> None:
+            if not isinstance(v, dict):
+                return
+            if "node_name" in v:
+                name = v["node_name"]
+                raise ValueError(
+                    f"{location}: DataSource objects must not be passed directly as "
+                    f"function arguments. Use the string reference "
+                    f"'{{nodes.{name}}}' instead."
+                )
+            if v.get("type") in _DATASOURCE_TYPES:
+                raise ValueError(
+                    f"{location}: DataSource objects must not be passed directly as "
+                    f"function arguments. Declare the source on the pipeline node and "
+                    f"reference it with '{{sources.<name>}}' string syntax instead."
+                )
+
+        for i, v in enumerate(data.get("func_args") or []):
+            _check(v, f"func_args[{i}]")
+        for k, v in (data.get("func_kwargs") or {}).items():
+            _check(v, f"func_kwargs['{k}']")
+
+        return data
+
     @model_validator(mode="after")
     def set_args(self) -> Any:
         # Pydantic does not trigger assign_parent_to_children() for mutations
