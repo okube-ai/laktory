@@ -194,7 +194,21 @@ class DataQualityMonitorSDKClient:
         return self.ws.data_quality.create_monitor(monitor)
 
     def update(self, existing):
+        from databricks.sdk.errors.platform import ResourceConflict
+        from databricks.sdk.service.dataquality import DataProfilingStatus
+
         existing_cfg = existing.data_profiling_config
+
+        # A failed/errored monitor cannot be updated — delete and recreate
+        if existing_cfg and existing_cfg.status in (
+            DataProfilingStatus.DATA_PROFILING_STATUS_FAILED,
+            DataProfilingStatus.DATA_PROFILING_STATUS_ERROR,
+        ):
+            logger.info(
+                f"Data quality monitor for {self.dqm.object_id} is in state "
+                f"{existing_cfg.status.value}. Deleting and recreating."
+            )
+            return False
 
         # Incompatible changes require delete + recreate
         if existing_cfg:
@@ -224,12 +238,19 @@ class DataQualityMonitorSDKClient:
             return existing
 
         logger.info(f"Updating data quality monitor for {self.dqm.object_id}")
-        return self.ws.data_quality.update_monitor(
-            object_type=self.dqm.object_type.lower(),
-            object_id=object_id,
-            monitor=monitor,
-            update_mask="data_profiling_config",
-        )
+        try:
+            return self.ws.data_quality.update_monitor(
+                object_type=self.dqm.object_type.lower(),
+                object_id=object_id,
+                monitor=monitor,
+                update_mask="data_profiling_config",
+            )
+        except ResourceConflict as e:
+            logger.warning(
+                f"Update rejected due to conflicting monitor state ({e}). "
+                f"Deleting and recreating."
+            )
+            return False
 
     def delete(self):
         from databricks.sdk.errors.platform import NotFound
