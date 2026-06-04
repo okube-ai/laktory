@@ -10,6 +10,7 @@ from pydantic import model_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
+from laktory.models.basechild import BaseChild
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
@@ -185,10 +186,14 @@ class DataFrameMethod(BaseModel, PipelineChild):
     def set_args(self) -> Any:
         # Pydantic does not trigger assign_parent_to_children() for mutations
         # to func_args/func_kwargs, so we set parent explicitly here.
+        # Values may be VariableType strings (e.g. ${vars.X}) when a variable
+        # reference is used — skip non-BaseChild entries.
         for v in self.func_args:
-            v.parent = self
+            if isinstance(v, BaseChild):
+                v.parent = self
         for v in self.func_kwargs.values():
-            v.parent = self
+            if isinstance(v, BaseChild):
+                v.parent = self
         return self
 
     @property

@@ -203,6 +203,23 @@ def test_json_roundtrip(backend):
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
 
 
+def test_func_kwargs_variable_ref_no_crash():
+    """
+    ${vars.X} strings in func_kwargs are valid VariableType placeholders and
+    must not crash set_args with AttributeError. They are stored as-is for
+    inject_vars() to resolve later.
+    """
+    m = DataFrameMethod(
+        func_name="my_func",
+        func_kwargs={
+            "catalog": "${vars.catalog_name}",
+            "other_df": "{nodes.upstream_node}",
+        },
+    )
+    assert m.func_kwargs["catalog"] == "${vars.catalog_name}"
+    assert m.func_kwargs["other_df"].value == "{nodes.upstream_node}"
+
+
 def test_json_roundtrip_named_ref_kwarg():
     """
     Named DataFrame references ({nodes.X}, {key}) in func_kwargs must survive
