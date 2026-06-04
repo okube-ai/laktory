@@ -260,9 +260,10 @@ def emit_block_class(
     block_types = block.get("block_types", {})
     has_fields = False
 
-    # Emit attributes
+    # Emit attributes (note: ALWAYS_SKIP_ATTRS is intentionally not applied here;
+    # nested blocks can have legitimate 'id' fields, e.g. webhook notification ids)
     for attr_name, attr in sorted(attrs.items()):
-        if attr_name in ALWAYS_SKIP_ATTRS or attr_name.startswith("__"):
+        if attr_name.startswith("__"):
             continue
         if is_computed_only(attr):
             continue
@@ -383,7 +384,7 @@ def emit_nested_type_class(
     has_fields = False
 
     for attr_name, attr in sorted(nested_type.get("attributes", {}).items()):
-        if attr_name in ALWAYS_SKIP_ATTRS or attr_name.startswith("__"):
+        if attr_name.startswith("__"):
             continue
         if is_computed_only(attr):
             continue
