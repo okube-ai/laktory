@@ -18,7 +18,9 @@ from laktory.models import UnityCatalogDataSink
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline._execute import _execute  # noqa: F401
-from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
+from laktory.models.pipeline._update_tables_metadata import (
+    _update_tables_metadata,  # noqa: F401
+)
 from laktory.models.pipeline.orchestrators.airfloworchestrator import (
     AirflowOrchestrator,
 )
