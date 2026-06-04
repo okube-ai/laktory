@@ -88,7 +88,6 @@ def test_update_data_profiling_configs_skips_when_explicitly_unmanaged():
     """managed=False: method is a no-op even when sinks have configs."""
     pl = models.Pipeline(
         name="pl",
-        databricks_data_profiling_configs_managed=False,
         nodes=[
             models.PipelineNode(
                 name="n",

@@ -154,7 +154,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
 
         if self.data_profiling_configuration_task:
             task = JobTask(
-                task_key="update-data-profiling-configs",
+                task_key="data-profiling-configs",
                 python_wheel_task=JobTaskPythonWheelTask(
                     entry_point="models.pipeline._update_data_profiling_configs",
                     package_name="laktory",

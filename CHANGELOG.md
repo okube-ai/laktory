@@ -10,14 +10,17 @@
 * `PipelineNode.execute()` now reads all `sources` entries before invoking the transformer. Upstream nodes referenced via `{nodes.X}` SQL placeholders are pre-loaded here rather than inside `DataFrameExpr`
 * `Dtype` class now supports `time_unit` and `time_zone` properties.
 * Databricks Terraform provider updated to 1.117.0
+### Fixed
+* Table creation when cdc_merge_options with SCD_TYPE 2 is used
+* `TableDataSink` supports "ORC" and "AVRO" formats
 ### Breaking changes
 * Renamed Databricks Pipelines orchestrator to Lakehouse Declarative Pipeline
 * Refactored Lakehouse Declarative Pipeline script to use latest API (`apply_changes` -> `create_auto_cdc_flow`)
 * CLI `--dbks-job` / `--dbks-pipeline` flags replaced by `--databricks-job` / `--databricks-pipeline`
 * `PipelineNode.source` field removed - use `PipelineNode.sources` (dict) instead. YAML using `source:` is automatically migrated; Python code accessing `.source` directly must be updated.
-### Fixed
-* Table creation when cdc_merge_options with SCD_TYPE 2 is used
-* `TableDataSink` supports "ORC" and "AVRO" formats
+* Renamed data sink `databricks_quality_monitor` to `databricks_data_profiling_config`
+* Removed pipeline `databricks_quality_monitors_enabled` flag (now auto-detected)
+* Pipeline Lakeflow Job orchestrator data profiling configuration task is no longer active by default. Needs to set `data_profiling_configuration_task` to `True`
 
 ## [0.11.10] - 2026-05-20
 ### Added
