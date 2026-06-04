@@ -239,8 +239,10 @@ def test_func_kwargs_variable_ref_no_crash2():
       transformer:
         nodes:
         - func_name: my_func
+          func_args:
+            - ${vars.schema}
           func_kwargs:
-            catalog: "${vars.catalog}"
+            catalog: ${vars.catalog}
     """
 
     with StringIO(pl_yaml) as fp:
