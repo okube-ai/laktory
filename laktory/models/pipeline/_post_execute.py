@@ -30,9 +30,9 @@ def _post_execute():
         required=False,
     )
     parser.add_argument(
-        "--quality_monitors",
+        "--data_profiling_configs",
         type=str2bool,
-        help="Update Databricks Quality Monitors",
+        help="Update Databricks data profiling configs",
         default=False,
         required=False,
     )
@@ -41,7 +41,7 @@ def _post_execute():
     args, unknown = parser.parse_known_args()
     filepaths = args.filepaths.split(",")
     tables_metadata = args.tables_metadata
-    quality_monitors = args.quality_monitors
+    data_profiling_configs = args.data_profiling_configs
     logger.info(f"Executing metadata update for pipelines {filepaths}")
 
     # Read
@@ -55,5 +55,5 @@ def _post_execute():
         # Execute
         if tables_metadata:
             pl.update_tables_metadata()
-        if quality_monitors:
-            pl.update_quality_monitors()
+        if data_profiling_configs:
+            pl.update_data_profiling_configs()

@@ -48,6 +48,10 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
     serverless_environment_version: str = Field(
         None, description="Serverless environment version"
     )
+    data_profiling_configuration_task: bool = Field(
+        False,
+        description="When `True`, a `post-execute` task is appended to the Lakeflow Job that calls `update_data_profiling_configs()` after all pipeline node tasks complete.",
+    )
 
     # ----------------------------------------------------------------------- #
     # Update Job                                                              #
@@ -148,7 +152,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
             )
             self.task += [task]
 
-        if pl.databricks_quality_monitor_enabled:
+        if self.data_profiling_configuration_task:
             task = JobTask(
                 task_key="post-execute",
                 python_wheel_task=JobTaskPythonWheelTask(
@@ -157,7 +161,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
                     named_parameters={
                         "filepaths": _path,
                         "tables_metadata": "false",
-                        "quality_monitors": "true",
+                        "data_profiling_configs": "true",
                     },
                 ),
                 depends_on=[{"task_key": t.task_key} for t in self.task],
@@ -235,6 +239,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
             "dataframe_backend",
             "dataframe_api",
             "serverless_environment_version",
+            "data_profiling_configuration_task",
         ]
 
     @property
