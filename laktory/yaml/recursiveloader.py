@@ -40,7 +40,16 @@ class RecursiveLoader(yaml.SafeLoader):
                 )
             # Only replace <<: at the start of line content (after optional
             # whitespace) - the only valid YAML position for a merge key.
-            _lines += [re.sub(r"^(\s*)<<:", r"\g<1>" + MERGE_KEY + ":", line)]
+            line = re.sub(r"^(\s*)<<:", r"\g<1>" + MERGE_KEY + ":", line)
+            # Unquoted {nodes.X} / {sources.X} are parsed by PyYAML as flow
+            # mappings instead of strings. Auto-quote them so they reach
+            # DataFrameMethodArg as the intended string reference.
+            line = re.sub(
+                r'(?<!["\'])\{((?:nodes|sources)\.[^}]+)\}(?!["\'])',
+                r'"{\1}"',
+                line,
+            )
+            _lines += [line]
 
         return "\n".join(_lines)
 
