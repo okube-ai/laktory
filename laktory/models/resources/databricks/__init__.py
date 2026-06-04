@@ -8,6 +8,7 @@ from .clusterpolicy import ClusterPolicy
 from .connection import Connection
 from .currentuser import CurrentUser
 from .dashboard import Dashboard
+from .dataqualitymonitor import DataQualityMonitor
 from .dbfsfile import DbfsFile
 from .directory import Directory
 from .entitlements import Entitlements
@@ -32,7 +33,6 @@ from .obotoken import OboToken
 from .permissions import Permissions
 from .pipeline import Pipeline
 from .pythonpackage import PythonPackage
-from .qualitymonitor import QualityMonitor
 from .query import Query
 from .recipient import Recipient
 from .repo import Repo
