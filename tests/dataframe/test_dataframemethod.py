@@ -228,42 +228,19 @@ def test_func_kwargs_variable_ref_no_crash2():
     """ """
 
     pl_yaml = """
-    name: ${vars.workflow_name}
-
-    variables:
-      business_unit: dlk
-      compute_name: workflow-compute
-      workflow_name: pl-aip
-
-    # --------------------------------------------------------------------------- #
-    # Orchestrator                                                                #
-    # --------------------------------------------------------------------------- #
+    name: pl
 
     orchestrator:
       type: LAKEFLOW_JOB
-      name_prefix: "[${vars.username}]"
       serverless_environment_version: "3"
-      timeout_seconds: 3600  # typical run is 15 minutes. full refresh should be the same (no read stream)
-      schedule:
-        timezone_id: America/New_York
-        quartz_cron_expression: '0 0 4 ? * *'  # daily at 4 AM EST
-        pause_status: ${vars.pause_status}
-
-
-    # --------------------------------------------------------------------------- #
-    # Nodes                                                                       #
-    # --------------------------------------------------------------------------- #
 
     nodes:
-    - name: gld_attributs_clients
-      primary_keys:
-        - CleUnique
+    - name: gld
       transformer:
-        dataframe_api: NATIVE
         nodes:
-        - func_name: dlk.process_attribut_clients
+        - func_name: my_func
           func_kwargs:
-            catalog: "${vars.catalog_read}"
+            catalog: "${vars.catalog}"
     """
 
     with StringIO(pl_yaml) as fp:

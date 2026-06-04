@@ -291,6 +291,8 @@ class DataFrameMethod(BaseModel, PipelineChild):
                 if m and m.group(1).startswith("nodes."):
                     names.append(m.group(1)[len("nodes.") :])
         for a in self.func_kwargs.values():
+            if not isinstance(a, DataFrameMethodArg):
+                continue
             if isinstance(a.value, str):
                 m = _SOURCE_REF_PATTERN.match(a.value.strip())
                 if m and m.group(1).startswith("nodes."):
