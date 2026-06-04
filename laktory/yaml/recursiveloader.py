@@ -40,16 +40,7 @@ class RecursiveLoader(yaml.SafeLoader):
                 )
             # Only replace <<: at the start of line content (after optional
             # whitespace) - the only valid YAML position for a merge key.
-            line = re.sub(r"^(\s*)<<:", r"\g<1>" + MERGE_KEY + ":", line)
-            # Unquoted {nodes.X} / {sources.X} are parsed by PyYAML as flow
-            # mappings instead of strings. Auto-quote them so they reach
-            # DataFrameMethodArg as the intended string reference.
-            line = re.sub(
-                r'(?<!["\'])\{((?:nodes|sources)\.[^}]+)\}(?!["\'])',
-                r'"{\1}"',
-                line,
-            )
-            _lines += [line]
+            _lines += [re.sub(r"^(\s*)<<:", r"\g<1>" + MERGE_KEY + ":", line)]
 
         return "\n".join(_lines)
 
@@ -232,6 +223,22 @@ class RecursiveLoader(yaml.SafeLoader):
     @staticmethod
     def custom_mapping_constructor(loader, node):
         """Custom handling for mappings to support !merge."""
+
+        # Unquoted {nodes.X} / {sources.X} in YAML are flow mappings that
+        # PyYAML parses as {"nodes.X": None}. Reconstruct the intended string
+        # reference before any further processing. Checking node.flow_style
+        # ensures block-style mappings (and multi-line string content) are
+        # never affected.
+        if node.flow_style and len(node.value) == 1:
+            key_node, value_node = node.value[0]
+            key = loader.construct_object(key_node)
+            value = loader.construct_object(value_node)
+            if (
+                value is None
+                and isinstance(key, str)
+                and (key.startswith("nodes.") or key.startswith("sources."))
+            ):
+                return "{" + key + "}"
 
         # read variables
         _vars = {}
