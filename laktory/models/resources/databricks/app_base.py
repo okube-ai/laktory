@@ -62,6 +62,10 @@ class AppResourcesGenieSpace(BaseModel):
 
 
 class AppResourcesJob(BaseModel):
+    id: str = Field(
+        ...,
+        description="The unique identifier of the app. * `compute_status` attribute",
+    )
     permission: str = Field(
         ...,
         description="Permission to grant on the experiment. Supported permissions are: `CAN_READ`, `CAN_EDIT`, `CAN_MANAGE`",
@@ -101,6 +105,10 @@ class AppResourcesServingEndpoint(BaseModel):
 
 
 class AppResourcesSqlWarehouse(BaseModel):
+    id: str = Field(
+        ...,
+        description="The unique identifier of the app. * `compute_status` attribute",
+    )
     permission: str = Field(
         ...,
         description="Permission to grant on the experiment. Supported permissions are: `CAN_READ`, `CAN_EDIT`, `CAN_MANAGE`",

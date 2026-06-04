@@ -1684,23 +1684,23 @@ class JobTaskForEachTaskTaskSqlTask(BaseModel):
 class JobTaskForEachTaskTaskWebhookNotificationsOnDurationWarningThresholdExceeded(
     BaseModel
 ):
-    pass
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskForEachTaskTaskWebhookNotificationsOnFailure(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskForEachTaskTaskWebhookNotificationsOnStart(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskForEachTaskTaskWebhookNotificationsOnStreamingBacklogExceeded(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskForEachTaskTaskWebhookNotificationsOnSuccess(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskForEachTaskTaskWebhookNotifications(BaseModel):
@@ -2419,23 +2419,23 @@ class JobTaskSqlTask(BaseModel):
 
 
 class JobTaskWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobTaskWebhookNotificationsOnFailure(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobTaskWebhookNotificationsOnStart(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobTaskWebhookNotificationsOnStreamingBacklogExceeded(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobTaskWebhookNotificationsOnSuccess(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobTaskWebhookNotifications(BaseModel):
@@ -2652,23 +2652,23 @@ class JobTrigger(BaseModel):
 
 
 class JobWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobWebhookNotificationsOnFailure(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobWebhookNotificationsOnStart(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobWebhookNotificationsOnStreamingBacklogExceeded(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobWebhookNotificationsOnSuccess(BaseModel):
-    pass
+    id: str = Field(..., description="ID of the notification destination")
 
 
 class JobWebhookNotifications(BaseModel):
