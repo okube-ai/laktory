@@ -394,6 +394,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         if not laktory_found:
             dependencies += [f"laktory=={__version__}"]
 
+        if isinstance(self.orchestrator, LakeflowJobOrchestrator):
+            if self.orchestrator.data_profiling_config_task:
+                dependencies += ["databricks-sdk>=0.114.0"]
+
         return dependencies
 
     @property
