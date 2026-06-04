@@ -18,6 +18,9 @@ from laktory.models import UnityCatalogDataSink
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline._execute import _execute  # noqa: F401
+from laktory.models.pipeline._update_data_profiling_configs import (
+    _update_data_profiling_configs,  # noqa: F401
+)
 from laktory.models.pipeline._update_tables_metadata import (
     _update_tables_metadata,  # noqa: F401
 )
