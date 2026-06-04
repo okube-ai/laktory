@@ -9,10 +9,7 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule(BaseModel):
-    cidr_blocks: list[str] | None = Field(
-        None,
-        description="list of IP CIDR blocks. * `azure_service_endpoint_rule` (Azure only) - block with information about stable Azure service endpoints. You can configure the firewall of your Azure resources to allow traffic from your Databricks serverless compute resources.  Consists of the following fields:",
-    )
+    cidr_blocks: list[str] | None = Field(None, description="list of IP CIDR blocks")
 
 
 class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule(
@@ -34,11 +31,17 @@ class MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRu
 class MwsNetworkConnectivityConfigEgressConfigDefaultRules(BaseModel):
     aws_stable_ip_rule: (
         MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule | None
-    ) = Field(None)
+    ) = Field(
+        None,
+        description="block with information about stable AWS IP CIDR blocks. You can use these to configure the firewall of your resources to allow traffic from your Databricks workspace.  Consists of the following fields:",
+    )
     azure_service_endpoint_rule: (
         MwsNetworkConnectivityConfigEgressConfigDefaultRulesAzureServiceEndpointRule
         | None
-    ) = Field(None)
+    ) = Field(
+        None,
+        description="block with information about stable Azure service endpoints. You can configure the firewall of your Azure resources to allow traffic from your Databricks serverless compute resources.  Consists of the following fields:",
+    )
 
 
 class MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules(
@@ -95,23 +98,29 @@ class MwsNetworkConnectivityConfigEgressConfigTargetRules(BaseModel):
     aws_private_endpoint_rules: (
         list[MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules]
         | None
-    ) = Field(None)
+    ) = Field(
+        None,
+        description="list containing information about configure AWS Private Endpoints",
+    )
     azure_private_endpoint_rules: (
         list[
             MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRules
         ]
         | None
-    ) = Field(None)
+    ) = Field(
+        None,
+        description="list containing information about configure Azure Private Endpoints",
+    )
 
 
 class MwsNetworkConnectivityConfigEgressConfig(BaseModel):
     default_rules: MwsNetworkConnectivityConfigEgressConfigDefaultRules | None = Field(
         None,
-        description="block describing network connectivity rules that are applied by default without resource specific configurations.  Consists of the following fields: * `aws_stable_ip_rule` (AWS only) - block with information about stable AWS IP CIDR blocks. You can use these to configure the firewall of your resources to allow traffic from your Databricks workspace.  Consists of the following fields:",
+        description="block describing network connectivity rules that are applied by default without resource specific configurations.  Consists of the following fields:",
     )
     target_rules: MwsNetworkConnectivityConfigEgressConfigTargetRules | None = Field(
         None,
-        description="block describing network connectivity rules that configured for each destinations. These rules override default rules.  Consists of the following fields: * `azure_private_endpoint_rules` (Azure only) - list containing information about configure Azure Private Endpoints. * `aws_private_endpoint_rules` (AWS only) - list containing information about configure AWS Private Endpoints",
+        description="block describing network connectivity rules that configured for each destinations. These rules override default rules.  Consists of the following fields:",
     )
 
 

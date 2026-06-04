@@ -11,8 +11,8 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class QueryParameterDateRangeValueDateRangeValue(BaseModel):
-    end: str = Field(...)
-    start: str = Field(...)
+    end: str = Field(..., description="end of the date range")
+    start: str = Field(..., description="begin of the date range")
 
 
 class QueryParameterDateRangeValue(BaseModel):
@@ -29,7 +29,7 @@ class QueryParameterDateRangeValue(BaseModel):
     )
     date_range_value: QueryParameterDateRangeValueDateRangeValue | None = Field(
         None,
-        description="(Block) Manually specified date-time range value.  Consists of the following attributes: * `start` (Required, String) - begin of the date range. * `end` (Required, String) - end of the date range",
+        description="(Block) Manually specified date-time range value.  Consists of the following attributes:",
     )
 
 
@@ -120,7 +120,7 @@ class QueryParameter(BaseModel):
     )
     date_range_value: QueryParameterDateRangeValue | None = Field(
         None,
-        description="(Block) Manually specified date-time range value.  Consists of the following attributes: * `start` (Required, String) - begin of the date range. * `end` (Required, String) - end of the date range",
+        description="(Block) Manually specified date-time range value.  Consists of the following attributes:",
     )
     date_value: QueryParameterDateValue | None = Field(
         None, description="(String) Manually specified date-time value"
