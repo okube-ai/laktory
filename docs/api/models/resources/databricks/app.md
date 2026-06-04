@@ -7,6 +7,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.app.AppProviderConfig
+
+---
+
 ::: laktory.models.resources.databricks.app.AppResource
 
 ---
@@ -51,8 +55,60 @@
 
 ---
 
+::: laktory.models.resources.databricks.app.AppResources
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesApp
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesDatabase
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesExperiment
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesGenieSpace
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesJob
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesPostgres
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesSecret
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesServingEndpoint
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesSqlWarehouse
+
+---
+
+::: laktory.models.resources.databricks.app.AppResourcesUcSecurable
+
+---
+
 ::: laktory.models.resources.databricks.app.AppTelemetryExportDestination
 
 ---
 
 ::: laktory.models.resources.databricks.app.AppTelemetryExportDestinationUnityCatalog
+
+---
+
+::: laktory.models.resources.databricks.app.AppTelemetryExportDestinations
+
+---
+
+::: laktory.models.resources.databricks.app.AppTelemetryExportDestinationsUnityCatalog

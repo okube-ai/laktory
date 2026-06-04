@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
 
@@ -7,7 +8,14 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks.tabledatasink import TableDataSink
-from laktory.models.resources.databricks.qualitymonitor import QualityMonitor
+from laktory.models.resources.databricks.dataqualitymonitor_base import (
+    DataQualityMonitorDataProfilingConfig,
+)
+
+if TYPE_CHECKING:
+    from laktory.models.resources.databricks.dataqualitymonitor import (
+        DataQualityMonitor,
+    )
 
 logger = get_logger(__name__)
 
@@ -39,23 +47,33 @@ class UnityCatalogDataSink(TableDataSink):
     type: Literal["UNITY_CATALOG"] = Field(
         "UNITY_CATALOG", frozen=True, description="Sink Type"
     )
-    databricks_quality_monitor: QualityMonitor | None = Field(
-        None,
-        description="Databricks Quality Monitor. Requires `databricks_quality_monitor_enabled` set to `True`.",
+    databricks_data_profiling_config: DataQualityMonitorDataProfilingConfig | None = (
+        Field(
+            None,
+            description="Databricks data profiling configuration for a Databricks Data Quality Monitor on this table. When set, Laktory automatically constructs a DataQualityMonitor using this sink's table as the monitored object.",
+        )
     )
 
     @model_validator(mode="after")
-    def validate_qm(self) -> Any:
+    def validate_sink(self) -> Any:
         if self.dataframe_backend == DataFrameBackends.POLARS:
             raise ValueError(
                 "Unity Catalog data sink does not support the Polars backend."
             )
-        if self.databricks_quality_monitor is not None:
-            if (
-                self.parent_pipeline
-                and not self.parent_pipeline.databricks_quality_monitor_enabled
-            ):
-                raise ValueError(
-                    "`databricks_quality_monitor_enabled` must be set to `True` to use quality monitor on Unity Catalog data sinks."
-                )
         return self
+
+    @property
+    def data_quality_monitor(self) -> "DataQualityMonitor | None":
+        """Build a DataQualityMonitor for this sink from the configured databricks_data_profiling_config."""
+        if self.databricks_data_profiling_config is None:
+            return None
+
+        from laktory.models.resources.databricks.dataqualitymonitor import (
+            DataQualityMonitor,
+        )
+
+        return DataQualityMonitor(
+            object_type="table",
+            object_id=self.full_name,
+            data_profiling_config=self.databricks_data_profiling_config,
+        )

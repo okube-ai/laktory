@@ -4,7 +4,9 @@ from pydantic import SkipValidation
 from laktory._logger import get_logger
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline._execute import _execute  # noqa: F401
-from laktory.models.pipeline._post_execute import _post_execute  # noqa: F401
+from laktory.models.pipeline._update_tables_metadata import (
+    _update_tables_metadata,  # noqa: F401
+)
 from laktory.models.pipeline.pipeline import Pipeline
 from laktory.typing import AnyFrame
 

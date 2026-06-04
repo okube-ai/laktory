@@ -41,7 +41,6 @@ _CLUSTER = {
 def _get_pl():
     return models.Pipeline(
         name="pl-job",
-        databricks_quality_monitor_enabled=True,
         nodes=[
             models.PipelineNode(
                 name="brz",
@@ -64,6 +63,7 @@ def _get_pl():
         orchestrator={
             "type": "LAKEFLOW_JOB",
             "name": "pl-job",
+            "data_profiling_config_task": True,
             "job_clusters": [
                 {
                     "job_cluster_key": "node-cluster",
@@ -92,7 +92,7 @@ def test_task_per_execution_task_name():
     assert "node-brz" in task_keys
     assert "node-slv" in task_keys
     assert "node-gld" in task_keys
-    assert "post-execute" in task_keys
+    assert "data-profiling-configs" in task_keys
 
 
 def test_task_dependency_matches_dag():
