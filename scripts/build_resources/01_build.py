@@ -266,16 +266,36 @@ def emit_block_class(
             continue
         if is_computed_only(attr):
             continue
-        lines.append(
-            _attr_field_line(
-                attr_name,
-                attr,
-                descriptions,
-                block_path,
-                required=attr.get("required", False),
-                plural_fields=False,
+        if "nested_type" in attr:
+            nested_class = block_class_name(class_name, attr_name)
+            nested_path = f"{block_path}.{attr_name}" if block_path else attr_name
+            n_pre, n_lines, n_names = emit_nested_type_class(
+                nested_class, attr["nested_type"], descriptions, block_path=nested_path
             )
-        )
+            pre_classes.extend(n_pre)
+            pre_classes.append("\n".join(n_lines))
+            pre_classes.append("")
+            all_class_names.extend(n_names)
+            lines.append(
+                _nested_type_field_line(
+                    attr_name,
+                    attr["nested_type"],
+                    nested_class,
+                    descriptions,
+                    block_path,
+                )
+            )
+        else:
+            lines.append(
+                _attr_field_line(
+                    attr_name,
+                    attr,
+                    descriptions,
+                    block_path,
+                    required=attr.get("required", False),
+                    plural_fields=False,
+                )
+            )
         has_fields = True
 
     # Emit block_type fields (nested models)
@@ -323,6 +343,90 @@ def emit_block_class(
     return pre_classes, lines, all_class_names
 
 
+def _nested_type_field_line(
+    attr_name: str,
+    nested_type: dict,
+    class_name: str,
+    descriptions: dict[str, str],
+    block_path: str,
+) -> str:
+    """Return the field assignment line for an attribute that uses nested_type."""
+    nesting_mode = nested_type.get("nesting_mode", "single")
+    field_name = safe_field_name(attr_name)
+    desc = get_desc(descriptions, block_path, attr_name, {})
+    desc_snippet = f', description="{desc}"' if desc else ""
+    if nesting_mode == "single":
+        return f"    {field_name}: {class_name} | None = Field(None{desc_snippet})"
+    else:
+        plural = pluralize(field_name)
+        if field_name != plural:
+            return f'    {field_name}: list[{class_name}] | None = PluralField(None, plural="{plural}"{desc_snippet})'
+        return (
+            f"    {field_name}: list[{class_name}] | None = Field(None{desc_snippet})"
+        )
+
+
+def emit_nested_type_class(
+    class_name: str,
+    nested_type: dict,
+    descriptions: dict[str, str],
+    block_path: str = "",
+) -> tuple[list[str], list[str], list[str]]:
+    """
+    Recursively emit a Pydantic BaseModel class for a nested_type attribute.
+
+    Returns (pre_classes, class_lines, all_class_names).
+    """
+    pre_classes: list[str] = []
+    lines: list[str] = [f"class {class_name}(BaseModel):"]
+    all_class_names: list[str] = [class_name]
+    has_fields = False
+
+    for attr_name, attr in sorted(nested_type.get("attributes", {}).items()):
+        if attr_name in ALWAYS_SKIP_ATTRS or attr_name.startswith("__"):
+            continue
+        if is_computed_only(attr):
+            continue
+
+        nested_path = f"{block_path}.{attr_name}" if block_path else attr_name
+
+        if "nested_type" in attr:
+            nested_class = block_class_name(class_name, attr_name)
+            n_pre, n_lines, n_names = emit_nested_type_class(
+                nested_class, attr["nested_type"], descriptions, block_path=nested_path
+            )
+            pre_classes.extend(n_pre)
+            pre_classes.append("\n".join(n_lines))
+            pre_classes.append("")
+            all_class_names.extend(n_names)
+            lines.append(
+                _nested_type_field_line(
+                    attr_name,
+                    attr["nested_type"],
+                    nested_class,
+                    descriptions,
+                    block_path,
+                )
+            )
+        else:
+            lines.append(
+                _attr_field_line(
+                    attr_name,
+                    attr,
+                    descriptions,
+                    block_path,
+                    required=attr.get("required", False),
+                    plural_fields=False,
+                )
+            )
+        has_fields = True
+
+    if not has_fields:
+        lines.append("    pass")
+
+    return pre_classes, lines, all_class_names
+
+
 def emit_resource_module(
     resource_key: str,
     resource_schema: dict,
@@ -341,7 +445,9 @@ def emit_resource_module(
     needs_any = any(
         "Any" in tf_type_to_python(a.get("type", "dynamic"))
         for an, a in attrs.items()
-        if not is_computed_only(a) and an not in ALWAYS_SKIP_ATTRS
+        if not is_computed_only(a)
+        and an not in ALWAYS_SKIP_ATTRS
+        and "nested_type" not in a
     )
 
     per_resource_skip = PER_RESOURCE_SKIP_ATTRS.get(resource_key, set())
@@ -349,7 +455,33 @@ def emit_resource_module(
     # --- Build nested classes ---
     pre_classes: list[str] = []
     nested_field_lines: list[str] = []
+    nested_type_field_lines: list[str] = []
     all_class_names: list[str] = []
+
+    # Handle nested_type attributes (Terraform's newer schema format)
+    for attr_name, attr in sorted(attrs.items()):
+        if "nested_type" not in attr:
+            continue
+        if is_computed_only(attr):
+            continue
+        if attr_name in ALWAYS_SKIP_ATTRS or attr_name.startswith("__"):
+            continue
+        if attr_name in per_resource_skip:
+            continue
+
+        nested_class = block_class_name(class_name, attr_name)
+        n_pre, n_lines, n_names = emit_nested_type_class(
+            nested_class, attr["nested_type"], descriptions, block_path=attr_name
+        )
+        pre_classes.extend(n_pre)
+        pre_classes.append("\n".join(n_lines))
+        pre_classes.append("")
+        all_class_names.extend(n_names)
+        nested_type_field_lines.append(
+            _nested_type_field_line(
+                attr_name, attr["nested_type"], nested_class, descriptions, ""
+            )
+        )
 
     for bt_name, bt_def in sorted(block_types.items()):
         if bt_name in ALWAYS_SKIP_BLOCK_TYPES:
@@ -410,6 +542,7 @@ def emit_resource_module(
         and k not in ALWAYS_SKIP_ATTRS
         and not k.startswith("__")
         and k not in per_resource_skip
+        and "nested_type" not in v
     }
     optional_attrs = {
         k: v
@@ -419,6 +552,7 @@ def emit_resource_module(
         and k not in ALWAYS_SKIP_ATTRS
         and not k.startswith("__")
         and k not in per_resource_skip
+        and "nested_type" not in v
     }
 
     for attr_name, attr in sorted(required_attrs.items()):
@@ -431,9 +565,15 @@ def emit_resource_module(
             _attr_field_line(attr_name, attr, descriptions, "", required=False)
         )
 
+    main_lines.extend(nested_type_field_lines)
     main_lines.extend(nested_field_lines)
 
-    if not (required_attrs or optional_attrs or nested_field_lines):
+    if not (
+        required_attrs
+        or optional_attrs
+        or nested_type_field_lines
+        or nested_field_lines
+    ):
         main_lines.append("    pass")
 
     main_lines.append("")

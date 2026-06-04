@@ -8,6 +8,7 @@ from __future__ import annotations
 # The terraform_resource_type property still returns the original resource_key.
 RESOURCE_NAME_OVERRIDES: dict[str, str] = {
     "databricks_sql_table": "databricks_table",
+    # "databricks_quality_monitor": "databricks_data_profiling_monitor",
 }
 
 # Default generation targets
@@ -21,6 +22,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_cluster_policy",
     "databricks_current_user",
     "databricks_dashboard",
+    "databricks_data_quality_monitor",
     "databricks_dbfs_file",
     "databricks_directory",
     "databricks_entitlements",
@@ -44,7 +46,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_obo_token",
     "databricks_permissions",
     "databricks_pipeline",
-    "databricks_quality_monitor",
+    # "databricks_quality_monitor",
     "databricks_query",
     "databricks_recipient",
     "databricks_repo",

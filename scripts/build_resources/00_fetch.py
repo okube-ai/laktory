@@ -82,6 +82,7 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_app",
     "databricks_cluster_policy",
     "databricks_dashboard",
+    "databricks_data_quality_monitor",  # preview only
     "databricks_dbfs_file",
     "databricks_directory",
     "databricks_entitlements",
@@ -295,7 +296,8 @@ def parse_md_descriptions(md_source: str) -> dict[str, str]:
             continue
 
         # Match a bullet: * `field_name` - description
-        m = re.match(r"^\s*\*\s+`([^`]+)`\s+-\s+(.*)", line)
+        # Also handles: * `field_name` (type, qualifier) - description
+        m = re.match(r"^\s*\*\s+`([^`]+)`(?:\s+\([^)]*\))?\s+-\s+(.*)", line)
         if m:
             flush()
             pending_field = m.group(1)
