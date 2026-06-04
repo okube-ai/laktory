@@ -1,5 +1,6 @@
 import polars as pl
 import pytest
+from pydantic import ValidationError
 
 from laktory._testing import get_df0
 from laktory._testing import get_df1
@@ -201,6 +202,48 @@ def test_json_roundtrip(backend):
 
     df = node2.execute(df0)
     assert_dfs_equal(df.select("y1"), pl.DataFrame({"y1": [1, 2, 2]}))
+
+
+def test_func_kwargs_variable_ref_no_crash():
+    """
+    ${vars.X} strings in func_kwargs are valid VariableType placeholders and
+    must not crash set_args with AttributeError. They are stored as-is for
+    inject_vars() to resolve later.
+    """
+    m = DataFrameMethod(
+        func_name="my_func",
+        func_kwargs={
+            "catalog": "${vars.catalog_name}",
+            "other_df": "{nodes.upstream_node}",
+        },
+    )
+    assert m.func_kwargs["catalog"] == "${vars.catalog_name}"
+    assert m.func_kwargs["other_df"].value == "{nodes.upstream_node}"
+
+
+@pytest.mark.parametrize(
+    "bad_value, expected_hint",
+    [
+        ({"node_name": "brz_node"}, "{nodes.brz_node}"),
+        ({"node_name": "brz_node", "type": "PIPELINE_NODE"}, "{nodes.brz_node}"),
+        ({"type": "UNITY_CATALOG", "table_name": "t"}, "{sources.<name>}"),
+        ({"type": "FILE", "path": "/tmp/x.csv"}, "{sources.<name>}"),
+        ({"type": "DATAFRAME"}, "{sources.<name>}"),
+        ({"type": "HIVE_METASTORE", "table_name": "t"}, "{sources.<name>}"),
+    ],
+)
+def test_direct_datasource_arg_raises(bad_value, expected_hint):
+    """
+    Passing a DataSource dict directly as a func_kwarg or func_arg must raise a
+    ValidationError pointing to the correct {nodes.X} or {sources.<name>} syntax.
+    """
+    with pytest.raises(ValidationError) as exc_info:
+        DataFrameMethod(func_name="my_func", func_kwargs={"df": bad_value})
+    assert expected_hint in str(exc_info.value)
+
+    with pytest.raises(ValidationError) as exc_info:
+        DataFrameMethod(func_name="my_func", func_args=[bad_value])
+    assert expected_hint in str(exc_info.value)
 
 
 def test_json_roundtrip_named_ref_kwarg():
