@@ -1,3 +1,5 @@
+from io import StringIO
+
 import polars as pl
 import pytest
 from pydantic import ValidationError
@@ -9,6 +11,7 @@ from laktory.api import register_expr_namespace
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameMethod
 from laktory.models import LaktoryContext
+from laktory.models import Pipeline
 
 from ..conftest import assert_dfs_equal
 
@@ -219,6 +222,54 @@ def test_func_kwargs_variable_ref_no_crash():
     )
     assert m.func_kwargs["catalog"] == "${vars.catalog_name}"
     assert m.func_kwargs["other_df"].value == "{nodes.upstream_node}"
+
+
+def test_func_kwargs_variable_ref_no_crash2():
+    """ """
+
+    pl_yaml = """
+    name: ${vars.workflow_name}
+
+    variables:
+      business_unit: dlk
+      compute_name: workflow-compute
+      workflow_name: pl-aip
+
+    # --------------------------------------------------------------------------- #
+    # Orchestrator                                                                #
+    # --------------------------------------------------------------------------- #
+
+    orchestrator:
+      type: LAKEFLOW_JOB
+      name_prefix: "[${vars.username}]"
+      serverless_environment_version: "3"
+      timeout_seconds: 3600  # typical run is 15 minutes. full refresh should be the same (no read stream)
+      schedule:
+        timezone_id: America/New_York
+        quartz_cron_expression: '0 0 4 ? * *'  # daily at 4 AM EST
+        pause_status: ${vars.pause_status}
+
+
+    # --------------------------------------------------------------------------- #
+    # Nodes                                                                       #
+    # --------------------------------------------------------------------------- #
+
+    nodes:
+    - name: gld_attributs_clients
+      primary_keys:
+        - CleUnique
+      transformer:
+        dataframe_api: NATIVE
+        nodes:
+        - func_name: dlk.process_attribut_clients
+          func_kwargs:
+            catalog: "${vars.catalog_read}"
+    """
+
+    with StringIO(pl_yaml) as fp:
+        pl = Pipeline.model_validate_yaml(fp)
+
+    print(pl)
 
 
 @pytest.mark.parametrize(
