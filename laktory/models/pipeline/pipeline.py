@@ -281,10 +281,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         validation_alias=AliasChoices("root_path", "root_path_"),
         exclude=True,
     )
-    databricks_quality_monitor_enabled: bool = Field(
-        False,
-        description="Enable Databricks Quality Monitor. When enabled, quality monitors are created for each sink configured with a quality monitor and deleted for sinks without.",
-    )
     _imports_imported: bool = False
     _plan: "PipelineExecutionPlan" = None
 
@@ -571,6 +567,15 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             sources += n.data_sources
         return sources
 
+    @property
+    def has_databricks_data_profiling_configs(self) -> bool:
+        return any(
+            isinstance(s, UnityCatalogDataSink)
+            and s.databricks_data_profiling_config is not None
+            for node in self.nodes
+            for s in node.sinks
+        )
+
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
@@ -696,37 +701,24 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 if s.metadata:
                     s.metadata.execute()
 
-    def update_quality_monitors(self, workspace_client: "WorkspaceClient" = None):
-        if not self.databricks_quality_monitor_enabled:
-            logger.info(
-                f"Databricks Quality Monitor is disabled for pipeline {self.name}. Skipping update."
-            )
-
-        logger.info("Updating pipeline quality monitors")
-        for inode, node in enumerate(self.sorted_nodes):
+    def update_data_profiling_configs(self, workspace_client: "WorkspaceClient" = None):
+        logger.info(f"Updating data profiling configs for pipeline '{self.name}'")
+        for node in self.sorted_nodes:
             for s in node.sinks:
                 if not isinstance(s, UnityCatalogDataSink):
                     continue
 
-                if s.databricks_quality_monitor:
-                    sdk = s.databricks_quality_monitor.sdk(
+                if s.databricks_data_profiling_config:
+                    s.data_quality_monitor.sdk(
                         workspace_client=workspace_client
-                    )
-                    sdk.create_or_update()
+                    ).create_or_update()
                 else:
-                    from laktory.models.resources.databricks import QualityMonitor
+                    from laktory.models.resources.databricks import DataQualityMonitor
 
-                    # Create a dummy quality monitor to access the delete function
-                    # Current quality monitor properties will be used to delete
-                    # existing assets.
-                    qm = QualityMonitor(
-                        table_name=s.full_name,
-                        output_schema_name="dummy_schema",
-                        assets_dir="dummy_path",
-                        snapshot={},
-                    )
-                    sdk = qm.sdk(workspace_client=workspace_client)
-                    sdk.delete()
+                    DataQualityMonitor(
+                        object_type="table",
+                        object_id=s.full_name,
+                    ).sdk(workspace_client=workspace_client).delete()
 
     def dag_figure(self) -> "Figure":
         """
