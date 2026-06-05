@@ -36,21 +36,35 @@ def register_spark_session(spark=None):
 
     if spark is None:
         # No active session - build one (local / test usage).
-        # Requires pyspark pip metadata to determine Scala / Delta JAR versions.
         # In managed environments (LDP, Databricks Connect) a session is always
         # active, so this branch is never reached there.
+        from importlib.metadata import PackageNotFoundError
         from importlib.metadata import version as pkg_version
 
         from pyspark.sql import SparkSession
 
-        pyspark_ver = pkg_version("pyspark")
+        try:
+            pyspark_ver = pkg_version("pyspark")
+        except PackageNotFoundError:
+            # pyspark installed without pip metadata (e.g. bundled runtime or
+            # source install) — fall back to the module's own __version__
+            import pyspark
+
+            pyspark_ver = pyspark.__version__
+
         spark_major, spark_minor = (
             int(pyspark_ver.split(".")[0]),
             int(pyspark_ver.split(".")[1]),
         )
         scala = "2.13" if spark_major >= 4 else "2.12"
 
-        delta_ver = pkg_version("delta_spark")
+        try:
+            delta_ver = pkg_version("delta_spark")
+        except PackageNotFoundError:
+            import delta
+
+            delta_ver = delta.__version__
+
         delta_major, delta_minor = (
             int(delta_ver.split(".")[0]),
             int(delta_ver.split(".")[1]),
