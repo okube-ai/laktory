@@ -578,12 +578,14 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
     @property
     def has_databricks_data_profiling_configs(self) -> bool:
-        return any(
-            isinstance(s, UnityCatalogDataSink)
-            and s.databricks_data_profiling_config is not None
-            for node in self.nodes
-            for s in node.sinks
-        )
+        for node in self.nodes:
+            for s in node.sinks:
+                if (
+                    isinstance(s, UnityCatalogDataSink)
+                    and s.databricks_data_profiling_config is not None
+                ):
+                    return True
+        return False
 
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #

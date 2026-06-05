@@ -1,3 +1,5 @@
+from io import StringIO
+
 import polars as pl
 import pytest
 from pydantic import ValidationError
@@ -9,6 +11,7 @@ from laktory.api import register_expr_namespace
 from laktory.enums import DataFrameBackends
 from laktory.models import DataFrameMethod
 from laktory.models import LaktoryContext
+from laktory.models import Pipeline
 
 from ..conftest import assert_dfs_equal
 
@@ -219,6 +222,74 @@ def test_func_kwargs_variable_ref_no_crash():
     )
     assert m.func_kwargs["catalog"] == "${vars.catalog_name}"
     assert m.func_kwargs["other_df"].value == "{nodes.upstream_node}"
+
+
+def test_func_kwargs_variable_ref_no_crash2():
+    """ """
+
+    pl_yaml = """
+    name: pl
+
+    orchestrator:
+      type: LAKEFLOW_JOB
+      serverless_environment_version: "3"
+
+    nodes:
+    - name: gld
+      transformer:
+        nodes:
+        - func_name: my_func
+          func_args:
+            - ${vars.schema}
+          func_kwargs:
+            catalog: ${vars.catalog}
+    """
+
+    with StringIO(pl_yaml) as fp:
+        pl = Pipeline.model_validate_yaml(fp)
+
+    print(pl)
+
+
+def test_unquoted_node_reference_auto_quoted():
+    """
+    Unquoted {nodes.X} / {sources.X} in YAML are parsed by PyYAML as flow
+    mappings. The YAML pre-processor must auto-quote them so they behave
+    identically to their quoted counterparts.
+    """
+    pl_yaml = """
+    name: pl
+
+    nodes:
+    - name: upstream1
+      transformer:
+        nodes:
+        - func_name: my_func
+
+    - name: upstream2
+      transformer:
+        nodes:
+        - func_name: my_func
+
+    - name: downstream
+      transformer:
+        nodes:
+        - func_name: my_func
+          func_args:
+            - {nodes.upstream1}
+          func_kwargs:
+            other: {nodes.upstream2}
+    """
+
+    with StringIO(pl_yaml) as fp:
+        pl = Pipeline.model_validate_yaml(fp)
+
+    downstream = next(n for n in pl.nodes if n.name == "downstream")
+    method = downstream.transformer.nodes[0]
+
+    assert method.func_args[0].value == "{nodes.upstream1}"
+    assert method.func_kwargs["other"].value == "{nodes.upstream2}"
+    assert downstream.upstream_node_names == ["upstream1", "upstream2"]
 
 
 @pytest.mark.parametrize(

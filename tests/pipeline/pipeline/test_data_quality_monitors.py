@@ -45,6 +45,19 @@ def test_has_databricks_data_profiling_configs_false():
     assert pl.has_databricks_data_profiling_configs is False
 
 
+def test_has_databricks_data_profiling_configs_no_sinks():
+    pl = models.Pipeline(
+        name="pl",
+        nodes=[
+            models.PipelineNode(
+                name="n",
+                sources=[{"table_name": "a.b.c"}],
+            )
+        ],
+    )
+    assert pl.has_databricks_data_profiling_configs is False
+
+
 def test_dqm_config_on_sink():
     node = models.PipelineNode(
         name="node_with_dqm",

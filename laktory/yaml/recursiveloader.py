@@ -224,6 +224,22 @@ class RecursiveLoader(yaml.SafeLoader):
     def custom_mapping_constructor(loader, node):
         """Custom handling for mappings to support !merge."""
 
+        # Unquoted {nodes.X} / {sources.X} in YAML are flow mappings that
+        # PyYAML parses as {"nodes.X": None}. Reconstruct the intended string
+        # reference before any further processing. Checking node.flow_style
+        # ensures block-style mappings (and multi-line string content) are
+        # never affected.
+        if node.flow_style and len(node.value) == 1:
+            key_node, value_node = node.value[0]
+            key = loader.construct_object(key_node)
+            value = loader.construct_object(value_node)
+            if (
+                value is None
+                and isinstance(key, str)
+                and (key.startswith("nodes.") or key.startswith("sources."))
+            ):
+                return "{" + key + "}"
+
         # read variables
         _vars = {}
         for key_node, value_node in node.value:
