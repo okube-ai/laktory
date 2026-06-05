@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `register_spark_session()` when pyspark connect is installed 
 ### Updated
 * n/a
 ### Breaking changes
