@@ -61,9 +61,8 @@ def register_spark_session(spark=None):
         try:
             delta_ver = pkg_version("delta_spark")
         except PackageNotFoundError:
-            import delta
-
-            delta_ver = delta.__version__
+            # Assume delta spark version is unknown
+            delta_ver = "0.0.0"
 
         delta_major, delta_minor = (
             int(delta_ver.split(".")[0]),
