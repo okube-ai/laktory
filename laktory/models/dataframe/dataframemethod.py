@@ -275,7 +275,12 @@ class DataFrameMethod(BaseModel, PipelineChild):
 
     @property
     def data_sources(self) -> list:
-        return []
+        """Get PipelineNodeDataSource objects for each {nodes.X} reference in func_args/func_kwargs."""
+        from laktory.models.datasources.pipelinenodedatasource import (
+            PipelineNodeDataSource,
+        )
+
+        return [PipelineNodeDataSource(node_name=n) for n in self.upstream_node_names]
 
     # ----------------------------------------------------------------------- #
     # Upstream Nodes                                                          #

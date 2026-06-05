@@ -663,11 +663,18 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @property
     def data_sources(self) -> list[BaseDataSource]:
-        """Get all sources feeding the pipeline node (transformer-level inline sources only)."""
-        sources = []
+        """Get all sources feeding the pipeline node: explicit sources and {nodes.X} transformer references."""
+        sources = list(self.sources)
         if self.transformer:
             sources += self.transformer.data_sources
-        return sources
+        seen = set()
+        unique = []
+        for s in sources:
+            key = (type(s), s._id)
+            if key not in seen:
+                seen.add(key)
+                unique.append(s)
+        return unique
 
     # ----------------------------------------------------------------------- #
     # Execution                                                               #

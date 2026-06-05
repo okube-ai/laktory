@@ -1,14 +1,9 @@
 # Release History
 
 ## [0.12.1] - Unreleased
-### Added
-* n/a
 ### Fixed
 * `register_spark_session()` when pyspark connect is installed 
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* `pipeline.data_sources` to include all data sources
 
 ## [0.12.0] - 2026-06-05
 ### Added
