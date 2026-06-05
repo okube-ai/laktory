@@ -1,6 +1,16 @@
 # Release History
 
-## [0.12.0] - Unreleased
+## [0.12.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.12.0] - 2026-06-05
 ### Added
 * Spark Declarative Pipeline Orchestrator
 * `PipelineNode.sources` - a named dict of data sources replacing the single `source` field. All existing `source:` YAML is automatically migrated to `sources: {df: ...}`.
