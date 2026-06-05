@@ -5,6 +5,7 @@
 * n/a
 ### Fixed
 * `register_spark_session()` when pyspark connect is installed 
+* `pipeline.data_sources` to include all data sources
 ### Updated
 * n/a
 ### Breaking changes
