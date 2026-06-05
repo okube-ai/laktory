@@ -241,6 +241,7 @@ nav:
           - Connection: api/models/resources/databricks/connection.md
           - CurrentUser: api/models/resources/databricks/currentuser.md
           - Dashboard: api/models/resources/databricks/dashboard.md
+          - DataQualityMonitor: api/models/resources/databricks/dataqualitymonitor.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
           - api/models/resources/databricks/directory.md
           - Declarative Pipeline:
@@ -267,7 +268,6 @@ nav:
           - Permissions: api/models/resources/databricks/permissions.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
           - PythonPackagePermissions: api/models/resources/databricks/pythonpackagepermissions.md
-          - QualityMonitor: api/models/resources/databricks/qualitymonitor.md
           - api/models/resources/databricks/query.md
           - api/models/resources/databricks/recipient.md
           - api/models/resources/databricks/repo.md
