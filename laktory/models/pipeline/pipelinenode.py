@@ -159,7 +159,7 @@ class PipelineNode(BaseModel, PipelineChild):
         description="Data sources for this node. The first entry is the primary input fed into the transformer as `{df}`. Assign a `name` to each source to reference it as `{sources.name}` in transformer expressions.",
     )
     sinks: list[DataSinksUnion] = Field(
-        None,
+        [],
         description="Definition of the data sink(s). Set `is_quarantine` to True to store node quarantine DataFrame.",
     )
     tags: list[str] = Field([], description="Node tags for selective execution.")
