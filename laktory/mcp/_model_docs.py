@@ -103,19 +103,25 @@ def _nice_type(ann: Any) -> str:
     return str(ann)
 
 
-def _display_name(name: str, field_info: Any) -> str:
-    """Return the user-facing YAML field name (strips trailing _ alias backing)."""
-    if name.endswith("_") and isinstance(field_info.validation_alias, AliasChoices):
-        choices = field_info.validation_alias.choices
-        if choices:
-            first = choices[0]
-            if isinstance(first, str) and not first.endswith("_"):
-                return first
-    return name
+def _display_names(name: str, field_info: Any) -> list[str]:
+    """Return all user-facing YAML names for a field.
 
+    The Python field name comes first (if it is user-facing — no leading or
+    trailing underscore), followed by any string AliasChoices entries that are
+    also user-facing. Internal backing names (ending with _) and truly private
+    names (starting with _) are excluded from both positions.
+    """
+    names: list[str] = []
 
-def _is_public(name: str) -> bool:
-    return not name.startswith("_")
+    if not name.startswith("_") and not name.endswith("_"):
+        names.append(name)
+
+    if isinstance(field_info.validation_alias, AliasChoices):
+        for c in field_info.validation_alias.choices:
+            if isinstance(c, str) and not c.endswith("_") and c not in names:
+                names.append(c)
+
+    return names
 
 
 def get_laktory_docs() -> str:
@@ -157,19 +163,21 @@ def _render_docs(cls: type[BaseModel]) -> str:
 
     seen: set[str] = set()
     for name, field in cls.model_fields.items():
-        if not _is_public(name):
+        display_list = _display_names(name, field)
+        if not display_list:
             continue
-        display = _display_name(name, field)
-        if display in seen:
-            continue
-        seen.add(display)
 
         type_str = _nice_type(field.annotation)
         required = "yes" if field.is_required() else "no"
         default = "" if field.is_required() else repr(field.default)
         description = field.description or ""
-        lines.append(
-            f"| `{display}` | `{type_str}` | {default} | {required} | {description} |"
-        )
+
+        for display in display_list:
+            if display in seen:
+                continue
+            seen.add(display)
+            lines.append(
+                f"| `{display}` | `{type_str}` | {default} | {required} | {description} |"
+            )
 
     return "\n".join(lines)
