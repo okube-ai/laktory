@@ -90,6 +90,9 @@ databricks = [
     "databricks-sdk",
     "databricks-bundles",
 ]
+mcp = [
+    "mcp>=1.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/okube-ai/laktory"
