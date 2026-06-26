@@ -373,3 +373,92 @@ Unity Catalog access control is expressed through four overlapping constructs. U
 - `laktory/models/datasources/basedatasource.py` - `name: str | None` field
 - `laktory/models/dataframe/dataframeexpr.py` - `{sources.X}` and `{df}` resolution in `to_sql()` and `to_df()`
 - `laktory/models/dataframe/dataframemethod.py` - `{sources.X}` resolution in `DataFrameMethodArg.eval()`
+
+---
+
+## 16. SDP Orchestrator (`SparkDeclarativePipelineOrchestrator`)
+
+`SPARK_DECLARATIVE_PIPELINE` orchestrator generates and executes [Spark Declarative Pipelines](https://spark.apache.org/docs/latest/pipelines.html) (`pyspark.pipelines`, available from PySpark 4.1.1+). It is the open-source counterpart of Databricks' Lakeflow Declarative Pipelines (LDP).
+
+**Key file:** `laktory/models/pipeline/orchestrators/sparkdeclarativepipelineorchestrator.py`
+
+### Generated artifacts (three per pipeline)
+
+| Artifact | Purpose |
+|----------|---------|
+| `laktory_sdp.py` | Python definition script using `@dp.materialized_view` / `@dp.table` decorators |
+| `{pipeline_name}.json` | Serialized pipeline config (reuses `PipelineConfigWorkspaceFile`) |
+| `spark-pipeline.yaml` | SDP YAML spec pointing at the script and config |
+
+### Python API quick reference
+
+```python
+from pyspark import pipelines as dp
+from pyspark.sql import SparkSession
+
+spark = SparkSession.getActiveSession()  # must be called explicitly; not injected
+
+@dp.materialized_view          # batch → MaterializedView
+def brz():
+    return spark.read.parquet("path/to/source.parquet")
+
+@dp.table                      # streaming → StreamingTable
+def slv():
+    return spark.readStream.table("brz")
+
+@dp.temporary_view             # ephemeral view
+def tmp():
+    return spark.table("brz")
+```
+
+Decorator kwargs: `name`, `comment`, `spark_conf`, `table_properties`, `partition_cols`, `cluster_by`, `schema`, `format`.
+
+### YAML spec format
+
+```yaml
+name: my-pipeline
+libraries:
+  - glob:
+      include: laktory_sdp.py   # relative to spec file directory, NOT cwd
+storage: file:///tmp/checkpoints  # must be absolute URI with scheme
+catalog: my_catalog               # optional default catalog
+database: my_schema               # optional default schema
+configuration:
+  laktory.executor: SDP
+```
+
+**Glob constraint:** only file paths or paths ending with `/**` are valid — `*.py` is not.
+
+### Dependency tracking
+
+SDP infers dependencies from Spark logical plans — no explicit declarations needed.
+
+`spark.table("brz")` inside `slv()` creates an `UnresolvedRelation ["brz"]` node in the plan. The SDP JVM server resolves it to the `brz` dataset and runs `brz` first.
+
+**Laktory implication:** `PipelineNodeDataSource._read_spark()` needs no special SDP handling. The normal path (`primary_sink.read()` → `spark.table(full_name)`) produces the right `UnresolvedRelation` automatically.
+
+### Laktory source type mapping
+
+| Laktory source | SDP read pattern | Creates SDP dependency? |
+|---|---|---|
+| `PipelineNodeDataSource` (batch) | `spark.table("sink_name")` | Yes |
+| `PipelineNodeDataSource` (streaming) | `spark.readStream.table("sink_name")` | Yes |
+| `FileDataSource` | `spark.read.format(...).load(path)` | No — leaf source |
+| `UnityCatalogDataSource` | `spark.table("cat.schema.table")` | No — external catalog |
+| `HiveMetastoreDataSource` | `spark.table("schema.table")` | No — external catalog |
+
+**Rule:** external data must use `spark.read.*`, not `spark.table()`. The SDP Spark Connect server has an isolated catalog — tables from other sessions are not visible.
+
+### Key constraints
+
+- **No programmatic runner** — `spark-pipelines run --spec <path>` CLI only; execution shells out via `subprocess.run`
+- **No DDL in pipeline code** — `spark.sql("CREATE TABLE …")` is blocked
+- **`collect()`, `count()`, `toPandas()`** are forbidden inside dataset functions
+- **`spark` must be obtained explicitly** — `SparkSession.getActiveSession()`
+- **Glob paths** are relative to the spec file directory, not the working directory
+- **CDC (`create_auto_cdc_flow`)** — Databricks-only extension; not in open-source SDP (use LDP instead)
+- **`is_sdp_compatible`** returns `False` (SDP has no `@dp.expect_*` yet); single place to flip when SDP adds expectation support
+
+### Execution detection
+
+`is_sdp_execute()` (in `laktory/__init__`) reads `spark.conf.get("laktory.executor") == "SDP"`. The generated YAML injects this conf key. Parallel: `is_ldp_execute()` checks `"LDP"`, `is_declarative_execute()` returns `True` for either.
