@@ -9,6 +9,7 @@ from prompt_toolkit.completion import WordCompleter
 from laktory._version import VERSION
 from laktory.cli._common import TemplateValidator
 from laktory.cli._setup_agent import write_agents_md
+from laktory.cli._setup_agent import write_claude_md
 from laktory.cli.app import app
 from laktory.constants import QUICKSTART_TEMPLATES
 
@@ -98,6 +99,7 @@ def quickstart(
 
     # Copy AGENTS.md from installed package (all templates)
     write_agents_md(target_dir)
+    write_claude_md(target_dir)
 
     if template == "workflows":
         _ldp_src = os.path.join(

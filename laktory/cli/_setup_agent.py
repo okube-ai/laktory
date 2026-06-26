@@ -52,6 +52,19 @@ def write_agents_md(target_dir: str | Path = ".") -> None:
         print("AGENTS.md: created with Laktory reference")
 
 
+def write_claude_md(target_dir: str | Path = ".") -> None:
+    dst = Path(target_dir) / "CLAUDE.md"
+    if not dst.exists():
+        print("CLAUDE.md: not found — skipping")
+        return
+    existing = dst.read_text(encoding="utf-8")
+    if _LAKTORY_MARKER in existing:
+        print("CLAUDE.md: Laktory reference already present — skipping")
+        return
+    dst.write_text(existing + _AGENTS_REFERENCE, encoding="utf-8")
+    print(f"CLAUDE.md: Laktory reference appended to {dst}")
+
+
 def write_mcp_json(target_dir: str | Path = ".") -> None:
     dst = Path(target_dir) / ".mcp.json"
 
@@ -95,4 +108,5 @@ def setup_agent():
     * [MCP](https://modelcontextprotocol.io/)
     """
     write_agents_md()
+    write_claude_md()
     write_mcp_json()

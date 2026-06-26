@@ -9,6 +9,7 @@ from laktory.cli._setup_agent import _LAKTORY_AGENTS_FILENAME
 from laktory.cli._setup_agent import _LAKTORY_MARKER
 from laktory.cli._setup_agent import _MCP_ENTRY
 from laktory.cli._setup_agent import write_agents_md
+from laktory.cli._setup_agent import write_claude_md
 from laktory.cli._setup_agent import write_mcp_json
 
 runner = CliRunner()
@@ -82,6 +83,35 @@ def test_write_agents_md_append_idempotent(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# write_claude_md                                                              #
+# --------------------------------------------------------------------------- #
+
+
+def test_write_claude_md_skips_when_absent(tmp_path, capsys):
+    write_claude_md(tmp_path)
+    assert not (tmp_path / "CLAUDE.md").exists()
+    assert "skipping" in capsys.readouterr().out
+
+
+def test_write_claude_md_appends_when_exists(tmp_path):
+    original = "# My Laktory project\n\nProject instructions.\n"
+    (tmp_path / "CLAUDE.md").write_text(original)
+    write_claude_md(tmp_path)
+    content = (tmp_path / "CLAUDE.md").read_text()
+    assert content.startswith(original)
+    assert _LAKTORY_MARKER in content
+    assert _LAKTORY_AGENTS_FILENAME in content
+
+
+def test_write_claude_md_idempotent(tmp_path):
+    (tmp_path / "CLAUDE.md").write_text("# My project\n")
+    write_claude_md(tmp_path)
+    after_first = (tmp_path / "CLAUDE.md").read_text()
+    write_claude_md(tmp_path)
+    assert (tmp_path / "CLAUDE.md").read_text() == after_first
+
+
+# --------------------------------------------------------------------------- #
 # write_mcp_json                                                               #
 # --------------------------------------------------------------------------- #
 
@@ -137,6 +167,16 @@ def test_setup_agent_idempotent(monkeypatch, tmp_path):
     runner.invoke(app, ["setup-agent"])
     assert (tmp_path / "AGENTS.md").read_text() == first_agents
     assert (tmp_path / ".mcp.json").read_text() == first_mcp
+
+
+def test_setup_agent_appends_claude_md(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "CLAUDE.md").write_text("# My project\n")
+    runner.invoke(app, ["setup-agent"])
+    content = (tmp_path / "CLAUDE.md").read_text()
+    assert content.startswith("# My project\n")
+    assert _LAKTORY_MARKER in content
+    assert _LAKTORY_AGENTS_FILENAME in content
 
 
 def test_setup_agent_merges_mcp(monkeypatch, tmp_path):
