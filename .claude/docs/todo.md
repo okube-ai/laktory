@@ -2,9 +2,9 @@
 
 ---
 
-## A1 — MCP server
+## A1 — MCP server ✅
 
-How can Claude / GPT know Laktory and its use cases so that users can benefit from it? MCP server?
+`laktory/AGENTS.md`, `laktory/mcp/` server (4 tools + `get_laktory_docs`), `laktory serve-mcp` CLI, `laktory setup-agent` CLI, `.mcp.json` in all quickstart stacks.
 
 ## A2 — AI-first solution
 
