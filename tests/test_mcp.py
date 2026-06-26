@@ -176,10 +176,12 @@ def test_validate_yaml_auto_detect_fails():
 
 def test_get_model_docs_inlines_nested():
     docs = get_model_docs("Cluster")
-    # Nested sub-model sections must appear inline
+    # Level-1 nested sub-model
     assert "### `ClusterInitScripts`" in docs
-    # Sub-model fields must be rendered
-    assert "| `workspace`" in docs or "| `dbfs`" in docs or "| `s3`" in docs
+    # Level-2 nested sub-model (child of ClusterInitScripts)
+    assert "### `ClusterInitScriptsVolumes`" in docs
+    # Level-2 field must be reachable
+    assert "| `destination`" in docs
 
 
 def test_get_model_docs_nested_has_fields():

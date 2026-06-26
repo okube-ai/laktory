@@ -135,27 +135,32 @@ def _inner_model(ann: Any) -> type[BaseModel] | None:
     return None
 
 
-def _nested_models(cls: type[BaseModel]) -> list[type[BaseModel]]:
-    """Return ordered list of nested BaseModel types found in cls fields.
+def _all_nested_models(cls: type[BaseModel]) -> list[type[BaseModel]]:
+    """Return all transitively reachable nested BaseModel types via BFS.
 
-    One level deep only. Models already in the registry are excluded (they can
-    be looked up directly with get_model_docs).
+    Excludes registry models (they have their own get_model_docs entry).
+    Deduplicates and preserves breadth-first discovery order.
     """
     registry_names = {
         ref.rsplit(":", 1)[1] for refs in _MODEL_REGISTRY.values() for ref in refs
     }
-    seen: set[type] = set()
+    seen: set[type] = {cls}
+    queue: list[type[BaseModel]] = [cls]
     result: list[type[BaseModel]] = []
-    for field in cls.model_fields.values():
-        inner = _inner_model(field.annotation)
-        if (
-            inner is not None
-            and inner is not cls
-            and inner.__name__ not in registry_names
-            and inner not in seen
-        ):
-            seen.add(inner)
-            result.append(inner)
+
+    while queue:
+        current = queue.pop(0)
+        for field in current.model_fields.values():
+            inner = _inner_model(field.annotation)
+            if (
+                inner is not None
+                and inner not in seen
+                and inner.__name__ not in registry_names
+            ):
+                seen.add(inner)
+                result.append(inner)
+                queue.append(inner)
+
     return result
 
 
@@ -236,7 +241,7 @@ def _render_docs(cls: type[BaseModel]) -> str:
                 f"| `{display}` | `{type_str}` | {default} | {required} | {description} |"
             )
 
-    for nested_cls in _nested_models(cls):
+    for nested_cls in _all_nested_models(cls):
         lines.append(f"\n### `{nested_cls.__name__}`\n")
         if nested_cls.__doc__:
             doc = nested_cls.__doc__.strip()
