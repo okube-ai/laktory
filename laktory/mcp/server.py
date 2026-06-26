@@ -27,14 +27,19 @@ def get_model_docs(model_name: str) -> str:
 
 
 @mcp.tool()
-def validate_yaml(yaml_content: str) -> dict:
-    """Validate a Laktory YAML snippet.
+def validate_yaml(yaml_content: str, model_name: str | None = None) -> dict:
+    """Validate a Laktory YAML snippet against any registered model.
 
-    Auto-detects whether the content is a Pipeline or a Stack and runs Pydantic
-    validation. Returns {"valid": true} on success or {"valid": false, "errors": [...]}
-    on failure.
+    Pass model_name to validate a specific model (e.g. "Cluster", "UnityCatalogDataSink").
+    Without model_name, auto-detects Pipeline or Stack from the YAML keys.
+
+    Returns {"valid": true} on success or {"valid": false, "errors": [...]} on failure.
+
+    Examples:
+        validate_yaml(cluster_yaml, model_name="Cluster")
+        validate_yaml(pipeline_yaml)  # auto-detected as Pipeline
     """
-    return _validate_yaml(yaml_content)
+    return _validate_yaml(yaml_content, model_name)
 
 
 @mcp.tool()

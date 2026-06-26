@@ -140,3 +140,50 @@ def test_get_laktory_docs():
     assert "Laktory" in docs
     assert "Pipeline" in docs
     assert len(docs) > 1000
+
+
+def test_validate_yaml_cluster_valid():
+    yaml_content = (
+        "spark_version: 15.4.x-scala2.12\nnode_type_id: m5.xlarge\nnum_workers: 2\n"
+    )
+    result = validate_yaml(yaml_content, model_name="Cluster")
+    assert result == {"valid": True}
+
+
+def test_validate_yaml_cluster_invalid():
+    yaml_content = (
+        "node_type_id: 12345\n"  # node_type_id must be str, num_workers wrong type
+    )
+    result = validate_yaml(yaml_content, model_name="Cluster")
+    # Should still parse — just confirming the model_name routing works.
+    # A truly invalid cluster would have a field type mismatch:
+    yaml_content = "num_workers: not_a_number\n"
+    result = validate_yaml(yaml_content, model_name="Cluster")
+    assert result["valid"] is False
+
+
+def test_validate_yaml_unknown_model():
+    result = validate_yaml("name: test\n", model_name="DoesNotExist")
+    assert result["valid"] is False
+    assert any("DoesNotExist" in e for e in result["errors"])
+
+
+def test_validate_yaml_auto_detect_fails():
+    result = validate_yaml("node_type_id: m5.xlarge\nnum_workers: 2\n")
+    assert result["valid"] is False
+    assert any("model_name" in e for e in result["errors"])
+
+
+def test_get_model_docs_inlines_nested():
+    docs = get_model_docs("Cluster")
+    # Nested sub-model sections must appear inline
+    assert "### `ClusterInitScripts`" in docs
+    # Sub-model fields must be rendered
+    assert "| `workspace`" in docs or "| `dbfs`" in docs or "| `s3`" in docs
+
+
+def test_get_model_docs_nested_has_fields():
+    docs = get_model_docs("UnityCatalogDataSink")
+    # DataSinkMergeCDCOptions is in the registry — should NOT be inlined
+    # (it can be fetched directly via get_model_docs)
+    assert "### `DataSinkMergeCDCOptions`" not in docs

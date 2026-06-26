@@ -103,6 +103,62 @@ def _nice_type(ann: Any) -> str:
     return str(ann)
 
 
+def _inner_model(ann: Any) -> type[BaseModel] | None:
+    """Return the innermost Pydantic BaseModel class from a type annotation."""
+    if ann is None or ann is type(None):
+        return None
+
+    origin = getattr(ann, "__origin__", None)
+    args = getattr(ann, "__args__", None)
+
+    is_union = origin is typing.Union or (
+        hasattr(types, "UnionType") and isinstance(ann, types.UnionType)
+    )
+
+    if is_union and args:
+        filtered = [a for a in args if a is not _VariableType and a is not type(None)]
+        for a in filtered:
+            result = _inner_model(a)
+            if result is not None:
+                return result
+        return None
+
+    if origin is list and args:
+        return _inner_model(args[0])
+
+    if origin is dict and args and len(args) == 2:
+        return _inner_model(args[1])
+
+    if isinstance(ann, type) and issubclass(ann, BaseModel):
+        return ann
+
+    return None
+
+
+def _nested_models(cls: type[BaseModel]) -> list[type[BaseModel]]:
+    """Return ordered list of nested BaseModel types found in cls fields.
+
+    One level deep only. Models already in the registry are excluded (they can
+    be looked up directly with get_model_docs).
+    """
+    registry_names = {
+        ref.rsplit(":", 1)[1] for refs in _MODEL_REGISTRY.values() for ref in refs
+    }
+    seen: set[type] = set()
+    result: list[type[BaseModel]] = []
+    for field in cls.model_fields.values():
+        inner = _inner_model(field.annotation)
+        if (
+            inner is not None
+            and inner is not cls
+            and inner.__name__ not in registry_names
+            and inner not in seen
+        ):
+            seen.add(inner)
+            result.append(inner)
+    return result
+
+
 def _display_names(name: str, field_info: Any) -> list[str]:
     """Return all user-facing YAML names for a field.
 
@@ -179,5 +235,30 @@ def _render_docs(cls: type[BaseModel]) -> str:
             lines.append(
                 f"| `{display}` | `{type_str}` | {default} | {required} | {description} |"
             )
+
+    for nested_cls in _nested_models(cls):
+        lines.append(f"\n### `{nested_cls.__name__}`\n")
+        if nested_cls.__doc__:
+            doc = nested_cls.__doc__.strip()
+            if doc:
+                lines.append(doc + "\n")
+        lines.append("| Field | Type | Default | Required | Description |")
+        lines.append("|-------|------|---------|----------|-------------|")
+        seen_nested: set[str] = set()
+        for n_name, n_field in nested_cls.model_fields.items():
+            n_display_list = _display_names(n_name, n_field)
+            if not n_display_list:
+                continue
+            n_type_str = _nice_type(n_field.annotation)
+            n_required = "yes" if n_field.is_required() else "no"
+            n_default = "" if n_field.is_required() else repr(n_field.default)
+            n_description = n_field.description or ""
+            for n_display in n_display_list:
+                if n_display in seen_nested:
+                    continue
+                seen_nested.add(n_display)
+                lines.append(
+                    f"| `{n_display}` | `{n_type_str}` | {n_default} | {n_required} | {n_description} |"
+                )
 
     return "\n".join(lines)

@@ -15,6 +15,27 @@ that can be version-controlled and CI/CD-deployed.
 
 ---
 
+## MCP Server
+
+When the Laktory MCP server is configured, use these tools to get accurate, up-to-date
+model documentation without relying on training data.
+
+| Tool | Purpose |
+|------|---------|
+| `list_models()` | List all queryable models grouped by category |
+| `get_model_docs(model_name)` | Full field reference for a model; nested sub-model schemas are inlined automatically — no follow-up calls needed |
+| `validate_yaml(yaml_content, model_name=None)` | Validate any Laktory model YAML; pass `model_name` (e.g. `"Cluster"`) for resource snippets; auto-detects Pipeline/Stack when omitted |
+| `get_version()` | Installed Laktory version |
+| `get_laktory_docs()` | Returns this reference document |
+
+**Recommended workflow:**
+
+1. Call `list_models()` once to orient yourself — or skip if you already know the model name.
+2. Call `get_model_docs(model_name)` for any model you need to configure. Nested sub-models (e.g. `ClusterInitScripts` inside `Cluster`) are included inline — you should not need a second lookup.
+3. After generating YAML, call `validate_yaml` to catch schema errors before presenting to the user. For Pipeline/Stack YAML, omit `model_name` (auto-detected). For any other model (e.g. a cluster block), pass `model_name="Cluster"` explicitly.
+
+---
+
 ## Core YAML Concepts
 
 ### Composition tags

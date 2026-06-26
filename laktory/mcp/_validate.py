@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-def validate_yaml(yaml_content: str) -> dict:
+def validate_yaml(yaml_content: str, model_name: str | None = None) -> dict:
     try:
         import yaml as _yaml
     except ImportError:
@@ -15,14 +15,41 @@ def validate_yaml(yaml_content: str) -> dict:
     if not isinstance(data, dict):
         return {"valid": False, "errors": ["YAML content must be a mapping"]}
 
-    model_cls = _detect_model(data)
-    if model_cls is None:
-        return {
-            "valid": False,
-            "errors": [
-                "Cannot detect model type. Add a 'name' field or recognizable top-level keys."
-            ],
-        }
+    if model_name is not None:
+        from laktory.mcp._model_docs import _MODEL_REGISTRY
+        from laktory.mcp._model_docs import _load_class
+
+        ref = next(
+            (
+                r
+                for refs in _MODEL_REGISTRY.values()
+                for r in refs
+                if r.rsplit(":", 1)[1].lower() == model_name.lower()
+            ),
+            None,
+        )
+        if ref is None:
+            available = sorted(
+                r.rsplit(":", 1)[1] for refs in _MODEL_REGISTRY.values() for r in refs
+            )
+            return {
+                "valid": False,
+                "errors": [
+                    f'Model "{model_name}" not found. '
+                    f"Available models: {', '.join(available)}"
+                ],
+            }
+        model_cls = _load_class(ref)
+    else:
+        model_cls = _detect_model(data)
+        if model_cls is None:
+            return {
+                "valid": False,
+                "errors": [
+                    "Cannot auto-detect model type. "
+                    "Pass model_name (e.g. model_name='Cluster') to validate any Laktory model."
+                ],
+            }
 
     from pydantic import ValidationError
 
