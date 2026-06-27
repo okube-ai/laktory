@@ -8,6 +8,7 @@ from prompt_toolkit.completion import WordCompleter
 
 from laktory._version import VERSION
 from laktory.cli._common import TemplateValidator
+from laktory.cli._setup_agent import write_mcp_json
 from laktory.cli._setup_agent import write_other_instructions
 from laktory.cli.app import app
 from laktory.constants import QUICKSTART_TEMPLATES
@@ -98,6 +99,7 @@ def quickstart(
 
     # Write generic agent instruction files; user can run setup-agent to switch framework
     write_other_instructions(target_dir)
+    write_mcp_json(target_dir)
     print(
         "Tip: run `laktory setup-agent` to configure your AI agent (claude/copilot/other)."
     )
