@@ -30,9 +30,11 @@ model documentation without relying on training data.
 
 **Recommended workflow:**
 
-1. Call `list_models()` once to orient yourself — or skip if you already know the model name.
-2. Call `get_model_docs(model_name)` for any model you need to configure. Nested sub-models (e.g. `ClusterInitScripts` inside `Cluster`) are included inline — you should not need a second lookup.
-3. After generating YAML, call `validate_yaml` to catch schema errors before presenting to the user. For Pipeline/Stack YAML, omit `model_name` (auto-detected). For any other model (e.g. a cluster block), pass `model_name="Cluster"` explicitly.
+1. If you are writing a resource type for the first time in this session, call `get_laktory_docs()` first — it contains YAML patterns and examples you can use as a starting point.
+2. Call `get_model_docs(model_name)` for any model you are writing or modifying YAML for, even if the pattern looks familiar. Nested sub-models are included inline — no follow-up call needed.
+3. Always call `validate_yaml` on the **complete final YAML block** after all fields are filled in — do not validate an incomplete skeleton and then add more fields without re-validating. For Pipeline/Stack YAML, omit `model_name` (auto-detected). For any other model (e.g. a catalog or cluster block), pass the model name explicitly: `model_name="Catalog"`, `model_name="Cluster"`, etc.
+
+**When MCP adds the most value:** writing a model block from scratch, using a model or sub-model for the first time, or verifying a non-trivial YAML block you're uncertain about. For small incremental edits to existing resource files (e.g. adding a group to a user's `group_ids`), reading the surrounding codebase context is sufficient — MCP is not required.
 
 ---
 
