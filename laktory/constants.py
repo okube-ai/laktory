@@ -11,6 +11,12 @@ SUPPORTED_BACKENDS = [
     "terraform",
 ]
 
+AGENT_CHOICES = [
+    "claude",
+    "copilot",
+    "other",
+]
+
 
 # CACHE_ROOT = "./laktory"
 CACHE_ROOT = "./"

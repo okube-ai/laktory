@@ -8,6 +8,7 @@ from prompt_toolkit.validation import Validator
 from pydantic import BaseModel
 
 from laktory._logger import get_logger
+from laktory.constants import AGENT_CHOICES
 from laktory.constants import QUICKSTART_TEMPLATES
 from laktory.constants import SUPPORTED_BACKENDS
 from laktory.models.stacks.stack import Stack
@@ -70,6 +71,16 @@ class TemplateValidator(Validator):
                 message=f"Please enter one of the supported template {QUICKSTART_TEMPLATES}",
                 cursor_position=len(text),
             )  # Move cursor to end
+
+
+class AgentValidator(Validator):
+    def validate(self, document):
+        text = document.text
+        if text.lower() not in AGENT_CHOICES:
+            raise ValidationError(
+                message=f"Please enter one of the supported agents {AGENT_CHOICES}",
+                cursor_position=len(text),
+            )
 
 
 class BackendValidator(Validator):

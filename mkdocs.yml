@@ -154,6 +154,7 @@ nav:
       - Declarative Automation Bundles: concepts/dab.md
       - Infrastructure-as-Code: concepts/iac.md
       - CLI: concepts/cli.md
+      - AI Coding Agent: concepts/agent.md
     - Best Practices:
       - Data Governance: concepts/governance.md
 

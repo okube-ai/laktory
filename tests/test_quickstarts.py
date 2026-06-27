@@ -34,6 +34,13 @@ def test_read(monkeypatch, template, env, tmp_path):
         ["quickstart", "--template", template],
     )
 
+    # AI agent files should be present for every template
+    assert (
+        tmp_path / "AGENTS_LAKTORY.md"
+    ).exists(), "AGENTS_LAKTORY.md missing after quickstart"
+    assert (tmp_path / "AGENTS.md").exists(), "AGENTS.md missing after quickstart"
+    assert (tmp_path / ".mcp.json").exists(), ".mcp.json missing after quickstart"
+
     # Read Stack
     with open(stack_filepath) as fp:
         stack = model.model_validate_yaml(fp)

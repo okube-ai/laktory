@@ -83,9 +83,8 @@ Check these files when working on related topics:
 
 | File | When to consult |
 |------|----------------|
-| `.claude/docs/architectural_patterns.md` | Model hierarchy, resource patterns, pipeline composition, variable injection, YAML tags |
-| `.claude/docs/strategic_roadmap.md` | Planned direction: dropping Pulumi, DABs integration, Terraform schema generation, scope decisions |
+| `.claude/docs/architectural_patterns.md` | Model hierarchy, resource patterns, pipeline composition, variable injection, YAML tags, SDP orchestrator |
+| `.claude/docs/todo.md` | Open items: A1 MCP server, A2 AI-first solution, A3 SDP Lakeflow Job dual-mode path |
 | `.claude/docs/documentation_system.md` | Full reference for the MkDocs stack, griffe extension, doc stub automation, and VariableType fix - Claude owns this system |
 | `.claude/docs/testing.md` | Test setup, markers, fixtures, backend parametrization, and live test credentials |
-| `.claude/docs/spark_declarative_pipelines.md` | SDP (`pyspark.pipelines`) API, dependency tracking, read patterns, constraints, and F6 integration notes |
 | `.claude/docs/placeholder_convention.md` | Variable / Expression / Reference naming convention; the `$` rule; where each applies |

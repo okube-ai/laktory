@@ -19,3 +19,7 @@
 ---
 
 ::: laktory.cli.run
+
+---
+
+::: laktory.cli.setup_agent

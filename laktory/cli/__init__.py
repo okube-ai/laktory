@@ -5,6 +5,8 @@ import laktory.cli._init
 import laktory.cli._preview
 import laktory.cli._quickstart
 import laktory.cli._run
+import laktory.cli._serve_mcp
+import laktory.cli._setup_agent
 import laktory.cli._validate
 import laktory.cli._version
 from laktory.cli._build import build
@@ -14,6 +16,8 @@ from laktory.cli._init import init
 from laktory.cli._preview import preview
 from laktory.cli._quickstart import quickstart
 from laktory.cli._run import run
+from laktory.cli._serve_mcp import serve_mcp
+from laktory.cli._setup_agent import setup_agent
 from laktory.cli._validate import validate
 from laktory.cli._version import version
 from laktory.cli.app import app
