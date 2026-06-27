@@ -10,7 +10,7 @@ The CLI supports 4 main commands `preview`, `deploy`, `run` and `destroy` provid
 operations, whether locally from the terminal or using your favorite a CI/CD tool like GitHub actions, Azure DevOps or 
 Gitlab.
 
-The CLI also offers a `quickstart` command for quickly setting up a working example of a Laktory stack.
+The CLI also offers a `quickstart` command for quickly setting up a working example of a Laktory stack, and a `setup-agent` command to configure AI coding-agent support.
 
 ### commands
 
@@ -40,6 +40,13 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 
 #### destroy
 `laktory destroy` destroy all resources declared in your stack. Similar to `terraform destroy`
+
+#### setup-agent
+`laktory setup-agent` configures AI coding-agent support in the current directory. It writes
+agent instruction files and, by default, a `.mcp.json` that starts the Laktory MCP server
+automatically when the agent session opens. Supports Claude Code, GitHub Copilot, and other
+AGENTS.md-compatible agents. Pass `--no-mcp` to write only the instruction files without
+the MCP server configuration. See [AI Coding Agent](agent.md) for full details.
 
 ### CI/CD
 These commands can be run locally, but really start to provide value in the context of a CI/CD pipeline in which 

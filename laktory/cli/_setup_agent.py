@@ -189,24 +189,35 @@ def setup_agent(
             help=f"Agent framework {AGENT_CHOICES}",
         ),
     ] = None,
+    no_mcp: Annotated[
+        bool,
+        typer.Option(
+            "--no-mcp",
+            help="Skip writing .mcp.json (instruction files are still written)",
+        ),
+    ] = False,
 ):
     """
     Set up AI coding-agent support in the current directory.
 
-    Writes agent instruction files and .mcp.json (MCP server configuration).
-    Safe to run on existing projects — all writes are idempotent.
+    Writes agent instruction files and (by default) .mcp.json for the Laktory
+    MCP server. Safe to run on existing projects — all writes are idempotent.
 
     Use --agent to skip the interactive prompt:
 
-    - claude   → .claude/laktory.md + @import in CLAUDE.md
+    - claude   → .claude/docs/laktory.md + @import in CLAUDE.md
     - copilot  → .github/instructions/laktory.md + reference in AGENTS.md
     - other    → AGENTS_LAKTORY.md + reference in AGENTS.md
+
+    Use --no-mcp to write only the instruction files without the MCP server
+    configuration (useful in restricted environments).
 
     Examples
     --------
     ```cmd
     laktory setup-agent
     laktory setup-agent --agent claude
+    laktory setup-agent --agent claude --no-mcp
     ```
 
     References
@@ -231,4 +242,5 @@ def setup_agent(
     else:
         write_other_instructions()
 
-    write_mcp_json()
+    if not no_mcp:
+        write_mcp_json()

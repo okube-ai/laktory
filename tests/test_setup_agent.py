@@ -285,3 +285,35 @@ def test_setup_agent_merges_mcp(monkeypatch, tmp_path):
     data = json.loads((tmp_path / ".mcp.json").read_text())
     assert "other" in data["mcpServers"]
     assert "laktory" in data["mcpServers"]
+
+
+# --------------------------------------------------------------------------- #
+# setup-agent CLI — --no-mcp flag                                             #
+# --------------------------------------------------------------------------- #
+
+
+def test_setup_agent_no_mcp_skips_mcp_json(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["setup-agent", "--agent", "claude", "--no-mcp"])
+    assert result.exit_code == 0
+    assert not (tmp_path / ".mcp.json").exists()
+    assert (tmp_path / ".claude" / "docs" / "laktory.md").exists()
+
+
+def test_setup_agent_no_mcp_other(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["setup-agent", "--agent", "other", "--no-mcp"])
+    assert result.exit_code == 0
+    assert not (tmp_path / ".mcp.json").exists()
+    assert (tmp_path / _LAKTORY_AGENTS_FILENAME).exists()
+
+
+def test_setup_agent_no_mcp_does_not_remove_existing_mcp_json(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    existing = {"mcpServers": {"other": {"command": "npx", "args": ["other"]}}}
+    (tmp_path / ".mcp.json").write_text(json.dumps(existing))
+    runner.invoke(app, ["setup-agent", "--agent", "other", "--no-mcp"])
+    # Existing .mcp.json must be left untouched
+    assert (tmp_path / ".mcp.json").exists()
+    data = json.loads((tmp_path / ".mcp.json").read_text())
+    assert "laktory" not in data["mcpServers"]

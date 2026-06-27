@@ -2,13 +2,9 @@
 
 ## [0.12.2] - Unreleased
 ### Added
-* n/a
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* `setup-agent` CLI command to configure AI coding-agent support (Claude Code, GitHub Copilot, or other AGENTS.md-compatible agents)
+* Laktory MCP server (`python -m laktory.mcp.server`) with five tools: `get_model_docs`, `validate_yaml`, `list_models`, `get_laktory_docs`, `get_version`
+* `laktory/AGENTS.md` — AI agent instruction file bundled with the installed package
 
 ## [0.12.1] - 2026-06-05
 ### Fixed
