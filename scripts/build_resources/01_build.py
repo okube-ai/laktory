@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import keyword
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -199,7 +200,8 @@ def get_desc(
         or descriptions.get(attr_name)
         or attr.get("description", "")
     )
-    return raw.strip().replace('"', "'")
+    cleaned = re.sub(r"\[([^\]]+)\]\((?!https?://)[^)]+\.md[^)]*\)", r"\1", raw)
+    return cleaned.strip().replace('"', "'")
 
 
 def _attr_field_line(

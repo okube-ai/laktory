@@ -18,11 +18,11 @@ class ServicePrincipalRoleBase(BaseModel, TerraformResource):
 
     role: str = Field(
         ...,
-        description="This is the role name, role id, or [instance profile](instance_profile.md) resource",
+        description="This is the role name, role id, or instance profile resource",
     )
     service_principal_id: str = Field(
         ...,
-        description="This is the id of the [service principal](service_principal.md) resource",
+        description="This is the id of the service principal resource",
     )
     api: str | None = Field(
         None,

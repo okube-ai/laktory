@@ -259,8 +259,8 @@ class StackResources(BaseModel):
 
         AWSProvider and DatabricksProvider share fields like `profile` and `token`,
         so Pydantic's union matching is ambiguous. The key name is the explicit
-        source of truth: "databricks[.*]" → DatabricksProvider, "aws[.*]" →
-        AWSProvider, "azure[rm][.*]" → AzureProvider.
+        source of truth: `databricks[...]` → DatabricksProvider, `aws[...]` →
+        AWSProvider, `azure[rm][...]` → AzureProvider.
         """
         if not isinstance(v, dict):
             return v

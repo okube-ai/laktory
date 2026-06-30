@@ -18,11 +18,11 @@ class GroupMemberBase(BaseModel, TerraformResource):
 
     group_id: str = Field(
         ...,
-        description="This is the `id` attribute (SCIM ID) of the [group](group.md) resource",
+        description="This is the `id` attribute (SCIM ID) of the group resource",
     )
     member_id: str = Field(
         ...,
-        description="This is the `id` attribute (SCIM ID) of the [group](group.md), [service principal](service_principal.md), or [user](user.md)",
+        description="This is the `id` attribute (SCIM ID) of the group, service principal, or user",
     )
     api: str | None = Field(
         None,

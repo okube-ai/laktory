@@ -18,7 +18,7 @@ class OboTokenBase(BaseModel, TerraformResource):
 
     application_id: str = Field(
         ...,
-        description="Application ID of [databricks_service_principal](service_principal.md#application_id) to create a PAT token for",
+        description="Application ID of databricks_service_principal to create a PAT token for",
     )
     comment: str | None = Field(
         None,
