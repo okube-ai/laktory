@@ -158,14 +158,7 @@ nav:
     - Best Practices:
       - Data Governance: concepts/governance.md
 
-  - How-To Guides:
-    - Data Catalog: guides/catalog.md
-    - Users: guides/users.md
-    - Data Table: guides/table.md
-    - Data Pipeline: guides/pipeline.md
-    - Compute: guides/compute.md
-    - Job: guides/job.md
-    - Secrets: guides/secrets.md
+  - Build with AI: build/build-with-ai.md
 
   - Lakehouse As Code: lakehouseascode.md
   - API Reference:

@@ -118,3 +118,7 @@ installed package. It contains the full Laktory reference for AI agents, includi
 
 The file is automatically overwritten on each `setup-agent` run, so it always reflects
 the installed version.
+
+## Next steps
+
+See [Build with AI](../build/build-with-ai.md) for example prompts covering pipelines, orchestration, and common resources.
