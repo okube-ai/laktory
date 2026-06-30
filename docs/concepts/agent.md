@@ -32,11 +32,11 @@ laktory setup-agent
 The command prompts for the agent framework you are using and then writes the appropriate
 instruction and configuration files:
 
-| Agent | Instruction file | Host file updated |
-|---|---|---|
-| `claude` | `.claude/docs/laktory.md` | `CLAUDE.md` (imports the instruction file) |
-| `copilot` | `.github/instructions/laktory.md` | `AGENTS.md` (links to the instruction file) |
-| `other` | `AGENTS_LAKTORY.md` | `AGENTS.md` (links to the instruction file) |
+| Agent | Instruction file                               | Host file updated |
+|---|------------------------------------------------|---|
+| `claude` | `.claude/docs/laktory.md`                      | `CLAUDE.md` (imports the instruction file) |
+| `copilot` | `.github/instructions/laktory.instructions.md` | `AGENTS.md` (links to the instruction file) |
+| `other` | `AGENTS_LAKTORY.md`                            | `AGENTS.md` (links to the instruction file) |
 
 By default, a `.mcp.json` file is also written to register the Laktory MCP server.
 

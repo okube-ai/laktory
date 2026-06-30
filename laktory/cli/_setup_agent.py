@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 
 _LAKTORY_MARKER = "<!-- laktory -->"
 _LAKTORY_AGENTS_FILENAME = "AGENTS_LAKTORY.md"
-_GITHUB_INSTRUCTIONS_PATH = ".github/instructions/laktory.md"
+_GITHUB_INSTRUCTIONS_PATH = ".github/instructions/laktory.instructions.md"
 
 _MCP_ENTRY = {
     "command": "python",
@@ -111,19 +111,19 @@ def write_claude_md(target_dir: str | Path = ".") -> None:
 
 
 def write_github_instructions(target_dir: str | Path = ".") -> None:
-    """Write .github/instructions/laktory.md with applyTo frontmatter."""
+    """Write .github/instructions/laktory.instructions.md with applyTo frontmatter."""
     content = _read_laktory_source()
     if content is None:
         return
     instructions_dir = Path(target_dir) / ".github" / "instructions"
     instructions_dir.mkdir(parents=True, exist_ok=True)
-    dst = instructions_dir / "laktory.md"
+    dst = instructions_dir / "laktory.instructions.md"
     logger.info(f"Writing laktory agent instructions to {dst}...")
     dst.write_text(_GITHUB_FRONTMATTER + content, encoding="utf-8")
 
 
 def write_agents_md_copilot(target_dir: str | Path = ".") -> None:
-    """Idempotently add a link to .github/instructions/laktory.md in AGENTS.md."""
+    """Idempotently add a link to .github/instructions/laktory.instructions.md in AGENTS.md."""
     _append_to_agents_md(Path(target_dir), _COPILOT_AGENTS_REFERENCE)
 
 
@@ -206,7 +206,7 @@ def setup_agent(
     Use --agent to skip the interactive prompt:
 
     - claude   → .claude/docs/laktory.md + @import in CLAUDE.md
-    - copilot  → .github/instructions/laktory.md + reference in AGENTS.md
+    - copilot  → .github/instructions/laktory.instructions.md + reference in AGENTS.md
     - other    → AGENTS_LAKTORY.md + reference in AGENTS.md
 
     Use --no-mcp to write only the instruction files without the MCP server
