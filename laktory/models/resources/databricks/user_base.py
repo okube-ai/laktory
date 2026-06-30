@@ -22,7 +22,7 @@ class UserBase(BaseModel, TerraformResource):
     )
     acl_principal_id: str | None = Field(
         None,
-        description="identifier for use in [databricks_access_control_rule_set](access_control_rule_set.md), e.g. `users/mr.foo@example.com`",
+        description="identifier for use in databricks_access_control_rule_set, e.g. `users/mr.foo@example.com`",
     )
     active: bool | None = Field(
         None,
@@ -30,11 +30,11 @@ class UserBase(BaseModel, TerraformResource):
     )
     allow_cluster_create: bool | None = Field(
         None,
-        description="Allow the user to have [cluster](cluster.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Cluster-usage) and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with [permission to use](permissions.md#Cluster-Policy-usage) Cluster Policy would be able to create clusters, but within boundaries of that specific policy",
+        description="Allow the user to have cluster create privileges. Defaults to false. More fine grained permissions could be assigned with databricks_permissions and `cluster_id` argument. Everyone without `allow_cluster_create` argument set, but with permission to use Cluster Policy would be able to create clusters, but within boundaries of that specific policy",
     )
     allow_instance_pool_create: bool | None = Field(
         None,
-        description="Allow the user to have [instance pool](instance_pool.md) create privileges. Defaults to false. More fine grained permissions could be assigned with [databricks_permissions](permissions.md#Instance-Pool-usage) and [instance_pool_id](permissions.md#instance_pool_id) argument",
+        description="Allow the user to have instance pool create privileges. Defaults to false. More fine grained permissions could be assigned with databricks_permissions and instance_pool_id argument",
     )
     api: str | None = Field(
         None,
@@ -42,7 +42,7 @@ class UserBase(BaseModel, TerraformResource):
     )
     databricks_sql_access: bool | None = Field(
         None,
-        description="This is a field to allow the user to have access to [Databricks SQL](https://databricks.com/product/databricks-sql)  UI, [Databricks One](https://docs.databricks.com/aws/en/workspace/databricks-one#who-can-access-databricks-one) and through [databricks_sql_endpoint](sql_endpoint.md)",
+        description="This is a field to allow the user to have access to [Databricks SQL](https://databricks.com/product/databricks-sql)  UI, [Databricks One](https://docs.databricks.com/aws/en/workspace/databricks-one#who-can-access-databricks-one) and through databricks_sql_endpoint",
     )
     disable_as_user_deletion: bool | None = Field(
         None,

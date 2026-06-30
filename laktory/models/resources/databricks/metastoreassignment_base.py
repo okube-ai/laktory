@@ -29,7 +29,7 @@ class MetastoreAssignmentBase(BaseModel, TerraformResource):
     )
     default_catalog_name: str | None = Field(
         None,
-        description="(Deprecated) Default catalog used for this assignment. Please use [databricks_default_namespace_setting](default_namespace_setting.md) instead",
+        description="(Deprecated) Default catalog used for this assignment. Please use databricks_default_namespace_setting instead",
     )
 
     @property

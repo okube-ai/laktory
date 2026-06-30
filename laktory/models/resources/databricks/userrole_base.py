@@ -18,11 +18,9 @@ class UserRoleBase(BaseModel, TerraformResource):
 
     role: str = Field(
         ...,
-        description="Either a role name or the ARN/ID of the [instance profile](instance_profile.md) resource",
+        description="Either a role name or the ARN/ID of the instance profile resource",
     )
-    user_id: str = Field(
-        ..., description="This is the id of the [user](user.md) resource"
-    )
+    user_id: str = Field(..., description="This is the id of the user resource")
     api: str | None = Field(
         None,
         description="Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host",

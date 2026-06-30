@@ -158,14 +158,7 @@ nav:
     - Best Practices:
       - Data Governance: concepts/governance.md
 
-  - How-To Guides:
-    - Data Catalog: guides/catalog.md
-    - Users: guides/users.md
-    - Data Table: guides/table.md
-    - Data Pipeline: guides/pipeline.md
-    - Compute: guides/compute.md
-    - Job: guides/job.md
-    - Secrets: guides/secrets.md
+  - Build with AI: build/build-with-ai.md
 
   - Lakehouse As Code: lakehouseascode.md
   - API Reference:
@@ -330,5 +323,8 @@ nav:
         - register_expr_namespace: api/api/register_expr_namespace.md
         - register_dataframe_namespace: api/api/register_dataframe_namespace.md
         - register_lazyframe_namespace: api/api/register_lazyframe_namespace.md
+        - register_anyframe_namespace: api/api/register_anyframe_namespace.md
+        - register_spark_dataframe_namespace: api/api/register_spark_dataframe_namespace.md
+        - register_spark_column_namespace: api/api/register_spark_column_namespace.md
 
   - Changelog: changelog.md

@@ -81,7 +81,7 @@ def test_write_claude_md_idempotent(tmp_path):
 
 def test_write_github_instructions_creates(tmp_path):
     write_github_instructions(tmp_path)
-    dst = tmp_path / ".github" / "instructions" / "laktory.md"
+    dst = tmp_path / ".github" / "instructions" / "laktory.instructions.md"
     assert dst.exists()
     content = dst.read_text()
     assert "applyTo" in content
@@ -95,7 +95,7 @@ def test_write_github_instructions_creates_dirs(tmp_path):
 
 def test_write_github_instructions_always_overwrites(tmp_path):
     write_github_instructions(tmp_path)
-    dst = tmp_path / ".github" / "instructions" / "laktory.md"
+    dst = tmp_path / ".github" / "instructions" / "laktory.instructions.md"
     dst.write_text("# Outdated\n")
     write_github_instructions(tmp_path)
     assert "Outdated" not in dst.read_text()
@@ -245,7 +245,7 @@ def test_setup_agent_copilot(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     result = runner.invoke(app, ["setup-agent", "--agent", "copilot"])
     assert result.exit_code == 0
-    dst = tmp_path / ".github" / "instructions" / "laktory.md"
+    dst = tmp_path / ".github" / "instructions" / "laktory.instructions.md"
     assert dst.exists()
     assert "applyTo" in dst.read_text()
     assert _GITHUB_INSTRUCTIONS_PATH in (tmp_path / "AGENTS.md").read_text()

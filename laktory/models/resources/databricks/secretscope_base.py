@@ -30,7 +30,7 @@ class SecretScopeBase(BaseModel, TerraformResource):
     )
     initial_manage_principal: str | None = Field(
         None,
-        description="The principal with the only possible value `users` that is initially granted `MANAGE` permission to the created scope.  If it's omitted, then the [databricks_secret_acl](secret_acl.md) with `MANAGE` permission applied to the scope is assigned to the API request issuer's user identity (see [documentation](https://docs.databricks.com/dev-tools/api/latest/secrets.html#create-secret-scope)). This part of the state cannot be imported",
+        description="The principal with the only possible value `users` that is initially granted `MANAGE` permission to the created scope.  If it's omitted, then the databricks_secret_acl with `MANAGE` permission applied to the scope is assigned to the API request issuer's user identity (see [documentation](https://docs.databricks.com/dev-tools/api/latest/secrets.html#create-secret-scope)). This part of the state cannot be imported",
     )
     keyvault_metadata: SecretScopeKeyvaultMetadata | None = Field(None)
 

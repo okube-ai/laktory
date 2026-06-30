@@ -19,7 +19,7 @@ class SecretAclBase(BaseModel, TerraformResource):
     permission: str = Field(..., description="`READ`, `WRITE` or `MANAGE`")
     principal: str = Field(
         ...,
-        description="principal's identifier. It can be: * `user_name` attribute of [databricks_user](user.md). * `display_name` attribute of [databricks_group](group.md).  Use `users` to allow access for all workspace users. * `application_id` attribute of [databricks_service_principal](service_principal.md)",
+        description="principal's identifier. It can be: * `user_name` attribute of databricks_user. * `display_name` attribute of databricks_group.  Use `users` to allow access for all workspace users. * `application_id` attribute of databricks_service_principal",
     )
     scope: str = Field(..., description="name of the scope")
 

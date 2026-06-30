@@ -49,7 +49,7 @@ class JobDbtTask(BaseModel):
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
 
 
@@ -406,7 +406,7 @@ class JobJobCluster(BaseModel):
     )
     new_cluster: JobJobClusterNewCluster | None = Field(
         None,
-        description="Block with almost the same set of parameters as for [databricks_cluster](cluster.md) resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
+        description="Block with almost the same set of parameters as for databricks_cluster resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
     )
 
 
@@ -674,7 +674,7 @@ class JobNotebookTask(BaseModel):
     )
     notebook_path: str = Field(
         ...,
-        description="The path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required",
+        description="The path of the databricks_notebook to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required",
     )
     source: str | None = Field(
         None,
@@ -682,7 +682,7 @@ class JobNotebookTask(BaseModel):
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
 
 
@@ -808,11 +808,11 @@ class JobTaskAlertTaskSubscribers(BaseModel):
 class JobTaskAlertTask(BaseModel):
     alert_id: str | None = Field(
         None,
-        description="(String) identifier of the Databricks Alert ([databricks_alert](alert.md))",
+        description="(String) identifier of the Databricks Alert (databricks_alert)",
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     workspace_path: str | None = Field(None)
     subscribers: list[JobTaskAlertTaskSubscribers] | None = Field(None)
@@ -866,12 +866,12 @@ class JobTaskDashboardTaskSubscription(BaseModel):
 class JobTaskDashboardTask(BaseModel):
     dashboard_id: str | None = Field(
         None,
-        description="(String) identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md)",
+        description="(String) identifier of the Databricks SQL Dashboard databricks_sql_dashboard",
     )
     filters: dict[str, str] | None = Field(None)
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     subscription: JobTaskDashboardTaskSubscription | None = Field(None)
 
@@ -914,7 +914,7 @@ class JobTaskDbtTask(BaseModel):
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
 
 
@@ -963,11 +963,11 @@ class JobTaskForEachTaskTaskAlertTaskSubscribers(BaseModel):
 class JobTaskForEachTaskTaskAlertTask(BaseModel):
     alert_id: str | None = Field(
         None,
-        description="(String) identifier of the Databricks Alert ([databricks_alert](alert.md))",
+        description="(String) identifier of the Databricks Alert (databricks_alert)",
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     workspace_path: str | None = Field(None)
     subscribers: list[JobTaskForEachTaskTaskAlertTaskSubscribers] | None = Field(None)
@@ -1023,12 +1023,12 @@ class JobTaskForEachTaskTaskDashboardTaskSubscription(BaseModel):
 class JobTaskForEachTaskTaskDashboardTask(BaseModel):
     dashboard_id: str | None = Field(
         None,
-        description="(String) identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md)",
+        description="(String) identifier of the Databricks SQL Dashboard databricks_sql_dashboard",
     )
     filters: dict[str, str] | None = Field(None)
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     subscription: JobTaskForEachTaskTaskDashboardTaskSubscription | None = Field(None)
 
@@ -1071,7 +1071,7 @@ class JobTaskForEachTaskTaskDbtTask(BaseModel):
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
 
 
@@ -1423,7 +1423,7 @@ class JobTaskForEachTaskTaskNotebookTask(BaseModel):
     )
     notebook_path: str = Field(
         ...,
-        description="The path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required",
+        description="The path of the databricks_notebook to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required",
     )
     source: str | None = Field(
         None,
@@ -1431,7 +1431,7 @@ class JobTaskForEachTaskTaskNotebookTask(BaseModel):
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
 
 
@@ -1494,7 +1494,7 @@ class JobTaskForEachTaskTaskPowerBiTask(BaseModel):
     refresh_after_update: bool | None = Field(None)
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     power_bi_model: JobTaskForEachTaskTaskPowerBiTaskPowerBiModel | None = Field(None)
     tables: list[JobTaskForEachTaskTaskPowerBiTaskTables] | None = Field(None)
@@ -1604,7 +1604,7 @@ class JobTaskForEachTaskTaskSqlTaskAlertSubscriptions(BaseModel):
 class JobTaskForEachTaskTaskSqlTaskAlert(BaseModel):
     alert_id: str = Field(
         ...,
-        description="(String) identifier of the Databricks Alert ([databricks_alert](alert.md))",
+        description="(String) identifier of the Databricks Alert (databricks_alert)",
     )
     pause_subscriptions: bool | None = Field(
         None, description="flag that specifies if subscriptions are paused or not"
@@ -1629,7 +1629,7 @@ class JobTaskForEachTaskTaskSqlTaskDashboard(BaseModel):
     )
     dashboard_id: str = Field(
         ...,
-        description="(String) identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md)",
+        description="(String) identifier of the Databricks SQL Dashboard databricks_sql_dashboard",
     )
     pause_subscriptions: bool | None = Field(
         None, description="flag that specifies if subscriptions are paused or not"
@@ -1664,7 +1664,7 @@ class JobTaskForEachTaskTaskSqlTask(BaseModel):
     )
     warehouse_id: str = Field(
         ...,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     alert: JobTaskForEachTaskTaskSqlTaskAlert | None = Field(
         None, description="block consisting of following fields:"
@@ -1677,7 +1677,7 @@ class JobTaskForEachTaskTaskSqlTask(BaseModel):
     )
     query: JobTaskForEachTaskTaskSqlTaskQuery | None = Field(
         None,
-        description="block consisting of single string field: `query_id` - identifier of the Databricks Query ([databricks_query](query.md))",
+        description="block consisting of single string field: `query_id` - identifier of the Databricks Query (databricks_query)",
     )
 
 
@@ -1757,7 +1757,7 @@ class JobTaskForEachTaskTask(BaseModel):
     )
     existing_cluster_id: str | None = Field(
         None,
-        description="Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
+        description="Identifier of the interactive cluster to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
     )
     job_cluster_key: str | None = Field(
         None,
@@ -1818,7 +1818,7 @@ class JobTaskForEachTaskTask(BaseModel):
     )
     new_cluster: JobTaskForEachTaskTaskNewCluster | None = Field(
         None,
-        description="Block with almost the same set of parameters as for [databricks_cluster](cluster.md) resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
+        description="Block with almost the same set of parameters as for databricks_cluster resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
     )
     notebook_task: JobTaskForEachTaskTaskNotebookTask | None = Field(None)
     notification_settings: JobTaskForEachTaskTaskNotificationSettings | None = Field(
@@ -2162,7 +2162,7 @@ class JobTaskNotebookTask(BaseModel):
     )
     notebook_path: str = Field(
         ...,
-        description="The path of the [databricks_notebook](notebook.md#path) to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required",
+        description="The path of the databricks_notebook to be run in the Databricks workspace or remote repository. For notebooks stored in the Databricks workspace, the path must be absolute and begin with a slash. For notebooks stored in a remote repository, the path must be relative. This field is required",
     )
     source: str | None = Field(
         None,
@@ -2170,7 +2170,7 @@ class JobTaskNotebookTask(BaseModel):
     )
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
 
 
@@ -2233,7 +2233,7 @@ class JobTaskPowerBiTask(BaseModel):
     refresh_after_update: bool | None = Field(None)
     warehouse_id: str | None = Field(
         None,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     power_bi_model: JobTaskPowerBiTaskPowerBiModel | None = Field(None)
     tables: list[JobTaskPowerBiTaskTables] | None = Field(None)
@@ -2343,7 +2343,7 @@ class JobTaskSqlTaskAlertSubscriptions(BaseModel):
 class JobTaskSqlTaskAlert(BaseModel):
     alert_id: str = Field(
         ...,
-        description="(String) identifier of the Databricks Alert ([databricks_alert](alert.md))",
+        description="(String) identifier of the Databricks Alert (databricks_alert)",
     )
     pause_subscriptions: bool | None = Field(
         None, description="flag that specifies if subscriptions are paused or not"
@@ -2368,7 +2368,7 @@ class JobTaskSqlTaskDashboard(BaseModel):
     )
     dashboard_id: str = Field(
         ...,
-        description="(String) identifier of the Databricks SQL Dashboard [databricks_sql_dashboard](sql_dashboard.md)",
+        description="(String) identifier of the Databricks SQL Dashboard databricks_sql_dashboard",
     )
     pause_subscriptions: bool | None = Field(
         None, description="flag that specifies if subscriptions are paused or not"
@@ -2401,7 +2401,7 @@ class JobTaskSqlTask(BaseModel):
     )
     warehouse_id: str = Field(
         ...,
-        description="ID of the (the [databricks_sql_endpoint](sql_endpoint.md)) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
     )
     alert: JobTaskSqlTaskAlert | None = Field(
         None, description="block consisting of following fields:"
@@ -2414,7 +2414,7 @@ class JobTaskSqlTask(BaseModel):
     )
     query: JobTaskSqlTaskQuery | None = Field(
         None,
-        description="block consisting of single string field: `query_id` - identifier of the Databricks Query ([databricks_query](query.md))",
+        description="block consisting of single string field: `query_id` - identifier of the Databricks Query (databricks_query)",
     )
 
 
@@ -2482,7 +2482,7 @@ class JobTask(BaseModel):
     )
     existing_cluster_id: str | None = Field(
         None,
-        description="Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
+        description="Identifier of the interactive cluster to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
     )
     job_cluster_key: str | None = Field(
         None,
@@ -2542,7 +2542,7 @@ class JobTask(BaseModel):
     )
     new_cluster: JobTaskNewCluster | None = Field(
         None,
-        description="Block with almost the same set of parameters as for [databricks_cluster](cluster.md) resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
+        description="Block with almost the same set of parameters as for databricks_cluster resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
     )
     notebook_task: JobTaskNotebookTask | None = Field(None)
     notification_settings: JobTaskNotificationSettings | None = Field(
@@ -2730,7 +2730,7 @@ class JobBase(BaseModel, TerraformResource):
     )
     existing_cluster_id: str | None = Field(
         None,
-        description="Identifier of the [interactive cluster](cluster.md) to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
+        description="Identifier of the interactive cluster to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
     )
     format: str | None = Field(None)
     max_concurrent_runs: int | None = Field(
@@ -2785,7 +2785,7 @@ class JobBase(BaseModel, TerraformResource):
     job_cluster: list[JobJobCluster] | None = PluralField(
         None,
         plural="job_clusters",
-        description="A list of job [databricks_cluster](cluster.md) specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*",
+        description="A list of job databricks_cluster specifications that can be shared and reused by tasks of this job. Libraries cannot be declared in a shared job cluster. You must declare dependent libraries in task settings. *Multi-task syntax*",
     )
     library: list[JobLibrary] | None = PluralField(
         None,
@@ -2794,7 +2794,7 @@ class JobBase(BaseModel, TerraformResource):
     )
     new_cluster: JobNewCluster | None = Field(
         None,
-        description="Block with almost the same set of parameters as for [databricks_cluster](cluster.md) resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
+        description="Block with almost the same set of parameters as for databricks_cluster resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
     )
     notebook_task: JobNotebookTask | None = Field(None)
     notification_settings: JobNotificationSettings | None = Field(
