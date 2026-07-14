@@ -41,7 +41,7 @@ GITHUB_RAW = (
     "https://raw.githubusercontent.com/databricks/terraform-provider-databricks"
 )
 
-DEFAULT_VERSION = "1.117.0"
+DEFAULT_VERSION = "1.121.0"
 
 # Resources whose descriptions come from Go model struct comments.
 # Format: resource_key → {service dir, primary struct, fallback structs}
@@ -80,6 +80,8 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_access_control_rule_set",
     "databricks_alert",
     "databricks_app",
+    "databricks_budget",
+    "databricks_budget_policy",
     "databricks_cluster_policy",
     "databricks_dashboard",
     "databricks_data_quality_monitor",  # preview only
