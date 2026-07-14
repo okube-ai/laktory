@@ -3,12 +3,6 @@
 ## [0.12.3] - Unreleased
 ### Added
 * `Budget`, `BudgetPolicy`, `InstancePool`, `IpAccessList`, `Library`, `ModelServing`, `RegisteredModel`, and `Token` Databricks resources
-### Fixed
-* n/a
-### Updated
-* n/a
-### Breaking changes
-* n/a
 
 ## [0.12.2] - 2026-06-30
 ### Added
