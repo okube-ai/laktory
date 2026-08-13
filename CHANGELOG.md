@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `PipelineNodeDataSource` batch->batch chains now read the upstream dataset (`spark.read.table`) inside the Lakeflow (LDP) runtime so Lakeflow can infer the dependency edge
 ### Updated
 * n/a
 ### Breaking changes

@@ -353,3 +353,115 @@ def test_ldp_view_node_raises():
                 ],
             }
         )
+
+
+# --------------------------------------------------------------------------- #
+# LDP dependency inference: batch -> batch node chain                          #
+# --------------------------------------------------------------------------- #
+
+
+def _get_batch_chain_pl():
+    """Pure-batch brz -> slv -> gld chain (no streaming source anywhere)."""
+    return models.Pipeline.model_validate(
+        {
+            "name": "pl-batch-chain",
+            "orchestrator": _LDP_ORCH,
+            "nodes": [
+                {
+                    "name": "brz",
+                    "sources": [{"format": "JSON", "path": "/src/"}],
+                    "sinks": [{"table_name": "brz"}],
+                },
+                {
+                    "name": "slv",
+                    "sources": [{"node_name": "brz"}],
+                    "sinks": [{"table_name": "slv"}],
+                },
+                {
+                    "name": "gld",
+                    "sources": [{"node_name": "slv"}],
+                    "sinks": [{"table_name": "gld"}],
+                },
+            ],
+        }
+    )
+
+
+def _spy_table_read(monkeypatch, sentinel):
+    """Patch TableDataSource._read_spark to record the read target and return a sentinel."""
+    from laktory.models.datasources.tabledatasource import TableDataSource
+
+    names = []
+
+    def fake_read_spark(self):
+        names.append(self.full_name)
+        return sentinel
+
+    monkeypatch.setattr(TableDataSource, "_read_spark", fake_read_spark)
+    return names
+
+
+def test_ldp_batch_to_batch_reads_from_sink(monkeypatch):
+    """
+    Regression: under an LDP declarative runtime, a batch->batch node chain must
+    read the upstream from its registered dataset (spark.read.table) so Lakeflow
+    can infer the dependency edge, instead of reusing the cached in-memory
+    output_df.
+    """
+    import laktory
+
+    # Simulate execution inside the Lakeflow runtime
+    monkeypatch.setattr(laktory, "is_ldp_execute", lambda: True)
+
+    pl = _get_batch_chain_pl()
+    slv = pl.nodes_dict["slv"]
+
+    # Pure-batch chain: no streaming source, so the old code path would have
+    # short-circuited to the cached output_df.
+    assert slv.has_streaming_source is False
+
+    # Simulate slv already executed in the same interpreter (cached output_df)
+    sentinel_cached = object()
+    slv._output_df = sentinel_cached
+
+    # Spy on the table read (spark.read.table equivalent)
+    sentinel_table = object()
+    names = _spy_table_read(monkeypatch, sentinel_table)
+
+    # gld reads slv as a batch pipeline-node source
+    source = pl.nodes_dict["gld"].sources[0]
+    df = source._read_spark()
+
+    assert names == [slv.primary_sink.sdp_table_or_view_name]
+    assert df is sentinel_table
+    assert df is not sentinel_cached
+
+
+def test_batch_to_batch_reuses_cached_output_when_not_declarative(monkeypatch):
+    """
+    Outside a declarative runtime (local execution), a batch->batch chain keeps
+    the in-memory short-circuit: the cached output_df is returned and no table is
+    read.
+    """
+    import laktory
+    from laktory.models.datasources.tabledatasource import TableDataSource
+
+    # Default local context: not executing inside a declarative runtime
+    monkeypatch.setattr(laktory, "is_ldp_execute", lambda: False)
+    monkeypatch.setattr(laktory, "is_sdp_execute", lambda: False)
+
+    pl = _get_batch_chain_pl()
+    slv = pl.nodes_dict["slv"]
+
+    sentinel_cached = object()
+    slv._output_df = sentinel_cached
+
+    def fail_read_spark(self):
+        raise AssertionError("table read must not happen for local runs")
+
+    monkeypatch.setattr(TableDataSource, "_read_spark", fail_read_spark)
+
+    source = pl.nodes_dict["gld"].sources[0]
+    df = source._read_spark()
+
+    assert df is sentinel_cached
