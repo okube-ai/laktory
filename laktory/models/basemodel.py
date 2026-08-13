@@ -424,14 +424,14 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         Examples
         --------
         ```py
-        from typing import Union
+        from __future__ import annotations
 
         from laktory import models
 
 
         class Cluster(models.BaseModel):
             name: str = None
-            size: Union[int, str] = None
+            size: int | str = None
 
 
         c = Cluster(

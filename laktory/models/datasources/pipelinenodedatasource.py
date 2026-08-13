@@ -118,6 +118,23 @@ class PipelineNodeDataSource(BaseDataSource):
 
     def _read_spark(self) -> AnyFrame:
         stream_to_batch = not self.as_stream and self.node.has_streaming_source
+
+        # Inside the Lakeflow (LDP) runtime, always read the upstream from its
+        # registered dataset so the query plan carries a traceable
+        # spark.read.table(<dataset>). Returning the cached in-memory output_df
+        # would hide the dependency from Lakeflow static DAG inference, leaving
+        # batch->batch node chains disconnected in the pipeline graph.
+        #
+        # This is intentionally NOT applied to SDP: the local `spark-pipelines`
+        # runtime eagerly analyzes each dataset's plan (Laktory's SQL transformer
+        # calls spark.sql), and a spark.read.table() against a not-yet-materialized
+        # pipeline dataset fails analysis at graph-registration time. SDP instead
+        # relies on the upstream plan being inlined from the original source. The
+        # `is_ldp_execute` flag fires only inside the actual Lakeflow runtime, so
+        # local Pipeline.execute() behavior is preserved.
+        if self.node.is_ldp_execute and self.node.primary_sink:
+            return self._read_spark_declarative_dataset()
+
         # When a streaming read is requested, always go to the primary sink so
         # that spark.readStream.table() is called. Returning a cached batch
         # output_df here would produce an invalid batch-relation-for-streaming-table
@@ -141,7 +158,38 @@ class PipelineNodeDataSource(BaseDataSource):
 
         return df
 
+    def _read_spark_declarative_dataset(self) -> AnyFrame:
+        """
+        Read the upstream node from the dataset registered by the Lakeflow
+        (LDP) declarative-pipeline decorators.
+
+        The read target must match the name declared to the dp decorators
+        (`sdp_table_or_view_name`): the sink's fully-qualified `full_name` when a
+        catalog is used, but the *unqualified* table name otherwise (Hive
+        metastore). A fully-qualified name would not resolve against the
+        pipeline's virtual schema during graph registration.
+        """
+        sink = self.node.primary_sink
+        source = sink.as_source(
+            as_stream=self.as_stream,
+            reader_kwargs=self.reader_kwargs,
+            reader_methods=self.reader_methods,
+        )
+        # Without a catalog the dataset is registered unqualified; drop the
+        # schema so the read targets the bare dataset name (e.g. `slv`).
+        if source.catalog_name is None:
+            source._setattr("schema_name", None)
+        logger.info(
+            f"Reading pipeline node {self._id} from declarative dataset {source.full_name}"
+        )
+        return source._read_spark()
+
     def _read_polars(self) -> AnyFrame:
+        # No declarative-runtime handling here: LDP and SDP are Spark-only
+        # orchestrators, so a Polars read never happens inside their runtime
+        # (the declarative dependency-inference concern handled in `_read_spark`
+        # does not apply).
+
         # Read from node output DataFrame (if available)
         if self.node.output_df is not None:
             logger.info(f"Reading pipeline node {self._id} from output DataFrame")
