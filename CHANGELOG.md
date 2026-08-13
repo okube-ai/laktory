@@ -6,7 +6,7 @@
 ### Fixed
 * `PipelineNodeDataSource` batch->batch chains now read the upstream dataset (`spark.read.table`) inside the Lakeflow (LDP) runtime so Lakeflow can infer the dependency edge
 ### Updated
-* n/a
+* `mcp` extra now requires `mcp>=2` (updated MCP server to the `MCPServer` API)
 ### Breaking changes
 * n/a
 

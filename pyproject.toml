@@ -91,7 +91,7 @@ databricks = [
     "databricks-bundles",
 ]
 mcp = [
-    "mcp>=1.0",
+    "mcp>=2",
 ]
 
 [project.urls]
