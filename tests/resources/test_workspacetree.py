@@ -139,6 +139,40 @@ def _tree_stack():
     )
 
 
+def test_utf8_source_files(tmp_path):
+    """Regression test: files containing UTF-8 multi-byte characters (emoji,
+    accents) must be read with an explicit utf-8 encoding so that scanning for
+    the Databricks notebook marker does not crash on platforms whose default
+    locale encoding is not UTF-8 (e.g. cp1252 on French Windows)."""
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+
+    # Notebook (python) with emoji + accented content and the notebook marker
+    (treepath / "notebook.py").write_text(
+        "# Databricks notebook source\n# 🚀 énçodïng — dashes\nprint('café')\n",
+        encoding="utf-8",
+    )
+    # Plain workspace file with emoji content but no marker
+    (treepath / "file.py").write_text("# 🎉 not a notebook\n", encoding="utf-8")
+    # SQL notebook with emoji + accented content and the SQL notebook marker
+    (treepath / "query.sql").write_text(
+        "-- Databricks notebook source\n-- 🧮 requête\nSELECT 1;\n",
+        encoding="utf-8",
+    )
+
+    tree = lk.models.resources.databricks.WorkspaceTree(source=str(treepath))
+
+    # Must complete without raising UnicodeDecodeError on any platform
+    resources = tree.additional_core_resources
+
+    by_name = {Path(r.source).name: r for r in resources}
+    assert isinstance(by_name["notebook.py"], lk.models.resources.databricks.Notebook)
+    assert by_name["notebook.py"].language == "PYTHON"
+    assert isinstance(by_name["file.py"], lk.models.resources.databricks.WorkspaceFile)
+    assert isinstance(by_name["query.sql"], lk.models.resources.databricks.Notebook)
+    assert by_name["query.sql"].language == "SQL"
+
+
 def test_depends_on_directions():
     """A virtual WorkspaceTree participates in the dependency graph in both
     directions: its own depends_on propagates to the child files (deploy X

@@ -19,7 +19,7 @@ import laktory as lk  # noqa: E402
 
 config_filepath = spark.conf.get("laktory.config_filepath")
 print(f"Reading pipeline at {config_filepath}")
-with open(config_filepath, "r") as fp:
+with open(config_filepath, "r", encoding="utf-8-sig") as fp:
     pl = lk.models.Pipeline.model_validate_json(fp.read())
 
 # --------------------------------------------------------------------------- #

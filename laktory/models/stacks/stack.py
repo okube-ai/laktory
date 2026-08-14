@@ -91,7 +91,7 @@ def _get_cached_ws_token(wc, cache_path: str) -> str:
     """
     if os.path.exists(cache_path):
         try:
-            with open(cache_path) as f:
+            with open(cache_path, encoding="utf-8-sig") as f:
                 cached = json.load(f)
             expires_at = cached.get("expires_at")
             if expires_at is None or expires_at > time.time() + 86400:
@@ -112,7 +112,7 @@ def _get_cached_ws_token(wc, cache_path: str) -> str:
         "expires_at": expiry_ms / 1000 if expiry_ms else None,
     }
     os.makedirs(os.path.dirname(cache_path) or ".", exist_ok=True)
-    with open(cache_path, "w") as f:
+    with open(cache_path, "w", encoding="utf-8") as f:
         json.dump(cached, f, indent=2)
 
     return result.token_value

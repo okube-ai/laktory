@@ -135,7 +135,7 @@ def build_resources(bundle):
 
         for yaml_file in yaml_files:
             logger.info(f"Loading pipeline from '{yaml_file}'")
-            with open(yaml_file, "r", encoding="utf-8") as fp:
+            with open(yaml_file, "r", encoding="utf-8-sig") as fp:
                 pl = Pipeline.model_validate_yaml(fp)
 
             # Inject bundle variables. Pipeline-level variables take priority

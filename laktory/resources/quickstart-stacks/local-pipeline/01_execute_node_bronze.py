@@ -4,7 +4,7 @@ from laktory import models
 # Read Pipeline                                                               #
 # --------------------------------------------------------------------------- #
 
-with open("./pipeline.yaml", "r") as fp:
+with open("./pipeline.yaml", "r", encoding="utf-8-sig") as fp:
     pipeline = models.Pipeline.model_validate_yaml(fp)
 
 # --------------------------------------------------------------------------- #

@@ -187,7 +187,7 @@ def _display_names(name: str, field_info: Any) -> list[str]:
 
 def get_laktory_docs() -> str:
     if _AGENTS_MD.exists():
-        return _AGENTS_MD.read_text(encoding="utf-8")
+        return _AGENTS_MD.read_text(encoding="utf-8-sig")
     return "AGENTS.md not found in the installed package."
 
 

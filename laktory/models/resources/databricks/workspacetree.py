@@ -72,12 +72,12 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
             is_notebook = filepath.suffix == ".ipynb"
             language = "PYTHON"
             if filepath.suffix == ".py":
-                content = filepath.read_text()
+                content = filepath.read_text(encoding="utf-8-sig")
                 if "# Databricks notebook source" in content:
                     is_notebook = True
                     language = "PYTHON"
             elif filepath.suffix == ".sql":
-                content = filepath.read_text()
+                content = filepath.read_text(encoding="utf-8-sig")
                 if "-- Databricks notebook source" in content:
                     is_notebook = True
                     language = "SQL"

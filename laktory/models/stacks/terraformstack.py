@@ -200,7 +200,7 @@ class TerraformStack(BaseModel):
         text = re.sub(r'"import_\d+": {', '"import": {', text)
 
         # Output
-        with open(filepath, "w") as fp:
+        with open(filepath, "w", encoding="utf-8") as fp:
             fp.write(text)
 
         return filepath
