@@ -554,7 +554,14 @@ class Stack(BaseModel):
         """Expand `depends_on` entries that reference a virtual resource into
         references to each of its concrete child resources. Virtual resources
         emit no Terraform block of their own, so depending on one means depending
-        on every resource it generates."""
+        on every resource it generates.
+
+        A name is only expanded when it does not also exist as a concrete
+        resource. When a virtual resource shares its name with one of its
+        children (e.g. a `Pipeline` and its `LakeflowJobOrchestrator` are both
+        named `pl-foo`), the reference resolves to that concrete Terraform block
+        directly - expanding it would make the child depend on itself and its
+        siblings, creating a cycle."""
         pattern = re.compile(r"^\$\{resources\.([^}.]+)\}$")
         for _r in resources.values():
             do = _r.resource_options.depends_on
@@ -564,7 +571,7 @@ class Stack(BaseModel):
             changed = False
             for dep in do:
                 m = pattern.match(dep)
-                if m and m.group(1) in virtual_children:
+                if m and m.group(1) in virtual_children and m.group(1) not in resources:
                     changed = True
                     for child in virtual_children[m.group(1)]:
                         ref = f"${{resources.{child}}}"
