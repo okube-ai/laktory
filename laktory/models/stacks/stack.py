@@ -297,7 +297,7 @@ class StackResources(BaseModel):
                 continue
 
             for resource_name, _r in getattr(self, resource_type).items():
-                if resource_name in resources.keys():
+                if resource_name in resources:
                     raise ValueError(
                         f"Stack resource names are not unique. '{resource_name}' is already used."
                     )
@@ -550,10 +550,38 @@ class Stack(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @staticmethod
-    def _check_depends_on(resources: dict, providers: dict) -> None:
+    def _expand_virtual_depends_on(resources: dict, virtual_children: dict) -> None:
+        """Expand `depends_on` entries that reference a virtual resource into
+        references to each of its concrete child resources. Virtual resources
+        emit no Terraform block of their own, so depending on one means depending
+        on every resource it generates."""
+        pattern = re.compile(r"^\$\{resources\.([^}.]+)\}$")
+        for _r in resources.values():
+            do = _r.resource_options.depends_on
+            if not do:
+                continue
+            expanded = []
+            changed = False
+            for dep in do:
+                m = pattern.match(dep)
+                if m and m.group(1) in virtual_children:
+                    changed = True
+                    for child in virtual_children[m.group(1)]:
+                        ref = f"${{resources.{child}}}"
+                        if ref not in expanded:
+                            expanded.append(ref)
+                elif dep not in expanded:
+                    expanded.append(dep)
+            if changed:
+                _r.resource_options.depends_on = expanded
+
+    @staticmethod
+    def _check_depends_on(
+        resources: dict, providers: dict, virtual_children: dict = None
+    ) -> None:
         """Warn when a depends_on entry references a ${resources.X} name that
         does not exist in the stack, catching typos before Terraform apply."""
-        known = set(resources) | set(providers)
+        known = set(resources) | set(providers) | set(virtual_children or {})
         pattern = re.compile(r"\$\{resources\.([^}.]+)")
         for _r in resources.values():
             for dep in _r.resource_options.depends_on:
@@ -601,11 +629,25 @@ class Stack(BaseModel):
 
         # Resources
         resources = {}
+        virtual_children = {}
         for r in env.resources._get_all(providers_excluded=True).values():
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
+            # Virtual resources (e.g. WorkspaceTree, Pipeline) emit no Terraform
+            # block of their own; keep track of the concrete children they expand
+            # into so dependencies on them can be resolved.
+            if not r.self_as_core_resources:
+                virtual_children[r.resource_name] = [
+                    _r.resource_name for _r in r.core_resources
+                ]
 
-        self._check_depends_on(resources, providers)
+        # A `depends_on` reference to a virtual resource means a dependency on all
+        # the resources it generates. Expand those references before they reach
+        # Terraform, which has no block to point at otherwise.
+        if virtual_children:
+            self._expand_virtual_depends_on(resources, virtual_children)
+
+        self._check_depends_on(resources, providers, virtual_children)
 
         # Auto-configure Databricks workspace state backend when
         # backend.databricks_workspace is set.
