@@ -305,3 +305,54 @@ def test_cluster_wrong_name_raises():
                 ],
             },
         )
+
+
+# --------------------------------------------------------------------------- #
+# Terraform dependency graph                                                   #
+# --------------------------------------------------------------------------- #
+
+
+def _two_cycles(depends_on_by_node):
+    """Return the set of mutually-dependent (a, b) node pairs, including
+    self-loops (a, a)."""
+    import re
+
+    def target(dep):
+        m = re.search(r"([a-z_]+\.[A-Za-z0-9_-]+)", dep)
+        return m.group(1) if m else dep
+
+    deps = {n: {target(x) for x in (d or [])} for n, d in depends_on_by_node.items()}
+    cycles = set()
+    for a, a_deps in deps.items():
+        for b in a_deps:
+            if b == a or (b in deps and a in deps[b]):
+                cycles.add(tuple(sorted((a, b))))
+    return cycles
+
+
+def test_no_terraform_depends_on_cycle():
+    """Regression: a LAKEFLOW_JOB pipeline must not produce a Terraform
+    dependency cycle. The virtual `Pipeline` and its `Job` orchestrator share a
+    resource name (`pl-job`), so the `${resources.pl-job}` dependency auto-added
+    to the config workspace file must resolve to the concrete job rather than
+    expand into the pipeline's children - which would make the file depend on
+    itself and its own permissions."""
+    stack = models.Stack(
+        name="test",
+        resources={"pipelines": {"pl-job": _get_pl().model_dump(exclude_unset=True)}},
+    )
+    d = stack.to_terraform().model_dump()
+
+    # Collect depends_on across every generated resource block
+    depends_on_by_node = {}
+    for rtype, bodies in d["resource"].items():
+        for name, body in bodies.items():
+            depends_on_by_node[f"{rtype}.{name}"] = body.get("depends_on", [])
+
+    assert _two_cycles(depends_on_by_node) == set()
+
+    # The config workspace file should still depend on the concrete job.
+    cfg = next(
+        n for n in depends_on_by_node if n.startswith("databricks_workspace_file.")
+    )
+    assert any("databricks_job.pl-job" in dep for dep in depends_on_by_node[cfg])

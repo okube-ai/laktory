@@ -25,7 +25,7 @@ node_name = "brz_stock_prices"
 # --------------------------------------------------------------------------- #
 
 
-with open(stack_filepath, "r") as fp:
+with open(stack_filepath, "r", encoding="utf-8-sig") as fp:
     stack = lk.models.Stack.model_validate_yaml(fp)
 
 pl = stack.get_env("dev").resources.pipelines["pl-stocks-job"]

@@ -55,14 +55,14 @@ def _read_laktory_source() -> str | None:
     if not src.exists():
         # logger.info("AGENTS.md source not found in installed package — skipping")
         return None
-    return src.read_text(encoding="utf-8")
+    return src.read_text(encoding="utf-8-sig")
 
 
 def _append_to_agents_md(target_dir: Path, reference: str) -> None:
     """Idempotently append a reference block to AGENTS.md."""
     agents_dst = target_dir / "AGENTS.md"
     if agents_dst.exists():
-        existing = agents_dst.read_text(encoding="utf-8")
+        existing = agents_dst.read_text(encoding="utf-8-sig")
         if _LAKTORY_MARKER in existing:
             # logger.info("AGENTS.md: Laktory reference already present — skipping")
             return
@@ -94,7 +94,7 @@ def write_claude_md(target_dir: str | Path = ".") -> None:
     """Append @.claude/laktory.md import to CLAUDE.md; create it if absent."""
     dst = Path(target_dir) / "CLAUDE.md"
     if dst.exists():
-        existing = dst.read_text(encoding="utf-8")
+        existing = dst.read_text(encoding="utf-8-sig")
         if _LAKTORY_MARKER in existing:
             # logger.info("CLAUDE.md: Laktory reference already present — skipping")
             return
@@ -158,7 +158,7 @@ def write_mcp_json(target_dir: str | Path = ".") -> None:
     if dst.exists():
         logger.info(f"Updating {dst} with laktory configuration ...")
         try:
-            data = json.loads(dst.read_text(encoding="utf-8"))
+            data = json.loads(dst.read_text(encoding="utf-8-sig"))
         except json.JSONDecodeError:
             logger.info("Could not parse existing file — skipping")
             return

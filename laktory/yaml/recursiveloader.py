@@ -136,7 +136,7 @@ class RecursiveLoader(yaml.SafeLoader):
 
         if filepath.as_posix().endswith(".sql"):
             try:
-                with filepath.open("r", encoding="utf-8") as _fp:
+                with filepath.open("r", encoding="utf-8-sig") as _fp:
                     data = _fp.read()
             except FileNotFoundError:
                 raise FileNotFoundError(
@@ -154,7 +154,7 @@ class RecursiveLoader(yaml.SafeLoader):
                     raise ValueError(
                         f"Circular !use reference: '{_filepath}' is already being loaded"
                     )
-                with _filepath.open("r") as f:
+                with _filepath.open("r", encoding="utf-8-sig") as f:
                     objs += [RecursiveLoader.load(f, parent_loader=loader)]
             return objs
 
@@ -165,7 +165,7 @@ class RecursiveLoader(yaml.SafeLoader):
                     f"Circular !use reference: '{filepath}' is already being loaded"
                 )
             try:
-                with filepath.open("r") as f:
+                with filepath.open("r", encoding="utf-8-sig") as f:
                     return RecursiveLoader.load(f, parent_loader=loader)
             except FileNotFoundError:
                 raise FileNotFoundError(
@@ -183,7 +183,7 @@ class RecursiveLoader(yaml.SafeLoader):
                 f"Circular !update reference: '{filepath}' is already being loaded"
             )
         try:
-            with open(filepath, "r") as f:
+            with open(filepath, "r", encoding="utf-8-sig") as f:
                 merge_data = RecursiveLoader.load(f, parent_loader=loader)
         except FileNotFoundError:
             raise FileNotFoundError(
@@ -207,7 +207,7 @@ class RecursiveLoader(yaml.SafeLoader):
                 f"Circular !extend reference: '{filepath}' is already being loaded"
             )
         try:
-            with open(filepath, "r") as f:
+            with open(filepath, "r", encoding="utf-8-sig") as f:
                 append_data = RecursiveLoader.load(f, parent_loader=loader)
         except FileNotFoundError:
             raise FileNotFoundError(

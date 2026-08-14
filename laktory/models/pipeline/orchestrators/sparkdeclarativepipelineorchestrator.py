@@ -179,11 +179,11 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         logger.info(f"Writing SDP artifacts to {root_dir}")
 
         # Write laktory pipeline config JSON
-        with self.config_filepath_abs.open("w") as fp:
+        with self.config_filepath_abs.open("w", encoding="utf-8") as fp:
             json.dump(self.config_dict, fp, indent=4)
 
         # Write Spark pipeline spec file
-        with self.spec_filepath_abs.open("w") as fp:
+        with self.spec_filepath_abs.open("w", encoding="utf-8") as fp:
             yaml.dump(self.spec_dict, fp, default_flow_style=False, sort_keys=False)
 
         # Copy python code
