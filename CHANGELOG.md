@@ -8,6 +8,7 @@
 * Virtual resources (`WorkspaceTree`, `Pipeline`) now participate in `depends_on` in both directions: their own `depends_on` propagates to the child resources they generate, and a `depends_on` reference to them expands to all those children
 ### Updated
 * `mcp` extra now requires `mcp>=2` (updated MCP server to the `MCPServer` API)
+* File reads/writes now specify an explicit encoding instead of relying on the platform default, fixing `UnicodeDecodeError` on non-UTF-8 locales (e.g. cp1252 on Windows) when config/source files contain UTF-8 characters. Reads use `utf-8-sig` to tolerate a BOM; writes use `utf-8`
 ### Breaking changes
 * n/a
 
