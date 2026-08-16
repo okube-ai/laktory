@@ -36,10 +36,6 @@ class DashboardBase(BaseModel, TerraformResource):
         description="Whether to embed credentials in the dashboard. Default is `true`",
     )
     etag: str | None = Field(None)
-    file_path: str | None = Field(
-        None,
-        description="The path to the dashboard JSON file. Conflicts with `serialized_dashboard`",
-    )
     lifecycle_state: str | None = Field(None)
     md5: str | None = Field(None)
     path: str | None = Field(None)

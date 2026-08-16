@@ -13,6 +13,7 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
+from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
 from laktory.models.resources.databricks.accesscontrolruleset import (
     AccessControlRuleSet,
 )
@@ -498,6 +499,15 @@ class Stack(BaseModel):
                 config_file = getattr(r.orchestrator, "config_file", None)
                 if config_file:
                     config_file.build()
+
+        logger.info("Rendering variable-templated file content...")
+        for k, r in env.resources._get_all(providers_excluded=True).items():
+            if isinstance(r, RenderableFileMixin) and r.render_vars:
+                r.build(vars=env.variables)
+            if isinstance(r, WorkspaceTree):
+                for _r in r.core_resources:
+                    if isinstance(_r, RenderableFileMixin) and _r.render_vars:
+                        _r.build(vars=env.variables)
 
         logger.info("Build completed.")
 

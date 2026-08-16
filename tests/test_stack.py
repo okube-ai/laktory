@@ -73,6 +73,43 @@ def test_build(monkeypatch, stack):
     stack.build(env_name="dev")
 
 
+def test_build_renders_workspace_tree_files(tmp_path, monkeypatch):
+    """`Stack.build()` renders opted-in WorkspaceTree files with each
+    environment's own variables, and leaves non-opted-in files untouched."""
+    monkeypatch.setattr(settings, "build_root", str(tmp_path / "build"))
+
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "app.json").write_text('{"catalog": "${vars.catalog}"}')
+
+    render_stack = models.Stack(
+        name="render-test",
+        organization="o3",
+        variables={"catalog": "default_cat"},
+        environments={
+            "dev": {"variables": {"catalog": "dev_cat"}},
+            "prod": {"variables": {"catalog": "prod_cat"}},
+        },
+        resources=models.StackResources(
+            databricks_workspacetrees={
+                "tree0": {
+                    "source": str(treepath),
+                    "path": "/apps/myapp",
+                    "render_paths": ["*.json"],
+                }
+            },
+        ),
+    )
+
+    staged = tmp_path / "build" / "workspace_files" / "apps" / "myapp" / "app.json"
+
+    render_stack.build(env_name="dev")
+    assert staged.read_text() == '{"catalog": "dev_cat"}'
+
+    render_stack.build(env_name="prod")
+    assert staged.read_text() == '{"catalog": "prod_cat"}'
+
+
 def test_stack_to_terraform_cli_vars_override_stack_var(monkeypatch, stack):
     # CLI vars must override stack-level variables (workflow_name defaults to UNDEFINED).
     monkeypatch.setenv("DATABRICKS_HOST", "mock-host")

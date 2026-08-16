@@ -7,6 +7,7 @@ from pydantic import computed_field
 
 from laktory import settings
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.notebook_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.notebook_base import NotebookBase
@@ -23,7 +24,7 @@ class NotebookLookup(ResourceLookup):
     )
 
 
-class Notebook(NotebookBase):
+class Notebook(RenderableFileMixin, NotebookBase):
     """
     Databricks Notebook
 
@@ -72,6 +73,12 @@ class Notebook(NotebookBase):
         validation_alias=AliasChoices("path", "path_"),
         exclude=True,
     )
+    source_: str = Field(
+        None,
+        description="Path to notebook in source code format on local filesystem. Conflicts with `content_base64`",
+        validation_alias=AliasChoices("source", "source_"),
+        exclude=True,
+    )
 
     @computed_field(description="path")
     @property
@@ -88,12 +95,28 @@ class Notebook(NotebookBase):
         path = Path(settings.workspace_root) / self.dirpath / self.filename
         return path.as_posix()
 
+    @computed_field(description="source")
+    @property
+    def source(self) -> str | None:
+        if self.render_vars:
+            return self._staged_path("workspace_files", self.path)
+        return self.source_
+
     @property
     def filename(self) -> str:
         """Notebook file name"""
-        if self.source is None:
+        if self.source_ is None:
             return ""
-        return os.path.basename(self.source)
+        return os.path.basename(self.source_)
+
+    def build(self, vars: dict = None):
+        """
+        Render `${vars.x}`/`${{ expr }}` placeholders in the notebook
+        content and stage the result under `settings.build_root`, if
+        `render_vars` is `True`. No-op otherwise.
+        """
+        if self.render_vars:
+            self._render_to_staged_path(self.source_, self.source, vars=vars)
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -126,4 +149,4 @@ class Notebook(NotebookBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["access_controls", "dirpath"]
+        return ["access_controls", "dirpath", "render_vars"]

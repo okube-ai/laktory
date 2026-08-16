@@ -569,3 +569,68 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
         if not inplace:
             return dump
+
+    def resolve_string(
+        self, text: str, vars: dict[str, Any] = None, objs: dict[str, Any] = None
+    ) -> str:
+        """
+        Resolve `${vars.x}` / `${{ expr }}` placeholders in an arbitrary
+        string (e.g. raw file content that is not itself a model field)
+        using this model's `variables` merged with any additional
+        `vars`/`objs`.
+
+        Unlike `inject_vars`/`inject_vars_into_dump` on a typed field -
+        where a placeholder resolving to a non-string (dict, list, bool,
+        ...) replaces the whole field value with that Python object - a
+        non-string resolution here is JSON-serialized and substituted in
+        place, since the return value must always be text. JSON is valid
+        embedded syntax for both JSON and YAML content; other file types
+        may need the value pre-formatted as a string instead (e.g. via a
+        `${{ }}` expression).
+
+        Parameters
+        ----------
+        text:
+            Raw string to resolve.
+        vars:
+            Additional variables to merge with `self.variables` (`self.variables`
+            wins on conflict, same precedence as `inject_vars`/
+            `inject_vars_into_dump`).
+        objs:
+            A dictionary of objects available when resolving expressions.
+
+        Returns
+        -------
+        :
+            Resolved string.
+
+        Examples
+        --------
+        ```py
+        from laktory import models
+
+        m = models.BaseModel(
+            variables={
+                "env": "dev",
+            },
+        )
+        print(m.resolve_string("catalog: ${vars.env}"))
+        # > catalog: dev
+        ```
+
+        A variable resolving to a dict or list is JSON-serialized in place:
+
+        ```py
+        from laktory import models
+
+        m = models.BaseModel(
+            variables={
+                "tags": {"bu": "finance", "env": "dev"},
+            },
+        )
+        print(m.resolve_string('{"tags": ${vars.tags}}'))
+        # > {"tags": {"bu": "finance", "env": "dev"}}
+        ```
+        """
+        vars = deepcopy({**(vars or {}), **self.variables})
+        return _resolve_value(text, vars, objs, stringify=True)
