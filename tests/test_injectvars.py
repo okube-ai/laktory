@@ -280,6 +280,25 @@ def test_dump():
     assert c.inject_vars(inplace=False).model_dump() == di
 
 
+def test_resolve_string():
+    c = Cluster(variables={"catalog": "dev_catalog"})
+    assert c.resolve_string("catalog: ${vars.catalog}") == "catalog: dev_catalog"
+
+    # Additional vars merge with self.variables; self.variables wins on conflict,
+    # matching inject_vars_into_dump precedence.
+    assert (
+        c.resolve_string("${vars.catalog}/${vars.schema}", vars={"schema": "s"})
+        == "dev_catalog/s"
+    )
+    assert (
+        c.resolve_string("${vars.catalog}", vars={"catalog": "other_catalog"})
+        == "dev_catalog"
+    )
+
+    # Unresolved placeholders are left as-is, matching inject_vars behavior.
+    assert c.resolve_string("${vars.na}") == "${vars.na}"
+
+
 def test_stack():
     cluster = models.resources.databricks.Cluster(
         cluster_name="cl",

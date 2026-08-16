@@ -569,3 +569,45 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
         if not inplace:
             return dump
+
+    def resolve_string(
+        self, text: str, vars: dict[str, Any] = None, objs: dict[str, Any] = None
+    ) -> str:
+        """
+        Resolve `${vars.x}` / `${{ expr }}` placeholders in an arbitrary
+        string (e.g. raw file content that is not itself a model field)
+        using this model's `variables` merged with any additional
+        `vars`/`objs`. Thin wrapper around `inject_vars_into_dump` for
+        scalar (non-dict) content.
+
+        Parameters
+        ----------
+        text:
+            Raw string to resolve.
+        vars:
+            Additional variables to merge with `self.variables` (`self.variables`
+            wins on conflict, same precedence as `inject_vars`/
+            `inject_vars_into_dump`).
+        objs:
+            A dictionary of objects available when resolving expressions.
+
+        Returns
+        -------
+        :
+            Resolved string.
+
+        Examples
+        --------
+        ```py
+        from laktory import models
+
+        m = models.BaseModel(
+            variables={
+                "env": "dev",
+            },
+        )
+        print(m.resolve_string("catalog: ${vars.env}"))
+        # > catalog: dev
+        ```
+        """
+        return self.inject_vars_into_dump({"_": text}, vars=vars, objs=objs)["_"]

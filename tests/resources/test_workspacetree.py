@@ -173,6 +173,113 @@ def test_utf8_source_files(tmp_path):
     assert by_name["query.sql"].language == "SQL"
 
 
+def test_render_paths_bare_extension_glob(tmp_path):
+    """A bare '*.ext' pattern matches files with that extension at any
+    depth, same as an extension-based opt-in would."""
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "app.json").write_text('{"catalog": "${vars.catalog}"}')
+    (treepath / "plain.txt").write_text("literal ${vars.catalog}")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), render_paths=["*.json"]
+    )
+
+    resources = {Path(r.source_).name: r for r in tree.additional_core_resources}
+    assert resources["app.json"].render_vars is True
+    assert resources["plain.txt"].render_vars is False
+
+
+def test_render_paths_scoped_to_subdir(tmp_path):
+    treepath = tmp_path / "tree"
+    (treepath / "configs").mkdir(parents=True)
+    (treepath / "configs" / "app.json").write_text('{"catalog": "${vars.catalog}"}')
+    (treepath / "other.json").write_text('{"catalog": "${vars.catalog}"}')
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), render_paths=["configs/*.json"]
+    )
+
+    by_rel = {}
+    for r in tree.additional_core_resources:
+        rel = os.path.relpath(r.source_, str(treepath))
+        by_rel[Path(rel).as_posix()] = r
+
+    assert by_rel["configs/app.json"].render_vars is True
+    assert by_rel["other.json"].render_vars is False
+
+
+def test_render_paths_multiple_patterns(tmp_path):
+    treepath = tmp_path / "tree"
+    (treepath / "configs").mkdir(parents=True)
+    (treepath / "configs" / "app.yaml").write_text("catalog: ${vars.catalog}")
+    (treepath / "other.json").write_text('{"catalog": "${vars.catalog}"}')
+    (treepath / "untouched.txt").write_text("literal ${vars.catalog}")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath),
+        render_paths=["*.json", "configs/*.yaml"],
+    )
+
+    by_name = {Path(r.source_).name: r for r in tree.additional_core_resources}
+    assert by_name["app.yaml"].render_vars is True
+    assert by_name["other.json"].render_vars is True
+    assert by_name["untouched.txt"].render_vars is False
+
+
+def test_render_default_off_backward_compatible(tmp_path):
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "app.json").write_text('{"catalog": "${vars.catalog}"}')
+
+    tree = lk.models.resources.databricks.WorkspaceTree(source=str(treepath))
+
+    resources = tree.additional_core_resources
+    assert len(resources) == 1
+    assert resources[0].render_vars is False
+    assert resources[0].source == str(treepath / "app.json")
+
+
+def test_render_notebook_file(tmp_path):
+    """A file matching render_paths and detected as a notebook is still
+    deployed as a Notebook, and is rendered like any other opted-in file."""
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "notebook.py").write_text(
+        "# Databricks notebook source\nprint('${vars.env}')\n"
+    )
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), render_paths=["*.py"]
+    )
+
+    resources = tree.additional_core_resources
+    assert len(resources) == 1
+    r = resources[0]
+    assert isinstance(r, lk.models.resources.databricks.Notebook)
+    assert r.render_vars is True
+
+
+def test_render_tree_variables_precedence(tmp_path, monkeypatch):
+    from laktory._settings import settings
+
+    monkeypatch.setattr(settings, "build_root", str(tmp_path / "build"))
+
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "app.json").write_text('{"catalog": "${vars.catalog}"}')
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath),
+        render_paths=["*.json"],
+        variables={"catalog": "tree_catalog"},
+    )
+
+    r = tree.additional_core_resources[0]
+    r.build()
+    assert Path(r.source).read_text() == '{"catalog": "tree_catalog"}'
+
+
 def test_depends_on_directions():
     """A virtual WorkspaceTree participates in the dependency graph in both
     directions: its own depends_on propagates to the child files (deploy X

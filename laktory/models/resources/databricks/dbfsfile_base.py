@@ -21,10 +21,6 @@ class DbfsFileBase(BaseModel, TerraformResource):
         description="Encoded file contents. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a data pipeline configuration file",
     )
     md5: str | None = Field(None)
-    source: str | None = Field(
-        None,
-        description="The full absolute path to the file. Conflicts with `content_base64`",
-    )
 
     @property
     def terraform_resource_type(self) -> str:

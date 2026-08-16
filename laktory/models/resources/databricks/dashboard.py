@@ -7,13 +7,14 @@ from pydantic import computed_field
 from pydantic import model_validator
 
 from laktory._settings import settings
+from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dashboard_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.dashboard_base import DashboardBase
 from laktory.models.resources.databricks.permissions import Permissions
 
 
-class Dashboard(DashboardBase):
+class Dashboard(RenderableFileMixin, DashboardBase):
     """
     Databricks Lakeview Dashboard
 
@@ -34,6 +35,30 @@ class Dashboard(DashboardBase):
       permission_level: CAN_VIEW
     - group_name: role-engineers
       permission_level: CAN_RUN
+    '''
+    dashboard = models.resources.databricks.Dashboard.model_validate_yaml(
+        io.StringIO(dashboard_yaml)
+    )
+    ```
+
+    Set `render_vars: true` to resolve `${vars.x}` / `${{ expr }}` placeholders
+    found inside the `file_path` JSON content itself (e.g. a dataset query
+    referencing `${vars.catalog}`) before it's uploaded - the resolved
+    content is staged under `settings.build_root` and never modifies the
+    original file on disk.
+
+    ```py
+    import io
+
+    from laktory import models
+
+    dashboard_yaml = '''
+    display_name: databricks-costs
+    file_path: ./dashboards/databricks_costs.json
+    warehouse_id: a7d9f2kl8mp3q6rt
+    render_vars: true
+    variables:
+      catalog: dev_catalog
     '''
     dashboard = models.resources.databricks.Dashboard.model_validate_yaml(
         io.StringIO(dashboard_yaml)
@@ -62,6 +87,12 @@ class Dashboard(DashboardBase):
         validation_alias=AliasChoices("parent_path", "dirpath", "parent_path_"),
         exclude=True,
     )
+    file_path_: str | None = Field(
+        None,
+        description="The path to the dashboard JSON file. Conflicts with `serialized_dashboard`",
+        validation_alias=AliasChoices("file_path", "file_path_"),
+        exclude=True,
+    )
 
     @computed_field(description="parent_path")
     @property
@@ -73,6 +104,26 @@ class Dashboard(DashboardBase):
 
         parent_path = Path(settings.workspace_root) / self.parent_path_
         return parent_path.as_posix()
+
+    @computed_field(description="file_path")
+    @property
+    def file_path(self) -> str | None:
+        if self.render_vars and self.file_path_:
+            return self._staged_path("dashboards", f"{self.display_name}.json")
+        return self.file_path_
+
+    @property
+    def _rendered_field_value(self) -> str | None:
+        return self.file_path
+
+    def build(self, vars: dict = None):
+        """
+        Render `${vars.x}`/`${{ expr }}` placeholders in the dashboard JSON
+        content and stage the result under `settings.build_root`, if
+        `render_vars` is `True`. No-op otherwise.
+        """
+        if self.render_vars and self.file_path_:
+            self._render_to_staged_path(self.file_path_, self.file_path, vars=vars)
 
     @model_validator(mode="after")
     def update_name(self) -> Any:
@@ -118,4 +169,5 @@ class Dashboard(DashboardBase):
             "access_controls",
             "name_prefix",
             "name_suffix",
+            "render_vars",
         ]

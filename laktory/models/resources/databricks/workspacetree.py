@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from pathlib import PurePosixPath
 
 from pydantic import Field
 
@@ -33,12 +34,50 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
         io.StringIO(tree_yaml)
     )
     ```
+
+    By default, file content is uploaded verbatim. Opt individual files into
+    variable rendering (`${vars.x}` / `${{ expr }}`) via `render_paths` -
+    useful for deploying an environment-specific Databricks App source tree,
+    for example. Resolved content is staged under `settings.build_root`,
+    the original files on disk are never modified.
+
+    ```py
+    import io
+
+    from laktory import models
+
+    tree_yaml = '''
+    source: ./app/
+    path: /apps/myapp
+    render_paths:
+    - '*.json'
+    - configs/*.yaml
+    variables:
+      env: dev
+    '''
+    tree = models.resources.databricks.WorkspaceTree.model_validate_yaml(
+        io.StringIO(tree_yaml)
+    )
+    ```
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
     path: str = Field(
         None,
         description="Workspace filepath for the tree. If not specified, workspace laktory root is used.",
+    )
+    render_paths: list[str] = Field(
+        default=[],
+        description=(
+            "Glob patterns, relative to `source`, identifying files whose "
+            "content is variable-resolved (`${vars.x}` / `${{ expr }}`) and "
+            "staged under `settings.build_root` before upload (e.g. "
+            "['*.json', 'configs/*.yaml', 'settings/prod.yaml']). Matched "
+            "with `PurePosixPath.match()` against each file's path relative "
+            "to `source` - a bare pattern like '*.json' matches any file "
+            "with that extension at any depth. Nothing is rendered by "
+            "default."
+        ),
     )
     source: str = Field(
         ...,
@@ -101,6 +140,14 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
 
             # Set access controls
             kwargs["access_controls"] = self.access_controls
+
+            # Set variable rendering opt-in
+            rel_posix = filepath.relative_to(root).as_posix()
+            should_render = any(
+                PurePosixPath(rel_posix).match(p) for p in self.render_paths
+            )
+            kwargs["render_vars"] = should_render
+            kwargs["variables"] = self.variables
 
             if is_notebook:
                 r = Notebook(source=str(_source), language=language, **kwargs)
