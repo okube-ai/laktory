@@ -6,13 +6,14 @@ from pydantic import Field
 from pydantic import computed_field
 
 from laktory import settings
+from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.workspacefile_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.workspacefile_base import WorkspaceFileBase
 
 
-class WorkspaceFile(WorkspaceFileBase):
+class WorkspaceFile(RenderableFileMixin, WorkspaceFileBase):
     """
     Databricks Workspace File
 
@@ -61,6 +62,8 @@ class WorkspaceFile(WorkspaceFileBase):
     @computed_field(description="source")
     @property
     def source(self) -> str:
+        if self.render_vars:
+            return self._staged_path("workspace_files", self.path)
         return self.source_
 
     @computed_field(description="path")
@@ -88,8 +91,17 @@ class WorkspaceFile(WorkspaceFileBase):
     @property
     def filename(self) -> str | None:
         """File filename"""
-        if self.source:
-            return os.path.basename(self.source)
+        if self.source_:
+            return os.path.basename(self.source_)
+
+    def build(self, vars: dict = None):
+        """
+        Render `${vars.x}`/`${{ expr }}` placeholders in the file content
+        and stage the result under `settings.build_root`, if `render_vars`
+        is `True`. No-op otherwise.
+        """
+        if self.render_vars:
+            self._render_to_staged_path(self.source_, self.source, vars=vars)
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -119,4 +131,4 @@ class WorkspaceFile(WorkspaceFileBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["access_controls", "dirpath"]
+        return ["access_controls", "dirpath", "render_vars"]

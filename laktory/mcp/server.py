@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 try:
-    from mcp.server.fastmcp import FastMCP
+    from mcp.server import MCPServer
 except ImportError as exc:
     raise ImportError(
         "The 'mcp' package is required to run the Laktory MCP server. "
@@ -13,7 +13,7 @@ from laktory.mcp._model_docs import get_model_docs as _get_model_docs
 from laktory.mcp._model_docs import list_models as _list_models
 from laktory.mcp._validate import validate_yaml as _validate_yaml
 
-mcp = FastMCP("laktory")
+mcp = MCPServer("laktory")
 
 
 @mcp.tool()

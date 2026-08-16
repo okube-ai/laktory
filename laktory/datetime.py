@@ -28,6 +28,7 @@ def unix_timestamp(
     --------
     ```py
     from datetime import datetime
+    from datetime import timezone
 
     from laktory.datetime import unix_timestamp
 
@@ -35,7 +36,7 @@ def unix_timestamp(
     print(ts)
     # > 1577840400.0
 
-    ts = unix_timestamp(datetime(2020, 1, 1, 1, 0, 0))
+    ts = unix_timestamp(datetime(2020, 1, 1, 1, 0, 0, tzinfo=timezone.utc))
     print(ts)
     # > 1577840400.0
     ```

@@ -28,10 +28,6 @@ class NotebookBase(BaseModel, TerraformResource):
     md5: str | None = Field(None)
     object_id: int | None = Field(None, description="Unique identifier for a NOTEBOOK")
     object_type: str | None = Field(None)
-    source: str | None = Field(
-        None,
-        description="Path to notebook in source code format on local filesystem. Conflicts with `content_base64`",
-    )
 
     @property
     def terraform_resource_type(self) -> str:

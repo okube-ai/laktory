@@ -6,6 +6,7 @@ from pydantic import Field
 from pydantic import computed_field
 
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dbfsfile_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.dbfsfile_base import DbfsFileBase
@@ -22,7 +23,7 @@ class DbfsFileLookup(ResourceLookup):
     )
 
 
-class DbfsFile(DbfsFileBase):
+class DbfsFile(RenderableFileMixin, DbfsFileBase):
     """
     Databricks DBFS File
 
@@ -70,6 +71,12 @@ class DbfsFile(DbfsFileBase):
         validation_alias=AliasChoices("path", "path_"),
         exclude=True,
     )
+    source_: str = Field(
+        None,
+        description="The full absolute path to the file. Conflicts with `content_base64`",
+        validation_alias=AliasChoices("source", "source_"),
+        exclude=True,
+    )
 
     @computed_field(description="path")
     @property
@@ -86,6 +93,13 @@ class DbfsFile(DbfsFileBase):
         path = Path("/") / self.dirpath / self.filename
         return path.as_posix()
 
+    @computed_field(description="source")
+    @property
+    def source(self) -> str | None:
+        if self.render_vars:
+            return self._staged_path("dbfs_files", self.path)
+        return self.source_
+
     @classmethod
     def lookup_defaults(cls) -> dict:
         return {"path": ""}
@@ -93,7 +107,16 @@ class DbfsFile(DbfsFileBase):
     @property
     def filename(self) -> str:
         """File filename"""
-        return os.path.basename(self.source)
+        return os.path.basename(self.source_)
+
+    def build(self, vars: dict = None):
+        """
+        Render `${vars.x}`/`${{ expr }}` placeholders in the file content
+        and stage the result under `settings.build_root`, if `render_vars`
+        is `True`. No-op otherwise.
+        """
+        if self.render_vars:
+            self._render_to_staged_path(self.source_, self.source, vars=vars)
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -122,4 +145,4 @@ class DbfsFile(DbfsFileBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["access_controls", "dirpath"]
+        return ["access_controls", "dirpath", "render_vars"]

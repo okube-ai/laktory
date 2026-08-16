@@ -51,7 +51,7 @@ def _execute():
     )
 
     # Read
-    with open(filepath, "r") as fp:
+    with open(filepath, "r", encoding="utf-8-sig") as fp:
         if str(filepath).endswith(".yaml"):
             pl = lk.models.Pipeline.model_validate_yaml(fp)
         else:

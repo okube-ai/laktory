@@ -50,7 +50,7 @@ def parse_cli_vars(
             logger.info(f"Auto-discovered variable file '{resolved_file}'")
 
     if resolved_file is not None:
-        with open(resolved_file, "r", encoding="utf-8") as f:
+        with open(resolved_file, "r", encoding="utf-8-sig") as f:
             data = yaml.safe_load(f)
         if isinstance(data, dict):
             result.update(data)
@@ -107,7 +107,7 @@ class CLIController(BaseModel):
         super().model_post_init(__context)
 
         # Read Stack Environments
-        with open(self.stack_filepath, "r", encoding="utf-8") as fp:
+        with open(self.stack_filepath, "r", encoding="utf-8-sig") as fp:
             lines = fp.readlines()
 
         env_names = []
@@ -152,7 +152,7 @@ class CLIController(BaseModel):
         if self.stack_filepath is None:
             self.stack_filepath = "./stack.yaml"
         logger.info(f"Reading stack from '{self.stack_filepath}'")
-        with open(self.stack_filepath, "r", encoding="utf-8") as fp:
+        with open(self.stack_filepath, "r", encoding="utf-8-sig") as fp:
             vars = (
                 {"env": self.env, **self.cli_vars}
                 if self.env is not None

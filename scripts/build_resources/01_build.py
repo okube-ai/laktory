@@ -58,11 +58,14 @@ ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
 # Per-resource attribute exclusions: fields that override classes handle via
 # @computed_field. If the base emits these as regular fields, Pydantic raises
 # "override with a computed_field is incompatible".
+# Reminder: adding a field here only stops it being generated in *_base.py -
+# the hand-written subclass (e.g. laktory/models/resources/databricks/dashboard.py)
+# must still define the `xxx_`/computed-`xxx` override itself.
 PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_alert": {"parent_path"},
-    "databricks_dashboard": {"parent_path"},
-    "databricks_dbfs_file": {"path"},
-    "databricks_notebook": {"path"},
+    "databricks_dashboard": {"parent_path", "file_path"},
+    "databricks_dbfs_file": {"path", "source"},
+    "databricks_notebook": {"path", "source"},
     "databricks_quality_monitor": {
         "table_name",
         "output_schema_name",

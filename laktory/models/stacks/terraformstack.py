@@ -11,6 +11,7 @@ from laktory._settings import settings
 from laktory._useragent import set_databricks_sdk_upstream
 from laktory.constants import CACHE_ROOT
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
 from laktory.models.resources.providers.baseprovider import BaseProvider
 
 logger = get_logger(__name__)
@@ -89,6 +90,8 @@ class TerraformStack(BaseModel):
         d["resource"] = defaultdict(lambda: {})
         d["data"] = defaultdict(lambda: {})
         for r in self.resources.values():
+            if isinstance(r, RenderableFileMixin):
+                r.check_staged()
             _d = r.terraform_properties
             if r.lookup_existing:
                 d["data"][r.terraform_resource_lookup_type][r.resource_name] = (
@@ -200,7 +203,7 @@ class TerraformStack(BaseModel):
         text = re.sub(r'"import_\d+": {', '"import": {', text)
 
         # Output
-        with open(filepath, "w") as fp:
+        with open(filepath, "w", encoding="utf-8") as fp:
             fp.write(text)
 
         return filepath

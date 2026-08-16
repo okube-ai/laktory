@@ -13,6 +13,7 @@ from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
+from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
 from laktory.models.resources.databricks.accesscontrolruleset import (
     AccessControlRuleSet,
 )
@@ -99,7 +100,7 @@ def _get_cached_ws_token(wc, cache_path: str) -> str:
     """
     if os.path.exists(cache_path):
         try:
-            with open(cache_path) as f:
+            with open(cache_path, encoding="utf-8-sig") as f:
                 cached = json.load(f)
             expires_at = cached.get("expires_at")
             if expires_at is None or expires_at > time.time() + 86400:
@@ -120,7 +121,7 @@ def _get_cached_ws_token(wc, cache_path: str) -> str:
         "expires_at": expiry_ms / 1000 if expiry_ms else None,
     }
     os.makedirs(os.path.dirname(cache_path) or ".", exist_ok=True)
-    with open(cache_path, "w") as f:
+    with open(cache_path, "w", encoding="utf-8") as f:
         json.dump(cached, f, indent=2)
 
     return result.token_value
@@ -313,7 +314,7 @@ class StackResources(BaseModel):
                 continue
 
             for resource_name, _r in getattr(self, resource_type).items():
-                if resource_name in resources.keys():
+                if resource_name in resources:
                     raise ValueError(
                         f"Stack resource names are not unique. '{resource_name}' is already used."
                     )
@@ -515,6 +516,15 @@ class Stack(BaseModel):
                 if config_file:
                     config_file.build()
 
+        logger.info("Rendering variable-templated file content...")
+        for k, r in env.resources._get_all(providers_excluded=True).items():
+            if isinstance(r, RenderableFileMixin) and r.render_vars:
+                r.build(vars=env.variables)
+            if isinstance(r, WorkspaceTree):
+                for _r in r.core_resources:
+                    if isinstance(_r, RenderableFileMixin) and _r.render_vars:
+                        _r.build(vars=env.variables)
+
         logger.info("Build completed.")
 
     def _apply_env_overrides(self, env: EnvironmentSettings) -> "Stack":
@@ -566,10 +576,45 @@ class Stack(BaseModel):
     # ----------------------------------------------------------------------- #
 
     @staticmethod
-    def _check_depends_on(resources: dict, providers: dict) -> None:
+    def _expand_virtual_depends_on(resources: dict, virtual_children: dict) -> None:
+        """Expand `depends_on` entries that reference a virtual resource into
+        references to each of its concrete child resources. Virtual resources
+        emit no Terraform block of their own, so depending on one means depending
+        on every resource it generates.
+
+        A name is only expanded when it does not also exist as a concrete
+        resource. When a virtual resource shares its name with one of its
+        children (e.g. a `Pipeline` and its `LakeflowJobOrchestrator` are both
+        named `pl-foo`), the reference resolves to that concrete Terraform block
+        directly - expanding it would make the child depend on itself and its
+        siblings, creating a cycle."""
+        pattern = re.compile(r"^\$\{resources\.([^}.]+)\}$")
+        for _r in resources.values():
+            do = _r.resource_options.depends_on
+            if not do:
+                continue
+            expanded = []
+            changed = False
+            for dep in do:
+                m = pattern.match(dep)
+                if m and m.group(1) in virtual_children and m.group(1) not in resources:
+                    changed = True
+                    for child in virtual_children[m.group(1)]:
+                        ref = f"${{resources.{child}}}"
+                        if ref not in expanded:
+                            expanded.append(ref)
+                elif dep not in expanded:
+                    expanded.append(dep)
+            if changed:
+                _r.resource_options.depends_on = expanded
+
+    @staticmethod
+    def _check_depends_on(
+        resources: dict, providers: dict, virtual_children: dict = None
+    ) -> None:
         """Warn when a depends_on entry references a ${resources.X} name that
         does not exist in the stack, catching typos before Terraform apply."""
-        known = set(resources) | set(providers)
+        known = set(resources) | set(providers) | set(virtual_children or {})
         pattern = re.compile(r"\$\{resources\.([^}.]+)")
         for _r in resources.values():
             for dep in _r.resource_options.depends_on:
@@ -617,11 +662,25 @@ class Stack(BaseModel):
 
         # Resources
         resources = {}
+        virtual_children = {}
         for r in env.resources._get_all(providers_excluded=True).values():
             for _r in r.core_resources:
                 resources[_r.resource_name] = _r
+            # Virtual resources (e.g. WorkspaceTree, Pipeline) emit no Terraform
+            # block of their own; keep track of the concrete children they expand
+            # into so dependencies on them can be resolved.
+            if not r.self_as_core_resources:
+                virtual_children[r.resource_name] = [
+                    _r.resource_name for _r in r.core_resources
+                ]
 
-        self._check_depends_on(resources, providers)
+        # A `depends_on` reference to a virtual resource means a dependency on all
+        # the resources it generates. Expand those references before they reach
+        # Terraform, which has no block to point at otherwise.
+        if virtual_children:
+            self._expand_virtual_depends_on(resources, virtual_children)
+
+        self._check_depends_on(resources, providers, virtual_children)
 
         # Auto-configure Databricks workspace state backend when
         # backend.databricks_workspace is set.

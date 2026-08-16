@@ -91,10 +91,10 @@ def quickstart(
                 or target_filepath.endswith(".yaml")
                 or target_filepath.endswith(".yml")
             ):
-                with open(target_filepath, "r") as fp:
+                with open(target_filepath, "r", encoding="utf-8-sig") as fp:
                     data = fp.read()
 
-                with open(target_filepath, "w") as fp:
+                with open(target_filepath, "w", encoding="utf-8") as fp:
                     fp.write(data.replace("<laktory_version>", VERSION))
 
     # Write generic agent instruction files; user can run setup-agent to switch framework

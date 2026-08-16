@@ -1,4 +1,5 @@
 import copy
+import json
 import os
 import re
 from typing import Any
@@ -109,8 +110,17 @@ def _resolve_values(o, vars, objs) -> Any:
     return o
 
 
-def _resolve_value(o, vars, objs):
-    """Replace variables in a simple object"""
+def _resolve_value(o, vars, objs, stringify=False):
+    """
+    Replace variables in a simple object.
+
+    `stringify`, when `True`, guarantees a `str` is returned: a match that
+    resolves to a non-string (dict, list, bool, ...) is JSON-serialized and
+    substituted in place of the matched span, instead of the default
+    behavior of replacing the entire value with the raw resolved object.
+    Used when resolving placeholders inside arbitrary text (e.g. rendered
+    file content) rather than a typed model field.
+    """
 
     # Not a string
     if not isinstance(o, str):
@@ -140,15 +150,19 @@ def _resolve_value(o, vars, objs):
         # Resolve the variable value
         resolved_value = _resolve_variable(var_name, vars, objs)
 
+        # Recursively resolve nested variables if variable value is a dict
+        # or a list, whether it ends up embedded (stringify) or returned
+        # as-is (whole-value replacement)
+        if isinstance(resolved_value, (list, dict)):
+            resolved_value = _resolve_values(resolved_value, vars, objs)
+
         # Update the value with the resolved value
         if isinstance(resolved_value, str):
             o = o.replace(match.group(0), resolved_value)
+        elif stringify:
+            o = o.replace(match.group(0), json.dumps(resolved_value))
         else:
             o = resolved_value
-
-            # Recursively resolve element if variable value is a dict or a list
-            if isinstance(o, (list, dict)):
-                o = _resolve_values(o, vars, objs)
 
     if not isinstance(o, str):
         return o
@@ -165,6 +179,8 @@ def _resolve_value(o, vars, objs):
         # Update the value with the resolved value
         if isinstance(resolved_value, str):
             o = o.replace(match.group(0), resolved_value)
+        elif stringify:
+            o = o.replace(match.group(0), json.dumps(resolved_value))
         else:
             o = resolved_value
 

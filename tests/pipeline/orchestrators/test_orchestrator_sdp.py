@@ -534,3 +534,69 @@ def test_streaming_incremental(tmp_path, monkeypatch, spark):
     ss.write_to_delta(source_path)  # batch 1: 3 more rows appended → source has 6
     pl.orchestrator.execute(read_output=True)
     assert nw.from_native(pl.nodes_dict["brz_stream"].output_df).collect().shape[0] == 6
+
+
+# ---------------------------------------------------------------------------
+# SDP dependency inference: batch -> batch node chain
+# ---------------------------------------------------------------------------
+
+
+def test_sdp_batch_to_batch_reuses_cached_output(monkeypatch):
+    """
+    Under the SDP runtime a batch->batch node chain must NOT switch to a
+    spark.read.table() of the upstream dataset. The local `spark-pipelines`
+    runtime eagerly analyzes each dataset's plan (Laktory's SQL transformer calls
+    spark.sql), so referencing a not-yet-materialized pipeline dataset by name
+    fails analysis at graph-registration time. SDP therefore keeps the in-memory
+    short-circuit and inlines the upstream plan from the original source.
+
+    (The declarative dataset-read path is reserved for Lakeflow/LDP - see
+    test_orchestrator_lakeflow_declarative.py - where DLT resolves pipeline-dataset
+    reads during analysis.)
+    """
+    import laktory
+    from laktory.models.datasources.tabledatasource import TableDataSource
+
+    # Simulate execution inside the SDP runtime
+    monkeypatch.setattr(laktory, "is_sdp_execute", lambda: True)
+
+    pl = models.Pipeline.model_validate(
+        {
+            "name": "pl-sdp-batch-chain",
+            "orchestrator": _SDP_ORCH,
+            "nodes": [
+                {
+                    "name": "brz",
+                    "sources": [{"format": "JSON", "path": "/src/"}],
+                    "sinks": [{"table_name": "brz", "format": "PARQUET"}],
+                },
+                {
+                    "name": "slv",
+                    "sources": [{"node_name": "brz"}],
+                    "sinks": [{"table_name": "slv", "format": "PARQUET"}],
+                },
+                {
+                    "name": "gld",
+                    "sources": [{"node_name": "slv"}],
+                    "sinks": [{"table_name": "gld", "format": "PARQUET"}],
+                },
+            ],
+        }
+    )
+    slv = pl.nodes_dict["slv"]
+
+    assert slv.has_streaming_source is False
+
+    # Simulate slv already executed in the same interpreter (cached output_df)
+    sentinel_cached = object()
+    slv._output_df = sentinel_cached
+
+    def fail_read_spark(self):
+        raise AssertionError("SDP must not read the upstream dataset by name")
+
+    monkeypatch.setattr(TableDataSource, "_read_spark", fail_read_spark)
+
+    source = pl.nodes_dict["gld"].sources[0]
+    df = source._read_spark()
+
+    assert df is sentinel_cached

@@ -8,9 +8,11 @@ Established 2026-06-01. Apply this terminology consistently in docstrings, code 
 
 | Name | Syntax | Resolved | Valid in |
 |------|--------|----------|----------|
-| **Variable** | `${vars.X}` · `${resources.X.id}` | Config / deployment time | Any model field |
-| **Expression** | `${{ python expr }}` | Config / deployment time | Any model field |
+| **Variable** | `${vars.X}` · `${resources.X.id}` | Config / deployment time | Any model field[^1] |
+| **Expression** | `${{ python expr }}` | Config / deployment time | Any model field[^1] |
 | **Reference** | `{df}` · `{sources.X}` · `{nodes.X}` | Execution time | Transformer nodes only |
+
+[^1]: Also resolvable inside the *content* of a handful of local files referenced by a model field (`Dashboard.file_path`, `WorkspaceFile`/`Notebook`/`DbfsFile.source`, `WorkspaceTree`-generated files) — opt-in only, off by default. See "Rendered file content" in `docs/concepts/variables.md` and pattern 17 in `architectural_patterns.md`.
 
 **The `$` rule** - the dollar sign is the tell. Variables and Expressions always start with `$` and are resolved before the pipeline runs. References have no `$` and are resolved at runtime by the transformer engine when DataFrames are live in memory.
 

@@ -34,6 +34,7 @@ Inside the `lake` package, a custom [Narwhals extension](extension_custom.md) is
 declared for data transformations:
 ```py title="dataframe_ext.py"
 from datetime import datetime
+from datetime import timezone
 
 import narwhals as nw
 
@@ -46,7 +47,7 @@ class LakeNamespace:
         self._df = _df
 
     def with_last_modified(self):
-        return self._df.with_columns(last_modified=nw.lit(datetime.now()))
+        return self._df.with_columns(last_modified=nw.lit(datetime.now(tz=timezone.utc)))
 ```
 
 The stack file declares:

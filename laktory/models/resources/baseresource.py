@@ -21,8 +21,7 @@ def to_safe_name(name: str) -> str:
     - preserving ${vars....} tags
     - Replacing special characters with - to avoid conflicts with resource properties
     """
-    if name.endswith("-"):
-        name = name[:-1]
+    name = name.removesuffix("-")
 
     # ${resources.x.property} -> x
     pattern = r"\$\{resources\.(.*?)\.(.*?)\}"
@@ -52,12 +51,10 @@ def to_safe_name(name: str) -> str:
         name = name.replace("--", "-")
 
     # Remove trailing dashes
-    if name.startswith("-"):
-        name = name[1:]
+    name = name.removeprefix("-")
 
     # Remove leading dashes
-    if name.endswith("-"):
-        name = name[:-1]
+    name = name.removesuffix("-")
 
     return name
 
@@ -379,8 +376,17 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
 
                     do = _r.resource_options.depends_on
                     l0 = len(do)
-                    if r.self_as_core_resources and k0 not in do:
-                        do += [k0]
+                    if r.self_as_core_resources:
+                        if k0 not in do:
+                            do += [k0]
+                    else:
+                        # A virtual parent emits no core resource of its own, so
+                        # its children can't depend on it (there is no `k0` to
+                        # reference). Instead, they must inherit the parent's own
+                        # upstream dependencies directly.
+                        for dep in r.resource_options.depends_on:
+                            if dep not in do:
+                                do += [dep]
                     _r.resource_options.depends_on = do
                     l1 = len(do)
                     if l1 != l0:

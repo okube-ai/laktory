@@ -3,6 +3,13 @@
 ## [0.12.3] - Unreleased
 ### Added
 * `Budget`, `BudgetPolicy`, `InstancePool`, `IpAccessList`, `Library`, `ModelServing`, `RegisteredModel`, and `Token` Databricks resources
+* Opt-in variable (`${vars.x}` / `${{ expr }}`) rendering of local file content, for environment-specific deployments (e.g. Databricks Apps, Lakeview dashboards): `render_vars` flag on `Dashboard`, `WorkspaceFile`, `Notebook`, and `DbfsFile`; `render_paths` (glob patterns) on `WorkspaceTree` for bulk opt-in. Resolved content is staged under `settings.build_root`, original files are never modified
+### Fixed
+* `PipelineNodeDataSource` batch->batch chains now read the upstream dataset (`spark.read.table`) inside the Lakeflow (LDP) runtime so Lakeflow can infer the dependency edge
+* Virtual resources (`WorkspaceTree`, `Pipeline`) now participate in `depends_on` in both directions: their own `depends_on` propagates to the child resources they generate, and a `depends_on` reference to them expands to all those children
+### Updated
+* `mcp` extra now requires `mcp>=2` (updated MCP server to the `MCPServer` API)
+* File reads/writes now specify an explicit encoding instead of relying on the platform default, fixing `UnicodeDecodeError` on non-UTF-8 locales (e.g. cp1252 on Windows) when config/source files contain UTF-8 characters. Reads use `utf-8-sig` to tolerate a BOM; writes use `utf-8`
 
 ## [0.12.2] - 2026-06-30
 ### Added

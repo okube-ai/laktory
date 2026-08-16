@@ -17,9 +17,9 @@ print(f"Reading pipeline at {config_filepath}")
 
 # Write is_sdp_execute() result alongside the config for observability and testing.
 pathlib.Path(config_filepath).parent.joinpath(".laktory_is_sdp_execute").write_text(
-    "true" if lk.is_sdp_execute() else "false"
+    "true" if lk.is_sdp_execute() else "false", encoding="utf-8"
 )
-with open(config_filepath, "r") as fp:
+with open(config_filepath, "r", encoding="utf-8-sig") as fp:
     pl = lk.models.Pipeline.model_validate_json(fp.read())
 
 # --------------------------------------------------------------------------- #

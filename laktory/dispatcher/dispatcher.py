@@ -28,7 +28,7 @@ class Dispatcher:
     from laktory import Dispatcher
     from laktory import models
 
-    with open("./stack.yaml") as fp:
+    with open("./stack.yaml", encoding="utf-8") as fp:
         stack = models.Stack.model_validate_yaml(fp)
 
     dispatcher = Dispatcher(stack=stack)
