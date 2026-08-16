@@ -19,6 +19,8 @@ from laktory.models.resources.databricks.accesscontrolruleset import (
 )
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.app import App
+from laktory.models.resources.databricks.budget import Budget
+from laktory.models.resources.databricks.budgetpolicy import BudgetPolicy
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.clusterpolicy import ClusterPolicy
@@ -33,13 +35,17 @@ from laktory.models.resources.databricks.externallocation import ExternalLocatio
 from laktory.models.resources.databricks.grant import Grant
 from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.group import Group
+from laktory.models.resources.databricks.instancepool import InstancePool
+from laktory.models.resources.databricks.ipaccesslist import IpAccessList
 from laktory.models.resources.databricks.job import Job
+from laktory.models.resources.databricks.library import Library
 from laktory.models.resources.databricks.metastore import Metastore
 from laktory.models.resources.databricks.metastoreassignment import MetastoreAssignment
 from laktory.models.resources.databricks.metastoredataaccess import MetastoreDataAccess
 from laktory.models.resources.databricks.mlflowexperiment import MLflowExperiment
 from laktory.models.resources.databricks.mlflowmodel import MLflowModel
 from laktory.models.resources.databricks.mlflowwebhook import MLflowWebhook
+from laktory.models.resources.databricks.modelserving import ModelServing
 from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
     MwsNetworkConnectivityConfig,
 )
@@ -53,6 +59,7 @@ from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksP
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
 from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.recipient import Recipient
+from laktory.models.resources.databricks.registeredmodel import RegisteredModel
 from laktory.models.resources.databricks.repo import Repo
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret
@@ -61,6 +68,7 @@ from laktory.models.resources.databricks.serviceprincipal import ServicePrincipa
 from laktory.models.resources.databricks.share import Share
 from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.databricks.table import Table
+from laktory.models.resources.databricks.token import Token
 from laktory.models.resources.databricks.user import User
 from laktory.models.resources.databricks.vectorsearchendpoint import (
     VectorSearchEndpoint,
@@ -204,6 +212,8 @@ class StackResources(BaseModel):
     databricks_accesscontrolrulesets: dict[str, AccessControlRuleSet] = {}
     databricks_alerts: dict[str, Alert] = {}
     databricks_apps: dict[str, App] = {}
+    databricks_budgets: dict[str, Budget] = {}
+    databricks_budgetpolicies: dict[str, BudgetPolicy] = {}
     databricks_catalogs: dict[str, Catalog] = {}
     databricks_clusterpolicies: dict[str, ClusterPolicy] = {}
     databricks_clusters: dict[str, Cluster] = {}
@@ -218,13 +228,17 @@ class StackResources(BaseModel):
     databricks_grant: dict[str, Grant] = {}
     databricks_grants: dict[str, Grants] = {}
     databricks_groups: dict[str, Group] = {}
+    databricks_instancepools: dict[str, InstancePool] = {}
+    databricks_ipaccesslists: dict[str, IpAccessList] = {}
     databricks_jobs: dict[str, Job] = {}
+    databricks_libraries: dict[str, Library] = {}
     databricks_metastoreassignments: dict[str, MetastoreAssignment] = {}
     databricks_metastoredataaccesses: dict[str, MetastoreDataAccess] = {}
     databricks_metastores: dict[str, Metastore] = {}
     databricks_mlflowexperiments: dict[str, MLflowExperiment] = {}
     databricks_mlflowmodels: dict[str, MLflowModel] = {}
     databricks_mlflowwebhooks: dict[str, MLflowWebhook] = {}
+    databricks_modelservings: dict[str, ModelServing] = {}
     databricks_networkconnectivityconfig: dict[str, MwsNetworkConnectivityConfig] = {}
     databricks_notebooks: dict[str, Notebook] = {}
     databricks_notificationdestinations: dict[str, NotificationDestination] = {}
@@ -234,6 +248,7 @@ class StackResources(BaseModel):
     databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}
     databricks_recipients: dict[str, Recipient] = {}
+    databricks_registeredmodels: dict[str, RegisteredModel] = {}
     databricks_repos: dict[str, Repo] = {}
     databricks_schemas: dict[str, Schema] = {}
     databricks_secrets: dict[str, Secret] = {}
@@ -242,6 +257,7 @@ class StackResources(BaseModel):
     databricks_shares: dict[str, Share] = {}
     databricks_storagecredentials: dict[str, StorageCredential] = {}
     databricks_tables: dict[str, Table] = {}
+    databricks_tokens: dict[str, Token] = {}
     databricks_users: dict[str, User] = {}
     databricks_vectorsearchendpoints: dict[str, VectorSearchEndpoint] = {}
     databricks_vectorsearchindexes: dict[str, VectorSearchIndex] = {}

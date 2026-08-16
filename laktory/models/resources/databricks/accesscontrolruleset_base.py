@@ -45,4 +45,4 @@ class AccessControlRuleSetBase(BaseModel, TerraformResource):
         return "databricks_access_control_rule_set"
 
 
-__all__ = ["AccessControlRuleSetGrantRules", "AccessControlRuleSetBase"]
+__all__ = ["AccessControlRuleSetBase", "AccessControlRuleSetGrantRules"]

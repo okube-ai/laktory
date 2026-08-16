@@ -82,8 +82,8 @@ __all__ = [
     "StorageCredentialAwsIamRole",
     "StorageCredentialAzureManagedIdentity",
     "StorageCredentialAzureServicePrincipal",
+    "StorageCredentialBase",
     "StorageCredentialCloudflareApiToken",
     "StorageCredentialDatabricksGcpServiceAccount",
     "StorageCredentialGcpServiceAccountKey",
-    "StorageCredentialBase",
 ]

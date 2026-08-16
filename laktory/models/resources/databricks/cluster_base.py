@@ -35,6 +35,7 @@ class ClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class ClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
+    capacity_reservation_group: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: ClusterAzureAttributesLogAnalyticsInfo | None = Field(None)
@@ -205,7 +206,7 @@ class ClusterBase(BaseModel, TerraformResource):
 
     spark_version: str = Field(
         ...,
-        description="The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of available Spark versions can be retrieved by using the :method:clusters/sparkVersions API call.",
+        description="The Spark version of the cluster, e.g. `3.3.x-scala2.11`. A list of available Spark versions can be retrieved by using the [clusters/sparkVersions] API call.",
     )
     apply_policy_default_values: bool | None = Field(
         None,
@@ -215,6 +216,7 @@ class ClusterBase(BaseModel, TerraformResource):
         None,
         description="Automatically terminates the cluster after it is inactive for this time in minutes. If not set, this cluster will not be automatically terminated. If specified, the threshold must be between 10 and 10000 minutes. Users can also set this value to 0 to explicitly disable automatic termination.",
     )
+    clear_cloud_attributes_on_remove: bool | None = Field(None)
     cluster_name: str | None = Field(
         None,
         description="Cluster name requested by the user. This doesn't have to be unique. If not specified at creation, the cluster name will be an empty string. For job clusters, the cluster name is automatically set based on the job and job run IDs.",
@@ -224,6 +226,9 @@ class ClusterBase(BaseModel, TerraformResource):
         description="Additional tags for cluster resources. Databricks will tag all cluster resources (e.g., AWS instances and EBS volumes) with these tags in addition to `default_tags`. Notes:",
     )
     data_security_mode: str | None = Field(None)
+    dependency_mode: str | None = Field(
+        None, description="Controls dependency configuration for the cluster."
+    )
     driver_instance_pool_id: str | None = Field(
         None,
         description="The optional ID of the instance pool for the driver of the cluster belongs. The pool cluster uses the instance pool with id (instance_pool_id) if the driver pool is not assigned.",
@@ -252,7 +257,7 @@ class ClusterBase(BaseModel, TerraformResource):
     no_wait: bool | None = Field(None)
     node_type_id: str | None = Field(
         None,
-        description="This field encodes, through a single value, the resources available to each of the Spark nodes in this cluster. For example, the Spark nodes can be provisioned and optimized for memory or compute intensive workloads. A list of available node types can be retrieved by using the :method:clusters/listNodeTypes API call.",
+        description="This field encodes, through a single value, the resources available to each of the Spark nodes in this cluster. For example, the Spark nodes can be provisioned and optimized for memory or compute intensive workloads. A list of available node types can be retrieved by using the [clusters/listNodeTypes] API call.",
     )
     num_workers: int | None = Field(
         None,
@@ -342,6 +347,7 @@ __all__ = [
     "ClusterAwsAttributes",
     "ClusterAzureAttributes",
     "ClusterAzureAttributesLogAnalyticsInfo",
+    "ClusterBase",
     "ClusterClusterLogConf",
     "ClusterClusterLogConfDbfs",
     "ClusterClusterLogConfS3",
@@ -368,5 +374,4 @@ __all__ = [
     "ClusterWorkerNodeTypeFlexibility",
     "ClusterWorkloadType",
     "ClusterWorkloadTypeClients",
-    "ClusterBase",
 ]

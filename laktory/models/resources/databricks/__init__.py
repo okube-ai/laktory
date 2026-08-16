@@ -2,6 +2,8 @@ from .accesscontrol import AccessControl
 from .accesscontrolruleset import AccessControlRuleSet
 from .alert import Alert
 from .app import App
+from .budget import Budget
+from .budgetpolicy import BudgetPolicy
 from .catalog import Catalog
 from .cluster import Cluster
 from .clusterpolicy import ClusterPolicy
@@ -17,13 +19,17 @@ from .grant import Grant
 from .grants import Grants
 from .group import Group
 from .groupmember import GroupMember
+from .instancepool import InstancePool
+from .ipaccesslist import IpAccessList
 from .job import Job
+from .library import Library
 from .metastore import Metastore
 from .metastoreassignment import MetastoreAssignment
 from .metastoredataaccess import MetastoreDataAccess
 from .mlflowexperiment import MLflowExperiment
 from .mlflowmodel import MLflowModel
 from .mlflowwebhook import MLflowWebhook
+from .modelserving import ModelServing
 from .mwsnccbinding import MwsNccBinding
 from .mwsnetworkconnectivityconfig import MwsNetworkConnectivityConfig
 from .mwspermissionassignment import MwsPermissionAssignment
@@ -35,6 +41,7 @@ from .pipeline import Pipeline
 from .pythonpackage import PythonPackage
 from .query import Query
 from .recipient import Recipient
+from .registeredmodel import RegisteredModel
 from .repo import Repo
 from .schema import Schema
 from .secret import Secret
@@ -45,6 +52,7 @@ from .serviceprincipalrole import ServicePrincipalRole
 from .share import Share
 from .storagecredential import StorageCredential
 from .table import Table
+from .token import Token
 from .user import User
 from .userrole import UserRole
 from .vectorsearchendpoint import VectorSearchEndpoint

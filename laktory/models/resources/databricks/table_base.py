@@ -97,4 +97,4 @@ class TableBase(BaseModel, TerraformResource):
         return "databricks_sql_table"
 
 
-__all__ = ["TableColumn", "TableBase"]
+__all__ = ["TableBase", "TableColumn"]

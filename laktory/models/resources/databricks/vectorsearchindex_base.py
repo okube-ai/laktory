@@ -116,6 +116,7 @@ class VectorSearchIndexBase(BaseModel, TerraformResource):
     primary_key: str = Field(
         ..., description="(required) The column name that will be used as a primary key"
     )
+    endpoint_id: str | None = Field(None)
     index_subtype: str | None = Field(None)
     delta_sync_index_spec: VectorSearchIndexDeltaSyncIndexSpec | None = Field(
         None,
@@ -133,6 +134,7 @@ class VectorSearchIndexBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "VectorSearchIndexBase",
     "VectorSearchIndexDeltaSyncIndexSpec",
     "VectorSearchIndexDeltaSyncIndexSpecEmbeddingSourceColumns",
     "VectorSearchIndexDeltaSyncIndexSpecEmbeddingVectorColumns",
@@ -140,5 +142,4 @@ __all__ = [
     "VectorSearchIndexDirectAccessIndexSpecEmbeddingSourceColumns",
     "VectorSearchIndexDirectAccessIndexSpecEmbeddingVectorColumns",
     "VectorSearchIndexTimeouts",
-    "VectorSearchIndexBase",
 ]

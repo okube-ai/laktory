@@ -90,8 +90,8 @@ __all__ = [
     "MetastoreDataAccessAwsIamRole",
     "MetastoreDataAccessAzureManagedIdentity",
     "MetastoreDataAccessAzureServicePrincipal",
+    "MetastoreDataAccessBase",
     "MetastoreDataAccessCloudflareApiToken",
     "MetastoreDataAccessDatabricksGcpServiceAccount",
     "MetastoreDataAccessGcpServiceAccountKey",
-    "MetastoreDataAccessBase",
 ]

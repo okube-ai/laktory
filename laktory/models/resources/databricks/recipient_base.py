@@ -68,8 +68,8 @@ class RecipientBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "RecipientBase",
     "RecipientIpAccessList",
     "RecipientPropertiesKvpairs",
     "RecipientTokens",
-    "RecipientBase",
 ]

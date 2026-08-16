@@ -90,8 +90,8 @@ class ShareBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "ShareBase",
     "ShareObject",
     "ShareObjectPartition",
     "ShareObjectPartitionValue",
-    "ShareBase",
 ]

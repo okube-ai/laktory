@@ -35,6 +35,10 @@ class RepoBase(BaseModel, TerraformResource):
         None,
         description="Hash of the HEAD commit at time of the last executed operation. It won't change if you manually perform pull operation via UI or API",
     )
+    git_credential_id: int | None = Field(
+        None,
+        description="The ID of the Git credential (`databricks_git_credential`) to use for authentication with the Git provider remote",
+    )
     git_provider: str | None = Field(
         None,
         description="case insensitive name of the Git provider.  Following values are supported right now (could be a subject for a change, consult [Repos API documentation](https://docs.databricks.com/dev-tools/api/latest/repos.html)): `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`",
@@ -54,4 +58,4 @@ class RepoBase(BaseModel, TerraformResource):
         return "databricks_repo"
 
 
-__all__ = ["RepoSparseCheckout", "RepoBase"]
+__all__ = ["RepoBase", "RepoSparseCheckout"]

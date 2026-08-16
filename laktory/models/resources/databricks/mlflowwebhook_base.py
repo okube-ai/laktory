@@ -72,4 +72,4 @@ class MlflowWebhookBase(BaseModel, TerraformResource):
         return "databricks_mlflow_webhook"
 
 
-__all__ = ["MlflowWebhookHttpUrlSpec", "MlflowWebhookJobSpec", "MlflowWebhookBase"]
+__all__ = ["MlflowWebhookBase", "MlflowWebhookHttpUrlSpec", "MlflowWebhookJobSpec"]

@@ -50,6 +50,9 @@ class CatalogBase(BaseModel, TerraformResource):
     connection_name: str | None = Field(
         None, description="The name of the connection to an external data source."
     )
+    custom_max_retention_hours: int | None = Field(
+        None, description="Custom maximum retention period in hours for the catalog"
+    )
     enable_predictive_optimization: str | None = Field(
         None,
         description="Whether predictive optimization should be enabled for this object and objects under it.",
@@ -93,9 +96,9 @@ class CatalogBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "CatalogBase",
     "CatalogEffectivePredictiveOptimizationFlag",
     "CatalogManagedEncryptionSettings",
     "CatalogManagedEncryptionSettingsAzureEncryptionSettings",
     "CatalogProvisioningInfo",
-    "CatalogBase",
 ]

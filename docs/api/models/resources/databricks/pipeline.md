@@ -167,6 +167,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGoogleAdsOptionsCustomReportOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsJiraOptions
 
 ---
@@ -195,7 +199,19 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptionsCustomReportOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptionsCustomReportOptions
 
 ---
 
@@ -219,7 +235,23 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptionsCustomReportOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsZendeskSupportOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransforms
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions
 
 ---
 
@@ -271,6 +303,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsGoogleAdsOptionsCustomReportOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsJiraOptions
 
 ---
@@ -299,7 +335,19 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptionsCustomReportOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptionsCustomReportOptions
 
 ---
 
@@ -320,6 +368,10 @@
 ---
 
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptionsCustomReportOptions
 
 ---
 

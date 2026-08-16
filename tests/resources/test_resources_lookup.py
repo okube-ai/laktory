@@ -59,6 +59,12 @@ def test_pipeline():
     _ = models.resources.databricks.Pipeline(lookup_existing={"pipeline_id": "0"})
 
 
+def test_registered_model():
+    _ = models.resources.databricks.RegisteredModel(
+        lookup_existing={"name": "dev.engineering.my_model"}
+    )
+
+
 def test_schema():
     _ = models.resources.databricks.Schema(lookup_existing={"name": "dev.engineering"})
 

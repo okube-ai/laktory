@@ -78,6 +78,7 @@ PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
         "time_series",
     },
     "databricks_query": {"parent_path"},
+    "databricks_registered_model": {"full_name"},
     "databricks_workspace_file": {"path", "source"},
 }
 

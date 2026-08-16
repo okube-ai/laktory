@@ -22,7 +22,7 @@ class WorkspaceBindingBase(BaseModel, TerraformResource):
     )
     binding_type: str | None = Field(
         None,
-        description="Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`",
+        description="Binding mode. Default to `BINDING_TYPE_READ_WRITE`. Possible values are `BINDING_TYPE_READ_ONLY`, `BINDING_TYPE_READ_WRITE`. Note: `BINDING_TYPE_READ_ONLY` is only supported when `securable_type` is `catalog`. For `storage_credential`, `external_location`, and `credential`, only `BINDING_TYPE_READ_WRITE` is supported",
     )
     catalog_name: str | None = Field(None)
     securable_name: str | None = Field(

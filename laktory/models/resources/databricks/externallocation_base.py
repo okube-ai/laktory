@@ -140,6 +140,7 @@ class ExternalLocationBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "ExternalLocationBase",
     "ExternalLocationEffectiveFileEventQueue",
     "ExternalLocationEffectiveFileEventQueueManagedAqs",
     "ExternalLocationEffectiveFileEventQueueManagedPubsub",
@@ -156,5 +157,4 @@ __all__ = [
     "ExternalLocationFileEventQueueProvidedAqs",
     "ExternalLocationFileEventQueueProvidedPubsub",
     "ExternalLocationFileEventQueueProvidedSqs",
-    "ExternalLocationBase",
 ]
