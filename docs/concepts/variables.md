@@ -269,3 +269,16 @@ render_paths:
 ```
 
 Resolved content is staged under `settings.build_root` (a copy - the original file on disk is never modified), and the resource's `source`/`file_path` is repointed at the staged copy so the Databricks Terraform provider still does its own upload/diffing at apply time. Rendering happens as part of `Stack.build()`, which `laktory build`, `preview`, `deploy`, and `destroy` all trigger automatically - so the staged content always reflects the target environment's variables.
+
+**Complex variables** (dict/list) work here too, unlike in a plain YAML field. A `${vars.x}` resolving to a dict or list is JSON-serialized into the surrounding text rather than replacing it wholesale, so it stays valid in JSON and YAML content:
+
+```yaml title="dashboard.yaml"
+variables:
+  tags: {bu: finance, env: dev}
+```
+```json title="databricks_costs.json (before)"
+{"tags": ${vars.tags}}
+```
+```json title="staged copy (after)"
+{"tags": {"bu": "finance", "env": "dev"}}
+```

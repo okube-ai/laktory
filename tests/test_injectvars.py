@@ -299,6 +299,43 @@ def test_resolve_string():
     assert c.resolve_string("${vars.na}") == "${vars.na}"
 
 
+def test_resolve_string_non_primitive():
+    """Unlike `inject_vars` on a typed field - where a placeholder resolving
+    to a dict/list/bool replaces the whole field value with that Python
+    object - `resolve_string` always returns a string: a non-string match is
+    JSON-serialized and substituted in place, since surrounding text (or
+    other placeholders) must be preserved."""
+    c = Cluster(variables={"tags": {"bu": "finance", "env": "dev"}, "sizes": [1, 2]})
+
+    # Whole string is just the placeholder
+    result = c.resolve_string("${vars.tags}")
+    assert isinstance(result, str)
+    assert result == '{"bu": "finance", "env": "dev"}'
+
+    # Embedded among other text - only the matched span is replaced
+    result = c.resolve_string("prefix ${vars.tags} suffix")
+    assert result == 'prefix {"bu": "finance", "env": "dev"} suffix'
+
+    # Valid JSON when embedded in a JSON template
+    result = c.resolve_string('{"tags": ${vars.tags}, "sizes": ${vars.sizes}}')
+    assert result == '{"tags": {"bu": "finance", "env": "dev"}, "sizes": [1, 2]}'
+    import json
+
+    assert json.loads(result) == {
+        "tags": {"bu": "finance", "env": "dev"},
+        "sizes": [1, 2],
+    }
+
+    # Nested variables inside a resolved dict are themselves resolved before
+    # serialization
+    c2 = Cluster(variables={"env": "prd", "tags": {"env": "${vars.env}"}})
+    assert c2.resolve_string("${vars.tags}") == '{"env": "prd"}'
+
+    # Booleans serialize using JSON casing ("true"), not Python's ("True")
+    c3 = Cluster(variables={"flag": True})
+    assert c3.resolve_string("enabled=${vars.flag}") == "enabled=true"
+
+
 def test_stack():
     cluster = models.resources.databricks.Cluster(
         cluster_name="cl",
