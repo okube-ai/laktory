@@ -578,6 +578,32 @@ class ModelServingTags(BaseModel):
     value: str | None = Field(None, description="The value field for a tag")
 
 
+class ModelServingTelemetryConfigInferenceTableConfig(BaseModel):
+    name: str | None = Field(
+        None,
+        description="The name of a served model. It must be unique across an endpoint. If not specified, this field will default to `modelname-modelversion`. A served model name can consist of alphanumeric characters, dashes, and underscores",
+    )
+    sampling_fraction: int | None = Field(None)
+
+
+class ModelServingTelemetryConfigTableNames(BaseModel):
+    annotations_table: str | None = Field(None)
+    logs_table: str | None = Field(None)
+    metrics_table: str | None = Field(None)
+    traces_table: str | None = Field(None)
+
+
+class ModelServingTelemetryConfig(BaseModel):
+    telemetry_profile_id: str | None = Field(None)
+    inference_table_config: ModelServingTelemetryConfigInferenceTableConfig | None = (
+        Field(
+            None,
+            description="Block describing the configuration of usage tracking. Consists of the following attributes:",
+        )
+    )
+    table_names: ModelServingTelemetryConfigTableNames | None = Field(None)
+
+
 class ModelServingTimeouts(BaseModel):
     create: str | None = Field(None)
     update_: str | None = Field(
@@ -628,6 +654,7 @@ class ModelServingBase(BaseModel, TerraformResource):
         None,
         description="Tags to be attached to the serving endpoint and automatically propagated to billing logs",
     )
+    telemetry_config: ModelServingTelemetryConfig | None = Field(None)
     timeouts: ModelServingTimeouts | None = Field(None)
 
     @property
@@ -646,6 +673,7 @@ __all__ = [
     "ModelServingAiGatewayInferenceTableConfig",
     "ModelServingAiGatewayRateLimits",
     "ModelServingAiGatewayUsageTrackingConfig",
+    "ModelServingBase",
     "ModelServingConfig",
     "ModelServingConfigAutoCaptureConfig",
     "ModelServingConfigServedEntities",
@@ -667,6 +695,8 @@ __all__ = [
     "ModelServingEmailNotifications",
     "ModelServingRateLimits",
     "ModelServingTags",
+    "ModelServingTelemetryConfig",
+    "ModelServingTelemetryConfigInferenceTableConfig",
+    "ModelServingTelemetryConfigTableNames",
     "ModelServingTimeouts",
-    "ModelServingBase",
 ]

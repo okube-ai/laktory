@@ -14,7 +14,7 @@ Usage:
     python scripts/build_resources/00_fetch.py 1.81.1 --schema-only
     python scripts/build_resources/00_fetch.py 1.81.1 --descriptions-only
 
-    If version is omitted, defaults to 1.113.0.
+    If version is omitted, defaults to 1.126.0.
 
 Outputs (written to the same directory as this script):
     databricks_schema.json
@@ -41,7 +41,7 @@ GITHUB_RAW = (
     "https://raw.githubusercontent.com/databricks/terraform-provider-databricks"
 )
 
-DEFAULT_VERSION = "1.121.0"
+DEFAULT_VERSION = "1.126.0"
 
 # Resources whose descriptions come from Go model struct comments.
 # Format: resource_key → {service dir, primary struct, fallback structs}

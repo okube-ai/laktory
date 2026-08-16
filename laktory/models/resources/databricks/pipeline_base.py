@@ -36,6 +36,7 @@ class PipelineClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class PipelineClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
+    capacity_reservation_group: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: PipelineClusterAzureAttributesLogAnalyticsInfo | None = Field(
@@ -263,6 +264,8 @@ class PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportPar
 
 
 class PipelineIngestionDefinitionObjectsReportTableConfiguration(BaseModel):
+    clustering_columns: list[str] | None = Field(None)
+    enable_auto_clustering: bool | None = Field(None)
     exclude_columns: list[str] | None = Field(None)
     include_columns: list[str] | None = Field(None)
     primary_keys: list[str] | None = Field(None)
@@ -270,6 +273,8 @@ class PipelineIngestionDefinitionObjectsReportTableConfiguration(BaseModel):
     salesforce_include_formula_fields: bool | None = Field(None)
     scd_type: str | None = Field(None)
     sequence_by: list[str] | None = Field(None)
+    source_metadata_column: str | None = Field(None)
+    table_properties: dict[str, str] | None = Field(None)
     auto_full_refresh_policy: (
         PipelineIngestionDefinitionObjectsReportTableConfigurationAutoFullRefreshPolicy
         | None
@@ -344,12 +349,25 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptions(Base
     ) = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGoogleAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    metrics: list[str] | None = Field(None)
+    resource: str = Field(...)
+    resource_fields: list[str] | None = Field(None)
+    segments: list[str] | None = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGoogleAdsOptions(
     BaseModel
 ):
     lookback_window_days: int | None = Field(None)
     manager_account_id: str = Field(...)
     sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGoogleAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsJiraOptions(BaseModel):
@@ -422,6 +440,17 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptions(BaseM
     ) = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    action_attribution_windows: list[str] | None = Field(None)
+    action_breakdowns: list[str] | None = Field(None)
+    action_report_time: str | None = Field(None)
+    breakdowns: list[str] | None = Field(None)
+    level: str | None = Field(None)
+    time_increment: str | None = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptions(BaseModel):
     action_attribution_windows: list[str] | None = Field(None)
     action_breakdowns: list[str] | None = Field(None)
@@ -431,6 +460,10 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptions(Bas
     level: str | None = Field(None)
     start_date: str | None = Field(None)
     time_increment: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions(BaseModel):
@@ -444,6 +477,24 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions(Bas
     sender_filter: list[str] | None = Field(None)
     start_date: str | None = Field(None)
     subject_filter: list[str] | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    breakdowns: list[str] | None = Field(None)
+    fields: list[str] | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptions(
+    BaseModel
+):
+    lookback_window_days: int | None = Field(None)
+    sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters(
@@ -495,6 +546,16 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSmartsheetOptions(
     enforce_schema: bool | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    data_level: str | None = Field(None)
+    dimensions: list[str] | None = Field(None)
+    metrics: list[str] | None = Field(None)
+    query_lifetime: bool | None = Field(None)
+    report_type: str | None = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptions(
     BaseModel
 ):
@@ -505,6 +566,10 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptions(
     query_lifetime: bool | None = Field(None)
     report_type: str | None = Field(None)
     sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsZendeskSupportOptions(
@@ -535,6 +600,9 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptions(BaseModel):
     outlook_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions | None
     ) = Field(None)
+    reddit_ads_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptions | None
+    ) = Field(None)
     sharepoint_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptions | None
     ) = Field(None)
@@ -547,6 +615,36 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptions(BaseModel):
     zendesk_support_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsZendeskSupportOptions
         | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions(
+    BaseModel
+):
+    as_variant: bool | None = Field(None)
+    schema_: str | None = Field(
+        None,
+        description="The UC schema the event log is published under",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    schema_evolution_mode: str | None = Field(None)
+    schema_file_path: str | None = Field(None)
+    schema_hints: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransforms(BaseModel):
+    format: str | None = Field(None)
+    json_options: (
+        PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptions(BaseModel):
+    fanout_by: str | None = Field(None)
+    transforms: (
+        list[PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransforms] | None
     ) = Field(None)
 
 
@@ -586,6 +684,8 @@ class PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportPar
 
 
 class PipelineIngestionDefinitionObjectsSchemaTableConfiguration(BaseModel):
+    clustering_columns: list[str] | None = Field(None)
+    enable_auto_clustering: bool | None = Field(None)
     exclude_columns: list[str] | None = Field(None)
     include_columns: list[str] | None = Field(None)
     primary_keys: list[str] | None = Field(None)
@@ -593,6 +693,8 @@ class PipelineIngestionDefinitionObjectsSchemaTableConfiguration(BaseModel):
     salesforce_include_formula_fields: bool | None = Field(None)
     scd_type: str | None = Field(None)
     sequence_by: list[str] | None = Field(None)
+    source_metadata_column: str | None = Field(None)
+    table_properties: dict[str, str] | None = Field(None)
     auto_full_refresh_policy: (
         PipelineIngestionDefinitionObjectsSchemaTableConfigurationAutoFullRefreshPolicy
         | None
@@ -615,6 +717,9 @@ class PipelineIngestionDefinitionObjectsSchema(BaseModel):
     connector_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptions | None
     ) = Field(None)
+    fanout_options: PipelineIngestionDefinitionObjectsSchemaFanoutOptions | None = (
+        Field(None)
+    )
     table_configuration: (
         PipelineIngestionDefinitionObjectsSchemaTableConfiguration | None
     ) = Field(
@@ -670,12 +775,25 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptions(BaseM
     ) = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsGoogleAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    metrics: list[str] | None = Field(None)
+    resource: str = Field(...)
+    resource_fields: list[str] | None = Field(None)
+    segments: list[str] | None = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsGoogleAdsOptions(
     BaseModel
 ):
     lookback_window_days: int | None = Field(None)
     manager_account_id: str = Field(...)
     sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsGoogleAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsJiraOptions(BaseModel):
@@ -748,6 +866,17 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptions(BaseMo
     ) = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    action_attribution_windows: list[str] | None = Field(None)
+    action_breakdowns: list[str] | None = Field(None)
+    action_report_time: str | None = Field(None)
+    breakdowns: list[str] | None = Field(None)
+    level: str | None = Field(None)
+    time_increment: str | None = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptions(BaseModel):
     action_attribution_windows: list[str] | None = Field(None)
     action_breakdowns: list[str] | None = Field(None)
@@ -757,6 +886,10 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptions(Base
     level: str | None = Field(None)
     start_date: str | None = Field(None)
     time_increment: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions(BaseModel):
@@ -770,6 +903,24 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions(Base
     sender_filter: list[str] | None = Field(None)
     start_date: str | None = Field(None)
     subject_filter: list[str] | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    breakdowns: list[str] | None = Field(None)
+    fields: list[str] | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptions(
+    BaseModel
+):
+    lookback_window_days: int | None = Field(None)
+    sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters(
@@ -821,6 +972,16 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsSmartsheetOptions(
     enforce_schema: bool | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    data_level: str | None = Field(None)
+    dimensions: list[str] | None = Field(None)
+    metrics: list[str] | None = Field(None)
+    query_lifetime: bool | None = Field(None)
+    report_type: str | None = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptions(
     BaseModel
 ):
@@ -831,6 +992,10 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptions(
     query_lifetime: bool | None = Field(None)
     report_type: str | None = Field(None)
     sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsZendeskSupportOptions(
@@ -860,6 +1025,9 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptions(BaseModel):
     ) = Field(None)
     outlook_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions | None
+    ) = Field(None)
+    reddit_ads_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptions | None
     ) = Field(None)
     sharepoint_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptions | None
@@ -912,6 +1080,8 @@ class PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportPara
 
 
 class PipelineIngestionDefinitionObjectsTableTableConfiguration(BaseModel):
+    clustering_columns: list[str] | None = Field(None)
+    enable_auto_clustering: bool | None = Field(None)
     exclude_columns: list[str] | None = Field(None)
     include_columns: list[str] | None = Field(None)
     primary_keys: list[str] | None = Field(None)
@@ -919,6 +1089,8 @@ class PipelineIngestionDefinitionObjectsTableTableConfiguration(BaseModel):
     salesforce_include_formula_fields: bool | None = Field(None)
     scd_type: str | None = Field(None)
     sequence_by: list[str] | None = Field(None)
+    source_metadata_column: str | None = Field(None)
+    table_properties: dict[str, str] | None = Field(None)
     auto_full_refresh_policy: (
         PipelineIngestionDefinitionObjectsTableTableConfigurationAutoFullRefreshPolicy
         | None
@@ -1022,6 +1194,8 @@ class PipelineIngestionDefinitionTableConfigurationWorkdayReportParameters(BaseM
 
 
 class PipelineIngestionDefinitionTableConfiguration(BaseModel):
+    clustering_columns: list[str] | None = Field(None)
+    enable_auto_clustering: bool | None = Field(None)
     exclude_columns: list[str] | None = Field(None)
     include_columns: list[str] | None = Field(None)
     primary_keys: list[str] | None = Field(None)
@@ -1029,6 +1203,8 @@ class PipelineIngestionDefinitionTableConfiguration(BaseModel):
     salesforce_include_formula_fields: bool | None = Field(None)
     scd_type: str | None = Field(None)
     sequence_by: list[str] | None = Field(None)
+    source_metadata_column: str | None = Field(None)
+    table_properties: dict[str, str] | None = Field(None)
     auto_full_refresh_policy: (
         PipelineIngestionDefinitionTableConfigurationAutoFullRefreshPolicy | None
     ) = Field(None)
@@ -1224,6 +1400,7 @@ class PipelineBase(BaseModel, TerraformResource):
         None,
         description="An optional flag indicating if serverless compute should be used for this Lakeflow Declarative Pipeline.  Requires `catalog` to be set, as it could be used only with Unity Catalog",
     )
+    serverless_compute_id: str | None = Field(None)
     state: str | None = Field(None)
     storage: str | None = Field(
         None,
@@ -1280,6 +1457,7 @@ class PipelineBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "PipelineBase",
     "PipelineCluster",
     "PipelineClusterAutoscale",
     "PipelineClusterAwsAttributes",
@@ -1321,6 +1499,7 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileIngestionOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGoogleAdsOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGoogleAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsJiraOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformer",
@@ -1328,13 +1507,20 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformer",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerJsonOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsFileIngestionOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSmartsheetOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsTiktokAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsZendeskSupportOptions",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptions",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransforms",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions",
     "PipelineIngestionDefinitionObjectsSchemaTableConfiguration",
     "PipelineIngestionDefinitionObjectsSchemaTableConfigurationAutoFullRefreshPolicy",
     "PipelineIngestionDefinitionObjectsSchemaTableConfigurationQueryBasedConnectorConfig",
@@ -1347,6 +1533,7 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIngestionOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIngestionOptionsFileFilters",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsGoogleAdsOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsGoogleAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsJiraOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformer",
@@ -1354,12 +1541,16 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformer",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerJsonOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFileIngestionOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptionsFileIngestionOptionsFileFilters",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsSmartsheetOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsTiktokAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsZendeskSupportOptions",
     "PipelineIngestionDefinitionObjectsTableTableConfiguration",
     "PipelineIngestionDefinitionObjectsTableTableConfigurationAutoFullRefreshPolicy",
@@ -1389,5 +1580,4 @@ __all__ = [
     "PipelineTrigger",
     "PipelineTriggerCron",
     "PipelineTriggerManual",
-    "PipelineBase",
 ]

@@ -45,7 +45,7 @@ class VectorSearchEndpointBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "VectorSearchEndpointBase",
     "VectorSearchEndpointScalingInfo",
     "VectorSearchEndpointTimeouts",
-    "VectorSearchEndpointBase",
 ]

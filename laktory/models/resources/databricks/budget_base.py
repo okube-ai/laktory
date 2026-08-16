@@ -20,6 +20,11 @@ class BudgetAlertConfigurationsActionConfigurations(BaseModel):
     )
 
 
+class BudgetAlertConfigurationsPrincipalOverrides(BaseModel):
+    override_threshold: str | None = Field(None)
+    principal_id: int | None = Field(None)
+
+
 class BudgetAlertConfigurations(BaseModel):
     alert_configuration_id: str | None = Field(None)
     quantity_threshold: str | None = Field(
@@ -30,6 +35,7 @@ class BudgetAlertConfigurations(BaseModel):
         None,
         description="The way to calculate cost for this budget alert. This is what quantity_threshold is measured in. (Enum: `LIST_PRICE_DOLLARS_USD`)",
     )
+    scope_type: str | None = Field(None)
     time_period: str | None = Field(
         None,
         description="The time window of usage data for the budget. (Enum: `MONTH`)",
@@ -43,6 +49,9 @@ class BudgetAlertConfigurations(BaseModel):
     ) = Field(
         None,
         description="List of action configurations to take when the budget alert is triggered. Consists of the following fields:",
+    )
+    principal_overrides: list[BudgetAlertConfigurationsPrincipalOverrides] | None = (
+        Field(None)
     )
 
 
@@ -93,6 +102,7 @@ class BudgetBase(BaseModel, TerraformResource):
     display_name: str | None = Field(
         None, description="Name of the budget in Databricks Account"
     )
+    resource_type: str | None = Field(None)
     update_time: int | None = Field(None)
     alert_configurations: list[BudgetAlertConfigurations] | None = Field(None)
     filter: BudgetFilter | None = Field(None)
@@ -105,9 +115,10 @@ class BudgetBase(BaseModel, TerraformResource):
 __all__ = [
     "BudgetAlertConfigurations",
     "BudgetAlertConfigurationsActionConfigurations",
+    "BudgetAlertConfigurationsPrincipalOverrides",
+    "BudgetBase",
     "BudgetFilter",
     "BudgetFilterTags",
     "BudgetFilterTagsValue",
     "BudgetFilterWorkspaceId",
-    "BudgetBase",
 ]

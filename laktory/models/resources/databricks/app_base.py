@@ -213,6 +213,7 @@ class AppBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "AppBase",
     "AppGitRepository",
     "AppProviderConfig",
     "AppResources",
@@ -228,5 +229,4 @@ __all__ = [
     "AppResourcesUcSecurable",
     "AppTelemetryExportDestinations",
     "AppTelemetryExportDestinationsUnityCatalog",
-    "AppBase",
 ]

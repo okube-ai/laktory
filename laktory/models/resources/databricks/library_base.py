@@ -88,4 +88,4 @@ class LibraryBase(BaseModel, TerraformResource):
         return "databricks_library"
 
 
-__all__ = ["LibraryCran", "LibraryMaven", "LibraryPypi", "LibraryBase"]
+__all__ = ["LibraryBase", "LibraryCran", "LibraryMaven", "LibraryPypi"]

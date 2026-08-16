@@ -94,9 +94,9 @@ class SqlEndpointBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "SqlEndpointBase",
     "SqlEndpointChannel",
     "SqlEndpointTags",
     "SqlEndpointTagsCustomTags",
     "SqlEndpointTimeouts",
-    "SqlEndpointBase",
 ]

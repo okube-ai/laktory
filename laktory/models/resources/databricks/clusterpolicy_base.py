@@ -67,9 +67,9 @@ class ClusterPolicyBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "ClusterPolicyBase",
     "ClusterPolicyLibraries",
     "ClusterPolicyLibrariesCran",
     "ClusterPolicyLibrariesMaven",
     "ClusterPolicyLibrariesPypi",
-    "ClusterPolicyBase",
 ]

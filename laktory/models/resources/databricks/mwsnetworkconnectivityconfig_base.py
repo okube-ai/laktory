@@ -162,6 +162,7 @@ class MwsNetworkConnectivityConfigBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "MwsNetworkConnectivityConfigBase",
     "MwsNetworkConnectivityConfigEgressConfig",
     "MwsNetworkConnectivityConfigEgressConfigDefaultRules",
     "MwsNetworkConnectivityConfigEgressConfigDefaultRulesAwsStableIpRule",
@@ -169,5 +170,4 @@ __all__ = [
     "MwsNetworkConnectivityConfigEgressConfigTargetRules",
     "MwsNetworkConnectivityConfigEgressConfigTargetRulesAwsPrivateEndpointRules",
     "MwsNetworkConnectivityConfigEgressConfigTargetRulesAzurePrivateEndpointRules",
-    "MwsNetworkConnectivityConfigBase",
 ]

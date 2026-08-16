@@ -36,4 +36,4 @@ class MlflowModelBase(BaseModel, TerraformResource):
         return "databricks_mlflow_model"
 
 
-__all__ = ["MlflowModelTags", "MlflowModelBase"]
+__all__ = ["MlflowModelBase", "MlflowModelTags"]

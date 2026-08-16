@@ -351,6 +351,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobScheduleSqlCondition
+
+---
+
 ::: laktory.models.resources.databricks.job.JobSparkJarTask
 
 ---
@@ -364,6 +368,18 @@
 ---
 
 ::: laktory.models.resources.databricks.job.JobTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskAiRuntimeTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskAiRuntimeTaskDeployments
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskAiRuntimeTaskDeploymentsCompute
 
 ---
 
@@ -424,6 +440,18 @@
 ---
 
 ::: laktory.models.resources.databricks.job.JobTaskForEachTaskTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskAiRuntimeTask
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskAiRuntimeTaskDeployments
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskAiRuntimeTaskDeploymentsCompute
 
 ---
 
@@ -1016,6 +1044,10 @@
 ---
 
 ::: laktory.models.resources.databricks.job.JobTriggerPeriodic
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggerSqlCondition
 
 ---
 

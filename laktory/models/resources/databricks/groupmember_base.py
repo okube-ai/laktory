@@ -17,8 +17,7 @@ class GroupMemberBase(BaseModel, TerraformResource):
     __doc_generated_base__ = True
 
     group_id: str = Field(
-        ...,
-        description="This is the `id` attribute (SCIM ID) of the group resource",
+        ..., description="This is the `id` attribute (SCIM ID) of the group resource"
     )
     member_id: str = Field(
         ...,

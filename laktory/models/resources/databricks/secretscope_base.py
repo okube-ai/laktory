@@ -39,4 +39,4 @@ class SecretScopeBase(BaseModel, TerraformResource):
         return "databricks_secret_scope"
 
 
-__all__ = ["SecretScopeKeyvaultMetadata", "SecretScopeBase"]
+__all__ = ["SecretScopeBase", "SecretScopeKeyvaultMetadata"]

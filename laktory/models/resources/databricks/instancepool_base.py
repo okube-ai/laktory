@@ -178,6 +178,7 @@ class InstancePoolBase(BaseModel, TerraformResource):
 __all__ = [
     "InstancePoolAwsAttributes",
     "InstancePoolAzureAttributes",
+    "InstancePoolBase",
     "InstancePoolDiskSpec",
     "InstancePoolDiskSpecDiskType",
     "InstancePoolGcpAttributes",
@@ -188,5 +189,4 @@ __all__ = [
     "InstancePoolNodeTypeFlexibility",
     "InstancePoolPreloadedDockerImage",
     "InstancePoolPreloadedDockerImageBasicAuth",
-    "InstancePoolBase",
 ]

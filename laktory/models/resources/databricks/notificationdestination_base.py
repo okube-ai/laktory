@@ -112,11 +112,11 @@ class NotificationDestinationBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "NotificationDestinationBase",
     "NotificationDestinationConfig",
     "NotificationDestinationConfigEmail",
     "NotificationDestinationConfigGenericWebhook",
     "NotificationDestinationConfigMicrosoftTeams",
     "NotificationDestinationConfigPagerduty",
     "NotificationDestinationConfigSlack",
-    "NotificationDestinationBase",
 ]

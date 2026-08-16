@@ -2,6 +2,7 @@
 # Regenerate with: python scripts/build_resources/01_build.py databricks_mlflow_experiment
 from __future__ import annotations
 
+from pydantic import AliasChoices
 from pydantic import Field
 
 from laktory.models.basemodel import BaseModel
@@ -15,6 +16,31 @@ class MlflowExperimentTags(BaseModel):
 
 class MlflowExperimentTimeouts(BaseModel):
     pass
+
+
+class MlflowExperimentTraceLocationUcTraceLocation(BaseModel):
+    catalog: str = Field(..., description="Name of the Unity Catalog catalog")
+    effective_table_prefix: str | None = Field(
+        None,
+        description="(Computed) The trace-table prefix actually in effect: `table_prefix` if it was set on creation, otherwise the server-generated default",
+    )
+    schema_: str = Field(
+        ...,
+        description="Name of the Unity Catalog schema within `catalog`",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    table_prefix: str | None = Field(
+        None,
+        description="Prefix for the generated trace tables (named `{catalog}.{schema}.{table_prefix}_otel_*`). If omitted, the server generates a default prefix derived from the experiment ID; the field then stays empty and the resolved value is available in `effective_table_prefix`",
+    )
+
+
+class MlflowExperimentTraceLocation(BaseModel):
+    uc_trace_location: MlflowExperimentTraceLocationUcTraceLocation | None = Field(
+        None,
+        description="The Unity Catalog storage location. This block consists of the following fields:",
+    )
 
 
 class MlflowExperimentBase(BaseModel, TerraformResource):
@@ -41,10 +67,20 @@ class MlflowExperimentBase(BaseModel, TerraformResource):
         None, description="Tags for the MLflow experiment"
     )
     timeouts: MlflowExperimentTimeouts | None = Field(None)
+    trace_location: MlflowExperimentTraceLocation | None = Field(
+        None,
+        description="Unity Catalog location where the experiment's traces are stored. Cannot be changed after the experiment is created; changing it forces replacement of the experiment. This block consists of the following fields:",
+    )
 
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_mlflow_experiment"
 
 
-__all__ = ["MlflowExperimentTags", "MlflowExperimentTimeouts", "MlflowExperimentBase"]
+__all__ = [
+    "MlflowExperimentBase",
+    "MlflowExperimentTags",
+    "MlflowExperimentTimeouts",
+    "MlflowExperimentTraceLocation",
+    "MlflowExperimentTraceLocationUcTraceLocation",
+]

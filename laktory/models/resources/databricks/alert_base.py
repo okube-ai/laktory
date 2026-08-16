@@ -95,10 +95,10 @@ class AlertBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "AlertBase",
     "AlertCondition",
     "AlertConditionOperand",
     "AlertConditionOperandColumn",
     "AlertConditionThreshold",
     "AlertConditionThresholdValue",
-    "AlertBase",
 ]

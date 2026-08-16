@@ -172,6 +172,7 @@ class DataQualityMonitorBase(BaseModel, TerraformResource):
 
 __all__ = [
     "DataQualityMonitorAnomalyDetectionConfig",
+    "DataQualityMonitorBase",
     "DataQualityMonitorDataProfilingConfig",
     "DataQualityMonitorDataProfilingConfigCustomMetrics",
     "DataQualityMonitorDataProfilingConfigInferenceLog",
@@ -181,5 +182,4 @@ __all__ = [
     "DataQualityMonitorDataProfilingConfigSnapshot",
     "DataQualityMonitorDataProfilingConfigTimeSeries",
     "DataQualityMonitorProviderConfig",
-    "DataQualityMonitorBase",
 ]

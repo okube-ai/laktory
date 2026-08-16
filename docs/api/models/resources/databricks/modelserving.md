@@ -127,4 +127,16 @@
 
 ---
 
+::: laktory.models.resources.databricks.modelserving.ModelServingTelemetryConfig
+
+---
+
+::: laktory.models.resources.databricks.modelserving.ModelServingTelemetryConfigInferenceTableConfig
+
+---
+
+::: laktory.models.resources.databricks.modelserving.ModelServingTelemetryConfigTableNames
+
+---
+
 ::: laktory.models.resources.databricks.modelserving.ModelServingTimeouts

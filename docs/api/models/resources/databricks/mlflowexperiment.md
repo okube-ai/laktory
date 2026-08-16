@@ -12,3 +12,11 @@
 ---
 
 ::: laktory.models.resources.databricks.mlflowexperiment.MlflowExperimentTimeouts
+
+---
+
+::: laktory.models.resources.databricks.mlflowexperiment.MlflowExperimentTraceLocation
+
+---
+
+::: laktory.models.resources.databricks.mlflowexperiment.MlflowExperimentTraceLocationUcTraceLocation

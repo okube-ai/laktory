@@ -11,6 +11,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.budget.BudgetAlertConfigurationsPrincipalOverrides
+
+---
+
 ::: laktory.models.resources.databricks.budget.BudgetFilter
 
 ---

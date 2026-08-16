@@ -8,6 +8,11 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.terraformresource import TerraformResource
 
 
+class ConnectionEnvironmentSettings(BaseModel):
+    environment_version: str | None = Field(None)
+    java_dependencies: list[str] | None = Field(None)
+
+
 class ConnectionBase(BaseModel, TerraformResource):
     """
     Generated base class for `databricks_connection`.
@@ -23,10 +28,11 @@ class ConnectionBase(BaseModel, TerraformResource):
     owner: str | None = Field(None)
     properties: dict[str, str] | None = Field(None)
     read_only: bool | None = Field(None)
+    environment_settings: ConnectionEnvironmentSettings | None = Field(None)
 
     @property
     def terraform_resource_type(self) -> str:
         return "databricks_connection"
 
 
-__all__ = ["ConnectionBase"]
+__all__ = ["ConnectionBase", "ConnectionEnvironmentSettings"]

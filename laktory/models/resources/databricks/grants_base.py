@@ -48,4 +48,4 @@ class GrantsBase(BaseModel, TerraformResource):
         return "databricks_grants"
 
 
-__all__ = ["GrantsGrant", "GrantsBase"]
+__all__ = ["GrantsBase", "GrantsGrant"]

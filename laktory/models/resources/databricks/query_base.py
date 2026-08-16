@@ -193,6 +193,7 @@ class QueryBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "QueryBase",
     "QueryParameter",
     "QueryParameterDateRangeValue",
     "QueryParameterDateRangeValueDateRangeValue",
@@ -203,5 +204,4 @@ __all__ = [
     "QueryParameterQueryBackedValue",
     "QueryParameterQueryBackedValueMultiValuesOptions",
     "QueryParameterTextValue",
-    "QueryBase",
 ]

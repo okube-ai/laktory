@@ -193,6 +193,7 @@ class JobJobClusterNewClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class JobJobClusterNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
+    capacity_reservation_group: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: (
@@ -353,6 +354,7 @@ class JobJobClusterNewCluster(BaseModel):
     cluster_name: str | None = Field(None)
     custom_tags: dict[str, str] | None = Field(None)
     data_security_mode: str | None = Field(None)
+    dependency_mode: str | None = Field(None)
     driver_instance_pool_id: str | None = Field(None)
     driver_node_type_id: str | None = Field(None)
     enable_elastic_disk: bool | None = Field(None)
@@ -404,6 +406,7 @@ class JobJobCluster(BaseModel):
         ...,
         description="Identifier that can be referenced in `task` block, so that cluster is shared between tasks",
     )
+    serverless_compute_id: str | None = Field(None)
     new_cluster: JobJobClusterNewCluster | None = Field(
         None,
         description="Block with almost the same set of parameters as for databricks_cluster resource, except following (check the [REST API documentation for full list of supported parameters](https://docs.databricks.com/api/workspace/jobs/create#job_clusters-new_cluster)):",
@@ -461,6 +464,7 @@ class JobNewClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class JobNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
+    capacity_reservation_group: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: JobNewClusterAzureAttributesLogAnalyticsInfo | None = Field(
@@ -621,6 +625,7 @@ class JobNewCluster(BaseModel):
     cluster_name: str | None = Field(None)
     custom_tags: dict[str, str] | None = Field(None)
     data_security_mode: str | None = Field(None)
+    dependency_mode: str | None = Field(None)
     driver_instance_pool_id: str | None = Field(None)
     driver_node_type_id: str | None = Field(None)
     enable_elastic_disk: bool | None = Field(None)
@@ -748,6 +753,15 @@ class JobRunJobTask(BaseModel):
     )
 
 
+class JobScheduleSqlCondition(BaseModel):
+    sql_query_id: str = Field(...)
+    trigger_mode: str | None = Field(None)
+    warehouse_id: str = Field(
+        ...,
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+    )
+
+
 class JobSchedule(BaseModel):
     pause_status: str | None = Field(
         None,
@@ -761,6 +775,7 @@ class JobSchedule(BaseModel):
         ...,
         description="A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required",
     )
+    sql_condition: JobScheduleSqlCondition | None = Field(None)
 
 
 class JobSparkJarTask(BaseModel):
@@ -795,6 +810,31 @@ class JobSparkSubmitTask(BaseModel):
         None,
         description="(Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters",
     )
+
+
+class JobTaskAiRuntimeTaskDeploymentsCompute(BaseModel):
+    accelerator_count: int = Field(...)
+    accelerator_type: str = Field(...)
+
+
+class JobTaskAiRuntimeTaskDeployments(BaseModel):
+    command_path: str = Field(...)
+    name: str | None = Field(
+        None,
+        description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
+    )
+    compute: JobTaskAiRuntimeTaskDeploymentsCompute | None = Field(
+        None,
+        description="Task level compute configuration. This block is [documented below](#compute-configuration-block)",
+    )
+
+
+class JobTaskAiRuntimeTask(BaseModel):
+    code_source_path: str | None = Field(None)
+    experiment: str = Field(...)
+    mlflow_experiment_directory: str | None = Field(None)
+    mlflow_run: str | None = Field(None)
+    deployments: list[JobTaskAiRuntimeTaskDeployments] | None = Field(None)
 
 
 class JobTaskAlertTaskSubscribers(BaseModel):
@@ -949,6 +989,33 @@ class JobTaskEmailNotifications(BaseModel):
     on_success: list[str] | None = Field(
         None,
         description="(List) list of notification IDs to call when the run completes successfully. A maximum of 3 destinations can be specified",
+    )
+
+
+class JobTaskForEachTaskTaskAiRuntimeTaskDeploymentsCompute(BaseModel):
+    accelerator_count: int = Field(...)
+    accelerator_type: str = Field(...)
+
+
+class JobTaskForEachTaskTaskAiRuntimeTaskDeployments(BaseModel):
+    command_path: str = Field(...)
+    name: str | None = Field(
+        None,
+        description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
+    )
+    compute: JobTaskForEachTaskTaskAiRuntimeTaskDeploymentsCompute | None = Field(
+        None,
+        description="Task level compute configuration. This block is [documented below](#compute-configuration-block)",
+    )
+
+
+class JobTaskForEachTaskTaskAiRuntimeTask(BaseModel):
+    code_source_path: str | None = Field(None)
+    experiment: str = Field(...)
+    mlflow_experiment_directory: str | None = Field(None)
+    mlflow_run: str | None = Field(None)
+    deployments: list[JobTaskForEachTaskTaskAiRuntimeTaskDeployments] | None = Field(
+        None
     )
 
 
@@ -1204,6 +1271,7 @@ class JobTaskForEachTaskTaskNewClusterAzureAttributesLogAnalyticsInfo(BaseModel)
 
 class JobTaskForEachTaskTaskNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
+    capacity_reservation_group: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: (
@@ -1366,6 +1434,7 @@ class JobTaskForEachTaskTaskNewCluster(BaseModel):
     cluster_name: str | None = Field(None)
     custom_tags: dict[str, str] | None = Field(None)
     data_security_mode: str | None = Field(None)
+    dependency_mode: str | None = Field(None)
     driver_instance_pool_id: str | None = Field(None)
     driver_node_type_id: str | None = Field(None)
     enable_elastic_disk: bool | None = Field(None)
@@ -1750,7 +1819,10 @@ class JobTaskForEachTaskTask(BaseModel):
     disable_auto_optimization: bool | None = Field(
         None, description="A flag to disable auto optimization in serverless tasks"
     )
-    disabled: bool | None = Field(None)
+    disabled: bool | None = Field(
+        None,
+        description="(Bool) An optional flag to disable the task. If set to `true`, the task will not run even if it is part of a job",
+    )
     environment_key: str | None = Field(
         None,
         description="an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task",
@@ -1784,6 +1856,7 @@ class JobTaskForEachTaskTask(BaseModel):
         None,
         description="(Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout",
     )
+    ai_runtime_task: JobTaskForEachTaskTaskAiRuntimeTask | None = Field(None)
     alert_task: JobTaskForEachTaskTaskAlertTask | None = Field(None)
     clean_rooms_notebook_task: JobTaskForEachTaskTaskCleanRoomsNotebookTask | None = (
         Field(None)
@@ -1949,6 +2022,7 @@ class JobTaskNewClusterAzureAttributesLogAnalyticsInfo(BaseModel):
 
 class JobTaskNewClusterAzureAttributes(BaseModel):
     availability: str | None = Field(None)
+    capacity_reservation_group: str | None = Field(None)
     first_on_demand: int | None = Field(None)
     spot_bid_max_price: float | None = Field(None)
     log_analytics_info: JobTaskNewClusterAzureAttributesLogAnalyticsInfo | None = Field(
@@ -2109,6 +2183,7 @@ class JobTaskNewCluster(BaseModel):
     cluster_name: str | None = Field(None)
     custom_tags: dict[str, str] | None = Field(None)
     data_security_mode: str | None = Field(None)
+    dependency_mode: str | None = Field(None)
     driver_instance_pool_id: str | None = Field(None)
     driver_node_type_id: str | None = Field(None)
     enable_elastic_disk: bool | None = Field(None)
@@ -2419,23 +2494,23 @@ class JobTaskSqlTask(BaseModel):
 
 
 class JobTaskWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskWebhookNotificationsOnFailure(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskWebhookNotificationsOnStart(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskWebhookNotificationsOnStreamingBacklogExceeded(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskWebhookNotificationsOnSuccess(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobTaskWebhookNotifications(BaseModel):
@@ -2475,7 +2550,10 @@ class JobTask(BaseModel):
     disable_auto_optimization: bool | None = Field(
         None, description="A flag to disable auto optimization in serverless tasks"
     )
-    disabled: bool | None = Field(None)
+    disabled: bool | None = Field(
+        None,
+        description="(Bool) An optional flag to disable the task. If set to `true`, the task will not run even if it is part of a job",
+    )
     environment_key: str | None = Field(
         None,
         description="an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task",
@@ -2509,6 +2587,7 @@ class JobTask(BaseModel):
         None,
         description="(Integer) An optional timeout applied to each run of this job. The default behavior is to have no timeout",
     )
+    ai_runtime_task: JobTaskAiRuntimeTask | None = Field(None)
     alert_task: JobTaskAlertTask | None = Field(None)
     clean_rooms_notebook_task: JobTaskCleanRoomsNotebookTask | None = Field(None)
     compute: JobTaskCompute | None = Field(
@@ -2612,6 +2691,15 @@ class JobTriggerPeriodic(BaseModel):
     )
 
 
+class JobTriggerSqlCondition(BaseModel):
+    sql_query_id: str = Field(...)
+    trigger_mode: str | None = Field(None)
+    warehouse_id: str = Field(
+        ...,
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+    )
+
+
 class JobTriggerTableUpdate(BaseModel):
     condition: str | None = Field(
         None,
@@ -2645,6 +2733,7 @@ class JobTrigger(BaseModel):
         None,
         description="configuration block to define a trigger for Periodic Triggers consisting of the following attributes:",
     )
+    sql_condition: JobTriggerSqlCondition | None = Field(None)
     table_update: JobTriggerTableUpdate | None = Field(
         None,
         description="configuration block to define a trigger for [Table Updates](https://docs.databricks.com/aws/en/jobs/trigger-table-update) consisting of following attributes:",
@@ -2652,23 +2741,23 @@ class JobTrigger(BaseModel):
 
 
 class JobWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobWebhookNotificationsOnFailure(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobWebhookNotificationsOnStart(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobWebhookNotificationsOnStreamingBacklogExceeded(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobWebhookNotificationsOnSuccess(BaseModel):
-    id: str = Field(..., description="ID of the notification destination")
+    id: str = Field(..., description="ID of the job")
 
 
 class JobWebhookNotifications(BaseModel):
@@ -2749,6 +2838,7 @@ class JobBase(BaseModel, TerraformResource):
         None,
         description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
     )
+    parent_path: str | None = Field(None)
     performance_target: str | None = Field(
         None,
         description="The performance mode on a serverless job. The performance target determines the level of compute performance or cost-efficiency for the run.  Supported values are: * `PERFORMANCE_OPTIMIZED`: (default value) Prioritizes fast startup and execution times through rapid scaling and optimized cluster performance. * `STANDARD`: Enables cost-efficient execution of serverless workloads",
@@ -2843,6 +2933,7 @@ class JobBase(BaseModel, TerraformResource):
 
 
 __all__ = [
+    "JobBase",
     "JobContinuous",
     "JobDbtTask",
     "JobDeployment",
@@ -2929,10 +3020,14 @@ __all__ = [
     "JobRunAs",
     "JobRunJobTask",
     "JobSchedule",
+    "JobScheduleSqlCondition",
     "JobSparkJarTask",
     "JobSparkPythonTask",
     "JobSparkSubmitTask",
     "JobTask",
+    "JobTaskAiRuntimeTask",
+    "JobTaskAiRuntimeTaskDeployments",
+    "JobTaskAiRuntimeTaskDeploymentsCompute",
     "JobTaskAlertTask",
     "JobTaskAlertTaskSubscribers",
     "JobTaskCleanRoomsNotebookTask",
@@ -2948,6 +3043,9 @@ __all__ = [
     "JobTaskEmailNotifications",
     "JobTaskForEachTask",
     "JobTaskForEachTaskTask",
+    "JobTaskForEachTaskTaskAiRuntimeTask",
+    "JobTaskForEachTaskTaskAiRuntimeTaskDeployments",
+    "JobTaskForEachTaskTaskAiRuntimeTaskDeploymentsCompute",
     "JobTaskForEachTaskTaskAlertTask",
     "JobTaskForEachTaskTaskAlertTaskSubscribers",
     "JobTaskForEachTaskTaskCleanRoomsNotebookTask",
@@ -3096,6 +3194,7 @@ __all__ = [
     "JobTriggerFileArrival",
     "JobTriggerModel",
     "JobTriggerPeriodic",
+    "JobTriggerSqlCondition",
     "JobTriggerTableUpdate",
     "JobWebhookNotifications",
     "JobWebhookNotificationsOnDurationWarningThresholdExceeded",
@@ -3103,5 +3202,4 @@ __all__ = [
     "JobWebhookNotificationsOnStart",
     "JobWebhookNotificationsOnStreamingBacklogExceeded",
     "JobWebhookNotificationsOnSuccess",
-    "JobBase",
 ]

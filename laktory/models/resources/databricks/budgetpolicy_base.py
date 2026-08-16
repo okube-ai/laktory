@@ -46,4 +46,4 @@ class BudgetPolicyBase(BaseModel, TerraformResource):
         return "databricks_budget_policy"
 
 
-__all__ = ["BudgetPolicyCustomTags", "BudgetPolicyBase"]
+__all__ = ["BudgetPolicyBase", "BudgetPolicyCustomTags"]
