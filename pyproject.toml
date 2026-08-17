@@ -29,6 +29,7 @@ dependencies = [
     "inflect",
     "narwhals>=1.46",
     "networkx",
+    "pathspec>=0.12",
     "planck>=0.0.8",
     "platformdirs",
     "prompt_toolkit",

@@ -280,6 +280,144 @@ def test_render_tree_variables_precedence(tmp_path, monkeypatch):
     assert Path(r.source).read_text() == '{"catalog": "tree_catalog"}'
 
 
+def test_exclude_paths_glob(tmp_path):
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "app.py").write_text("print('hi')")
+    (treepath / "debug.log").write_text("noisy")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), exclude_paths=["*.log"]
+    )
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"app.py"}
+
+
+def test_exclude_paths_directory_pattern(tmp_path):
+    treepath = tmp_path / "tree"
+    (treepath / "build").mkdir(parents=True)
+    (treepath / "build" / "out.bin").write_text("binary")
+    (treepath / "src.py").write_text("print('hi')")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), exclude_paths=["build/"]
+    )
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"src.py"}
+
+
+def test_exclude_paths_negation(tmp_path):
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "app.log").write_text("noisy")
+    (treepath / "keep.log").write_text("keep me")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), exclude_paths=["*.log", "!keep.log"]
+    )
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"keep.log"}
+
+
+def test_gitignore_auto_honored(tmp_path):
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / ".gitignore").write_text("*.log\n")
+    (treepath / "app.py").write_text("print('hi')")
+    (treepath / "debug.log").write_text("noisy")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), use_gitignore=True
+    )
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"app.py"}
+
+
+def test_use_gitignore_default_off(tmp_path):
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / ".gitignore").write_text("*.log\n")
+    (treepath / "app.py").write_text("print('hi')")
+    (treepath / "debug.log").write_text("noisy")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(source=str(treepath))
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"app.py", "debug.log"}
+
+
+def test_exclude_paths_committed_but_not_deployed(tmp_path):
+    """A file can be committed to git (no .gitignore involved at all) and
+    still be kept out of the deployed tree via exclude_paths."""
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / "app.py").write_text("print('hi')")
+    (treepath / "notes.md").write_text("committed, not deployed")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath), exclude_paths=["*.md"]
+    )
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"app.py"}
+
+
+def test_nested_dot_directory_skipped(tmp_path):
+    """Regression test: a file inside a dot-directory (e.g. a virtualenv)
+    must be excluded even though its own leaf name doesn't start with '.'."""
+    treepath = tmp_path / "tree"
+    (treepath / ".venv" / "lib").mkdir(parents=True)
+    (treepath / ".venv" / "lib" / "site.py").write_text("stuff")
+    (treepath / "app.py").write_text("print('hi')")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(source=str(treepath))
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"app.py"}
+
+
+def test_exclude_paths_can_reinclude_dotdir(tmp_path):
+    """The default dotfile/dot-directory exclusion is just the first pattern
+    in the spec, not a hardcoded rule - a negated pattern in exclude_paths
+    can re-include one, e.g. a Databricks App relying on
+    .streamlit/config.toml."""
+    treepath = tmp_path / "tree"
+    (treepath / ".streamlit").mkdir(parents=True)
+    (treepath / ".streamlit" / "config.toml").write_text("[theme]")
+    (treepath / ".env").write_text("SECRET=1")
+    (treepath / "app.py").write_text("print('hi')")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath),
+        exclude_paths=["!.streamlit/", "!.streamlit/**"],
+    )
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"app.py", "config.toml"}
+
+
+def test_exclude_paths_and_gitignore_combined(tmp_path):
+    treepath = tmp_path / "tree"
+    treepath.mkdir()
+    (treepath / ".gitignore").write_text("*.log\n")
+    (treepath / "app.py").write_text("print('hi')")
+    (treepath / "debug.log").write_text("noisy")
+    (treepath / "app.tmp").write_text("scratch")
+
+    tree = lk.models.resources.databricks.WorkspaceTree(
+        source=str(treepath),
+        use_gitignore=True,
+        exclude_paths=["*.tmp"],
+    )
+
+    names = {Path(r.source_).name for r in tree.additional_core_resources}
+    assert names == {"app.py"}
+
+
 def test_depends_on_directions():
     """A virtual WorkspaceTree participates in the dependency graph in both
     directions: its own depends_on propagates to the child files (deploy X
