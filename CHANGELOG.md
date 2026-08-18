@@ -1,6 +1,16 @@
 # Release History
 
-## [0.12.3] - Unreleased
+## [0.12.4] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.12.3] - 2026-08-18
 ### Added
 * `Budget`, `BudgetPolicy`, `InstancePool`, `IpAccessList`, `Library`, `ModelServing`, `RegisteredModel`, and `Token` Databricks resources
 * Opt-in variable (`${vars.x}` / `${{ expr }}`) rendering of local file content, for environment-specific deployments (e.g. Databricks Apps, Lakeview dashboards): `render_vars` flag on `Dashboard`, `WorkspaceFile`, `Notebook`, and `DbfsFile`; `render_paths` (glob patterns) on `WorkspaceTree` for bulk opt-in. Resolved content is staged under `settings.build_root`, original files are never modified
