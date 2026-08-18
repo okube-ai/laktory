@@ -4,9 +4,11 @@
 ### Added
 * `Budget`, `BudgetPolicy`, `InstancePool`, `IpAccessList`, `Library`, `ModelServing`, `RegisteredModel`, and `Token` Databricks resources
 * Opt-in variable (`${vars.x}` / `${{ expr }}`) rendering of local file content, for environment-specific deployments (e.g. Databricks Apps, Lakeview dashboards): `render_vars` flag on `Dashboard`, `WorkspaceFile`, `Notebook`, and `DbfsFile`; `render_paths` (glob patterns) on `WorkspaceTree` for bulk opt-in. Resolved content is staged under `settings.build_root`, original files are never modified
+* `exclude_paths` (gitignore-syntax patterns, supports negation) and `use_gitignore` (auto-honor a `source/.gitignore` file) on `WorkspaceTree`, to exclude files/directories from deployment.
 ### Fixed
 * `PipelineNodeDataSource` batch->batch chains now read the upstream dataset (`spark.read.table`) inside the Lakeflow (LDP) runtime so Lakeflow can infer the dependency edge
 * Virtual resources (`WorkspaceTree`, `Pipeline`) now participate in `depends_on` in both directions: their own `depends_on` propagates to the child resources they generate, and a `depends_on` reference to them expands to all those children
+* `WorkspaceTree` now excludes files inside a dot-directory (e.g. `.venv/lib/site.py`), not just files whose own name starts with `.` - a negated pattern in `exclude_paths` (e.g. `!.streamlit/`) can re-include one when needed
 ### Updated
 * `mcp` extra now requires `mcp>=2` (updated MCP server to the `MCPServer` API)
 * File reads/writes now specify an explicit encoding instead of relying on the platform default, fixing `UnicodeDecodeError` on non-UTF-8 locales (e.g. cp1252 on Windows) when config/source files contain UTF-8 characters. Reads use `utf-8-sig` to tolerate a BOM; writes use `utf-8`

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from pathlib import PurePosixPath
 
+from pathspec import PathSpec
 from pydantic import Field
 
 from laktory._logger import get_logger
@@ -59,9 +60,52 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
         io.StringIO(tree_yaml)
     )
     ```
+
+    Files can be excluded from the tree with `exclude_paths`, using
+    `.gitignore` syntax (including negation) - independent of git, so a file
+    can be committed to the repo and still be kept out of the deployed tree.
+    A real `.gitignore` found at the root of `source` can also be honored via
+    `use_gitignore`, for the common case where "don't commit" and "don't
+    deploy" coincide. Dotfiles and dot-directories (e.g. `.git`, `.venv`) are
+    excluded by default; re-include one explicitly with a negated pattern
+    (e.g. `!.streamlit/`, `!.streamlit/**`) - useful for a Databricks App
+    source tree that relies on a dotdir like `.streamlit/config.toml`.
+
+    ```py
+    import io
+
+    from laktory import models
+
+    tree_yaml = '''
+    source: ./app/
+    path: /apps/myapp
+    exclude_paths:
+    - '*.log'
+    - build/
+    - '!.streamlit/'
+    - '!.streamlit/**'
+    use_gitignore: true
+    '''
+    tree = models.resources.databricks.WorkspaceTree.model_validate_yaml(
+        io.StringIO(tree_yaml)
+    )
+    ```
     """
 
     access_controls: list[AccessControl] = Field([], description="Access controls list")
+    exclude_paths: list[str] = Field(
+        default=[],
+        description=(
+            "Gitignore-style patterns, relative to `source`, identifying "
+            "files and directories to exclude from the tree (e.g. "
+            "['*.log', 'build/', '!build/keep.txt']). Matched with the same "
+            "syntax as a `.gitignore` file (supports negation). Applied "
+            "after the built-in dotfile/dot-directory exclusion and, when "
+            "`use_gitignore` is enabled, after `source/.gitignore` - so it "
+            "wins on conflicting/negated patterns, and can be used to "
+            "re-include a dotdir (e.g. '!.streamlit/', '!.streamlit/**')."
+        ),
+    )
     path: str = Field(
         None,
         description="Workspace filepath for the tree. If not specified, workspace laktory root is used.",
@@ -83,6 +127,17 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
         ...,
         description="Path to directory on local filesystem.",
     )
+    use_gitignore: bool = Field(
+        default=False,
+        description=(
+            "If `True` and a `.gitignore` file exists at the root of "
+            "`source`, its patterns are automatically applied when building "
+            "the tree. Off by default, since it changes which files deploy "
+            "based on a file unrelated to this resource. Governs git "
+            "tracking, not deployment - use `exclude_paths` for files that "
+            "are committed but shouldn't be deployed."
+        ),
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
@@ -96,11 +151,26 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
         source = Path(self.source)
         cwd = Path("./").resolve()
         root = (cwd / source).resolve()
+
+        # Build ignore spec. Dotfiles/dot-directories are excluded by
+        # default (backward compatible), but - unlike a hardcoded check -
+        # this is just the first pattern in the spec, so a later negated
+        # pattern in exclude_paths can re-include one (e.g. a Databricks App
+        # relying on `.streamlit/config.toml`).
+        patterns = [".*"]
+        if self.use_gitignore:
+            gitignore_path = root / ".gitignore"
+            if gitignore_path.is_file():
+                patterns += gitignore_path.read_text(encoding="utf-8-sig").splitlines()
+        patterns += self.exclude_paths
+        spec = PathSpec.from_lines("gitignore", patterns)
+
         filepaths = []
         for filepath in root.rglob("*"):
             if filepath.is_dir():
                 continue
-            if filepath.name.startswith("."):
+            rel_path = filepath.relative_to(root)
+            if spec.match_file(rel_path.as_posix()):
                 continue
             filepaths += [filepath]
         filepaths.sort()
@@ -130,8 +200,7 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
             # Set path (Databricks / unix file system)
             dirpath = str(filepath.parent).replace(str(root), "")
             if self.path:
-                if dirpath.startswith("/"):
-                    dirpath = dirpath[1:]
+                dirpath = dirpath.removeprefix("/")
                 kwargs = {
                     "path": (Path(self.path) / dirpath / filepath.name).as_posix()
                 }
