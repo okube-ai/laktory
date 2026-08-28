@@ -167,6 +167,32 @@ def _resolve_value(o, vars, objs, stringify=False):
     if not isinstance(o, str):
         return o
 
+    # Resolve ${settings.<name>} or ${setting.<name>} syntax
+    pattern = re.compile(r"\$\{settings?\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
+    for match in pattern.finditer(o):
+        # Extract the setting name
+        setting_name = match.group(1)
+
+        # Resolve the setting value
+        resolved_value = _resolve_settings(setting_name, vars, objs)
+
+        # Recursively resolve nested variables if variable value is a dict
+        # or a list, whether it ends up embedded (stringify) or returned
+        # as-is (whole-value replacement)
+        if isinstance(resolved_value, (list, dict)):
+            resolved_value = _resolve_values(resolved_value, vars, objs)
+
+        # Update the value with the resolved value
+        if isinstance(resolved_value, str):
+            o = o.replace(match.group(0), resolved_value)
+        elif stringify:
+            o = o.replace(match.group(0), json.dumps(resolved_value))
+        else:
+            o = resolved_value
+
+    if not isinstance(o, str):
+        return o
+
     # Resolve ${{ <expression> }} syntax
     pattern = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
     for match in pattern.finditer(o):
@@ -187,6 +213,14 @@ def _resolve_value(o, vars, objs, stringify=False):
     return o
 
 
+def _get_settings_value(name):
+    """Look up `name` (case-insensitively) among `laktory._settings.settings` fields."""
+    from laktory._settings import settings
+
+    _vals = {k.lower(): getattr(settings, k) for k in settings.model_fields.keys()}
+    return _vals.get(name.lower())
+
+
 def _resolve_variable(name, vars, objs):
     """Resolve a variable name from the variables or environment."""
 
@@ -199,16 +233,31 @@ def _resolve_variable(name, vars, objs):
         _vars = {k.lower(): v for k, v in os.environ.items()}
         value = _vars.get(name.lower())
 
-    # Fetch from laktory settings
+    # Fetch from laktory settings. This is a documented, backward-compatible
+    # alias - `${settings.<name>}` (below) is the explicit, unambiguous
+    # syntax and should be preferred, since a model/env variable of the same
+    # name silently takes precedence over the settings value here.
     if value is None:
-        from laktory._settings import settings
-
-        _vars = {k.lower(): getattr(settings, k) for k in settings.model_fields.keys()}
-        value = _vars.get(name.lower())
+        value = _get_settings_value(name)
 
     # Value not found returning original value
     if value is None:
         return f"${{vars.{name}}}"  # Default value if not resolved
+
+    # If the resolved value is itself a string with variables, resolve it
+    if isinstance(value, str) and ("${" in value or "$${" in value):
+        value = _resolve_value(value, vars, objs)
+
+    return value
+
+
+def _resolve_settings(name, vars, objs):
+    """Resolve a `${settings.<name>}` / `${setting.<name>}` reference."""
+    value = _get_settings_value(name)
+
+    # Value not found returning original value
+    if value is None:
+        return f"${{settings.{name}}}"  # Default value if not resolved
 
     # If the resolved value is itself a string with variables, resolve it
     if isinstance(value, str) and ("${" in value or "$${" in value):
@@ -229,6 +278,17 @@ def _resolve_expression(expression, vars, objs):
         r"\bvars?\.([a-zA-Z_][a-zA-Z0-9_]*)\b", r"variables_map['\1']", expression
     )
 
+    # Names referenced as `settings.name` / `setting.name`, translated the
+    # same way (settings.name -> settings_map['name'])
+    referenced_settings = set(
+        re.findall(r"\bsettings?\.([a-zA-Z_][a-zA-Z0-9_]*)\b", expression)
+    )
+    expression = re.sub(
+        r"\bsettings?\.([a-zA-Z_][a-zA-Z0-9_]*)\b",
+        r"settings_map['\1']",
+        expression,
+    )
+
     # Prepare a safe evaluation context - shallow copy is sufficient because
     # eval() only reads from variables_map and never mutates var values.
     # Only the variables actually referenced by the expression are
@@ -242,7 +302,9 @@ def _resolve_expression(expression, vars, objs):
         if name in local_context:
             local_context[name] = _resolve_variable(name, vars, objs)
 
-    locals = {"variables_map": local_context}
+    settings_context = {name: _get_settings_value(name) for name in referenced_settings}
+
+    locals = {"variables_map": local_context, "settings_map": settings_context}
 
     if objs is not None:
         for k, v in objs.items():

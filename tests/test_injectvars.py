@@ -428,3 +428,33 @@ def test_var_syntax():
         Cluster(
             variables={"env": "${{ var.env + '_local' }}"},
         )
+
+
+def test_settings_syntax(monkeypatch):
+    """${settings.x} / ${setting.x} (#618) resolve laktory._settings.settings
+    fields explicitly, in both plain substitution and ${{ expr }} contexts.
+    The pre-existing ${vars.<settings-field>} fallback alias keeps working
+    for backward compatibility."""
+    from laktory._settings import settings
+
+    monkeypatch.setattr(settings, "workspace_root", "/Users/x/")
+
+    # Plain substitution
+    c = Cluster(name="${settings.workspace_root}notebooks").inject_vars()
+    assert c.name == "/Users/x/notebooks"
+
+    # Singular alias, matching the vars/var convention
+    c = Cluster(name="${setting.workspace_root}notebooks").inject_vars()
+    assert c.name == "/Users/x/notebooks"
+
+    # Inside an expression
+    c = Cluster(job_id="${{ 'resolved:' + settings.workspace_root }}").inject_vars()
+    assert c.job_id == "resolved:/Users/x/"
+
+    # Unresolved settings field left as-is, matching ${vars.x} behavior
+    c = Cluster(name="${settings.no_such_field}").inject_vars()
+    assert c.name == "${settings.no_such_field}"
+
+    # Backward-compatible: ${vars.<settings-field>} still falls back to settings
+    c = Cluster(name="${vars.workspace_root}notebooks").inject_vars()
+    assert c.name == "/Users/x/notebooks"

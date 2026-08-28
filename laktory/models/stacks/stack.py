@@ -2,6 +2,7 @@ import json
 import os
 import re
 import time
+from copy import deepcopy
 from typing import Any
 from typing import Literal
 
@@ -90,6 +91,48 @@ DIRPATH = "./"
 
 _WS_TOKEN_CACHE = ".laktory.ws-backend-token.json"
 
+# Reserved `settings.workspace_root` value that auto-computes a
+# user/stack/env-scoped deployment root (see `Stack._resolve_user_root`).
+USER_ROOT_SENTINEL = "user_root"
+
+
+def _resolve_databricks_provider_and_username(env):
+    """Find a `DatabricksProvider` among `env`'s resources and resolve the
+    live current username via the Databricks SDK.
+
+    Returns `(db_provider, workspace_client, username)`, or `(None, None,
+    None)` if no `DatabricksProvider` is present in the stack.
+    """
+    db_provider = None
+    for r in env.resources._get_all(providers_only=True).values():
+        for _r in r.core_resources:
+            if isinstance(_r, DatabricksProvider):
+                db_provider = _r
+                break
+        if db_provider:
+            break
+
+    if db_provider is None:
+        return None, None, None
+
+    wc = db_provider.workspace_client
+    username = wc.current_user.me().user_name
+    return db_provider, wc, username
+
+
+def _user_workspace_root(username: str, stack_name: str, env_name: str | None) -> str:
+    """Build the shared user/stack/env-scoped root used by both
+    `settings.workspace_root: "user_root"` and the `backend.databricks_workspace`
+    Terraform state path, so the two can never drift apart. Always
+    trailing-slash-terminated - some call sites (e.g. the LDP orchestrator)
+    concatenate onto `settings.workspace_root` with plain string formatting
+    rather than `Path(...)` joining.
+    """
+    root = f"/Users/{username}/.laktory/{stack_name}/"
+    if env_name:
+        root = f"{root}{env_name}/"
+    return root
+
 
 def _get_cached_ws_token(wc, cache_path: str) -> str:
     """Return a Databricks PAT suitable for HTTP Basic auth, caching it on disk.
@@ -169,7 +212,14 @@ class LaktorySettings(BaseModel):
     dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(None, description="")
     workspace_root: str = Field(
         "/.laktory/",
-        description="Root directory of a Databricks Workspace (excluding `'/Workspace') to which databricks objects like notebooks and workspace files are deployed.",
+        description=(
+            "Root directory of a Databricks Workspace (excluding `'/Workspace') to which "
+            "databricks objects like notebooks and workspace files are deployed. Set to the "
+            "reserved value `'user_root'` to auto-compute "
+            "`/Users/{you}/.laktory/{stack_name}/{env_name}/` instead. Requires a "
+            "`DatabricksProvider` in the stack (resolves your username via a live SDK call). "
+            "See [Workspace Root](../../../concepts/workspaceroot.md)."
+        ),
     )
     runtime_root: str = Field(
         "/laktory/",
@@ -186,10 +236,27 @@ class LaktorySettings(BaseModel):
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
+        # `${resources.x.y}` is Terraform-native interpolation syntax, never
+        # resolved by Laktory's own `${...}` engine (see `laktory/_parsers.py`)
+        # - so it can never become a real value here. Fail loudly instead of
+        # silently pushing a broken literal onto the global settings.
+        for key in type(self).model_fields:
+            value = getattr(self, key)
+            if isinstance(value, str) and "${resources." in value:
+                raise ValueError(
+                    f"settings.{key} = {value!r} contains a '${{resources...}}' "
+                    "reference, which cannot be resolved inside the 'settings:' "
+                    "block - it is resolved by Terraform itself at plan/apply time."
+                )
+
         if self.dataframe_backend:
             settings.dataframe_backend = self.dataframe_backend
 
-        if self.workspace_root:
+        # The "user_root" sentinel is a placeholder for Stack._resolve_user_root()
+        # to compute a real path from - unlike an unresolved ${vars.x} template,
+        # it reads exactly like a plausible (if wrong) literal directory name, so
+        # it must never be pushed onto the singleton as-is.
+        if self.workspace_root and self.workspace_root != USER_ROOT_SENTINEL:
             settings.workspace_root = self.workspace_root
 
         if self.runtime_root:
@@ -469,6 +536,54 @@ class Stack(BaseModel):
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
 
+    def inject_vars(self, inplace: bool = False, vars: dict = None, objs: dict = None):
+        """
+        Same as `BaseModel.inject_vars()`, but resolves `self.settings` and
+        pushes it onto the global `laktory._settings.settings` singleton
+        first, deterministically, before resolving the rest of the stack.
+
+        `BaseModel.inject_vars()`'s field loop iterates `model_fields_set` (a
+        `set`, unordered) and may skip re-resolution entirely via its result
+        cache, so `settings` is not guaranteed to be resolved - and pushed
+        onto the singleton - before other fields (e.g. a `${settings.x}`
+        reference elsewhere in the stack) are substituted in the same pass.
+        """
+        if self.settings is not None:
+            merged_vars = deepcopy({**(vars or {}), **self.variables})
+            self.settings.inject_vars(vars=merged_vars, objs=objs).apply_settings()
+
+        return super().inject_vars(inplace=inplace, vars=vars, objs=objs)
+
+    def _resolve_user_root(self, env: "Stack", env_name: str | None):
+        """Resolve `settings.workspace_root: "user_root"` (if set) into a
+        concrete, user/stack/env-scoped path and push it onto `env.settings`
+        (and, via `apply_settings()`, the global settings singleton).
+
+        No-op unless `env.settings.workspace_root` is exactly the
+        `USER_ROOT_SENTINEL`. Requires a `DatabricksProvider` in the stack for
+        the live username lookup - same requirement as
+        `backend.databricks_workspace`.
+
+        Returns the `(db_provider, workspace_client, username)` it resolved
+        (or `(None, None, None)` if it was a no-op), so a caller that also
+        needs to resolve `backend.databricks_workspace` in the same pass
+        (`to_terraform()`) can reuse it instead of making a second, redundant
+        `current_user.me()` API call.
+        """
+        if env.settings is None or env.settings.workspace_root != USER_ROOT_SENTINEL:
+            return None, None, None
+
+        db_provider, wc, username = _resolve_databricks_provider_and_username(env)
+        if db_provider is None:
+            raise ValueError(
+                f"settings.workspace_root: '{USER_ROOT_SENTINEL}' requires a "
+                "DatabricksProvider in the stack."
+            )
+
+        env.settings.workspace_root = _user_workspace_root(username, env.name, env_name)
+        env.settings.apply_settings()
+        return db_provider, wc, username
+
     def build(self, env_name: str | None, inject_vars: bool = True, vars: dict = None):
         """
         Build stack artifacts before preview or deploy.
@@ -497,6 +612,12 @@ class Stack(BaseModel):
             if vars:
                 env = env.model_copy(update={"variables": {**env.variables, **vars}})
             env = env.inject_vars()
+            # Gated on `inject_vars` (not just run unconditionally) because
+            # `to_terraform()` calls `env.build(env_name=None, inject_vars=False)`
+            # internally on an already-resolved `env` - that internal call must
+            # not re-run this with the wrong (None) env_name; to_terraform()
+            # resolves it separately, beforehand, with its own correct env_name.
+            self._resolve_user_root(env, env_name)
 
         if env.resources is None:
             return
@@ -651,6 +772,9 @@ class Stack(BaseModel):
         if vars:
             env = env.model_copy(update={"variables": {**env.variables, **vars}})
         env = env.inject_vars()
+        _resolved_provider, _resolved_wc, _resolved_username = self._resolve_user_root(
+            env, env_name
+        )
         env.build(env_name=None, inject_vars=False)
 
         # Providers
@@ -699,19 +823,24 @@ class Stack(BaseModel):
                     "the other keys take precedence and databricks_workspace is ignored."
                 )
             else:
-                db_provider = next(
-                    (
-                        p
-                        for p in providers.values()
-                        if isinstance(p, DatabricksProvider)
-                    ),
-                    None,
-                )
+                # Reuse the provider/username `_resolve_user_root()` already
+                # resolved above (if `workspace_root: "user_root"` was set),
+                # rather than making a second, redundant `current_user.me()`
+                # API call.
+                if _resolved_provider is not None:
+                    db_provider, wc, username = (
+                        _resolved_provider,
+                        _resolved_wc,
+                        _resolved_username,
+                    )
+                else:
+                    db_provider, wc, username = (
+                        _resolve_databricks_provider_and_username(env)
+                    )
                 if db_provider is None:
                     raise ValueError(
                         "backend.databricks_workspace requires a DatabricksProvider in the stack."
                     )
-                wc = db_provider.workspace_client
                 host = (db_provider.host or wc.config.host or "").rstrip("/")
                 if not host:
                     raise ValueError(
@@ -719,8 +848,6 @@ class Stack(BaseModel):
                         "Set 'host' explicitly in the DatabricksProvider or ensure the profile "
                         "in ~/.databrickscfg includes a host."
                     )
-
-                username = wc.current_user.me().user_name
 
                 # The Terraform HTTP backend uses Basic auth (Authorization:
                 # Basic base64("token:{password}")). Databricks accepts this
@@ -758,10 +885,10 @@ class Stack(BaseModel):
                         "To use a fully custom backend, configure the `http` backend directly."
                     )
 
-                if env_name:
-                    state_path = f"/Users/{username}/.laktory/{self.name}/{env_name}/state/terraform.tfstate"
-                else:
-                    state_path = f"/Users/{username}/.laktory/{self.name}/state/terraform.tfstate"
+                state_path = (
+                    f"{_user_workspace_root(username, env.name, env_name)}"
+                    "state/terraform.tfstate"
+                )
                 ws_parent = state_path.rsplit("/", 1)[0]
                 wc.workspace.mkdirs(path=ws_parent)
 

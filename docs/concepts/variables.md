@@ -5,7 +5,7 @@ Laktory uses three distinct mechanisms to make declarations dynamic. They share 
 
 | Mechanism | Syntax | Resolved | Valid in |
 |-----------|--------|----------|----------|
-| **Variable** | `${vars.X}` · `${resources.X.id}` | Config / deployment time | Any model field |
+| **Variable** | `${vars.X}` · `${resources.X.id}` · `${settings.X}` | Config / deployment time | Any model field |
 | **Expression** | `${{ python expr }}` | Config / deployment time | Any model field |
 | **Reference** | `{df}` · `{sources.X}` · `{nodes.X}` | Execution time | Transformer nodes only |
 
@@ -38,7 +38,7 @@ When the same variable is declared in multiple places, the following priority ap
 | 3 | Stack environment variables (`environments.<env>.variables`) | `stack.yaml` → `environments.dev.variables` |
 | 4 | Stack-level variables (`variables`) | `stack.yaml` → `variables` |
 | 5 | OS environment variables | `$DATABRICKS_HOST` |
-| 6 *(lowest)* | Laktory settings | `laktory.settings` |
+| 6 *(lowest)* | Laktory settings | `laktory.settings` (prefer the explicit `${settings.X}` syntax below over relying on this fallback) |
 
 **From model** - any Laktory object can declare its own variables:
 
@@ -50,7 +50,7 @@ variables:
 
 **From environment** - if a variable is not found in declared model variables, Laktory falls back to OS environment variables.
 
-**From settings** - final fallback to `laktory.settings` values.
+**From settings** - final fallback to `laktory.settings` values, e.g. `${vars.workspace_root}` resolves to `settings.workspace_root` if no model/env variable of that name exists. This is a legacy alias kept for backward compatibility; prefer the explicit `${settings.X}` syntax described below - it can't be silently shadowed by a same-named variable, and it makes the intent obvious at the call site.
 
 **From CLI** - variables passed at the CLI level override everything:
 
@@ -135,6 +135,31 @@ tasks:
 
 Here `${resources.my-pipeline.id}` resolves to the ID of the deployed `my-pipeline` resource. The resource must be part of the current stack.
 
+### Settings
+
+The `settings.*` namespace exposes `laktory.settings` values (`workspace_root`, `build_root`, `runtime_root`, `dataframe_backend`, `dataframe_api`) as variables, so a value configured once under `stack.yaml`'s `settings:` block can be reused anywhere else in the stack without duplicating the literal:
+
+```yaml title="stack.yaml"
+settings:
+  workspace_root: /Users/${vars.username}/.laktory/${vars.env}/
+resources:
+  databricks_workspacetrees:
+    app:
+      source: ./app/
+      path: ${settings.workspace_root}app   # same root, reused explicitly
+variables:
+  username: jane.doe@example.com
+  env: dev
+```
+
+`settings:` itself accepts `${vars.X}` (as shown above) - resolved the same way as any other field, once `inject_vars()` runs (i.e. as part of `build`, `preview`, `deploy`, `destroy`, or `validate`). Right after a `Stack` is constructed, before any of those commands run, `settings.*` fields are still unresolved templates, same as any other `${vars.X}`-templated field (e.g. `Stack.name`).
+
+`${resources.X.y}` cannot be used inside `settings:` - it is resolved by Terraform at `plan`/`apply` time, after `settings:` has already been applied, so it would never become a real value. Laktory raises a validation error if you try.
+
+A settings field cannot reference a sibling settings field in the same block (e.g. `build_root: ${settings.workspace_root}x` inside the same `settings:` you're defining `workspace_root` in) - it would see the *previous* value, not the one being defined alongside it. Reference another settings value from *outside* the `settings:` block instead, as in the example above.
+
+For what `settings.workspace_root` actually controls, its default, and how to auto-scope it (and Terraform state) to your own user/stack/environment with almost no configuration, see [Workspace Root](workspaceroot.md).
+
 ---
 
 ## Expressions
@@ -158,6 +183,12 @@ variables:
   sizes:
     dev: 2
     prd: 4
+```
+
+`settings.X` is also available inside expressions, alongside `vars.X`:
+
+```yaml
+name: ${{ 'prod-' + settings.workspace_root if vars.env == 'prd' else 'dev' }}
 ```
 
 ### Context objects

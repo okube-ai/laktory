@@ -137,6 +137,7 @@ nav:
     - Models:
       - Models: concepts/models.md
       - Stack: concepts/stack.md
+      - Workspace Root: concepts/workspaceroot.md
       - Variables: concepts/variables.md
     - ETL:
       - Data Pipeline: concepts/pipeline.md
