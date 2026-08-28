@@ -687,6 +687,87 @@ def test_stack_settings(monkeypatch):
     assert settings.runtime_root == custom_root
 
 
+def test_stack_settings_vars_construction(monkeypatch):
+    """#617: settings.workspace_root using ${vars.x} stays an unresolved
+    template right after Stack construction - same as any other templated
+    field (e.g. Stack.name, see test_get_env) - and only resolves once
+    Stack.inject_vars() runs (via build()/to_terraform()/Dispatcher)."""
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    stack = models.Stack(
+        name="s",
+        variables={"root": "/foo/"},
+        settings={"workspace_root": "${vars.root}"},
+    )
+    assert stack.settings.workspace_root == "${vars.root}"
+
+    stack.build(env_name=None)
+    assert settings.workspace_root == "/foo/"
+
+
+def test_stack_settings_vars_per_env(monkeypatch):
+    """#617: settings.workspace_root using ${vars.x} correctly picks up
+    per-environment variable overrides once resolved via to_terraform() -
+    proves Stack.inject_vars()'s explicit settings push (not the top-level
+    Stack's own, environment-agnostic settings value) is what makes each
+    environment's resolution correct."""
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    stack = models.Stack(
+        name="s",
+        variables={"root": "/default/"},
+        settings={"workspace_root": "${vars.root}"},
+        environments={
+            "dev": {"variables": {"root": "/dev/"}},
+            "prd": {"variables": {"root": "/prd/"}},
+        },
+    )
+
+    stack.to_terraform(env_name="dev")
+    assert settings.workspace_root == "/dev/"
+
+    stack.to_terraform(env_name="prd")
+    assert settings.workspace_root == "/prd/"
+
+
+def test_stack_settings_resources_reference_rejected():
+    """#617: ${resources.x.y} can never resolve inside settings: (it's
+    Terraform-native interpolation, resolved by Terraform itself, not
+    Laktory) - fail loudly instead of silently keeping a broken literal."""
+    with pytest.raises(ValueError, match="resources"):
+        models.Stack(
+            name="s",
+            settings={"workspace_root": "${resources.current-user.home}"},
+        )
+
+
+def test_stack_settings_and_settings_reference_combined(monkeypatch):
+    """#617 + #618 combined: settings.workspace_root is itself defined via
+    ${vars.x}, and reused elsewhere in the same stack via
+    ${settings.workspace_root}. Proves Stack.inject_vars()'s explicit,
+    deterministic settings push - not incidental field-iteration order or
+    the inject_vars result cache - is what makes this reliable."""
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    stack = models.Stack(
+        name="s",
+        variables={"root": "/foo/"},
+        settings={"workspace_root": "${vars.root}"},
+        resources={
+            "databricks_notebooks": {
+                "nb": {
+                    "source": "./test_stack.py",
+                    "path": "${settings.workspace_root}notebooks/nb.py",
+                }
+            }
+        },
+    )
+
+    env = stack.get_env(env_name=None).inject_vars()
+    nb = env.resources.databricks_notebooks["nb"]
+    assert nb.path == "/foo/notebooks/nb.py"
+
+
 def test_get_env():
     stack = models.Stack(
         name="stack-${vars.v0}-${vars.v1}",
@@ -807,3 +888,35 @@ def test_terraform_stack_workspace_state():
     ).to_terraform(env_name="dev")
     assert "local" in ts_explicit.terraform.backend
     assert "http" not in ts_explicit.terraform.backend
+
+
+def test_terraform_stack_workspace_state_templated_name():
+    """The auto-computed Terraform state path must use the resolved stack
+    name (env.name, after inject_vars()), not the raw pre-injection
+    Stack.name - otherwise a ${vars.x}-templated name: never resolves in the
+    state path."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack-${vars.suffix}",
+            variables={"suffix": "x"},
+            environments={"dev": {"variables": {}}},
+            resources={"providers": {"databricks": _DB_PROVIDER}},
+            terraform={"backend": {"databricks_workspace": True}},
+        )
+        ts = stack.to_terraform(env_name="dev")
+        address = ts.terraform.backend["http"]["address"]
+        assert "/my-stack-x/dev/state/terraform.tfstate" in address
+        assert "${vars.suffix}" not in address

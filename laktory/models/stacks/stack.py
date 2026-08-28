@@ -2,6 +2,7 @@ import json
 import os
 import re
 import time
+from copy import deepcopy
 from typing import Any
 from typing import Literal
 
@@ -186,6 +187,19 @@ class LaktorySettings(BaseModel):
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
+        # `${resources.x.y}` is Terraform-native interpolation syntax, never
+        # resolved by Laktory's own `${...}` engine (see `laktory/_parsers.py`)
+        # - so it can never become a real value here. Fail loudly instead of
+        # silently pushing a broken literal onto the global settings.
+        for key in type(self).model_fields:
+            value = getattr(self, key)
+            if isinstance(value, str) and "${resources." in value:
+                raise ValueError(
+                    f"settings.{key} = {value!r} contains a '${{resources...}}' "
+                    "reference, which cannot be resolved inside the 'settings:' "
+                    "block - it is resolved by Terraform itself at plan/apply time."
+                )
+
         if self.dataframe_backend:
             settings.dataframe_backend = self.dataframe_backend
 
@@ -468,6 +482,24 @@ class Stack(BaseModel):
     # ----------------------------------------------------------------------- #
     # Methods                                                                 #
     # ----------------------------------------------------------------------- #
+
+    def inject_vars(self, inplace: bool = False, vars: dict = None, objs: dict = None):
+        """
+        Same as `BaseModel.inject_vars()`, but resolves `self.settings` and
+        pushes it onto the global `laktory._settings.settings` singleton
+        first, deterministically, before resolving the rest of the stack.
+
+        `BaseModel.inject_vars()`'s field loop iterates `model_fields_set` (a
+        `set`, unordered) and may skip re-resolution entirely via its result
+        cache, so `settings` is not guaranteed to be resolved - and pushed
+        onto the singleton - before other fields (e.g. a `${settings.x}`
+        reference elsewhere in the stack) are substituted in the same pass.
+        """
+        if self.settings is not None:
+            merged_vars = deepcopy({**(vars or {}), **self.variables})
+            self.settings.inject_vars(vars=merged_vars, objs=objs).apply_settings()
+
+        return super().inject_vars(inplace=inplace, vars=vars, objs=objs)
 
     def build(self, env_name: str | None, inject_vars: bool = True, vars: dict = None):
         """
@@ -759,9 +791,11 @@ class Stack(BaseModel):
                     )
 
                 if env_name:
-                    state_path = f"/Users/{username}/.laktory/{self.name}/{env_name}/state/terraform.tfstate"
+                    state_path = f"/Users/{username}/.laktory/{env.name}/{env_name}/state/terraform.tfstate"
                 else:
-                    state_path = f"/Users/{username}/.laktory/{self.name}/state/terraform.tfstate"
+                    state_path = (
+                        f"/Users/{username}/.laktory/{env.name}/state/terraform.tfstate"
+                    )
                 ws_parent = state_path.rsplit("/", 1)[0]
                 wc.workspace.mkdirs(path=ws_parent)
 

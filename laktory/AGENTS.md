@@ -59,6 +59,7 @@ All paths are relative to the current file. Variables can appear in paths:
 | `${vars.NAME}` | Upper-case name reads from environment / system variables |
 | `${{ expr }}` | Python expression — evaluated at deploy time; supports conditionals |
 | `${resources.<key>.<prop>}` | Cross-reference another resource's runtime output (e.g. `.id`, `.name`) |
+| `${settings.name}` | Reuse a `laktory.settings` value (e.g. `settings.workspace_root`) elsewhere in the stack; also works inside `${{ }}` |
 
 ```yaml
 catalog_name: ${vars.catalog}
@@ -833,6 +834,21 @@ group_ids:
 - ${resources.group-role-engineers.id}
 catalog: ${resources.catalog-dev.name}
 ```
+
+The top-level `settings:` block (`laktory.settings` / `LaktorySettings` - `workspace_root`, `build_root`, `runtime_root`, `dataframe_backend`, `dataframe_api`) accepts `${vars.x}` too, and its resolved values can be reused anywhere else in the stack via `${settings.x}` - useful for keeping deployed-object paths consistent without duplicating the literal:
+
+```yaml
+settings:
+  workspace_root: /Users/${vars.username}/.laktory/${vars.env}/
+
+resources:
+  databricks_workspacetrees:
+    app:
+      source: ./app/
+      path: ${settings.workspace_root}app
+```
+
+`${resources.x.y}` cannot be used inside `settings:` (it's resolved by Terraform, after settings have already been applied) - Laktory raises a validation error if you try. This is independent of the Terraform state file location used by the `backend.databricks_workspace: true` shortcut, which is computed separately (`/Users/{user}/.laktory/{stack}/{env}/state/...`).
 
 ---
 
