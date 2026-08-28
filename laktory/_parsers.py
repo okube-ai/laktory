@@ -219,6 +219,11 @@ def _resolve_variable(name, vars, objs):
 
 def _resolve_expression(expression, vars, objs):
     """Evaluate an inline expression."""
+    # Names referenced as `vars.name` / `var.name` inside the expression
+    referenced_names = set(
+        re.findall(r"\bvars?\.([a-zA-Z_][a-zA-Z0-9_]*)\b", expression)
+    )
+
     # Translate vars.env or var.env to variables_map['env']
     expression = re.sub(
         r"\bvars?\.([a-zA-Z_][a-zA-Z0-9_]*)\b", r"variables_map['\1']", expression
@@ -226,7 +231,16 @@ def _resolve_expression(expression, vars, objs):
 
     # Prepare a safe evaluation context - shallow copy is sufficient because
     # eval() only reads from variables_map and never mutates var values.
+    # Only the variables actually referenced by the expression are
+    # recursively re-resolved (mirroring what _resolve_variable() already
+    # does for plain `${vars.x}` substitutions), so eval() never sees a raw,
+    # still-unresolved `${vars.x}` indirection. Resolving the full vars dict
+    # eagerly instead would re-enter resolution of the very entry currently
+    # being evaluated and recurse indefinitely.
     local_context = dict(vars)
+    for name in referenced_names:
+        if name in local_context:
+            local_context[name] = _resolve_variable(name, vars, objs)
 
     locals = {"variables_map": local_context}
 
