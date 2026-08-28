@@ -1,6 +1,7 @@
 import random
 import string
 import time
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -9,6 +10,7 @@ from laktory import get_spark_session
 from laktory._testing import get_df0
 from laktory.models import HiveMetastoreDataSink
 from laktory.models import UnityCatalogDataSink
+from laktory.models.datasinks.tabledatasinkmetadata import set_tags
 
 
 @pytest.fixture()
@@ -98,6 +100,34 @@ def test_hive_table(backend, tmp_path):
     }
 
 
+def test_set_tags_value_quoting(monkeypatch):
+    mock_spark = MagicMock()
+    monkeypatch.setattr("laktory.get_spark_session", lambda: mock_spark)
+
+    set_tags(
+        object="TABLE",
+        full_name="catalog.schema.table",
+        alter_target="catalog.schema.table",
+        current={},
+        new={"my_tag": "my_value", "quoted": "o'brien", "unset_tag": None},
+        is_uc=True,
+    )
+
+    executed = [c.args[0] for c in mock_spark.sql.call_args_list]
+
+    # Non-null values are quoted as string literals via ALTER TABLE ... SET TAGS,
+    # not backtick-quoted identifiers via the unsupported "SET TAG ON ..." form
+    assert (
+        "ALTER TABLE catalog.schema.table SET TAGS ('my_tag' = 'my_value')" in executed
+    )
+    # Single quotes in the value are escaped
+    assert (
+        "ALTER TABLE catalog.schema.table SET TAGS ('quoted' = 'o\\'brien')" in executed
+    )
+    # Null values keep the key-only form
+    assert "ALTER TABLE catalog.schema.table SET TAGS ('unset_tag')" in executed
+
+
 @pytest.mark.databricks_connect
 def test_uc_table(spark, tags):
     catalog = "laktory"
@@ -144,11 +174,15 @@ def test_uc_table(spark, tags):
     assert meta1.comment == """Okube's "unit test" table"""
     assert meta1.owner == "olivier.soucy@okube.ai"
     assert meta1.properties == {
+        "delta.checkpoint.writeStatsAsJson": "false",
+        "delta.checkpoint.writeStatsAsStruct": "true",
+        "delta.enableDeletionVectors": "true",
         "delta.feature.appendOnly": "supported",
         "delta.feature.deletionVectors": "supported",
         "delta.feature.invariants": "supported",
         "delta.minReaderVersion": "3",
         "delta.minWriterVersion": "7",
+        "delta.parquet.compression.codec": "zstd",
         "lk.installed": "true",
         "lk.version": "0",
         "laktory.managedProperties": "lk.installed|lk.version",
