@@ -22,6 +22,15 @@ def test_notebook():
     assert nb1.path == "/.laktory/notebooks/hello_world.py"
 
 
+def test_notebook_dirpath_backslash_normalized():
+    """Regression test (#616): a dirpath carrying a native Windows separator
+    (leading backslash) must not be treated as an absolute anchor when
+    joined with settings.workspace_root - that would silently drop the root
+    instead of concatenating."""
+    nb = Notebook(source="./hello_world.py", dirpath="\\scripts")
+    assert nb.path == "/.laktory/scripts/hello_world.py"
+
+
 def test_notebook_laktory_root(monkeypatch):
     monkeypatch.setattr("laktory.settings.workspace_root", "/src/")
     nb3 = Notebook(source="./hello_world.py")

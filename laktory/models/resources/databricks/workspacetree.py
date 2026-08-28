@@ -197,15 +197,18 @@ class WorkspaceTree(BaseModel, VirtualTerraformResource):
             else:
                 _source = Path(os.path.relpath(filepath, cwd))
 
-            # Set path (Databricks / unix file system)
-            dirpath = str(filepath.parent).replace(str(root), "")
+            # Set path (Databricks / unix file system). Computed via
+            # `relative_to().as_posix()` instead of stringifying `filepath.parent`
+            # and stripping `root` - the latter uses the OS-native separator
+            # (`\` on Windows), which `Path(...) / dirpath` then treats as an
+            # absolute anchor and silently discards any preceding path segment.
+            dirpath = filepath.relative_to(root).parent.as_posix()
             if self.path:
-                dirpath = dirpath.removeprefix("/")
                 kwargs = {
                     "path": (Path(self.path) / dirpath / filepath.name).as_posix()
                 }
             else:
-                kwargs = {"dirpath": Path(dirpath).as_posix()}
+                kwargs = {"dirpath": dirpath}
 
             # Set access controls
             kwargs["access_controls"] = self.access_controls

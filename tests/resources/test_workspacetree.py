@@ -418,6 +418,36 @@ def test_exclude_paths_and_gitignore_combined(tmp_path):
     assert names == {"app.py"}
 
 
+def test_dirpath_computation_separator_safe():
+    """Regression test (#616): on Windows, `filepath.parent`/`root` stringify
+    with a native backslash separator. The dirpath computation must not rely
+    on that stringification - `Path(self.path) / dirpath` would then treat a
+    leading backslash as an absolute anchor and silently discard `self.path`
+    (a real `WindowsPath` can't be instantiated on POSIX, so this exercises
+    the two candidate computations directly via `PureWindowsPath`, which -
+    unlike `WindowsPath` - never touches the filesystem)."""
+    from pathlib import PureWindowsPath
+
+    root = PureWindowsPath("C:/Users/me/notebooks")
+    filepath = PureWindowsPath("C:/Users/me/notebooks/scripts/read_s3_landing.py")
+    tree_path = PureWindowsPath("/Users/me/notebooks")
+
+    # The old computation (str(filepath.parent).replace(str(root), "")) is
+    # separator-unsafe: removeprefix("/") can't strip a leading "\\", so the
+    # join below silently drops tree_path - this documents the bug.
+    old_dirpath = str(filepath.parent).replace(str(root), "").removeprefix("/")
+    assert (tree_path / old_dirpath / filepath.name) != (
+        tree_path / "scripts" / filepath.name
+    )
+
+    # The fixed computation (relative_to().parent.as_posix()) is
+    # separator-safe by construction.
+    new_dirpath = filepath.relative_to(root).parent.as_posix()
+    assert (tree_path / new_dirpath / filepath.name).as_posix() == (
+        "/Users/me/notebooks/scripts/read_s3_landing.py"
+    )
+
+
 def test_depends_on_directions():
     """A virtual WorkspaceTree participates in the dependency graph in both
     directions: its own depends_on propagates to the child files (deploy X
