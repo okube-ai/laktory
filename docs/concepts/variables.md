@@ -158,8 +158,7 @@ variables:
 
 A settings field cannot reference a sibling settings field in the same block (e.g. `build_root: ${settings.workspace_root}x` inside the same `settings:` you're defining `workspace_root` in) - it would see the *previous* value, not the one being defined alongside it. Reference another settings value from *outside* the `settings:` block instead, as in the example above.
 
-!!! note "This does not affect the Terraform state file location"
-    When using the `backend.databricks_workspace: true` shortcut (see [Stack - Backend configuration](stack.md#backend-configuration)), the Terraform state path is computed independently of `settings.workspace_root` (`/Users/{user}/.laktory/{stack}/{env}/state/...`) and is not affected by anything documented here.
+For what `settings.workspace_root` actually controls, its default, and how to auto-scope it (and Terraform state) to your own user/stack/environment with almost no configuration, see [Workspace Root](workspaceroot.md).
 
 ---
 

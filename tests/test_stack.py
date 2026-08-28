@@ -920,3 +920,143 @@ def test_terraform_stack_workspace_state_templated_name():
         address = ts.terraform.backend["http"]["address"]
         assert "/my-stack-x/dev/state/terraform.tfstate" in address
         assert "${vars.suffix}" not in address
+
+
+def _user_root_stack(**kwargs):
+    return models.Stack(
+        name="my-stack",
+        environments={"dev": {"variables": {}}},
+        resources={
+            "providers": {"databricks": _DB_PROVIDER},
+            "databricks_notebooks": {
+                "nb": {"source": "./test_stack.py", "dirpath": "foo"}
+            },
+        },
+        settings={"workspace_root": "user_root"},
+        **kwargs,
+    )
+
+
+def test_workspace_root_user_root_via_build(monkeypatch):
+    """settings.workspace_root: "user_root" resolves to a user/stack/env-scoped
+    root via Stack.build(), pushed onto the global settings singleton."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = _user_root_stack()
+        stack.build(env_name="dev")
+
+    assert settings.workspace_root == "/Users/user@test.com/.laktory/my-stack/dev/"
+
+
+def test_workspace_root_user_root_via_to_terraform(monkeypatch):
+    """Same as test_workspace_root_user_root_via_build, but via
+    Stack.to_terraform() - the resolved root shows up in a resource's own
+    resolved path."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = _user_root_stack()
+        ts = stack.to_terraform(env_name="dev")
+
+    nb_path = ts.model_dump()["resource"]["databricks_notebook"]["nb"]["path"]
+    assert nb_path == "/Users/user@test.com/.laktory/my-stack/dev/foo/test_stack.py"
+
+
+def test_workspace_root_user_root_requires_databricks_provider():
+    """settings.workspace_root: "user_root" without a DatabricksProvider in
+    the stack raises a clear error instead of silently deploying with the
+    literal sentinel as the root."""
+    stack = models.Stack(
+        name="my-stack",
+        settings={"workspace_root": "user_root"},
+    )
+    with pytest.raises(ValueError, match="user_root"):
+        stack.build(env_name=None)
+
+
+def test_workspace_root_user_root_independent_of_state_backend(monkeypatch):
+    """settings.workspace_root: "user_root" alone (no
+    backend.databricks_workspace) leaves the Terraform backend untouched -
+    the two mechanisms are independent opt-ins."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = _user_root_stack()
+        ts = stack.to_terraform(env_name="dev")
+
+    assert ts.terraform.backend is None
+
+
+def test_workspace_root_user_root_combined_with_state_backend_single_lookup(
+    monkeypatch,
+):
+    """settings.workspace_root: "user_root" combined with
+    backend.databricks_workspace: true nests the Terraform state path under
+    the same resolved root, and shares one Databricks SDK username lookup
+    instead of two."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = _user_root_stack(terraform={"backend": {"databricks_workspace": True}})
+        ts = stack.to_terraform(env_name="dev")
+
+    nb_path = ts.model_dump()["resource"]["databricks_notebook"]["nb"]["path"]
+    address = ts.terraform.backend["http"]["address"]
+    assert nb_path == "/Users/user@test.com/.laktory/my-stack/dev/foo/test_stack.py"
+    assert address.endswith(
+        "/Users/user@test.com/.laktory/my-stack/dev/state/terraform.tfstate"
+    )
+    mock_wc.current_user.me.assert_called_once()

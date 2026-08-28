@@ -850,6 +850,8 @@ resources:
 
 `${resources.x.y}` cannot be used inside `settings:` (it's resolved by Terraform, after settings have already been applied) - Laktory raises a validation error if you try. This is independent of the Terraform state file location used by the `backend.databricks_workspace: true` shortcut, which is computed separately (`/Users/{user}/.laktory/{stack}/{env}/state/...`).
 
+Set `settings.workspace_root: user_root` to auto-compute that same `/Users/{user}/.laktory/{stack}/{env}/` root for deployed objects too (requires a `DatabricksProvider`). It's an independent opt-in from `backend.databricks_workspace: true`, but combining both nests state inside the same root with zero extra config - see the `Workspace Root` docs page for the full recipe.
+
 ---
 
 ## MCP Server (if configured)
