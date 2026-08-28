@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `TableDataSinkMetadata.set_tags()` now uses `ALTER TABLE ... SET TAGS (...)` / `UNSET TAGS (...)` (supported since DBR 13.3 LTS) instead of `SET TAG ON ...` / `UNSET TAG ON ...` (only recognized on DBR 16.1+), fixing `INVALID_PROPERTY_KEY` / `INVALID_SET_SYNTAX` errors when setting table/column tags on Unity Catalog sinks on older Databricks Runtime versions, where the latter DDL form isn't parsed as tag syntax and instead falls through to Spark's generic `SET` configuration-statement grammar [[#621](https://github.com/okube-ai/laktory/issues/621)]
 ### Updated
 * n/a
 ### Breaking changes
