@@ -19,7 +19,7 @@ _LAKTORY_MANAGED_KEY = "laktory.managedProperties"
 #     not_null: bool = None
 
 
-def set_tags(object, full_name, current, new, is_uc):
+def set_tags(object, full_name, alter_target, current, new, is_uc):
     from laktory import get_spark_session
 
     spark = get_spark_session()
@@ -33,20 +33,25 @@ def set_tags(object, full_name, current, new, is_uc):
         v0 = current.get(k, "__lk_undefined__")
         if v != v0:
             logger.info(f"Setting {object} '{full_name}' tag `{k}` to '{v}'")
+            k_str = k.replace("'", "\\'")
             if k in current.keys():
                 # Tags can't be overwritten. They need to be unset first.
-                spark.sql(f"""UNSET TAG ON {object} {full_name} `{k}`""")
+                spark.sql(f"""ALTER TABLE {alter_target} UNSET TAGS ('{k_str}')""")
 
             if v is not None:
-                spark.sql(f"""SET TAG ON {object} {full_name} `{k}` = `{v}`""")
+                v_str = str(v).replace("'", "\\'")
+                spark.sql(
+                    f"""ALTER TABLE {alter_target} SET TAGS ('{k_str}' = '{v_str}')"""
+                )
             else:
-                spark.sql(f"""SET TAG ON {object} {full_name} `{k}`""")
+                spark.sql(f"""ALTER TABLE {alter_target} SET TAGS ('{k_str}')""")
 
     # Remove old tags
     for k in current.keys():
         if k not in new:
             logger.info(f"Unsetting {object} '{full_name}' tag `{k}`")
-            spark.sql(f"""UNSET TAG ON {object} {full_name} `{k}`""")
+            k_str = k.replace("'", "\\'")
+            spark.sql(f"""ALTER TABLE {alter_target} UNSET TAGS ('{k_str}')""")
 
 
 class ColumnMetadata(BaseModel):
@@ -104,6 +109,7 @@ class ColumnMetadata(BaseModel):
         set_tags(
             object="COLUMN",
             full_name=column_full_name,
+            alter_target=f"{table_full_name} ALTER COLUMN {self.name}",
             current=current.tags,
             new=self.tags,
             is_uc=is_uc,
@@ -276,6 +282,7 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         set_tags(
             object="TABLE",
             full_name=table_full_name,
+            alter_target=table_full_name,
             current=self.current.tags,
             new=self.tags,
             is_uc=self.is_uc,
