@@ -174,11 +174,15 @@ def test_uc_table(spark, tags):
     assert meta1.comment == """Okube's "unit test" table"""
     assert meta1.owner == "olivier.soucy@okube.ai"
     assert meta1.properties == {
+        "delta.checkpoint.writeStatsAsJson": "false",
+        "delta.checkpoint.writeStatsAsStruct": "true",
+        "delta.enableDeletionVectors": "true",
         "delta.feature.appendOnly": "supported",
         "delta.feature.deletionVectors": "supported",
         "delta.feature.invariants": "supported",
         "delta.minReaderVersion": "3",
         "delta.minWriterVersion": "7",
+        "delta.parquet.compression.codec": "zstd",
         "lk.installed": "true",
         "lk.version": "0",
         "laktory.managedProperties": "lk.installed|lk.version",
