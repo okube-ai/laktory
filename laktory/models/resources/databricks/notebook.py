@@ -86,9 +86,12 @@ class Notebook(RenderableFileMixin, NotebookBase):
         if self.path_:
             return self.path_
 
-        # dir
+        # dir - normalize a native Windows separator (e.g. a backslash-prefixed
+        # dirpath) so `Path(...) / self.dirpath` below can't treat it as an
+        # absolute anchor and silently drop `settings.workspace_root`
         if self.dirpath is None:
             self.dirpath = ""
+        self.dirpath = self.dirpath.replace("\\", "/")
         if self.dirpath.startswith("/"):
             self.dirpath = self.dirpath[1:]
 
