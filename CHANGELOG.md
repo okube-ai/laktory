@@ -8,6 +8,7 @@
 * `WorkspaceTree` with an explicit `path` no longer silently drops that path prefix on Windows for files nested in a subdirectory of `source`. The `dirpath` used to build each file's target path is now computed via `relative_to(...).as_posix()` instead of stringifying `filepath.parent` (which used the OS-native separator and was then wrongly treated as an absolute anchor when joined with `path`). `Notebook.dirpath` / `WorkspaceFile.dirpath` also now normalize a backslash-prefixed value defensively [[#616](https://github.com/okube-ai/laktory/issues/616)]
 ### Updated
 * `TableDataSinkMetadata.set_tags()` now uses `ALTER TABLE ... SET TAGS (...)` / `UNSET TAGS (...)` (supported since DBR 13.3 LTS) instead of `SET TAG ON ...` / `UNSET TAG ON ...` (only recognized on DBR 16.1+), fixing `INVALID_PROPERTY_KEY` / `INVALID_SET_SYNTAX` errors when setting table/column tags on Unity Catalog sinks on older Databricks Runtime versions, where the latter DDL form isn't parsed as tag syntax and instead falls through to Spark's generic `SET` configuration-statement grammar [[#621](https://github.com/okube-ai/laktory/issues/621)]
+* `CurrentUser` (`databricks_current_user`) now always deploys as a Terraform `data` block - it only exists as a data source in the `databricks` provider, so `lookup_existing` no longer needs to be set explicitly; omitting it previously generated an invalid `resource` block that only failed later at `terraform plan` [[#619](https://github.com/okube-ai/laktory/issues/619)]
 
 ## [0.12.3] - 2026-08-18
 ### Added
