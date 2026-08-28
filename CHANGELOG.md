@@ -1,6 +1,16 @@
 # Release History
 
-## [0.12.4] - Unreleased
+## [0.12.5] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.12.4] - 2026-08-28
 ### Added
 * `${settings.x}` / `${setting.x}` variable syntax to reuse a `laktory.settings` value (e.g. `settings.workspace_root`) anywhere else in a stack, in both plain substitution and `${{ expr }}` contexts - avoids duplicating the same literal in the `settings:` block and again elsewhere [[#618](https://github.com/okube-ai/laktory/issues/618)]
 * `settings.workspace_root: "user_root"` sentinel value to auto-compute a Databricks user/stack/environment-scoped deployment root (`/Users/{you}/.laktory/{stack}/{env}/`). Independent of, but designed to nest cleanly with, `terraform.backend.databricks_workspace: true` - using both resolves the username via a single shared Databricks SDK lookup. See the new [Workspace Root](https://www.laktory.ai/concepts/workspaceroot/) docs page [[#618](https://github.com/okube-ai/laktory/issues/618)]
