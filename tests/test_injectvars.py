@@ -170,6 +170,22 @@ def test_expression():
     assert c.id == 4
 
 
+def test_expression_indirection():
+    """A variable that is itself a `${vars.x}` indirection must be fully
+    resolved before being exposed to `${{ }}` expression evaluation, not
+    handed to eval() as a raw, unresolved template string (#615)."""
+    c = Cluster(
+        name="${vars.catalog_write}",
+        job_id="${{ 'resolved:' + vars.catalog_write }}",
+        variables={
+            "catalog_write": "${vars.real_catalog}",
+            "real_catalog": "dlk_dev",
+        },
+    ).inject_vars()
+    assert c.name == "dlk_dev"
+    assert c.job_id == "resolved:dlk_dev"
+
+
 def test_objects():
     from laktory._parsers import _resolve_expression
 
