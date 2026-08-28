@@ -30,6 +30,15 @@ def test_workspace_file():
     assert workspace_file.access_controls[0].group_name == "account users"
 
 
+def test_workspacefile_dirpath_backslash_normalized():
+    """Regression test (#616): a dirpath carrying a native Windows separator
+    (leading backslash) must not be treated as an absolute anchor when
+    joined with settings.workspace_root - that would silently drop the root
+    instead of concatenating."""
+    wf = WorkspaceFile(source="./hello_world.py", dirpath="\\scripts")
+    assert wf.path == "/.laktory/scripts/hello_world.py"
+
+
 def test_workspacefile_additional_resources():
     wf = get_workspace_file()
     assert len(wf.additional_core_resources) == 1
