@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytest
@@ -1060,3 +1061,68 @@ def test_workspace_root_user_root_combined_with_state_backend_single_lookup(
         "/Users/user@test.com/.laktory/my-stack/dev/state/terraform.tfstate"
     )
     mock_wc.current_user.me.assert_called_once()
+
+
+def test_workspace_root_user_root_lakeflow_job_permissions_depends_on(monkeypatch):
+    """Regression for #629: a LAKEFLOW_JOB pipeline's auto-generated config-file
+    `Permissions` resource must `depends_on` the actual `databricks_workspace_file`
+    resource name, even when `settings.workspace_root: "user_root"` is resolved
+    (the resolved root wasn't yet known when the `Permissions` resource's
+    `depends_on` was first computed and cached)."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    pl = models.Pipeline(
+        name="pl-job",
+        nodes=[
+            {
+                "name": "brz",
+                "sources": [{"format": "JSON", "path": "/brz_source/"}],
+                "sinks": [
+                    {"format": "PARQUET", "mode": "APPEND", "path": "/brz_sink/"}
+                ],
+            },
+        ],
+        orchestrator={
+            "type": "LAKEFLOW_JOB",
+            "name": "pl-job",
+            "serverless_environment_version": "5",
+        },
+    )
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "pipelines": {"pl-job": pl.model_dump(exclude_unset=True)},
+            },
+            settings={"workspace_root": "user_root"},
+        )
+        d = stack.to_terraform(env_name="dev").model_dump()
+
+    resource_names = {rname for bodies in d["resource"].values() for rname in bodies}
+    perms = d["resource"]["databricks_permissions"]
+    assert len(perms) == 1
+    depends_on = next(iter(perms.values()))["depends_on"]
+    assert len(depends_on) == 1
+    # A resolved `depends_on` is rewritten to Terraform's native `type.name`
+    # reference; an unresolved one is left as the raw `${resources.name}`
+    # placeholder - either way, `name` must be a real resource.
+    dep = depends_on[0]
+    m = re.match(r"^\$\{resources\.([^}]+)\}$", dep)
+    dep_name = m.group(1) if m else dep.split(".", 1)[1]
+    assert dep_name in resource_names

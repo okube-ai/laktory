@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `depends_on` on a LAKEFLOW_JOB pipeline's auto-generated config-file `Permissions` resource pointing at a nonexistent resource when `settings.workspace_root: "user_root"` is used, causing `terraform plan` to fail [[#629](https://github.com/okube-ai/laktory/issues/629)]
 ### Updated
 * n/a
 ### Breaking changes
