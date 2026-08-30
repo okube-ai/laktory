@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* `inject_vars()` no longer crashes with a Pydantic `frozen_field` error when a frozen field (e.g. a data source's `type:` literal, such as `type: CUSTOM` on `CustomDataSource`) is explicitly set in YAML/code [[#628](https://github.com/okube-ai/laktory/issues/628)]
 ### Updated
 * n/a
 ### Breaking changes

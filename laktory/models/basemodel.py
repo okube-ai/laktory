@@ -1,5 +1,3 @@
-#
-
 import copy
 import json
 import re
@@ -7,7 +5,6 @@ import typing
 from copy import deepcopy
 from typing import Any
 from typing import TextIO
-from typing import Type
 from typing import TypeVar
 from typing import Union
 from typing import get_args
@@ -229,7 +226,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # ----------------------------------------------------------------------- #
 
     @classmethod
-    def model_validate_yaml(cls: Type[Model], fp: TextIO, vars=None) -> Model:
+    def model_validate_yaml(cls, fp: TextIO, vars=None) -> typing.Self:
         """
         Load model from yaml file object using laktory.yaml.RecursiveLoader. Supports
         reference to external yaml and sql files using `!use`, `!extend` and `!update` tags.
@@ -291,7 +288,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         return yaml.dump(self.model_dump(*args, **kwargs))
 
     @classmethod
-    def model_validate_json_file(cls: Type[Model], fp: TextIO) -> Model:
+    def model_validate_json_file(cls, fp: TextIO) -> typing.Self:
         """
         Load model from json file object
 
