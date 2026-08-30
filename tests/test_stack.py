@@ -5,6 +5,7 @@ import pytest
 
 import laktory as lk
 from laktory import models
+from laktory._current_user import current_user
 from laktory._settings import settings
 from laktory._testing import skip_terraform_plan
 
@@ -1126,3 +1127,285 @@ def test_workspace_root_user_root_lakeflow_job_permissions_depends_on(monkeypatc
     m = re.match(r"^\$\{resources\.([^}]+)\}$", dep)
     dep_name = m.group(1) if m else dep.split(".", 1)[1]
     assert dep_name in resource_names
+
+
+def test_workspace_root_user_root_lakeflow_job_config_filepath(monkeypatch):
+    """Regression for #630: a LAKEFLOW_JOB pipeline's own job definition -
+    the task's `named_parameters.filepath` and the job's dependency/library
+    spec - must reflect the resolved `settings.workspace_root: "user_root"`
+    value, not the raw unresolved root. `LakeflowJobOrchestrator.
+    update_from_parent()` first runs at initial model construction/
+    validation, before `Stack._resolve_user_root()` has a chance to resolve
+    the sentinel, so these fields were getting baked in with the wrong root
+    and never recomputed."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    pl = models.Pipeline(
+        name="pl-job",
+        dependencies=["${vars.wheel_filepath}"],
+        nodes=[
+            {
+                "name": "brz",
+                "sources": [{"format": "JSON", "path": "/brz_source/"}],
+                "sinks": [
+                    {"format": "PARQUET", "mode": "APPEND", "path": "/brz_sink/"}
+                ],
+            },
+        ],
+        orchestrator={
+            "type": "LAKEFLOW_JOB",
+            "name": "pl-job",
+            "serverless_environment_version": "5",
+        },
+    )
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            variables={
+                "wheel_filepath": "/Workspace${settings.workspace_root}wheels/udp-0.0.1-py3-none-any.whl"
+            },
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "pipelines": {"pl-job": pl.model_dump(exclude_unset=True)},
+            },
+            settings={"workspace_root": "user_root"},
+        )
+        d = stack.to_terraform(env_name="dev").model_dump()
+
+    root = "/Users/user@test.com/.laktory/my-stack/dev/"
+    assert settings.workspace_root == root
+
+    # `databricks_workspace_file` resource (already known to resolve correctly)
+    file_path = next(iter(d["resource"]["databricks_workspace_file"].values()))["path"]
+    assert file_path == f"{root}pipelines/pl-job.json"
+
+    # Job task's own `filepath` parameter must point at the same file
+    job = next(iter(d["resource"]["databricks_job"].values()))
+    task = job["task"][0]
+    assert task["python_wheel_task"]["named_parameters"]["filepath"] == (
+        f"/Workspace{file_path}"
+    )
+
+    # Environment dependency (serverless) must use the resolved root too
+    dep = job["environment"][0]["spec"]["dependencies"][0]
+    assert dep == f"/Workspace{root}wheels/udp-0.0.1-py3-none-any.whl"
+
+
+def test_workspace_root_user_root_lakeflow_declarative_pipeline_config_filepath(
+    monkeypatch,
+):
+    """Regression for #630: same as
+    test_workspace_root_user_root_lakeflow_job_config_filepath, but for the
+    LAKEFLOW_DECLARATIVE_PIPELINE orchestrator, whose `update_from_parent()`
+    bakes `settings.workspace_root` into `configuration['laktory.
+    config_filepath']` via the exact same early-construction pattern."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    pl = models.Pipeline(
+        name="pl-ldp",
+        nodes=[
+            {
+                "name": "brz",
+                "sources": [{"format": "JSON", "path": "/brz_source/"}],
+                "sinks": [{"schema_name": "s", "table_name": "brz"}],
+            },
+        ],
+        orchestrator={
+            "type": "LAKEFLOW_DECLARATIVE_PIPELINE",
+            "name": "pl-ldp",
+            "catalog": "c",
+            "target": "s",
+        },
+    )
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "pipelines": {"pl-ldp": pl.model_dump(exclude_unset=True)},
+            },
+            settings={"workspace_root": "user_root"},
+        )
+        d = stack.to_terraform(env_name="dev").model_dump()
+
+    root = "/Users/user@test.com/.laktory/my-stack/dev/"
+    assert settings.workspace_root == root
+
+    file_path = next(iter(d["resource"]["databricks_workspace_file"].values()))["path"]
+    assert file_path == f"{root}pipelines/pl-ldp.json"
+
+    pipeline = next(iter(d["resource"]["databricks_pipeline"].values()))
+    assert pipeline["configuration"]["laktory.config_filepath"] == (
+        f"/Workspace{file_path}"
+    )
+
+
+def test_current_user_variable_resolves(monkeypatch):
+    """`${current_user.user_name}` resolves to the live Databricks username,
+    the same way `${{ current_user.user_name }}` does inside an expression."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(current_user, "user_name", current_user.user_name)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "databricks_notebooks": {
+                    "nb": {
+                        "source": "./test_stack.py",
+                        "dirpath": "foo/${current_user.user_name}",
+                    },
+                    "nb2": {
+                        "source": "./test_stack.py",
+                        "dirpath": "${{ 'bar-' + current_user.user_name }}",
+                    },
+                },
+            },
+        )
+        d = stack.to_terraform(env_name="dev").model_dump()
+
+    assert current_user.user_name == "user@test.com"
+    notebooks = d["resource"]["databricks_notebook"]
+    assert notebooks["nb"]["path"] == "/.laktory/foo/user@test.com/test_stack.py"
+    assert notebooks["nb2"]["path"] == "/.laktory/bar-user@test.com/test_stack.py"
+
+
+def test_current_user_variable_not_referenced_makes_no_sdk_call(monkeypatch):
+    """A stack that never references `${current_user.x}` must not trigger a
+    live Databricks SDK lookup - it's opt-in, not auto-injected."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(current_user, "user_name", current_user.user_name)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "databricks_notebooks": {
+                    "nb": {"source": "./test_stack.py", "dirpath": "foo"}
+                },
+            },
+        )
+        stack.to_terraform(env_name="dev")
+
+    assert current_user.user_name is None
+    mock_wc.current_user.me.assert_not_called()
+
+
+def test_current_user_variable_requires_databricks_provider():
+    """Referencing `${current_user.x}` without a `DatabricksProvider` in the
+    stack raises a clear error instead of silently leaving it unresolved."""
+    stack = models.Stack(
+        name="my-stack",
+        resources={
+            "databricks_notebooks": {
+                "nb": {
+                    "source": "./test_stack.py",
+                    "dirpath": "foo/${current_user.user_name}",
+                }
+            },
+        },
+    )
+    with pytest.raises(ValueError, match=r"current_user"):
+        stack.build(env_name=None)
+
+
+def test_current_user_variable_shares_single_lookup_with_user_root_and_backend(
+    monkeypatch,
+):
+    """`${current_user.x}`, `settings.workspace_root: "user_root"`, and
+    `backend.databricks_workspace: true` all need the same live username -
+    combined in one stack, they must share a single SDK call."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
+    monkeypatch.setattr(current_user, "user_name", current_user.user_name)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "databricks_notebooks": {
+                    "nb": {
+                        "source": "./test_stack.py",
+                        "dirpath": "foo/${current_user.user_name}",
+                    }
+                },
+            },
+            settings={"workspace_root": "user_root"},
+            terraform={"backend": {"databricks_workspace": True}},
+        )
+        stack.to_terraform(env_name="dev")
+
+    assert current_user.user_name == "user@test.com"
+    mock_wc.current_user.me.assert_called_once()

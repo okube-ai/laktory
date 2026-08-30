@@ -193,6 +193,32 @@ def _resolve_value(o, vars, objs, stringify=False):
     if not isinstance(o, str):
         return o
 
+    # Resolve ${current_user.<name>} syntax
+    pattern = re.compile(r"\$\{current_user\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
+    for match in pattern.finditer(o):
+        # Extract the attribute name
+        attr_name = match.group(1)
+
+        # Resolve the current user value
+        resolved_value = _resolve_current_user(attr_name, vars, objs)
+
+        # Recursively resolve nested variables if variable value is a dict
+        # or a list, whether it ends up embedded (stringify) or returned
+        # as-is (whole-value replacement)
+        if isinstance(resolved_value, (list, dict)):
+            resolved_value = _resolve_values(resolved_value, vars, objs)
+
+        # Update the value with the resolved value
+        if isinstance(resolved_value, str):
+            o = o.replace(match.group(0), resolved_value)
+        elif stringify:
+            o = o.replace(match.group(0), json.dumps(resolved_value))
+        else:
+            o = resolved_value
+
+    if not isinstance(o, str):
+        return o
+
     # Resolve ${{ <expression> }} syntax
     pattern = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
     for match in pattern.finditer(o):
@@ -266,6 +292,40 @@ def _resolve_settings(name, vars, objs):
     return value
 
 
+def _get_current_user_value(name):
+    """Look up `name` on the `laktory._current_user.current_user` singleton.
+
+    Returns `None` if not yet resolved (no `Stack` has found and resolved a
+    `${current_user.x}` reference) or if `name` isn't a recognized attribute.
+    """
+    from laktory._current_user import current_user
+
+    return getattr(current_user, name.lower(), None)
+
+
+def _resolve_current_user(name, vars, objs):
+    """Resolve a `${current_user.<name>}` reference.
+
+    `laktory._current_user.current_user` is populated by `Stack` (see
+    `Stack._resolve_user_root` in `laktory/models/stacks/stack.py`) before
+    the general variable-resolution pass runs, so by the time this is
+    called the value should already be set. Returns the raw template
+    unresolved (matching `${settings.x}`'s behavior) if it isn't - e.g. when
+    resolving outside a `Stack` context.
+    """
+    value = _get_current_user_value(name)
+
+    # Value not found returning original value
+    if value is None:
+        return f"${{current_user.{name}}}"  # Default value if not resolved
+
+    # If the resolved value is itself a string with variables, resolve it
+    if isinstance(value, str) and ("${" in value or "$${" in value):
+        value = _resolve_value(value, vars, objs)
+
+    return value
+
+
 def _resolve_expression(expression, vars, objs):
     """Evaluate an inline expression."""
     # Names referenced as `vars.name` / `var.name` inside the expression
@@ -289,6 +349,17 @@ def _resolve_expression(expression, vars, objs):
         expression,
     )
 
+    # Names referenced as `current_user.name`, translated the same way
+    # (current_user.name -> current_user_map['name'])
+    referenced_current_user = set(
+        re.findall(r"\bcurrent_user\.([a-zA-Z_][a-zA-Z0-9_]*)\b", expression)
+    )
+    expression = re.sub(
+        r"\bcurrent_user\.([a-zA-Z_][a-zA-Z0-9_]*)\b",
+        r"current_user_map['\1']",
+        expression,
+    )
+
     # Prepare a safe evaluation context - shallow copy is sufficient because
     # eval() only reads from variables_map and never mutates var values.
     # Only the variables actually referenced by the expression are
@@ -303,8 +374,15 @@ def _resolve_expression(expression, vars, objs):
             local_context[name] = _resolve_variable(name, vars, objs)
 
     settings_context = {name: _get_settings_value(name) for name in referenced_settings}
+    current_user_context = {
+        name: _get_current_user_value(name) for name in referenced_current_user
+    }
 
-    locals = {"variables_map": local_context, "settings_map": settings_context}
+    locals = {
+        "variables_map": local_context,
+        "settings_map": settings_context,
+        "current_user_map": current_user_context,
+    }
 
     if objs is not None:
         for k, v in objs.items():
