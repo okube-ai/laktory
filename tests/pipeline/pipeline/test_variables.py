@@ -29,6 +29,28 @@ def test_node_name_in_path():
     assert pl2.nodes[0].sinks[0].schema_name == "brz"
 
 
+def test_node_source_explicit_type():
+    """A pipeline node whose source explicitly sets `type` (a frozen field)
+    must not crash inject_vars (#628)."""
+    pl = models.Pipeline(
+        name="my-pipeline",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                sources=[
+                    {
+                        "type": "CUSTOM",
+                        "custom_reader": "tests.datasources.test_customdatasource._read_polars",
+                    }
+                ],
+                sinks=[{"schema_name": "default", "table_name": "brz"}],
+            )
+        ],
+    )
+    pl2 = pl.inject_vars()
+    assert pl2.nodes[0].sources[0].type == "CUSTOM"
+
+
 def test_pipeline_variables_dict():
     pl = models.Pipeline(
         name="my-pipeline",

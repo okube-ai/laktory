@@ -1,4 +1,5 @@
 import pytest
+from pydantic import Field
 
 from laktory import models
 
@@ -15,6 +16,11 @@ class Cluster(models.BaseModel):
     tags: dict[str, str] = None
     owner: Owner = None
     job_id: str = None
+
+
+class FrozenTyped(models.BaseModel):
+    type: str = Field("CUSTOM", frozen=True)
+    name: str = None
 
 
 def test_simple_substitution():
@@ -184,6 +190,16 @@ def test_expression_indirection():
     ).inject_vars()
     assert c.name == "dlk_dev"
     assert c.job_id == "resolved:dlk_dev"
+
+
+def test_frozen_field_explicitly_set():
+    """Explicitly setting a frozen field (e.g. a data source's `type`
+    literal) must not crash inject_vars with a Pydantic frozen-field
+    error, since the resolved value is identical to the original (#628)."""
+    m = FrozenTyped(type="CUSTOM", name="${vars.n}", variables={"n": "x"})
+    result = m.inject_vars()
+    assert result.type == "CUSTOM"
+    assert result.name == "x"
 
 
 def test_objects():

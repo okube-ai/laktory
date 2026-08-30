@@ -87,6 +87,20 @@ def test_kwargs():
     assert source.custom_reader.func_kwargs == {"multiplier": 2.0}
 
 
+def test_inject_vars_with_explicit_frozen_type():
+    """Explicitly setting `type` must not crash inject_vars (issue #628)."""
+    source = models.CustomDataSource(
+        type="CUSTOM",
+        custom_reader="tests.datasources.test_customdatasource._read_polars",
+    )
+    injected = source.inject_vars()
+    assert injected.type == "CUSTOM"
+    assert (
+        injected.custom_reader.func_name
+        == "tests.datasources.test_customdatasource._read_polars"
+    )
+
+
 # --------------------------------------------------------------------------- #
 # Read                                                                        #
 # --------------------------------------------------------------------------- #
