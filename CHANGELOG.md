@@ -4,6 +4,7 @@
 ### Added
 * n/a
 ### Fixed
+* `inject_vars()` no longer crashes with a Pydantic `frozen_field` error when a frozen field (e.g. a data source's `type:` literal, such as `type: CUSTOM` on `CustomDataSource`) is explicitly set in YAML/code [[#628](https://github.com/okube-ai/laktory/issues/628)]
 * `depends_on` on a LAKEFLOW_JOB pipeline's auto-generated config-file `Permissions` resource pointing at a nonexistent resource when `settings.workspace_root: "user_root"` is used, causing `terraform plan` to fail [[#629](https://github.com/okube-ai/laktory/issues/629)]
 ### Updated
 * n/a

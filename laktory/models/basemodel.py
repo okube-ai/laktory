@@ -1,5 +1,3 @@
-#
-
 import copy
 import json
 import re
@@ -7,7 +5,6 @@ import typing
 from copy import deepcopy
 from typing import Any
 from typing import TextIO
-from typing import Type
 from typing import TypeVar
 from typing import Union
 from typing import get_args
@@ -229,7 +226,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # ----------------------------------------------------------------------- #
 
     @classmethod
-    def model_validate_yaml(cls: Type[Model], fp: TextIO, vars=None) -> Model:
+    def model_validate_yaml(cls: typing.Type[Model], fp: TextIO, vars=None) -> Model:
         """
         Load model from yaml file object using laktory.yaml.RecursiveLoader. Supports
         reference to external yaml and sql files using `!use`, `!extend` and `!update` tags.
@@ -291,7 +288,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         return yaml.dump(self.model_dump(*args, **kwargs))
 
     @classmethod
-    def model_validate_json_file(cls: Type[Model], fp: TextIO) -> Model:
+    def model_validate_json_file(cls: typing.Type[Model], fp: TextIO) -> Model:
         """
         Load model from json file object
 
@@ -482,14 +479,23 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         for k in list(self.model_fields_set):
             if k == "variables":
                 continue
+            # Frozen fields (e.g. `type` literals) are constants and can
+            # never contain a variable to resolve. Skipping them also
+            # avoids Pydantic's frozen-field check on setattr below.
+            field = type(self).model_fields.get(k)
+            if field is not None and field.frozen:
+                continue
             o = getattr(self, k)
 
             if isinstance(o, BaseModel) or isinstance(o, dict) or isinstance(o, list):
                 # Mutable objects will be updated in place
                 _resolve_values(o, vars, objs)
             else:
-                # Simple objects must be updated explicitly
-                setattr(self, k, _resolve_value(o, vars, objs))
+                # Simple objects must be updated explicitly, but only if
+                # the resolved value actually changed
+                new_o = _resolve_value(o, vars, objs)
+                if new_o != o:
+                    setattr(self, k, new_o)
 
         # Inject into child resources
         if hasattr(self, "core_resources"):
