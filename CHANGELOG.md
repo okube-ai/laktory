@@ -2,14 +2,12 @@
 
 ## [0.12.5] - Unreleased
 ### Added
-* n/a
+* `${current_user.X}` variable namespace (currently `user_name`) exposing the live Databricks identity resolved via the SDK, mirroring `${settings.X}`. See [Variables](https://www.laktory.ai/concepts/variables/#current-user)
 ### Fixed
 * `inject_vars()` no longer crashes with a Pydantic `frozen_field` error when a frozen field (e.g. a data source's `type:` literal, such as `type: CUSTOM` on `CustomDataSource`) is explicitly set in YAML/code [[#628](https://github.com/okube-ai/laktory/issues/628)]
 * `depends_on` on a LAKEFLOW_JOB pipeline's auto-generated config-file `Permissions` resource pointing at a nonexistent resource when `settings.workspace_root: "user_root"` is used, causing `terraform plan` to fail [[#629](https://github.com/okube-ai/laktory/issues/629)]
-### Updated
-* n/a
-### Breaking changes
-* n/a
+* A `LAKEFLOW_JOB` or `LAKEFLOW_DECLARATIVE_PIPELINE` pipeline's own job/config definition (task `filepath`, dependency/library paths, `config_filepath`) baked in the raw, unresolved `settings.workspace_root` instead of the `"user_root"`-resolved value, causing the deployed job to fail with `FileNotFoundError` / library-install errors [[#630](https://github.com/okube-ai/laktory/issues/630)]
+
 
 ## [0.12.4] - 2026-08-28
 ### Added

@@ -10,6 +10,7 @@ from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
 
+from laktory._current_user import current_user
 from laktory._logger import get_logger
 from laktory._settings import settings
 from laktory.models.basemodel import BaseModel
@@ -124,6 +125,21 @@ def _resolve_databricks_provider_and_username(env):
     wc = db_provider.workspace_client
     username = wc.current_user.me().user_name
     return db_provider, wc, username
+
+
+_CURRENT_USER_REFERENCE_PATTERN = re.compile(r"current_user\.[a-zA-Z_]")
+
+
+def _references_current_user(env) -> bool:
+    """Cheap textual scan for a `current_user.x` reference anywhere in the
+    (not yet variable-resolved) stack - either the plain `${current_user.x}`
+    form or `current_user.x` inside a `${{ <expr> }}` expression - so the
+    live Databricks SDK username lookup is only made when actually needed.
+    `${current_user.x}` is opt-in and must never trigger a surprise network
+    call for a stack that doesn't reference it.
+    """
+    dump = json.dumps(env.model_dump(mode="json", exclude_unset=True), default=str)
+    return _CURRENT_USER_REFERENCE_PATTERN.search(dump) is not None
 
 
 def _user_workspace_root(username: str, stack_name: str, env_name: str | None) -> str:
@@ -563,11 +579,16 @@ class Stack(BaseModel):
     def _resolve_user_root(self, env: "Stack", env_name: str | None):
         """Resolve `settings.workspace_root: "user_root"` (if set) into a
         concrete, user/stack/env-scoped path and push it onto `env.settings`
-        (and, via `apply_settings()`, the global settings singleton).
+        (and, via `apply_settings()`, the global settings singleton). Also
+        resolves the `${current_user.x}` template namespace (see
+        `laktory/_current_user.py`) if referenced anywhere in the stack -
+        both need the exact same live Databricks SDK username lookup, made
+        at most once here.
 
         No-op unless `env.settings.workspace_root` is exactly the
-        `USER_ROOT_SENTINEL`. Requires a `DatabricksProvider` in the stack for
-        the live username lookup - same requirement as
+        `USER_ROOT_SENTINEL` or `${current_user.x}` is referenced somewhere
+        in `env`. Requires a `DatabricksProvider` in the stack whenever
+        either is triggered - same requirement as
         `backend.databricks_workspace`.
 
         Returns the `(db_provider, workspace_client, username)` it resolved
@@ -576,18 +597,35 @@ class Stack(BaseModel):
         (`to_terraform()`) can reuse it instead of making a second, redundant
         `current_user.me()` API call.
         """
-        if env.settings is None or env.settings.workspace_root != USER_ROOT_SENTINEL:
+        needs_root = (
+            env.settings is not None
+            and env.settings.workspace_root == USER_ROOT_SENTINEL
+        )
+        needs_current_user = _references_current_user(env)
+
+        if not needs_root and not needs_current_user:
             return None, None, None
 
         db_provider, wc, username = _resolve_databricks_provider_and_username(env)
         if db_provider is None:
+            if needs_root:
+                raise ValueError(
+                    f"settings.workspace_root: '{USER_ROOT_SENTINEL}' requires a "
+                    "DatabricksProvider in the stack."
+                )
             raise ValueError(
-                f"settings.workspace_root: '{USER_ROOT_SENTINEL}' requires a "
-                "DatabricksProvider in the stack."
+                "'${current_user.x}' requires a DatabricksProvider in the stack."
             )
 
-        env.settings.workspace_root = _user_workspace_root(username, env.name, env_name)
-        env.settings.apply_settings()
+        if needs_root:
+            env.settings.workspace_root = _user_workspace_root(
+                username, env.name, env_name
+            )
+            env.settings.apply_settings()
+
+        if needs_current_user:
+            current_user.user_name = username
+
         return db_provider, wc, username
 
     def build(self, env_name: str | None, inject_vars: bool = True, vars: dict = None):
@@ -645,6 +683,16 @@ class Stack(BaseModel):
                 orchestrator = r.orchestrator
                 if not orchestrator:
                     continue
+
+                # Orchestrator fields derived from `settings.workspace_root`
+                # (e.g. a LAKEFLOW_JOB task's `filepath`, a
+                # LAKEFLOW_DECLARATIVE_PIPELINE's `config_filepath`
+                # configuration entry) are computed by `update_from_parent()`,
+                # which first runs at initial model construction/validation -
+                # before `_resolve_user_root()` (above) has had a chance to
+                # resolve `workspace_root: "user_root"`. Re-run it now so
+                # those fields reflect the resolved root.
+                orchestrator.update_from_parent()
 
                 config_file = getattr(r.orchestrator, "config_file", None)
                 if config_file:

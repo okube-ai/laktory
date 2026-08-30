@@ -5,7 +5,7 @@ Laktory uses three distinct mechanisms to make declarations dynamic. They share 
 
 | Mechanism | Syntax | Resolved | Valid in |
 |-----------|--------|----------|----------|
-| **Variable** | `${vars.X}` · `${resources.X.id}` · `${settings.X}` | Config / deployment time | Any model field |
+| **Variable** | `${vars.X}` · `${resources.X.id}` · `${settings.X}` · `${current_user.X}` | Config / deployment time | Any model field |
 | **Expression** | `${{ python expr }}` | Config / deployment time | Any model field |
 | **Reference** | `{df}` · `{sources.X}` · `{nodes.X}` | Execution time | Transformer nodes only |
 
@@ -160,6 +160,24 @@ A settings field cannot reference a sibling settings field in the same block (e.
 
 For what `settings.workspace_root` actually controls, its default, and how to auto-scope it (and Terraform state) to your own user/stack/environment with almost no configuration, see [Workspace Root](workspaceroot.md).
 
+### Current User
+
+The `current_user.*` namespace exposes your live Databricks identity - currently just `user_name` - resolved via the Databricks SDK against the `DatabricksProvider` in your stack:
+
+```yaml title="stack.yaml"
+resources:
+  providers:
+    databricks: {}
+  databricks_workspacetrees:
+    app:
+      source: ./app/
+      path: /Users/${current_user.user_name}/app
+```
+
+Unlike `settings.*`, `current_user.*` isn't backed by a stack config field - it's resolved lazily, only when `${current_user.X}` is actually referenced somewhere in the stack, via one live SDK call (`workspace_client.current_user.me()`). A stack that never references it makes no network call for it. Referencing it without a `DatabricksProvider` in the stack raises a clear error rather than silently leaving the template unresolved.
+
+If the stack also uses `settings.workspace_root: "user_root"` (see [Workspace Root](workspaceroot.md)) and/or `terraform.backend.databricks_workspace: true`, all three share the same single SDK lookup - no redundant calls.
+
 ---
 
 ## Expressions
@@ -185,10 +203,11 @@ variables:
     prd: 4
 ```
 
-`settings.X` is also available inside expressions, alongside `vars.X`:
+`settings.X` and `current_user.X` are also available inside expressions, alongside `vars.X`:
 
 ```yaml
 name: ${{ 'prod-' + settings.workspace_root if vars.env == 'prd' else 'dev' }}
+path: ${{ '/Users/' + current_user.user_name + '/app' }}
 ```
 
 ### Context objects

@@ -78,9 +78,9 @@ When both are enabled together, Laktory resolves your username only once and reu
 
 ## How the username is resolved
 
-Both `user_root` and `backend.databricks_workspace: true` resolve your identity the same way: they find a `DatabricksProvider` in the stack, build a Databricks SDK `WorkspaceClient` from whatever credentials are already configured on it (token, profile, service principal, ...), and call the SDK's current-user endpoint. If that provider is authenticated as a human, this is your email; if it's authenticated as a service principal (e.g. in CI/CD), it's the service principal's identity instead - "your own root" then really means "whoever/whatever this provider is authenticated as." Either way, no extra credentials or scopes are required beyond what the `DatabricksProvider` already needs.
+`user_root`, `backend.databricks_workspace: true`, and the [`${current_user.X}` variable namespace](variables.md#current-user) all resolve your identity the same way: they find a `DatabricksProvider` in the stack, build a Databricks SDK `WorkspaceClient` from whatever credentials are already configured on it (token, profile, service principal, ...), and call the SDK's current-user endpoint. If that provider is authenticated as a human, this is your email; if it's authenticated as a service principal (e.g. in CI/CD), it's the service principal's identity instead - "your own root" then really means "whoever/whatever this provider is authenticated as." Either way, no extra credentials or scopes are required beyond what the `DatabricksProvider` already needs.
 
-Because this is a live API call, commands that use it (`build`, `preview`, `deploy`, `destroy`, `validate`) need a real Databricks connection - unlike a stack that never touches either setting, which can run those commands with no live credentials at all.
+Because this is a live API call, commands that use it (`build`, `preview`, `deploy`, `destroy`, `validate`) need a real Databricks connection - unlike a stack that touches none of these, which can run those commands with no live credentials at all. When more than one of the three is used in the same stack, Laktory resolves your username only once and reuses it for all of them.
 
 ## Customizing the root
 
