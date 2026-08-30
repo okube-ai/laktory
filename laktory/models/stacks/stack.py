@@ -115,6 +115,12 @@ def _resolve_databricks_provider_and_username(env):
     if db_provider is None:
         return None, None, None
 
+    # Called before the stack-wide `inject_vars()` pass (so that resolving
+    # `workspace_root: "user_root"` doesn't itself depend on it - see
+    # `Stack._resolve_user_root`), so credentials may still be raw
+    # `${vars.x}` templates. Resolve them on this provider alone.
+    db_provider = db_provider.inject_vars(vars=env.variables)
+
     wc = db_provider.workspace_client
     username = wc.current_user.me().user_name
     return db_provider, wc, username
@@ -611,13 +617,20 @@ class Stack(BaseModel):
         if inject_vars:
             if vars:
                 env = env.model_copy(update={"variables": {**env.variables, **vars}})
-            env = env.inject_vars()
             # Gated on `inject_vars` (not just run unconditionally) because
             # `to_terraform()` calls `env.build(env_name=None, inject_vars=False)`
             # internally on an already-resolved `env` - that internal call must
             # not re-run this with the wrong (None) env_name; to_terraform()
             # resolves it separately, beforehand, with its own correct env_name.
+            #
+            # Must run before `env.inject_vars()`: that call also caches
+            # `core_resources` (and any `depends_on` baked into it) on every
+            # resource in the stack, so resolving `workspace_root: "user_root"`
+            # afterward would leave resource names computed from the
+            # not-yet-resolved root frozen in already-cached `depends_on`
+            # entries, out of sync with the final resource names.
             self._resolve_user_root(env, env_name)
+            env = env.inject_vars()
 
         if env.resources is None:
             return
@@ -771,10 +784,11 @@ class Stack(BaseModel):
         env = self.get_env(env_name=env_name)
         if vars:
             env = env.model_copy(update={"variables": {**env.variables, **vars}})
-        env = env.inject_vars()
+        # Must run before `env.inject_vars()` - see the comment in `build()`.
         _resolved_provider, _resolved_wc, _resolved_username = self._resolve_user_root(
             env, env_name
         )
+        env = env.inject_vars()
         env.build(env_name=None, inject_vars=False)
 
         # Providers
