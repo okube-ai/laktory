@@ -117,6 +117,37 @@ def test_checkpoint_removed_volumes_path(tmp_path, monkeypatch):
     mock_client.dbfs.delete.assert_not_called()
 
 
+def test_checkpoint_removed_volumes_path_not_created(tmp_path, monkeypatch):
+    """A `/Volumes/{catalog}/{schema}/{volume}/...`-shaped checkpoint path that
+    was never created (e.g. `full_refresh` before the node's first run) must not
+    be routed through the legacy DBFS API - `dbfs.get_status` on a Volumes path
+    raises `PermissionDenied`, not `ResourceDoesNotExist`, so it can't be
+    special-cased there. The purge must recognize the `/Volumes/` prefix and
+    skip the DBFS fallback outright.
+    """
+    volume_root = tmp_path / "Volumes" / "main" / "default" / "laktory_vol"
+    sink_path = str(volume_root / "sink")
+    checkpoint_path = volume_root / "checkpoints" / "expectations"
+
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"df": get_df0("PYSPARK")}],
+        expectations_checkpoint_path_=checkpoint_path,
+        sinks=[{"path": sink_path, "format": "DELTA", "mode": "OVERWRITE"}],
+    )
+
+    # Checkpoint was never created
+    assert not checkpoint_path.exists()
+
+    mock_client = MagicMock()
+    monkeypatch.setattr("databricks.sdk.WorkspaceClient", lambda: mock_client)
+
+    node.purge()  # should not raise
+
+    mock_client.dbfs.get_status.assert_not_called()
+    mock_client.dbfs.delete.assert_not_called()
+
+
 def test_purge_never_executed(tmp_path):
     node = models.PipelineNode(
         name="node0",
