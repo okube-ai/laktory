@@ -1,6 +1,16 @@
 # Release History
 
-## [0.12.5] - Unreleased
+## [0.12.6] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.12.5] - 2026-08-31
 ### Added
 * `${current_user.X}` variable namespace (currently `user_name`) exposing the live Databricks identity resolved via the SDK, mirroring `${settings.X}`. See [Variables](https://www.laktory.ai/concepts/variables/#current-user)
 * `settings.runtime_root` guidance for DBFS-disabled Databricks workspaces (serverless compute, or workspaces with legacy DBFS features disabled): recommends a Unity Catalog Volume path (`/Volumes/{catalog}/{schema}/{volume}/{path}`) instead.
