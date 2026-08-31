@@ -126,6 +126,7 @@ class TableDataSink(BaseDataSink):
     def children_names(self):
         return [
             "metadata",
+            "custom_writer",
         ]
 
     # ----------------------------------------------------------------------- #
