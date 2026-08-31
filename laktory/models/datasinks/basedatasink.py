@@ -645,6 +645,15 @@ class BaseDataSink(BaseModel, PipelineChild):
             if self.dataframe_backend != DataFrameBackends.PYSPARK:
                 return
 
+            # The legacy DBFS API does not support Unity Catalog Volumes paths,
+            # regardless of whether the path exists. If it wasn't found above by
+            # `os.path.exists`, it genuinely doesn't exist (Volumes are FUSE-mounted
+            # like a regular filesystem) - routing it through `dbfs.*` would raise a
+            # `PermissionDenied`, not a `ResourceDoesNotExist`, so skip it entirely.
+            _posix_path = self.checkpoint_path.as_posix()
+            if _posix_path.startswith(("/Volumes/", "dbfs:/Volumes/")):
+                return
+
             # Check if a workspace client can be instantiated
             try:
                 from databricks.sdk import WorkspaceClient

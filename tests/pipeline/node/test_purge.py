@@ -117,6 +117,48 @@ def test_checkpoint_removed_volumes_path(tmp_path, monkeypatch):
     mock_client.dbfs.delete.assert_not_called()
 
 
+def test_checkpoint_removed_volumes_path_not_created(tmp_path, monkeypatch):
+    """A `/Volumes/{catalog}/{schema}/{volume}/...`-shaped checkpoint path that
+    was never created (e.g. `full_refresh` before the node's first run) must not
+    be routed through the legacy DBFS API - `dbfs.get_status` on a Volumes path
+    raises `PermissionDenied`, not `ResourceDoesNotExist`, so it can't be
+    special-cased there. The purge must recognize the `/Volumes/` prefix and
+    skip the DBFS fallback outright. This covers both the node's expectations
+    checkpoint (`PipelineNode.purge()`) and a sink's own default checkpoint
+    (`BaseDataSink._purge_checkpoint()`), which both derive from `root_path`
+    when `runtime_root` is configured as a Databricks Volume.
+
+    The checkpoint path is rooted at the filesystem root (not under `tmp_path`)
+    so it genuinely matches the `/Volumes/` prefix, the way it would on an
+    actual Databricks runtime; on this test machine it simply doesn't exist.
+    """
+    node = models.PipelineNode(
+        name="node0",
+        root_path_="/Volumes/main/default/laktory_vol/node0",
+        dataframe_backend="PYSPARK",
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+        expectations=[
+            models.DataQualityExpectation(name="warn", expr="x1 < 100", action="WARN")
+        ],
+        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
+    )
+
+    # Checkpoints are Volumes-rooted and were never created
+    assert node.expectations_checkpoint_path.as_posix().startswith("/Volumes/")
+    assert not node.expectations_checkpoint_path.exists()
+    sink_checkpoint_path = node.sinks[0].checkpoint_path
+    assert sink_checkpoint_path.as_posix().startswith("/Volumes/")
+    assert not sink_checkpoint_path.exists()
+
+    mock_client = MagicMock()
+    monkeypatch.setattr("databricks.sdk.WorkspaceClient", lambda: mock_client)
+
+    node.purge()  # should not raise
+
+    mock_client.dbfs.get_status.assert_not_called()
+    mock_client.dbfs.delete.assert_not_called()
+
+
 def test_purge_never_executed(tmp_path):
     node = models.PipelineNode(
         name="node0",
