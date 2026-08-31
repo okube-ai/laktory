@@ -158,7 +158,7 @@ variables:
 
 A settings field cannot reference a sibling settings field in the same block (e.g. `build_root: ${settings.workspace_root}x` inside the same `settings:` you're defining `workspace_root` in) - it would see the *previous* value, not the one being defined alongside it. Reference another settings value from *outside* the `settings:` block instead, as in the example above.
 
-For what `settings.workspace_root` actually controls, its default, and how to auto-scope it (and Terraform state) to your own user/stack/environment with almost no configuration, see [Workspace Root](workspaceroot.md).
+For what `settings.workspace_root` actually controls, its default, and how to auto-scope it (and Terraform state) to your own user/stack/environment with almost no configuration, see [Laktory Settings - Workspace Root](laktorysettings.md#workspace-root).
 
 ### Current User
 
@@ -176,7 +176,7 @@ resources:
 
 Unlike `settings.*`, `current_user.*` isn't backed by a stack config field - it's resolved lazily, only when `${current_user.X}` is actually referenced somewhere in the stack, via one live SDK call (`workspace_client.current_user.me()`). A stack that never references it makes no network call for it. Referencing it without a `DatabricksProvider` in the stack raises a clear error rather than silently leaving the template unresolved.
 
-If the stack also uses `settings.workspace_root: "user_root"` (see [Workspace Root](workspaceroot.md)) and/or `terraform.backend.databricks_workspace: true`, all three share the same single SDK lookup - no redundant calls.
+If the stack also uses `settings.workspace_root: "user_root"` (see [Laktory Settings - Workspace Root](laktorysettings.md#workspace-root)) and/or `terraform.backend.databricks_workspace: true`, all three share the same single SDK lookup - no redundant calls.
 
 ---
 

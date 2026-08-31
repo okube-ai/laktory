@@ -240,12 +240,19 @@ class LaktorySettings(BaseModel):
             "reserved value `'user_root'` to auto-compute "
             "`/Users/{you}/.laktory/{stack_name}/{env_name}/` instead. Requires a "
             "`DatabricksProvider` in the stack (resolves your username via a live SDK call). "
-            "See [Workspace Root](../../../concepts/workspaceroot.md)."
+            "See [Laktory Settings](../../../concepts/laktorysettings.md#workspace-root)."
         ),
     )
     runtime_root: str = Field(
         "/laktory/",
-        description="Laktory cache root directory. Used when a pipeline needs to write checkpoint files.",
+        description=(
+            "Laktory cache root directory. Used when a pipeline needs to write "
+            "checkpoint files. The default assumes a DBFS FUSE mount, which is "
+            "unavailable on newer/serverless Databricks workspaces - on those, set "
+            "this explicitly to a Unity Catalog Volume path instead, e.g. "
+            "`/Volumes/{catalog}/{schema}/{volume}/{path}/`. See "
+            "[Laktory Settings](../../../concepts/laktorysettings.md#runtime-root)."
+        ),
     )
     build_root: str = Field(
         "",

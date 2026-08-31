@@ -137,7 +137,7 @@ nav:
     - Models:
       - Models: concepts/models.md
       - Stack: concepts/stack.md
-      - Workspace Root: concepts/workspaceroot.md
+      - Laktory Settings: concepts/laktorysettings.md
       - Variables: concepts/variables.md
     - ETL:
       - Data Pipeline: concepts/pipeline.md

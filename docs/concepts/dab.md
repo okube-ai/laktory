@@ -222,4 +222,4 @@ Two settings control where Laktory writes and reads files during bundle resoluti
 
 Both are auto-configured from the bundle context when left at their defaults. The `build_root` is set to 
 `{bundle_root}/laktory/.build/` and `workspace_root` is derived as 
-`{dab_workspace_root}/files/laktory/.build/`. Explicit overrides via environment variables take priority.
+`{dab_workspace_root}/files/laktory/.build/`. Explicit overrides via environment variables take priority. See [Laktory Settings](laktorysettings.md) for what each setting controls outside the DAB context.

@@ -65,18 +65,18 @@ notebook. However, in the `dev` environment, the `development` property will be 
 Each environment will be deployed as a standalone set of resources or stack.
 
 ### Settings
-The `settings` attribute configures Laktory-wide behavior for this stack. The most commonly used is `workspace_root` - where deployed objects like notebooks and workspace files land by default (see [Workspace Root](workspaceroot.md)) - alongside `build_root`, `runtime_root`, `dataframe_backend`, and `dataframe_api`.
+The `settings` attribute configures Laktory-wide behavior for this stack. The most commonly used is `workspace_root` - where deployed objects like notebooks and workspace files land by default - alongside `build_root`, `runtime_root`, `dataframe_backend`, and `dataframe_api`. See [Laktory Settings](laktorysettings.md) for the full field list and defaults.
 
 ```yaml
 settings:
   workspace_root: user_root
 ```
 
-Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)). See [`LaktorySettings`][laktory.models.stacks.stack.LaktorySettings] in the API reference for the full list of fields.
+Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)).
 
 ### Backend configuration
 The `terraform` block attributes define the Infrastructure-as-Code (IaC) configuration, and how to 
 configure resource providers (such as Azure, AWS, GCP, Databricks) for secure access.
 
-Setting `terraform.backend.databricks_workspace: true` auto-configures a Terraform state backend scoped to your own Databricks user directory, stack name, and environment - no separate cloud storage account needed. See [Workspace Root](workspaceroot.md) for the full details, including how to keep it consistent with where deployed objects (notebooks, workspace files, ...) land.
+Setting `terraform.backend.databricks_workspace: true` auto-configures a Terraform state backend scoped to your own Databricks user directory, stack name, and environment - no separate cloud storage account needed. See [Laktory Settings - Workspace Root](laktorysettings.md#workspace-root) for the full details, including how to keep it consistent with where deployed objects (notebooks, workspace files, ...) land.
 

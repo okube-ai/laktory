@@ -688,11 +688,14 @@ class PipelineNode(BaseModel, PipelineChild):
                 s.purge()
 
         if self.expectations_checkpoint_path:
+            # Try with simple paths (supported by local file system or Unity Catalog
+            # Volumes)
             if os.path.exists(self.expectations_checkpoint_path):
                 logger.info(
                     f"Deleting expectations checkpoint at {self.expectations_checkpoint_path}",
                 )
                 shutil.rmtree(self.expectations_checkpoint_path)
+                return
 
             # Try with DBFS
             # If spark is not used, dbfs is most likely not used

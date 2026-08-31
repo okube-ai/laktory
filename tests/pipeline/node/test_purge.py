@@ -1,6 +1,7 @@
 """Tests for PipelineNode.purge() and Pipeline.purge()."""
 
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -75,6 +76,45 @@ def test_checkpoint_removed(tmp_path):
 
     node.purge()
     assert not checkpoint_path.exists()
+
+
+def test_checkpoint_removed_volumes_path(tmp_path, monkeypatch):
+    """A checkpoint under a `/Volumes/{catalog}/{schema}/{volume}/...`-shaped
+    path is removed by the plain-filesystem branch of the purge logic alone
+    (Unity Catalog Volumes are FUSE-mounted like a regular filesystem, unlike
+    legacy DBFS) - the DBFS fallback (`WorkspaceClient().dbfs.*`) must never
+    be reached. See `.claude/docs/plan_a6_runtime_root_volumes.md`.
+    """
+    from laktory._testing import StreamingSource
+
+    volume_root = tmp_path / "Volumes" / "main" / "default" / "laktory_vol"
+    ss_path = str(volume_root / "source")
+    sink_path = str(volume_root / "sink")
+    checkpoint_path = volume_root / "checkpoints" / "expectations"
+
+    ss = StreamingSource("PYSPARK")
+    ss.write_to_delta(ss_path)
+
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"path": ss_path, "format": "DELTA", "as_stream": True}],
+        expectations_checkpoint_path_=checkpoint_path,
+        expectations=[
+            models.DataQualityExpectation(name="warn", expr="x1 < 100", action="WARN")
+        ],
+        sinks=[{"path": sink_path, "format": "DELTA", "mode": "APPEND"}],
+    )
+    node.execute()
+    assert checkpoint_path.exists()
+
+    mock_client = MagicMock()
+    monkeypatch.setattr("databricks.sdk.WorkspaceClient", lambda: mock_client)
+
+    node.purge()
+
+    assert not checkpoint_path.exists()
+    mock_client.dbfs.get_status.assert_not_called()
+    mock_client.dbfs.delete.assert_not_called()
 
 
 def test_purge_never_executed(tmp_path):

@@ -3,10 +3,12 @@
 ## [0.12.5] - Unreleased
 ### Added
 * `${current_user.X}` variable namespace (currently `user_name`) exposing the live Databricks identity resolved via the SDK, mirroring `${settings.X}`. See [Variables](https://www.laktory.ai/concepts/variables/#current-user)
+* `settings.runtime_root` guidance for DBFS-disabled Databricks workspaces (serverless compute, or workspaces with legacy DBFS features disabled): recommends a Unity Catalog Volume path (`/Volumes/{catalog}/{schema}/{volume}/{path}`) instead.
 ### Fixed
 * `inject_vars()` no longer crashes with a Pydantic `frozen_field` error when a frozen field (e.g. a data source's `type:` literal, such as `type: CUSTOM` on `CustomDataSource`) is explicitly set in YAML/code [[#628](https://github.com/okube-ai/laktory/issues/628)]
 * `depends_on` on a LAKEFLOW_JOB pipeline's auto-generated config-file `Permissions` resource pointing at a nonexistent resource when `settings.workspace_root: "user_root"` is used, causing `terraform plan` to fail [[#629](https://github.com/okube-ai/laktory/issues/629)]
 * A `LAKEFLOW_JOB` or `LAKEFLOW_DECLARATIVE_PIPELINE` pipeline's own job/config definition (task `filepath`, dependency/library paths, `config_filepath`) baked in the raw, unresolved `settings.workspace_root` instead of the `"user_root"`-resolved value, causing the deployed job to fail with `FileNotFoundError` / library-install errors [[#630](https://github.com/okube-ai/laktory/issues/630)]
+* Checkpoint purge (`DataSink` and `PipelineNode` expectations) no longer falls through to a DBFS API probe after already deleting the checkpoint via the plain filesystem - previously this happened unconditionally, which could error out on a DBFS-disabled workspace even though the checkpoint was already correctly removed (e.g. via a Unity Catalog Volume `runtime_root`)
 
 
 ## [0.12.4] - 2026-08-28

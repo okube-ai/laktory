@@ -631,12 +631,14 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _purge_checkpoint(self):
         if self.checkpoint_path:
-            # Try with simple paths (supported by local file system or Unity Catalog)
+            # Try with simple paths (supported by local file system or Unity Catalog
+            # Volumes)
             if os.path.exists(self.checkpoint_path):
                 logger.info(
                     f"Deleting checkpoint at {self.checkpoint_path}",
                 )
                 shutil.rmtree(self.checkpoint_path)
+                return
 
             # Try with DBFS
             # If spark is not used, dbfs is most likely not used
