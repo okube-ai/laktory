@@ -48,6 +48,12 @@ automatically when the agent session opens. Supports Claude Code, GitHub Copilot
 AGENTS.md-compatible agents. Pass `--no-mcp` to write only the instruction files without
 the MCP server configuration. See [AI Coding Agent](agent.md) for full details.
 
+#### install-shim
+`laktory install-shim` writes a `laktory-safe` wrapper script into the current environment's
+scripts directory that calls `python -m laktory` directly, bypassing the pip-generated
+`laktory` console-script executable. Useful when a security policy blocks that executable.
+See [Working around blocked console-scripts](#working-around-blocked-console-scripts) above.
+
 ### CI/CD
 These commands can be run locally, but really start to provide value in the context of a CI/CD pipeline in which 
 complex testing, validation and deployment flows can be built. An example of such workflows is provided in the 
@@ -120,3 +126,25 @@ jobs:
 
 Of course, the workflows can be customized for each project specific requirements, but they all generally require to
 use the `preview`, `deploy` and `run` CLI commands.
+
+
+### Working around blocked console-scripts
+In some corporate environments, security policies (e.g. Microsoft Defender Attack Surface
+Reduction rules) block newly generated, unsigned executables such as the `laktory.exe`
+launcher that pip creates for console scripts. If the `laktory` command fails to run because
+it's blocked, you have two alternatives, since `python.exe` itself is not affected by these
+policies:
+
+- Run the CLI as a module:
+  ```cmd
+  python -m laktory --help
+  ```
+- Install a `laktory-safe` wrapper script once, then use it going forward:
+  ```cmd
+  python -m laktory install-shim
+  laktory-safe --help
+  ```
+  `install-shim` writes a `laktory-safe.cmd` (Windows) or `laktory-safe` (macOS/Linux) script
+  into the current environment's scripts directory. The wrapper calls `python -m laktory`
+  under the hood and is named `laktory-safe` rather than `laktory` to avoid colliding with the
+  existing `laktory.exe` on `PATH`.
