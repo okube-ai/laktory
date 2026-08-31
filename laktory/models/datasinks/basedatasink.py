@@ -651,9 +651,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             # like a regular filesystem) - routing it through `dbfs.*` would raise a
             # `PermissionDenied`, not a `ResourceDoesNotExist`, so skip it entirely.
             _posix_path = self.checkpoint_path.as_posix()
-            if _posix_path.startswith("/Volumes/") or _posix_path.startswith(
-                "dbfs:/Volumes/"
-            ):
+            if _posix_path.startswith(("/Volumes/", "dbfs:/Volumes/")):
                 return
 
             # Check if a workspace client can be instantiated

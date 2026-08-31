@@ -123,21 +123,32 @@ def test_checkpoint_removed_volumes_path_not_created(tmp_path, monkeypatch):
     be routed through the legacy DBFS API - `dbfs.get_status` on a Volumes path
     raises `PermissionDenied`, not `ResourceDoesNotExist`, so it can't be
     special-cased there. The purge must recognize the `/Volumes/` prefix and
-    skip the DBFS fallback outright.
-    """
-    volume_root = tmp_path / "Volumes" / "main" / "default" / "laktory_vol"
-    sink_path = str(volume_root / "sink")
-    checkpoint_path = volume_root / "checkpoints" / "expectations"
+    skip the DBFS fallback outright. This covers both the node's expectations
+    checkpoint (`PipelineNode.purge()`) and a sink's own default checkpoint
+    (`BaseDataSink._purge_checkpoint()`), which both derive from `root_path`
+    when `runtime_root` is configured as a Databricks Volume.
 
+    The checkpoint path is rooted at the filesystem root (not under `tmp_path`)
+    so it genuinely matches the `/Volumes/` prefix, the way it would on an
+    actual Databricks runtime; on this test machine it simply doesn't exist.
+    """
     node = models.PipelineNode(
         name="node0",
-        sources=[{"df": get_df0("PYSPARK")}],
-        expectations_checkpoint_path_=checkpoint_path,
-        sinks=[{"path": sink_path, "format": "DELTA", "mode": "OVERWRITE"}],
+        root_path_="/Volumes/main/default/laktory_vol/node0",
+        dataframe_backend="PYSPARK",
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+        expectations=[
+            models.DataQualityExpectation(name="warn", expr="x1 < 100", action="WARN")
+        ],
+        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
     )
 
-    # Checkpoint was never created
-    assert not checkpoint_path.exists()
+    # Checkpoints are Volumes-rooted and were never created
+    assert node.expectations_checkpoint_path.as_posix().startswith("/Volumes/")
+    assert not node.expectations_checkpoint_path.exists()
+    sink_checkpoint_path = node.sinks[0].checkpoint_path
+    assert sink_checkpoint_path.as_posix().startswith("/Volumes/")
+    assert not sink_checkpoint_path.exists()
 
     mock_client = MagicMock()
     monkeypatch.setattr("databricks.sdk.WorkspaceClient", lambda: mock_client)
