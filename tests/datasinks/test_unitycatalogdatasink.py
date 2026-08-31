@@ -58,3 +58,14 @@ def test_full_name():
     )
     assert sink.schema_name == "default"
     assert sink.table_name == "df"
+
+
+def test_custom_writer_parent():
+    sink = UnityCatalogDataSink(
+        catalog_name="sandbox",
+        schema_name="default",
+        table_name="df",
+        custom_writer={"func_name": "mypackage.etl.my_write"},
+    )
+    assert "custom_writer" in sink.children_names
+    assert sink.custom_writer.parent is sink
