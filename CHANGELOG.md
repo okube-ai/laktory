@@ -5,6 +5,7 @@
 * n/a
 ### Fixed
 * Fixed `laktory.dab.build_resources` computing `workspace_root` with OS-native (backslash) separators on Windows, breaking the deployed job's file path on remote Unix compute. [[#639](https://github.com/okube-ai/laktory/issues/639)]
+* Fixed `DataFrameExpr` (SQL `expr:` pipeline nodes) splitting on a bare `;`, causing a `;` inside a `-- comment` to silently truncate/corrupt the query - `expr:` must now be a single SQL statement, enforced with a clear validation error instead of a confusing backend parse error. [[#640](https://github.com/okube-ai/laktory/issues/640)]
 ### Updated
 * n/a
 ### Breaking changes

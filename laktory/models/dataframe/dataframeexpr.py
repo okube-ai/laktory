@@ -6,6 +6,7 @@ from typing import Literal
 # from typing import Literal
 import narwhals as nw
 from pydantic import Field
+from pydantic import field_validator
 
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
@@ -37,6 +38,71 @@ def to_safe_expr(expr, df_names=None):
         expr = expr.replace("{" + df_name + "}", f"__{df_name}__")
 
     return expr
+
+
+_LINE_COMMENT_RE = re.compile(r"--[^\n]*")
+_BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+
+
+def _iter_top_level_semicolons(expr: str):
+    """Yield the index of every `;` in `expr` not inside a `--`/`/* */`
+    comment or a quoted string/identifier literal (`'`, `"`, `` ` ``)."""
+    in_line_comment = False
+    in_block_comment = False
+    quote_char = None
+    i, n = 0, len(expr)
+    while i < n:
+        c = expr[i]
+        nxt = expr[i + 1] if i + 1 < n else ""
+        if in_line_comment:
+            if c == "\n":
+                in_line_comment = False
+            i += 1
+        elif in_block_comment:
+            if c == "*" and nxt == "/":
+                in_block_comment = False
+                i += 2
+            else:
+                i += 1
+        elif quote_char:
+            if c == quote_char:
+                if nxt == quote_char:  # doubled-quote escape
+                    i += 2
+                    continue
+                quote_char = None
+            i += 1
+        elif c == "-" and nxt == "-":
+            in_line_comment = True
+            i += 2
+        elif c == "/" and nxt == "*":
+            in_block_comment = True
+            i += 2
+        elif c in ("'", '"', "`"):
+            quote_char = c
+            i += 1
+        elif c == ";":
+            yield i
+            i += 1
+        else:
+            i += 1
+
+
+def validate_single_statement(expr: str) -> None:
+    """Raise if `expr` contains more than one SQL statement - a `;` outside
+    of comments/literals that isn't simply the trailing terminator."""
+    positions = list(_iter_top_level_semicolons(expr))
+    if not positions:
+        return
+
+    tail = expr[positions[-1] + 1 :]
+    tail = _LINE_COMMENT_RE.sub("", tail)
+    tail = _BLOCK_COMMENT_RE.sub("", tail)
+    if len(positions) > 1 or tail.strip():
+        raise ValueError(
+            "DataFrameExpr `expr` must be a single SQL statement. Found a "
+            "statement-separating ';' (outside of comments and string "
+            "literals) that is not just a trailing terminator."
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -79,11 +145,23 @@ class DataFrameExpr(BaseModel, PipelineChild):
     ```
     """
 
-    expr: str = Field(..., description="SQL Expression")
+    expr: str = Field(
+        ...,
+        description=(
+            "SQL Expression. Must be a single SQL statement - multiple "
+            "`;`-separated statements are not supported, including a `;` "
+            "appearing inside a `-- comment`."
+        ),
+    )
     type: Literal["SQL"] = Field(
         "SQL",
         description="Expression type. Only SQL is currently supported, but `DF` could be added in the future.",
     )
+
+    @field_validator("expr")
+    def check_single_statement(cls, v: str) -> str:
+        validate_single_statement(v)
+        return v
 
     @property
     def is_sql_expressible(self) -> bool:
@@ -206,7 +284,6 @@ class DataFrameExpr(BaseModel, PipelineChild):
 
             from laktory import is_sdp_execute
 
-            _df = None
             if is_sdp_execute():
                 # Spark Connect (SDP): createOrReplaceTempView is forbidden inside
                 # @dp.* decorated functions. Use spark.sql(**kwargs) instead -
@@ -225,10 +302,7 @@ class DataFrameExpr(BaseModel, PipelineChild):
                     sql_kwargs[safe_k] = v
                     query = query.replace("{{" + k + "}}", "{" + safe_k + "}")
 
-                for stmt in query.split(";"):
-                    if stmt.replace("\n", " ").strip() == "":
-                        continue
-                    _df = _spark.sql(stmt, **sql_kwargs)
+                _df = _spark.sql(query, **sql_kwargs)
             else:
                 # Local / LDP: use createOrReplaceTempView.
                 # LDP monkey-patches spark.sql() and does not support **kwargs.
@@ -239,13 +313,8 @@ class DataFrameExpr(BaseModel, PipelineChild):
                     query = query.replace("{" + k + "}", safe_k)
                     v.createOrReplaceTempView(safe_k)
 
-                for stmt in query.split(";"):
-                    if stmt.replace("\n", " ").strip() == "":
-                        continue
-                    _df = _spark.sql(stmt)
+                _df = _spark.sql(query)
 
-            if _df is None:
-                raise ValueError(f"SQL Expression '{self.expr}' is invalid")
             return nw.from_native(_df)
 
         else:
