@@ -204,6 +204,17 @@ nodes:
       - table_name: brz_stocks
 """
 
+# Pipeline with no orchestrator - produces no DAB resource (issue #643)
+_PIPELINE_NO_ORCHESTRATOR_YAML = """\
+name: pl-no-orchestrator
+nodes:
+  - name: brz_stocks
+    sources:
+    - table_name: samples.nyctaxi.trips
+    sinks:
+      - table_name: brz_stocks
+"""
+
 # Pipeline with a ${var.env} reference
 _PIPELINE_WITH_VAR_YAML = """\
 name: pl-${var.env}
@@ -359,6 +370,29 @@ def test_load_resources_missing_dir_skipped(tmp_path, mock_bundle, monkeypatch):
 
     resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 0
+
+
+def test_load_resources_no_orchestrator_skipped_with_warning(
+    tmp_path, mock_bundle, monkeypatch
+):
+    """A pipeline with no orchestrator produces no DAB resource, and this is
+    logged as a warning, not an easy-to-miss INFO log (issue #643)."""
+    import laktory.dab as dab_module
+
+    laktory_pipelines_dir = _make_pipelines_dir(
+        tmp_path, _PIPELINE_NO_ORCHESTRATOR_YAML, filename="pl-no-orchestrator.yaml"
+    )
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+
+    warnings = []
+    monkeypatch.setattr(dab_module.logger, "warning", warnings.append)
+
+    resources = dab_module.build_resources(mock_bundle)
+
+    assert len(resources.pipelines) == 0
+    assert len(resources.jobs) == 0
+    assert any("pl-no-orchestrator' has no orchestrator" in w for w in warnings)
 
 
 def test_load_resources_default_dir(tmp_path, mock_bundle, monkeypatch):

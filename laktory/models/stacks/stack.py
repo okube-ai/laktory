@@ -689,6 +689,9 @@ class Stack(BaseModel):
             if isinstance(r, Pipeline):
                 orchestrator = r.orchestrator
                 if not orchestrator:
+                    logger.warning(
+                        f"Pipeline '{r.name}' has no orchestrator. Skipping."
+                    )
                     continue
 
                 # Orchestrator fields derived from `settings.workspace_root`
