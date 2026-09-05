@@ -10,6 +10,7 @@
 ### Updated
 * Documented the `${var.x}` / `${vars.x}` alias in `laktory/AGENTS.md` (previously only on the docs site), and recommended `${var.x}` for pipeline YAML in DAB-integrated projects to match DAB's own native bundle-variable syntax. [[#642](https://github.com/okube-ai/laktory/issues/642)]
 * Documented that DAB does not expose a computed reference for an `artifacts:` block's deployed wheel path, and how to reference it via a bundle variable using `${dab_workspace_root}`, in `laktory/AGENTS.md` and `docs/concepts/dab.md`. [[#641](https://github.com/okube-ai/laktory/issues/641)]
+* Documented the DAB-context equivalent of `settings.runtime_root` (`root_path` on a pipeline, or the `LAKTORY_RUNTIME_ROOT` environment variable) for workspaces with public DBFS root access disabled, in `laktory/AGENTS.md` and `docs/concepts/dab.md`. [[#644](https://github.com/okube-ai/laktory/issues/644)]
 ### Breaking changes
 * n/a
 
