@@ -228,7 +228,8 @@ FROM
 ```
 </div>
 
-### Spark
+#### Spark session
+
 If you select `PYSPARK` as the DataFrame backend, Laktory will instantiate 
 a default Spark Session, but you can register your own instead. This works using a 
 local, a Databricks notebook or Databricks connect Spark Session:
@@ -241,7 +242,7 @@ spark = DatabricksSession.builder.getOrCreate()
 register_spark_session(spark)
 ```
 
-### Debugging a single node
+#### Debugging a single node
 
 Combine a live Databricks Connect session (above) with `write_sinks=False` and `selects` to validate
 a node's transform logic in seconds, without deploying anything. This is a much faster iteration loop
