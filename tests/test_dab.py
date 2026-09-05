@@ -435,6 +435,29 @@ def test_workspace_root_auto_set(tmp_path, mock_bundle, monkeypatch):
     assert settings.workspace_root == f"{stripped_root}/files/{expected_rel}/"
 
 
+def test_workspace_root_posix_on_windows_style_relpath(
+    tmp_path, mock_bundle, monkeypatch
+):
+    """workspace_root never contains backslashes, even if os.path.relpath returns
+    Windows-style (backslash) separators, as it does on a Windows host."""
+    import laktory.dab as dab_module
+    from laktory._settings import settings
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+
+    monkeypatch.setattr(
+        dab_module.os.path, "relpath", lambda *a, **k: "laktory\\.build"
+    )
+
+    dab_module.build_resources(mock_bundle)
+
+    stripped_root = _FAKE_WORKSPACE_ROOT.replace("/Workspace/", "/")
+    assert "\\" not in settings.workspace_root
+    assert settings.workspace_root == f"{stripped_root}/files/laktory/.build/"
+
+
 def test_workspace_root_no_bundle_var(tmp_path, mock_bundle, monkeypatch):
     """When dab_workspace_root bundle variable is absent, load_resources() raises ValueError."""
     from laktory.dab import build_resources

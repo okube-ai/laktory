@@ -1,6 +1,7 @@
 import os
 import shutil
 from pathlib import Path
+from pathlib import PureWindowsPath
 
 from laktory._logger import get_logger
 from laktory._settings import DEFAULT_BUILD_ROOT
@@ -92,9 +93,14 @@ def build_resources(bundle):
                 "Variable `dab_workspace_root` must be set to '${workspace.root_path}' in databricks.yml to use Laktory."
             )
 
-        # Build Path relative to Bundle root
+        # Build Path relative to Bundle root. Normalized via PureWindowsPath
+        # (which accepts both "\" and "/" as separators, regardless of host
+        # OS) since workspace_root represents a remote (Unix) Databricks
+        # path, even though os.path.relpath returns OS-native (backslash on
+        # Windows) separators.
         build_root_abs = settings.build_root
         build_root_rel = os.path.relpath(build_root_abs, bundle_dirpath)
+        build_root_rel = PureWindowsPath(build_root_rel).as_posix()
         settings.workspace_root = (
             f"{dab_workspace_root}/{_DAB_FILES_SUBDIR}/{build_root_rel}/"
         )
