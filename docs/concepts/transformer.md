@@ -19,7 +19,9 @@ API, but it can also be configured to use the selected DataFrame backend API.
 ??? "API Documentation"
     [`laktory.models.DataFrameExpr`][laktory.models.DataFrameExpr]<br>
 
-The `DataFrameExpr` class expresses a transformation as a `SELECT` SQL expression, including joins and unions.
+The `DataFrameExpr` class expresses a transformation as a `SELECT` SQL expression, including joins and unions. It
+must be a single SQL statement - `;`-separated multi-statement scripts are not supported, including a `;` appearing
+inside a `-- comment`.
 
 #### DataFrameMethod
 ??? "API Documentation"
