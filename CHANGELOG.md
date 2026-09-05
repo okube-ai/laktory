@@ -9,6 +9,7 @@
 * Fixed `laktory/AGENTS.md` incorrectly claiming a Pipeline YAML doesn't need `orchestrator.type` when deploying via DABs; a pipeline with no orchestrator is actually skipped entirely (no resource created, in both DABs and Terraform/Pulumi), now logged as a warning instead of an easy-to-miss INFO log. [[#643](https://github.com/okube-ai/laktory/issues/643)]
 ### Updated
 * Documented the `${var.x}` / `${vars.x}` alias in `laktory/AGENTS.md` (previously only on the docs site), and recommended `${var.x}` for pipeline YAML in DAB-integrated projects to match DAB's own native bundle-variable syntax. [[#642](https://github.com/okube-ai/laktory/issues/642)]
+* Documented the DAB-context equivalent of `settings.runtime_root` (`root_path` on a pipeline, or the `LAKTORY_RUNTIME_ROOT` environment variable) for workspaces with public DBFS root access disabled, in `laktory/AGENTS.md` and `docs/concepts/dab.md`. [[#644](https://github.com/okube-ai/laktory/issues/644)]
 ### Breaking changes
 * n/a
 

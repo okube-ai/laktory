@@ -213,13 +213,14 @@ orchestrator:
 
 ## Settings
 
-Two settings control where Laktory writes and reads files during bundle resolution:
+These settings control where Laktory writes and reads files during bundle resolution:
 
 | Setting          | Environment variable     | Description                                                          |
 |------------------|--------------------------|----------------------------------------------------------------------|
 | `build_root`     | `LAKTORY_BUILD_ROOT`     | Local directory for generated config JSON files and the LDP notebook |
 | `workspace_root` | `LAKTORY_WORKSPACE_ROOT` | Workspace path where Laktory files are synced by DABs                |
+| `runtime_root`   | `LAKTORY_RUNTIME_ROOT`   | Root for streaming checkpoints; not auto-configured under DAB - set explicitly (e.g. to a Unity Catalog Volume path) if the default fails with `[DBFS_DISABLED]` |
 
-Both are auto-configured from the bundle context when left at their defaults. The `build_root` is set to 
+`build_root` and `workspace_root` are auto-configured from the bundle context when left at their defaults. The `build_root` is set to 
 `{bundle_root}/laktory/.build/` and `workspace_root` is derived as 
 `{dab_workspace_root}/files/laktory/.build/`. Explicit overrides via environment variables take priority. See [Laktory Settings](laktorysettings.md) for what each setting controls outside the DAB context.
