@@ -150,7 +150,7 @@ def build_resources(bundle):
 
             orchestrator = pl.orchestrator
             if not orchestrator:
-                logger.info(f"Pipeline '{pl.name}' has no orchestrator. Skipping.")
+                logger.warning(f"Pipeline '{pl.name}' has no orchestrator. Skipping.")
                 continue
 
             # Write pipeline config JSON for DABs to sync to the workspace

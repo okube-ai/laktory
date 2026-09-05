@@ -776,7 +776,7 @@ targets:
 Key differences from Terraform:
 - `targets` (dev/prd) replace Stack `environments`
 - Account-level resources (groups, metastore) still require Terraform
-- Pipeline YAML does not need `orchestrator.type` — DABs creates the job automatically
+- Pipeline YAML still needs `orchestrator.type` — DABs uses it to create the matching job/pipeline resource; a pipeline with no orchestrator is skipped silently (no error)
 - Use `databricks bundle deploy` instead of `laktory deploy`
 
 ---

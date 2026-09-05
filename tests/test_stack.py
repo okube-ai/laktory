@@ -112,6 +112,41 @@ def test_build_renders_workspace_tree_files(tmp_path, monkeypatch):
     assert staged.read_text() == '{"catalog": "prod_cat"}'
 
 
+def test_build_pipeline_no_orchestrator_skipped_with_warning(tmp_path, monkeypatch):
+    """A pipeline with no orchestrator produces no deployable resource, and
+    this is logged as a warning, not silently (issue #643)."""
+    import laktory.models.stacks.stack as stack_module
+
+    monkeypatch.setattr(settings, "build_root", str(tmp_path / "build"))
+
+    warnings = []
+    monkeypatch.setattr(stack_module.logger, "warning", warnings.append)
+
+    no_orch_stack = models.Stack(
+        name="no-orch-stack",
+        organization="o3",
+        environments={"dev": {}},
+        resources=models.StackResources(
+            pipelines={
+                "pl-no-orch": {
+                    "name": "pl-no-orch",
+                    "nodes": [
+                        {
+                            "name": "brz",
+                            "sources": [{"format": "JSON", "path": "/brz_source/"}],
+                            "sinks": [{"table_name": "brz"}],
+                        },
+                    ],
+                }
+            },
+        ),
+    )
+
+    no_orch_stack.build(env_name="dev")
+
+    assert any("pl-no-orch' has no orchestrator" in w for w in warnings)
+
+
 def test_stack_to_terraform_cli_vars_override_stack_var(monkeypatch, stack):
     # CLI vars must override stack-level variables (workflow_name defaults to UNDEFINED).
     monkeypatch.setenv("DATABRICKS_HOST", "mock-host")
