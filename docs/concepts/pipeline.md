@@ -241,6 +241,49 @@ spark = DatabricksSession.builder.getOrCreate()
 register_spark_session(spark)
 ```
 
+### Debugging a single node
+
+Combine a live Databricks Connect session (above) with `write_sinks=False` and `selects` to validate
+a node's transform logic in seconds, without deploying anything. This is a much faster iteration loop
+than a full deploy + run cycle, and should be the first thing you reach for when a node's SQL or
+DataFrame logic is failing - reserve deploy + run for verifying job/task orchestration and
+streaming/checkpoint behavior end-to-end.
+
+```py title="debug.py"
+from databricks.connect import DatabricksSession
+from laktory import models, register_spark_session
+
+spark = DatabricksSession.builder.profile("<profile>").getOrCreate()  # or .getOrCreate() for serverless
+register_spark_session(spark)
+
+with open("laktory/pipelines/pl-stock-prices.yml") as fp:
+    pl = models.Pipeline.model_validate_yaml(fp)
+pl = pl.inject_vars(vars={"catalog": "dev"})  # under DAB, use bundle_vars instead - see the DAB integration guide
+
+pl.execute(write_sinks=False)                                 # run every node first
+# pl.execute(write_sinks=False, selects=["brz_stock_prices"])  # then narrow down to the failing node
+
+df = pl.nodes_dict["brz_stock_prices"].output_df.to_native()
+df.show()
+```
+
+`selects` accepts `node_name` (that node only), `*node_name` (with upstream dependencies),
+`node_name*` (with downstream dependencies), or `*node_name*` (both).
+
+A few things to know before relying on this:
+
+- **`write_sinks` is real.** `False` only reads sources and runs transformations - nothing is written
+  anywhere. `True` writes to whatever catalog/schema/table the injected variables resolve to, which is
+  useful for an end-to-end check but is a real write against that environment, not a dry run.
+- **A streaming source can't be inspected directly.** When a source has `as_stream: true`, `output_df`
+  is a genuine Spark streaming DataFrame and cannot be `.show()`n or collected. To inspect it, override
+  the source to a static read for the debug session: `pl.nodes_dict["x"].sources[0].as_stream = False`.
+- **Checkpoints are shared with production.** A sink's `checkpoint_path` defaults to
+  `{root_path}/checkpoints/sink-{uuid}` - a deterministic path based on pipeline/node identity, the same
+  one the deployed job uses. Running `write_sinks=True` on a streaming node without first pointing
+  `root_path` (or the sink's `checkpoint_path`) at a separate scratch location will advance the real
+  checkpoint, and the production job will skip data on its next run believing it was already processed.
+
 ### Orchestrators
 While local execution is ideal for small datasets or prototyping, orchestrators unlock more advanced features such as 
 parallel processing, automatic schema management, and historical re-processing. The desired orchestrator can be 

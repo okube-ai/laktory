@@ -786,6 +786,35 @@ Key differences from Terraform:
 
 ---
 
+## Local Development & Debugging
+
+Prefer this over a full deploy+run cycle as the *first* debugging step for transform-logic issues
+(SQL errors, bad column mappings, type casts) — it's much faster and touches nothing deployed.
+Reserve deploy+run for verifying job/task orchestration and streaming/checkpoint behavior end-to-end.
+
+```python
+from databricks.connect import DatabricksSession
+from laktory import models, register_spark_session
+
+spark = DatabricksSession.builder.profile("<profile>").getOrCreate()  # or .getOrCreate() for serverless
+register_spark_session(spark)
+
+with open("laktory/pipelines/pl-stock-prices.yml") as fp:
+    pl = models.Pipeline.model_validate_yaml(fp)
+pl = pl.inject_vars(vars={"catalog": "dev"})  # DAB: use bundle_vars instead
+
+pl.execute(write_sinks=False)                                 # run every node first
+# pl.execute(write_sinks=False, selects=["brz_stock_prices"])  # then narrow to the failing node
+df = pl.nodes_dict["brz_stock_prices"].output_df.to_native()
+```
+
+- `write_sinks=False` only reads + transforms, nothing is written; `True` writes to the real target from the injected variables — not a dry run
+- A node with `as_stream: true` returns a genuine streaming DataFrame that can't be inspected directly — override `pl.nodes_dict["x"].sources[0].as_stream = False` to debug it as a static read
+- `checkpoint_path` defaults to `{root_path}/checkpoints/sink-{uuid}`, the *same* path the deployed job uses — `write_sinks=True` on a streaming node without pointing `root_path` elsewhere first will advance the real checkpoint and cause the production job to skip data
+- Full guide, including `selects` syntax - see the `Pipeline` docs page's "Debugging a single node" section
+
+---
+
 ## Naming Conventions
 
 | Element | Convention | Example |
