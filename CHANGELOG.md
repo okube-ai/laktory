@@ -9,6 +9,7 @@
 * Fixed `laktory/AGENTS.md` incorrectly claiming a Pipeline YAML doesn't need `orchestrator.type` when deploying via DABs; a pipeline with no orchestrator is actually skipped entirely (no resource created, in both DABs and Terraform/Pulumi), now logged as a warning instead of an easy-to-miss INFO log. [[#643](https://github.com/okube-ai/laktory/issues/643)]
 ### Updated
 * Documented the `${var.x}` / `${vars.x}` alias in `laktory/AGENTS.md` (previously only on the docs site), and recommended `${var.x}` for pipeline YAML in DAB-integrated projects to match DAB's own native bundle-variable syntax. [[#642](https://github.com/okube-ai/laktory/issues/642)]
+* Documented that no computed reference exists for an `artifacts:` block's deployed wheel path (DAB's Python SDK exposes no artifact accessor), with a version-independent workaround using DAB's native `BUNDLE_VAR_<name>` environment variable override, in `laktory/AGENTS.md` and `docs/concepts/dab.md`. [[#641](https://github.com/okube-ai/laktory/issues/641)]
 ### Breaking changes
 * n/a
 

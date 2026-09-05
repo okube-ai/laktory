@@ -780,6 +780,7 @@ Key differences from Terraform:
 - Pipeline YAML still needs `orchestrator.type` — DABs uses it to create the matching job/pipeline resource; a pipeline with no orchestrator is skipped silently (no error)
 - Use `databricks bundle deploy` instead of `laktory deploy`
 - Prefer `${var.x}` (singular) over `${vars.x}` in pipeline YAML — it resolves identically, but matches `databricks.yml`'s own native bundle-variable syntax, so you're not switching spellings between the two file types in the same project
+- No computed reference exists for an `artifacts:` block's deployed wheel path (`Bundle` only carries `target`/`variables`, no artifact accessor) — the path (including the undocumented `.internal/` segment) must be built manually, e.g. `${dab_workspace_root}/artifacts/.internal/my_package-${var.package_version}-py3-none-any.whl`; avoid hardcoding the version by overriding a bundle variable via DAB's native `BUNDLE_VAR_<name>` environment variable, populated from `pyproject.toml` before `databricks bundle deploy`
 
 ---
 
