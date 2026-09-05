@@ -4,7 +4,7 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* Fixed `laktory.dab.build_resources` computing `workspace_root` with OS-native (backslash) separators on Windows, breaking the deployed job's file path on remote Unix compute. [[#639](https://github.com/okube-ai/laktory/issues/639)]
 ### Updated
 * n/a
 ### Breaking changes
