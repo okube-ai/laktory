@@ -30,8 +30,14 @@ Then:
 
 ```sh
 git fetch origin main
-git checkout -b fix/<issue#>-<slug> origin/main
+git checkout -b fix/<issue#>-<slug> --no-track origin/main
 ```
+
+`--no-track` matters: without it, the new branch's upstream is set to
+`origin/main`, so a stray plain `git push` before Step 8 would push straight
+to `main` on origin instead of creating a new remote branch. Step 8's
+`git push -u origin fix/<issue#>-<slug>` sets the correct upstream once the
+branch is actually ready to share.
 
 `<slug>` is 1-2 kebab-case words distilled from the issue title, not a
 restatement of it - e.g. `frozen-type`, not `explicit-type-crashes-inject-vars`.

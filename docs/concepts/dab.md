@@ -211,6 +211,23 @@ orchestrator:
 ```
 
 
+## Referencing the artifact wheel path
+
+A pipeline's `dependencies:` list often needs the path of a wheel built by `databricks.yml`'s
+`artifacts:` block. DAB does not expose a computed reference for this path, so define it as a
+bundle variable using `${dab_workspace_root}` and reference that variable from the pipeline YAML:
+
+```yaml title="databricks.yml"
+variables:
+  package_wheel:
+    default: ${dab_workspace_root}/artifacts/.internal/my_package-0.1.0-py3-none-any.whl
+```
+
+```yaml title="laktory/pipelines/pl-stock-prices.yml"
+dependencies:
+- ${var.package_wheel}
+```
+
 ## Settings
 
 These settings control where Laktory writes and reads files during bundle resolution:
