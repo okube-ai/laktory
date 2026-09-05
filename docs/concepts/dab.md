@@ -214,36 +214,19 @@ orchestrator:
 ## Referencing the artifact wheel path
 
 A pipeline's `dependencies:` list often needs the path of a wheel built by `databricks.yml`'s
-`artifacts:` block. Neither DAB nor Laktory currently expose a computed reference for this path -
-`databricks.bundles.core.Bundle` (the object passed into `laktory.dab:build_resources`) only
-carries `target` and `variables`, with no artifact-path accessor. The wheel is uploaded to an
-undocumented `.internal/` path segment, not guaranteed to remain stable across DAB CLI versions:
-
-```yaml title="laktory/pipelines/pl-stock-prices.yml"
-dependencies:
-- ${dab_workspace_root}/artifacts/.internal/my_package-0.1.0-py3-none-any.whl
-```
-
-The version literal above silently goes stale on every release unless updated by hand. Avoid
-hardcoding it in `databricks.yml` by overriding the bundle variable from an environment variable,
-using DAB's native `BUNDLE_VAR_<name>` convention, populated from `pyproject.toml` right before
-deploying:
-
-```bash
-export BUNDLE_VAR_package_version=$(grep -m1 '^version' pyproject.toml | cut -d'"' -f2)
-databricks bundle deploy
-```
+`artifacts:` block. DAB does not expose a computed reference for this path, so define it as a
+bundle variable using `${dab_workspace_root}` and reference that variable from the pipeline YAML:
 
 ```yaml title="databricks.yml"
 variables:
-  package_version: {}  # no default - always supplied via BUNDLE_VAR_package_version
+  package_wheel:
+    default: ${dab_workspace_root}/artifacts/.internal/my_package-0.1.0-py3-none-any.whl
 ```
 
 ```yaml title="laktory/pipelines/pl-stock-prices.yml"
 dependencies:
-- ${dab_workspace_root}/artifacts/.internal/my_package-${var.package_version}-py3-none-any.whl
+- ${var.package_wheel}
 ```
-
 
 ## Settings
 
