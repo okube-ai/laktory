@@ -8,7 +8,7 @@
 * Fixed `DataFrameExpr` (SQL `expr:` pipeline nodes) splitting on a bare `;`, causing a `;` inside a `-- comment` to silently truncate/corrupt the query - `expr:` must now be a single SQL statement, enforced with a clear validation error instead of a confusing backend parse error. [[#640](https://github.com/okube-ai/laktory/issues/640)]
 * Fixed `laktory/AGENTS.md` incorrectly claiming a Pipeline YAML doesn't need `orchestrator.type` when deploying via DABs; a pipeline with no orchestrator is actually skipped entirely (no resource created, in both DABs and Terraform/Pulumi), now logged as a warning instead of an easy-to-miss INFO log. [[#643](https://github.com/okube-ai/laktory/issues/643)]
 ### Updated
-* n/a
+* Documented the `${var.x}` / `${vars.x}` alias in `laktory/AGENTS.md` (previously only on the docs site), and recommended `${var.x}` for pipeline YAML in DAB-integrated projects to match DAB's own native bundle-variable syntax. [[#642](https://github.com/okube-ai/laktory/issues/642)]
 ### Breaking changes
 * n/a
 

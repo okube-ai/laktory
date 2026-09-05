@@ -56,6 +56,7 @@ All paths are relative to the current file. Variables can appear in paths:
 | Syntax | Description |
 |--------|-------------|
 | `${vars.name}` | String substitution; resolved at deploy time from stack variables |
+| `${var.name}` | Alias for `${vars.name}` — resolves identically; prefer it in DAB-integrated pipeline YAML (see DAB section) to match `databricks.yml`'s own bundle-variable syntax |
 | `${vars.NAME}` | Upper-case name reads from environment / system variables |
 | `${{ expr }}` | Python expression — evaluated at deploy time; supports conditionals |
 | `${resources.<key>.<prop>}` | Cross-reference another resource's runtime output (e.g. `.id`, `.name`) |
@@ -778,6 +779,7 @@ Key differences from Terraform:
 - Account-level resources (groups, metastore) still require Terraform
 - Pipeline YAML still needs `orchestrator.type` — DABs uses it to create the matching job/pipeline resource; a pipeline with no orchestrator is skipped silently (no error)
 - Use `databricks bundle deploy` instead of `laktory deploy`
+- Prefer `${var.x}` (singular) over `${vars.x}` in pipeline YAML — it resolves identically, but matches `databricks.yml`'s own native bundle-variable syntax, so you're not switching spellings between the two file types in the same project
 
 ---
 
@@ -827,6 +829,8 @@ isolation_mode: ${{ 'ISOLATED' if vars.env == 'prd' else 'OPEN' }}
 # Variables in file paths
 <<: !update ./overrides_${vars.env}.yaml
 ```
+
+`${var.x}` (singular) is an accepted alias for `${vars.x}` — both resolve identically.
 
 Cross-reference a resource's runtime output:
 ```yaml
