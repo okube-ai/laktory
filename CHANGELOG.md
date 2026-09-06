@@ -2,7 +2,7 @@
 
 ## [0.12.6] - Unreleased
 ### Added
-* Added `laktory_settings_<field>` bundle-variable convention to set Laktory settings (`dataframe_api`, `dataframe_backend`, `runtime_root`, `cli_raise_external_exceptions`, `register_nw_extensions`, `log_level`) directly from `databricks.yml` [[#654](https://github.com/okube-ai/laktory/issues/654)]
+* Added `laktory_settings_<field>` bundle-variable convention to set Laktory settings (`build_root`, `dataframe_api`, `dataframe_backend`, `runtime_root`, `cli_raise_external_exceptions`, `register_nw_extensions`, `log_level`) directly from `databricks.yml` [[#654](https://github.com/okube-ai/laktory/issues/654)]
 ### Fixed
 * Fixed `laktory.dab.build_resources` computing `workspace_root` with OS-native (backslash) separators on Windows, breaking the deployed job's file path on remote Unix compute. [[#639](https://github.com/okube-ai/laktory/issues/639)]
 * Fixed `DataFrameExpr` (SQL `expr:` pipeline nodes) splitting on a bare `;`, causing a `;` inside a `-- comment` to silently truncate/corrupt the query - `expr:` must now be a single SQL statement, enforced with a clear validation error instead of a confusing backend parse error. [[#640](https://github.com/okube-ai/laktory/issues/640)]

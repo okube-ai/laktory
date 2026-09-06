@@ -567,23 +567,57 @@ def test_settings_bundle_var_runtime_root(tmp_path, mock_bundle, monkeypatch):
     assert settings.runtime_root == "/Volumes/main/lk/vol/checkpoints/"
 
 
-def test_settings_bundle_var_excludes_workspace_and_build_root(
+def test_settings_bundle_var_excludes_workspace_root(
     tmp_path, mock_bundle, monkeypatch
 ):
-    """workspace_root and build_root are not settable via laktory_settings_<field> - they
-    keep their own dedicated auto-configuration."""
+    """workspace_root is not settable via laktory_settings_<field> - it keeps its own
+    dedicated dab_workspace_root-based auto-configuration."""
     from laktory.dab import build_resources
 
     laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
     mock_bundle.variables["laktory_settings_workspace_root"] = "/should-not-apply/"
-    mock_bundle.variables["laktory_settings_build_root"] = "/should-not-apply/"
 
     build_resources(mock_bundle)
 
     assert settings.workspace_root != "/should-not-apply/"
-    assert settings.build_root != "/should-not-apply/"
+
+
+def test_settings_bundle_var_build_root(tmp_path, mock_bundle, monkeypatch):
+    """laktory_settings_build_root sets settings.build_root, unlike workspace_root."""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+    custom_root = tmp_path / "custom_build"
+    mock_bundle.variables["laktory_settings_build_root"] = str(custom_root)
+
+    build_resources(mock_bundle)
+
+    assert settings.build_root == str(custom_root)
+
+
+def test_settings_bundle_var_build_root_precedes_workspace_root_derivation(
+    tmp_path, mock_bundle, monkeypatch
+):
+    """A laktory_settings_build_root override is applied before workspace_root is derived
+    from build_root, so workspace_root reflects the overridden build_root instead of going
+    stale relative to the pre-override default."""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+    custom_root = tmp_path / "nested" / "custom_build"
+    mock_bundle.variables["laktory_settings_build_root"] = str(custom_root)
+
+    build_resources(mock_bundle)
+
+    stripped_root = _FAKE_WORKSPACE_ROOT.replace("/Workspace/", "/")
+    expected_rel = "nested/custom_build"
+    assert settings.workspace_root == f"{stripped_root}/files/{expected_rel}/"
 
 
 if __name__ == "__main__":
