@@ -254,13 +254,14 @@ targets:
       laktory_settings_log_level: WARN
 ```
 
-`workspace_root` and `build_root` are not settable via `laktory_settings_<field>` - see below for how
-they're configured under DAB instead.
+`workspace_root` and `build_root` have DAB-aware defaults instead - see below. They can still be
+overridden with the matching environment variable, just not with a `laktory_settings_<field>` bundle
+variable.
 
 ### DAB-specific default overrides
 
-`build_root` and `workspace_root` are auto-configured from the bundle context when left at their defaults,
-rather than through the `laktory_settings_<field>` convention above:
+`build_root` and `workspace_root` are auto-configured from the bundle context when left at their defaults
+(i.e. when no override, such as the environment variable below, has already set them to something else):
 
 | Setting          | Environment variable     | Description                                                          |
 |------------------|--------------------------|----------------------------------------------------------------------|
