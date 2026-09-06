@@ -12,7 +12,7 @@ DEFAULT_RUNTIME_ROOT = "./.laktory/"
 
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, validate_assignment=True)
 
     # CLI
     cli_raise_external_exceptions: bool = Field(

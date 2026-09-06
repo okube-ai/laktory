@@ -241,3 +241,31 @@ These settings control where Laktory writes and reads files during bundle resolu
 `build_root` and `workspace_root` are auto-configured from the bundle context when left at their defaults. The `build_root` is set to 
 `{bundle_root}/laktory/.build/` and `workspace_root` is derived as 
 `{dab_workspace_root}/files/laktory/.build/`. Explicit overrides via environment variables take priority. See [Laktory Settings](laktorysettings.md) for what each setting controls outside the DAB context.
+
+### Setting other Laktory settings from `databricks.yml`
+
+Every other [Laktory setting](laktorysettings.md) (`dataframe_api`, `dataframe_backend`, `runtime_root`,
+`cli_raise_external_exceptions`, `register_nw_extensions`, `log_level`) can be declared directly in
+`databricks.yml` as a `laktory_settings_<field>` bundle variable, instead of relying on an environment
+variable that has to be provisioned outside the bundle, or on a per-pipeline field:
+
+```yaml title="databricks.yml"
+variables:
+  laktory_settings_log_level:
+    default: INFO
+  laktory_settings_runtime_root:
+    default: /Volumes/main/lk/vol/checkpoints/
+
+targets:
+  dev:
+    variables:
+      laktory_settings_log_level: DEBUG
+  prod:
+    variables:
+      laktory_settings_log_level: WARN
+```
+
+This sets the setting once for the whole deployment. A per-pipeline field (e.g. `dataframe_api:` on a
+pipeline/node/transformer, or `root_path:` on a pipeline) still takes priority over the bundle-variable
+value when both are set, same as it already does over an environment variable. `workspace_root` and
+`build_root` are not settable this way - they keep their own dedicated auto-configuration described above.

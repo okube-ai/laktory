@@ -65,6 +65,7 @@ def build_resources(bundle):
     """
     from databricks.bundles.core import Resources
 
+    from laktory._settings import Settings
     from laktory._settings import settings
     from laktory.models.pipeline.pipeline import Pipeline
 
@@ -118,6 +119,21 @@ def build_resources(bundle):
     # --- Bundle variables ---
     # Expose all bundle variables for injection into pipeline models.
     bundle_vars = {k: v for k, v in bundle.variables.items() if v is not None}
+
+    # --- Laktory settings from bundle variables ---
+    # `workspace_root` and `build_root` are auto-configured above and have their own
+    # dedicated bundle variable (`dab_workspace_root`); every other `Settings` field can
+    # be set once for the whole deployment via a `laktory_settings_<field>` bundle
+    # variable, instead of only through an env var or a per-pipeline field escape hatch.
+    for field in Settings.model_fields:
+        if field in ("workspace_root", "build_root"):
+            continue
+        var_name = f"laktory_settings_{field}"
+        if var_name in bundle_vars:
+            setattr(settings, field, bundle_vars[var_name])
+            logger.info(
+                f"Setting `{field}` to '{getattr(settings, field)}' from bundle variable '{var_name}'."
+            )
 
     # --- Discover pipeline YAML files ---
     dirs_raw = bundle_vars.get("laktory_pipelines_dir", "laktory/pipelines")

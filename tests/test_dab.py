@@ -251,11 +251,10 @@ nodes:
 @pytest.fixture(autouse=True)
 def restore_settings():
     """Save and restore global settings around every test in this module."""
-    original_build_root = settings.build_root
-    original_workspace_root = settings.workspace_root
+    original = {k: getattr(settings, k) for k in Settings.model_fields}
     yield
-    settings.build_root = original_build_root
-    settings.workspace_root = original_workspace_root
+    for k, v in original.items():
+        setattr(settings, k, v)
 
 
 @pytest.fixture
@@ -502,6 +501,89 @@ def test_workspace_root_no_bundle_var(tmp_path, mock_bundle, monkeypatch):
 
     with pytest.raises(ValueError, match="dab_workspace_root"):
         build_resources(mock_bundle)
+
+
+# ---------------------------------------------------------------------------
+# Laktory settings from bundle variables
+# ---------------------------------------------------------------------------
+
+
+def test_settings_bundle_var_literal_field(tmp_path, mock_bundle, monkeypatch):
+    """laktory_settings_dataframe_api bundle variable sets settings.dataframe_api."""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+    mock_bundle.variables["laktory_settings_dataframe_api"] = "NATIVE"
+
+    build_resources(mock_bundle)
+
+    assert settings.dataframe_api == "NATIVE"
+
+
+def test_settings_bundle_var_str_field(tmp_path, mock_bundle, monkeypatch):
+    """laktory_settings_log_level bundle variable sets settings.log_level."""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+    mock_bundle.variables["laktory_settings_log_level"] = "WARN"
+
+    build_resources(mock_bundle)
+
+    assert settings.log_level == "WARN"
+
+
+def test_settings_bundle_var_bool_field(tmp_path, mock_bundle, monkeypatch):
+    """laktory_settings_cli_raise_external_exceptions coerces a string to bool."""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+    mock_bundle.variables["laktory_settings_cli_raise_external_exceptions"] = "true"
+
+    build_resources(mock_bundle)
+
+    assert settings.cli_raise_external_exceptions is True
+
+
+def test_settings_bundle_var_runtime_root(tmp_path, mock_bundle, monkeypatch):
+    """laktory_settings_runtime_root bundle variable sets settings.runtime_root once for
+    the whole deployment, instead of requiring root_path: on every pipeline."""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+    mock_bundle.variables["laktory_settings_runtime_root"] = (
+        "/Volumes/main/lk/vol/checkpoints/"
+    )
+
+    build_resources(mock_bundle)
+
+    assert settings.runtime_root == "/Volumes/main/lk/vol/checkpoints/"
+
+
+def test_settings_bundle_var_excludes_workspace_and_build_root(
+    tmp_path, mock_bundle, monkeypatch
+):
+    """workspace_root and build_root are not settable via laktory_settings_<field> - they
+    keep their own dedicated auto-configuration."""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = _make_pipelines_dir(tmp_path, _PIPELINE_DLT_YAML)
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+    mock_bundle.variables["laktory_settings_workspace_root"] = "/should-not-apply/"
+    mock_bundle.variables["laktory_settings_build_root"] = "/should-not-apply/"
+
+    build_resources(mock_bundle)
+
+    assert settings.workspace_root != "/should-not-apply/"
+    assert settings.build_root != "/should-not-apply/"
 
 
 if __name__ == "__main__":
