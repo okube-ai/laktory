@@ -23,3 +23,7 @@
 ---
 
 ::: laktory.cli.setup_agent
+
+---
+
+::: laktory.cli.install_shim
