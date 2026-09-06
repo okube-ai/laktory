@@ -65,6 +65,7 @@ def build_resources(bundle):
     """
     from databricks.bundles.core import Resources
 
+    from laktory._settings import Settings
     from laktory._settings import settings
     from laktory.models.pipeline.pipeline import Pipeline
 
@@ -72,6 +73,29 @@ def build_resources(bundle):
     # same directory (i.e. --bundle-dir is not used)
     # TODO: build a more reliable approach.
     bundle_dirpath = Path(os.getcwd())
+
+    # --- Bundle variables ---
+    # Expose all bundle variables for injection into pipeline models.
+    bundle_vars = {k: v for k, v in bundle.variables.items() if v is not None}
+
+    # --- Laktory settings from bundle variables ---
+    # `workspace_root` has its own dedicated bundle variable (`dab_workspace_root`) and is
+    # derived from `build_root` below, so it's excluded here. Every other `Settings` field,
+    # including `build_root`, can be set once for the whole deployment via a
+    # `laktory_settings_<field>` bundle variable, instead of only through an env var or a
+    # per-pipeline field escape hatch. This must run before the `build_root`/`workspace_root`
+    # auto-configuration below, so that a `laktory_settings_build_root` override is seen by
+    # the `workspace_root` derivation instead of being applied too late and leaving
+    # `workspace_root` stale relative to the old `build_root`.
+    for field in Settings.model_fields:
+        if field == "workspace_root":
+            continue
+        var_name = f"laktory_settings_{field}"
+        if var_name in bundle_vars:
+            setattr(settings, field, bundle_vars[var_name])
+            logger.info(
+                f"Setting `{field}` to '{getattr(settings, field)}' from bundle variable '{var_name}'."
+            )
 
     # Build Root
     if settings.build_root == DEFAULT_BUILD_ROOT:
@@ -114,10 +138,6 @@ def build_resources(bundle):
         shutil.rmtree(build_dir)
         logger.info(f"Cleaned stale build directory '{build_dir}'")
     build_dir.mkdir(parents=True, exist_ok=True)
-
-    # --- Bundle variables ---
-    # Expose all bundle variables for injection into pipeline models.
-    bundle_vars = {k: v for k, v in bundle.variables.items() if v is not None}
 
     # --- Discover pipeline YAML files ---
     dirs_raw = bundle_vars.get("laktory_pipelines_dir", "laktory/pipelines")

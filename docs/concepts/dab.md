@@ -230,14 +230,47 @@ dependencies:
 
 ## Settings
 
-These settings control where Laktory writes and reads files during bundle resolution:
+Every [Laktory setting](laktorysettings.md) except `workspace_root` (`build_root`, `dataframe_api`,
+`dataframe_backend`, `runtime_root`, `cli_raise_external_exceptions`, `register_nw_extensions`,
+`log_level`) can be set for a DAB deployment either as a `laktory_settings_<field>` bundle variable in
+`databricks.yml`, or as the matching environment variable (e.g. `LAKTORY_LOG_LEVEL`) in whatever process
+runs `databricks bundle deploy`/`bundle run`. The bundle variable is versioned alongside the rest of
+`databricks.yml` and integrates with `targets:`-based overrides; the environment variable does not, but
+is available even outside a bundle context.
+
+```yaml title="databricks.yml"
+variables:
+  laktory_settings_log_level:
+    default: INFO
+  laktory_settings_runtime_root:
+    default: /Volumes/main/lk/vol/checkpoints/
+
+targets:
+  dev:
+    variables:
+      laktory_settings_log_level: DEBUG
+  prod:
+    variables:
+      laktory_settings_log_level: WARN
+```
+
+`workspace_root` has a DAB-aware default instead - see below. It can still be overridden with the
+`LAKTORY_WORKSPACE_ROOT` environment variable, just not with a `laktory_settings_workspace_root` bundle
+variable.
+
+### DAB-specific default overrides
+
+`build_root` and `workspace_root` are auto-configured from the bundle context when left at their defaults
+(i.e. when no override - an environment variable, or, for `build_root`, a `laktory_settings_build_root`
+bundle variable too - has already set them to something else):
 
 | Setting          | Environment variable     | Description                                                          |
 |------------------|--------------------------|----------------------------------------------------------------------|
 | `build_root`     | `LAKTORY_BUILD_ROOT`     | Local directory for generated config JSON files and the LDP notebook |
 | `workspace_root` | `LAKTORY_WORKSPACE_ROOT` | Workspace path where Laktory files are synced by DABs                |
-| `runtime_root`   | `LAKTORY_RUNTIME_ROOT`   | Root for streaming checkpoints; not auto-configured under DAB - set explicitly (e.g. to a Unity Catalog Volume path) if the default fails with `[DBFS_DISABLED]` |
 
-`build_root` and `workspace_root` are auto-configured from the bundle context when left at their defaults. The `build_root` is set to 
-`{bundle_root}/laktory/.build/` and `workspace_root` is derived as 
-`{dab_workspace_root}/files/laktory/.build/`. Explicit overrides via environment variables take priority. See [Laktory Settings](laktorysettings.md) for what each setting controls outside the DAB context.
+`build_root` is set to `{bundle_root}/laktory/.build/` and `workspace_root` is derived from it as
+`{dab_workspace_root}/files/{build_root relative to the bundle root}/` - so a `build_root` override
+(bundle variable or environment variable) is always resolved before `workspace_root` is derived, and the
+latter reflects the overridden value rather than the default. See [Laktory Settings](laktorysettings.md)
+for what each setting controls outside the DAB context.
