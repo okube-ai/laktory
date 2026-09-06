@@ -67,6 +67,35 @@ def test_transformer_parent():
         assert tn.parent_pipeline_node == brz
 
 
+def test_parents_after_inject_vars():
+    # `Pipeline.inject_vars(inplace=False)` (the default, used by
+    # `laktory.dab.build_resources`) deep-copies the tree then resolves
+    # variables into the copy. Nodes (one level deep) got correctly
+    # re-parented, but grandchildren (sinks, transformer nodes - two levels
+    # deep) kept a `_parent` pointing at the stale, pre-copy node instead of
+    # the new one - see issue #653.
+    pl = models.Pipeline(
+        name="pl",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                sources=[{"path": "brz.json", "format": "JSON"}],
+                transformer={"nodes": [{"expr": "select * from {df}"}]},
+                sinks=[_SINK],
+            ),
+        ],
+    )
+    pl2 = pl.inject_vars()
+
+    node2 = pl2.nodes_dict["brz"]
+    sink2 = node2.sinks[0]
+    tn2 = node2.transformer.nodes[0]
+
+    assert node2.parent_pipeline is pl2
+    assert sink2.parent_pipeline_node is node2
+    assert tn2.parent_pipeline_node is node2
+
+
 def test_orchestrator_parent():
     pl = models.Pipeline(
         name="pl",

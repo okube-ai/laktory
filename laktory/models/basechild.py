@@ -56,6 +56,16 @@ class BaseChild(BaseModel, metaclass=ModelMetaclass):
             if isinstance(o, BaseChild):
                 o._parent = parent
                 o.update_from_parent()
+                # Recurse so a `model_copy(deep=True)` re-wires the whole
+                # subtree, not just direct children. `model_copy`'s override
+                # only fires `_assign_parent_to_children()` on the copied
+                # object itself, and plain `copy.deepcopy` cannot be trusted
+                # to preserve `_parent` back-references: pydantic's
+                # `__deepcopy__` doesn't memoize `self` before recursing into
+                # its own fields, so a child->parent cycle (e.g. a sink's
+                # `_parent` pointing back to its node) gets deep-copied into
+                # a disconnected duplicate instead of reusing the new parent.
+                o._assign_parent_to_children()
 
         for c_name in self.children_names:
             o = getattr(self, c_name)
