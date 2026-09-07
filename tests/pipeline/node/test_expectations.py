@@ -246,9 +246,10 @@ def test_streaming_multi(tmp_path):
     assert node.checks[2].fails_count == 1
 
 
-def test_quarantine_sink_streaming_defaults_to_append(tmp_path):
-    """Regression test for #661: a quarantine sink with no explicit `mode:`
-    must not crash on a streaming source - it should default to APPEND."""
+def test_quarantine_sink_requires_explicit_mode(tmp_path):
+    """`mode` has no implicit default for any sink, `is_quarantine` included
+    (see #661) - an explicit `mode: APPEND` is required, matching every
+    other sink."""
     ss = StreamingSource(backend="PYSPARK")
     source_path = str(tmp_path / "source")
     checkpoint_path = tmp_path / "node" / "_checkpoint"
@@ -271,7 +272,11 @@ def test_quarantine_sink_streaming_defaults_to_append(tmp_path):
     )
 
     ss.write_to_delta(source_path)
-    node.execute()  # should not raise
+    with pytest.raises(ValueError, match="Mode 'None' is not supported"):
+        node.execute()
 
+    # Setting mode explicitly on the quarantine sink resolves it.
+    node.sinks[1].mode = "APPEND"
+    node.execute()
     quarantine = node.quarantine_sinks[0].read().collect().to_pandas()
     assert len(quarantine) == 1

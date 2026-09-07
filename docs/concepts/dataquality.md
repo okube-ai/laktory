@@ -39,11 +39,17 @@ nodes:
     sinks:
     - schema_name: finance
       table_name: slv_stock_prices
+      mode: APPEND
     - schema_name: finance
       table_name: slv_stock_prices_quarantine
       is_quarantine: True
+      mode: APPEND
   ...
 ```
+
+`mode` has no implicit default and must always be set explicitly - including on
+`is_quarantine` sinks, which are typically `APPEND` since they only ever
+receive newly-failing rows.
 
 #### Expression
 

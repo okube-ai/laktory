@@ -265,7 +265,7 @@ Inherits common fields from `BaseDataSource`.
 | `schema_name` | `str` | `null` | Target table schema |
 | `table_name` | `str` | required | Target table name; supports fully qualified `catalog.schema.table` |
 | `table_type` | `TABLE \| VIEW` | `TABLE` | Write a materialized table or a SQL view |
-| `mode` | `str` | `null` | `OVERWRITE`, `APPEND`, `MERGE`, `ERROR`, `IGNORE` |
+| `mode` | `str` | `null` | `OVERWRITE`, `APPEND`, `MERGE`, `ERROR`, `IGNORE`. Always required - no implicit default, including for `is_quarantine` sinks (typically `APPEND`) |
 | `format` | `DELTA \| PARQUET \| ORC \| AVRO` | `DELTA` | Storage format |
 | `merge_cdc_options` | `DataSinkMergeCDCOptions` | `null` | CDC merge config; required when `mode: MERGE` |
 | `databricks_data_profiling_config` | `...` | `null` | Automatically creates a Databricks Data Quality Monitor on this table |
@@ -368,10 +368,11 @@ expectations:
 sinks:
 - schema_name: yahoo
   table_name: slv_stock_prices
-  mode: APPEND  # required for a streaming source - no implicit default
+  mode: APPEND  # required - mode has no implicit default, even for a streaming source
 - schema_name: yahoo
   table_name: slv_stock_prices_quarantine
-  is_quarantine: true  # mode defaults to APPEND for is_quarantine sinks on a streaming source
+  is_quarantine: true
+  mode: APPEND  # required here too - is_quarantine does not default mode either
 transformer:
   nodes:
   - expr: |
