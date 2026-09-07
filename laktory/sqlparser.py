@@ -73,6 +73,24 @@ class SQLParser:
                     f"Column expression {expr} with more than 2 parts is not supported"
                 )
 
+        if isinstance(expr, expressions.Is):
+            # `IS NULL` / `IS TRUE` / `IS FALSE` all parse to a generic `Is`
+            # node (a `Binary` subclass, so this must be checked before the
+            # `Binary` branch below), with `expression` holding a `Null()`
+            # or `Boolean()`.
+            left = self.visit_expr(expr.this)
+            rhs = expr.expression
+            if isinstance(rhs, expressions.Null):
+                return left.is_null()
+            if isinstance(rhs, expressions.Boolean):
+                # `IS TRUE`/`IS FALSE` never evaluate to NULL, even when
+                # `left` is NULL - so the comparison must be null-safe.
+                return (left == engine.lit(rhs.this)).fill_null(False)
+            raise Exception(
+                f"IS expression with right-hand side {rhs} of type "
+                f"'{type(rhs)}' is not currently supported"
+            )
+
         if isinstance(expr, expressions.Binary):
             return self.visit_binary_op(expr)
         #
@@ -114,29 +132,17 @@ class SQLParser:
         # if isinstance(expr, expressions.IsDistinctFrom):
         #     return self.visit_expr(expr.e1).neq_missing(self.visit_expr(expr.e2))
 
-        # if isinstance(expr, expressions.IsFalse):
-        #     return self.visit_expr(expr.expr).eq(lit(False))
-        #
         # if isinstance(expr, expressions.IsNotDistinctFrom):
         #     return self.visit_expr(expr.e1).eq_missing(self.visit_expr(expr.e2))
 
-        # if isinstance(expr, expressions.IsNotFalse):
-        #     return self.visit_expr(expr.expr).eq(lit(False)).
-        #     not ()
+        if isinstance(expr, expressions.Not):
+            # `IS NOT NULL` / `IS NOT TRUE` / `IS NOT FALSE` and bare `NOT`
+            # all parse as `Not(...)` wrapping the negated expression.
+            return ~self.visit_expr(expr.this)
 
-        # if isinstance(expr, expressions.IsNotNull):
-        #     return self.visit_expr(expr.expr).is_not_null()
-        #
-        # if isinstance(expr, expressions.IsNotTrue):
-        #     return self.visit_expr(expr.expr).eq(lit(True)).
-        #     not ()
-        #
-        # if isinstance(expr, expressions.IsNull):
-        #     return self.visit_expr(expr.expr).is_null()
+        if isinstance(expr, expressions.Paren):
+            return self.visit_expr(expr.this)
 
-        # if isinstance(expr, expressions.IsTrue):
-        #     return self.visit_expr(expr.expr).eq(lit(True))
-        #
         # if isinstance(expr, expressions.Like):
         #     if expr.any:
         #         raise Exception("LIKE ANY is not a supported syntax")

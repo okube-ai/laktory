@@ -117,6 +117,12 @@ class DataQualityExpectation(BaseModel, PipelineChild):
     def parse_expr(self) -> Any:
         if isinstance(self.expr, str):
             self.expr = DataFrameColumnExpr(expr=self.expr)
+        # Expectations are always checked against a narwhals-wrapped
+        # DataFrame (see PipelineNode.check_expectations), so `dataframe_api`
+        # must resolve to NARWHALS regardless of what a parent
+        # transformer/node/global setting specifies - NATIVE can never be
+        # honored here.
+        self.expr.dataframe_api_ = "NARWHALS"
         return self
 
     @model_validator(mode="after")

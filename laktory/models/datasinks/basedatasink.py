@@ -482,6 +482,12 @@ class BaseDataSink(BaseModel, PipelineChild):
         if mode is None:
             mode = self.mode
 
+        if mode is None and self.is_quarantine and self.is_streaming(df=df):
+            # A quarantine sink almost never has a reason to be anything
+            # other than append-only, and streaming writes reject `None`
+            # outright (unlike static writes).
+            mode = "APPEND"
+
         self._validate_mode(mode, df)
         self._validate_format()
 

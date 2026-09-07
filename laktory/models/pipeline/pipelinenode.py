@@ -892,7 +892,7 @@ class PipelineNode(BaseModel, PipelineChild):
                 else:
                     if _is_update_metadata:
                         s.metadata.execute()
-                    s.write(df=self._output_df)
+                    s.write(df=_df)
 
                     # Metadata update required because of schema overwrite
                     if _is_update_metadata and s.metadata.update_required:
