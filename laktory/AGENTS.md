@@ -203,7 +203,7 @@ Stack
 | `sinks` | `list[...]` | `[]` | Data sinks. Set `is_quarantine: true` to store expectation-failed rows |
 | `transformer` | `DataFrameTransformer` | `null` | Chain of SQL / method transformations |
 | `execution_task_name` | `str` | `null` | Groups nodes into one task in Databricks Jobs / Airflow |
-| `dataframe_api` | `NARWHALS \| NATIVE` | `NARWHALS` | API used in transformer nodes. `NATIVE` exposes backend-specific API |
+| `dataframe_api` | `NARWHALS \| NATIVE` | `NARWHALS` | API used in transformer nodes. `NATIVE` exposes backend-specific API. Ignored for `expectations` - those are always checked via Narwhals regardless of this setting |
 | `depends_on` | `list[str]` | `[]` | Node names to wait for even when no data flows between them |
 | `expectations` | `list[...]` | `[]` | Data quality checks: warn, drop, quarantine, or fail |
 | `ldp_template` | `str` | `DEFAULT` | Notebook template for Lakeflow Declarative Pipeline orchestrator |
@@ -368,9 +368,10 @@ expectations:
 sinks:
 - schema_name: yahoo
   table_name: slv_stock_prices
+  mode: APPEND  # required for a streaming source - no implicit default
 - schema_name: yahoo
   table_name: slv_stock_prices_quarantine
-  is_quarantine: true
+  is_quarantine: true  # mode defaults to APPEND for is_quarantine sinks on a streaming source
 transformer:
   nodes:
   - expr: |

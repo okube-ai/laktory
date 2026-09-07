@@ -52,9 +52,16 @@ at the row level (`ROW` `type`) or aggregate level (`AGGREGATE` `type`). Laktory
 supports both SQL and DataFrame API functions, giving you flexibility in setting
 quality targets. Here are examples of valid expressions:
 
-- `F.col('close') < 300` (pyspark)
+- `nw.col('close') < 300` (Narwhals)
 - `close < 300` (SQL)
 - `COUNT(*) > 50` (SQL)
+
+Expectations are always checked against a [Narwhals](https://narwhals-dev.github.io/narwhals/)-wrapped
+DataFrame, regardless of `dataframe_api` (`NARWHALS` / `NATIVE`) set on a
+transformer node, pipeline, or stack-wide. A DataFrame-type expression should
+therefore always use the Narwhals API (`nw.col(...)`, `nw.lit(...)`), never a
+backend-native one (e.g. `F.col(...)` for PySpark) - a `NATIVE` setting
+inherited from elsewhere is ignored for expectations specifically.
 
 #### Action
 
