@@ -47,33 +47,16 @@ nodes:
   ...
 ```
 
-`mode` has no implicit default and must always be set explicitly on any sink,
-with one exception: an `is_quarantine` sink on a streaming source defaults to
-`APPEND` when `mode` is left unset, since that's the only mode that is both
-valid and correct for it (`COMPLETE` requires a streaming aggregation, `UPDATE`
-isn't supported by Delta as a streaming sink, and `MERGE` would key off columns
-the quarantined rows typically violate). A *static* `is_quarantine` sink still
-requires an explicit `mode` - whether `OVERWRITE` or `APPEND` is correct there
-depends on whether the node fully recomputes each run or ingests
-incrementally, which Laktory has no way to infer.
-
 #### Expression
 
 Expectations are defined by expressions that evaluate to a boolean value, either
 at the row level (`ROW` `type`) or aggregate level (`AGGREGATE` `type`). Laktory
-supports both SQL and DataFrame API functions, giving you flexibility in setting
+supports both SQL and Narwhals DataFrame API functions, giving you flexibility in setting
 quality targets. Here are examples of valid expressions:
 
 - `nw.col('close') < 300` (Narwhals)
 - `close < 300` (SQL)
 - `COUNT(*) > 50` (SQL)
-
-Expectations are always checked against a [Narwhals](https://narwhals-dev.github.io/narwhals/)-wrapped
-DataFrame, regardless of `dataframe_api` (`NARWHALS` / `NATIVE`) set on a
-transformer node, pipeline, or stack-wide. A DataFrame-type expression should
-therefore always use the Narwhals API (`nw.col(...)`, `nw.lit(...)`), never a
-backend-native one (e.g. `F.col(...)` for PySpark) - a `NATIVE` setting
-inherited from elsewhere is ignored for expectations specifically.
 
 #### Action
 
