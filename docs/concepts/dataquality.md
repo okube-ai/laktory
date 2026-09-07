@@ -47,9 +47,15 @@ nodes:
   ...
 ```
 
-`mode` has no implicit default and must always be set explicitly - including on
-`is_quarantine` sinks, which are typically `APPEND` since they only ever
-receive newly-failing rows.
+`mode` has no implicit default and must always be set explicitly on any sink,
+with one exception: an `is_quarantine` sink on a streaming source defaults to
+`APPEND` when `mode` is left unset, since that's the only mode that is both
+valid and correct for it (`COMPLETE` requires a streaming aggregation, `UPDATE`
+isn't supported by Delta as a streaming sink, and `MERGE` would key off columns
+the quarantined rows typically violate). A *static* `is_quarantine` sink still
+requires an explicit `mode` - whether `OVERWRITE` or `APPEND` is correct there
+depends on whether the node fully recomputes each run or ingests
+incrementally, which Laktory has no way to infer.
 
 #### Expression
 

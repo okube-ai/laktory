@@ -246,10 +246,13 @@ def test_streaming_multi(tmp_path):
     assert node.checks[2].fails_count == 1
 
 
-def test_quarantine_sink_requires_explicit_mode(tmp_path):
-    """`mode` has no implicit default for any sink, `is_quarantine` included
-    (see #661) - an explicit `mode: APPEND` is required, matching every
-    other sink."""
+def test_quarantine_sink_streaming_defaults_to_append(tmp_path):
+    """A streaming quarantine sink with no explicit `mode:` defaults to
+    APPEND (see #661) - the only Spark streaming output mode that is both
+    valid (COMPLETE requires an aggregation, UPDATE isn't supported by Delta
+    as a streaming sink) and semantically correct (MERGE would key off
+    columns the quarantined rows typically violate) for a plain row filter
+    like a quarantine DataFrame."""
     ss = StreamingSource(backend="PYSPARK")
     source_path = str(tmp_path / "source")
     checkpoint_path = tmp_path / "node" / "_checkpoint"
@@ -272,11 +275,41 @@ def test_quarantine_sink_requires_explicit_mode(tmp_path):
     )
 
     ss.write_to_delta(source_path)
+    node.execute()  # should not raise
+
+    quarantine = node.quarantine_sinks[0].read().collect().to_pandas()
+    assert len(quarantine) == 1
+
+
+def test_quarantine_sink_static_requires_explicit_mode(tmp_path):
+    """A *static* quarantine sink has no single correct default mode -
+    OVERWRITE vs APPEND depends on whether the node fully recomputes each
+    run or ingests incrementally, which Laktory cannot infer - so, unlike
+    the streaming case, `mode` stays required here just like any other
+    sink."""
+    df0 = get_df0("PYSPARK", lazy=True)
+    primary_path = str(tmp_path / "primary") + "/"
+    quarantine_path = str(tmp_path / "quarantine") + "/"
+
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"df": df0}],
+        expectations=[
+            models.DataQualityExpectation(
+                name="check", expr="x1 < 3", action="QUARANTINE"
+            )
+        ],
+        sinks=[
+            {"path": primary_path, "format": "PARQUET", "mode": "OVERWRITE"},
+            {"path": quarantine_path, "format": "PARQUET", "is_quarantine": True},
+        ],
+    )
+
     with pytest.raises(ValueError, match="Mode 'None' is not supported"):
         node.execute()
 
     # Setting mode explicitly on the quarantine sink resolves it.
-    node.sinks[1].mode = "APPEND"
+    node.sinks[1].mode = "OVERWRITE"
     node.execute()
     quarantine = node.quarantine_sinks[0].read().collect().to_pandas()
     assert len(quarantine) == 1

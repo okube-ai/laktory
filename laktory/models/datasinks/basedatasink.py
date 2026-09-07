@@ -482,6 +482,25 @@ class BaseDataSink(BaseModel, PipelineChild):
         if mode is None:
             mode = self.mode
 
+        if mode is None and self.is_quarantine and self.is_streaming(df=df):
+            # Unlike a regular sink, a streaming quarantine sink has exactly
+            # one mode that is both valid and correct, so defaulting it is
+            # not a guess:
+            # - COMPLETE requires a streaming aggregation; a quarantine
+            #   DataFrame is a plain row filter, so Spark rejects it outright
+            #   ([STREAMING_OUTPUT_MODE.UNSUPPORTED_OPERATION]).
+            # - UPDATE is not supported by Delta as a streaming output mode
+            #   at all ([DELTA_UNSUPPORTED_OUTPUT_MODE]).
+            # - MERGE is semantically wrong here: rows are typically
+            #   quarantined precisely because they violate the primary
+            #   keys/constraints a merge would key off (e.g. a null id).
+            # That leaves APPEND as the only mode that runs and means the
+            # right thing. For a *static* quarantine sink there is no such
+            # single answer - OVERWRITE vs APPEND depends on whether the
+            # node fully recomputes each run or ingests incrementally - so
+            # mode stays required there, same as any other sink.
+            mode = "APPEND"
+
         self._validate_mode(mode, df)
         self._validate_format()
 
