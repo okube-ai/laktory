@@ -1,6 +1,16 @@
 # Release History
 
-## [0.12.6] - Unreleased
+## [0.12.7] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.12.6] - 2026-09-07
 ### Added
 * Added `laktory_settings_<field>` bundle-variable convention to set Laktory settings (`build_root`, `dataframe_api`, `dataframe_backend`, `runtime_root`, `cli_raise_external_exceptions`, `register_nw_extensions`, `log_level`) directly from `databricks.yml` [[#654](https://github.com/okube-ai/laktory/issues/654)]
 ### Fixed
