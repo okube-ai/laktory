@@ -35,6 +35,29 @@ def _get_pl(orchestrator_dict, expectation_dict):
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_expectation_forces_narwhals_dataframe_api(backend):
+    """
+    Expectations are always checked against a narwhals-wrapped batch, so
+    `dataframe_api` must resolve to NARWHALS on the nested expression even
+    when the expectation (or a parent node/global setting) resolves to
+    NATIVE - otherwise the check crashes deep inside narwhals when it tries
+    to filter with a raw backend-native expression (see #659).
+    """
+    df0 = get_df0(backend, lazy=True)
+    dqe = models.DataQualityExpectation(
+        name="id not null",
+        action="QUARANTINE",
+        expr="id IS NOT NULL",
+        dataframe_api_="NATIVE",
+    )
+    assert dqe.dataframe_api == "NATIVE"
+    assert dqe.expr.dataframe_api == "NARWHALS"
+
+    check = dqe.run_check(df0)
+    assert check.status == "PASS"
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_expectations_abs(backend):
     df0 = get_df0(backend, lazy=True)
     e = nw.col("x1") < 3

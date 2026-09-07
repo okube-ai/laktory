@@ -151,6 +151,38 @@ def test_math_functions():
         assert _df["r0"].fill_null(-1).to_list() == _df["r1"].fill_null(-1).to_list()
 
 
+def test_null_and_boolean_predicates():
+    parser = SQLParser()
+
+    df = pl.DataFrame(
+        {
+            "x": [1, None, 2, None],
+            "b": [True, False, None, None],
+        }
+    )
+    if e == nw:
+        df = nw.from_native(df)
+
+    exprs = [
+        ("x IS NULL", e.col("x").is_null()),
+        ("x IS NOT NULL", ~e.col("x").is_null()),
+        ("NOT (x > 1)", ~(e.col("x") > 1)),
+        ("b IS TRUE", (e.col("b") == e.lit(True)).fill_null(False)),
+        ("b IS FALSE", (e.col("b") == e.lit(False)).fill_null(False)),
+        ("b IS NOT TRUE", ~(e.col("b") == e.lit(True)).fill_null(False)),
+        ("b IS NOT FALSE", ~(e.col("b") == e.lit(False)).fill_null(False)),
+    ]
+
+    for sql_expr, nw_expr in exprs:
+        expr = parser.parse(sql_expr)
+
+        # Evaluate Expression
+        _df = df.with_columns(r0=expr, r1=nw_expr)
+
+        # Test
+        assert _df["r0"].to_list() == _df["r1"].to_list()
+
+
 # def test_string_functions():
 #     parser = SQLParser()
 #

@@ -57,6 +57,46 @@ def test_quarantine(backend):
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_quarantine_sink_gets_quarantine_data(backend, tmp_path):
+    """Regression test for #658: the quarantine sink must receive the
+    quarantine DataFrame, not a duplicate of the output DataFrame."""
+    df0 = get_df0(backend, lazy=True)
+    mode = "OVERWRITE" if backend == "PYSPARK" else None
+    primary_path = str(tmp_path / "primary") + ("/" if backend == "PYSPARK" else "")
+    quarantine_path = str(tmp_path / "quarantine") + (
+        "/" if backend == "PYSPARK" else ""
+    )
+
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"df": df0}],
+        expectations=[
+            models.DataQualityExpectation(
+                name="check", expr="x1 < 3", action="QUARANTINE"
+            )
+        ],
+        sinks=[
+            {"path": primary_path, "format": "PARQUET", "mode": mode},
+            {
+                "path": quarantine_path,
+                "format": "PARQUET",
+                "mode": mode,
+                "is_quarantine": True,
+            },
+        ],
+    )
+    node.execute()
+
+    primary = node.primary_sink.read().collect().to_pandas()
+    quarantine = node.quarantine_sinks[0].read().collect().to_pandas()
+
+    assert len(primary) == 2
+    assert len(quarantine) == 1
+    assert primary["x1"].max() < 3
+    assert quarantine["x1"].min() >= 3
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_fail(backend):
     node = _node_with("FAIL", backend=backend)
     with pytest.raises(DataQualityCheckFailedError):
@@ -204,3 +244,72 @@ def test_streaming_multi(tmp_path):
     assert node.checks[2].status == "FAIL"
     assert node.checks[2].rows_count == 3
     assert node.checks[2].fails_count == 1
+
+
+def test_quarantine_sink_streaming_defaults_to_append(tmp_path):
+    """A streaming quarantine sink with no explicit `mode:` defaults to
+    APPEND (see #661) - the only Spark streaming output mode that is both
+    valid (COMPLETE requires an aggregation, UPDATE isn't supported by Delta
+    as a streaming sink) and semantically correct (MERGE would key off
+    columns the quarantined rows typically violate) for a plain row filter
+    like a quarantine DataFrame."""
+    ss = StreamingSource(backend="PYSPARK")
+    source_path = str(tmp_path / "source")
+    checkpoint_path = tmp_path / "node" / "_checkpoint"
+    primary_path = str(tmp_path / "primary")
+    quarantine_path = str(tmp_path / "quarantine")
+
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"path": source_path, "format": "DELTA", "as_stream": True}],
+        expectations_checkpoint_path_=checkpoint_path,
+        expectations=[
+            models.DataQualityExpectation(
+                name="check", expr="x1 < 3", action="QUARANTINE"
+            ),
+        ],
+        sinks=[
+            {"path": primary_path, "format": "DELTA", "mode": "APPEND"},
+            {"path": quarantine_path, "format": "DELTA", "is_quarantine": True},
+        ],
+    )
+
+    ss.write_to_delta(source_path)
+    node.execute()  # should not raise
+
+    quarantine = node.quarantine_sinks[0].read().collect().to_pandas()
+    assert len(quarantine) == 1
+
+
+def test_quarantine_sink_static_requires_explicit_mode(tmp_path):
+    """A *static* quarantine sink has no single correct default mode -
+    OVERWRITE vs APPEND depends on whether the node fully recomputes each
+    run or ingests incrementally, which Laktory cannot infer - so, unlike
+    the streaming case, `mode` stays required here just like any other
+    sink."""
+    df0 = get_df0("PYSPARK", lazy=True)
+    primary_path = str(tmp_path / "primary") + "/"
+    quarantine_path = str(tmp_path / "quarantine") + "/"
+
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"df": df0}],
+        expectations=[
+            models.DataQualityExpectation(
+                name="check", expr="x1 < 3", action="QUARANTINE"
+            )
+        ],
+        sinks=[
+            {"path": primary_path, "format": "PARQUET", "mode": "OVERWRITE"},
+            {"path": quarantine_path, "format": "PARQUET", "is_quarantine": True},
+        ],
+    )
+
+    with pytest.raises(ValueError, match="Mode 'None' is not supported"):
+        node.execute()
+
+    # Setting mode explicitly on the quarantine sink resolves it.
+    node.sinks[1].mode = "OVERWRITE"
+    node.execute()
+    quarantine = node.quarantine_sinks[0].read().collect().to_pandas()
+    assert len(quarantine) == 1

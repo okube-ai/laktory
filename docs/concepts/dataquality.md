@@ -39,9 +39,11 @@ nodes:
     sinks:
     - schema_name: finance
       table_name: slv_stock_prices
+      mode: APPEND
     - schema_name: finance
       table_name: slv_stock_prices_quarantine
       is_quarantine: True
+      mode: APPEND
   ...
 ```
 
@@ -49,10 +51,10 @@ nodes:
 
 Expectations are defined by expressions that evaluate to a boolean value, either
 at the row level (`ROW` `type`) or aggregate level (`AGGREGATE` `type`). Laktory
-supports both SQL and DataFrame API functions, giving you flexibility in setting
+supports both SQL and Narwhals DataFrame API functions, giving you flexibility in setting
 quality targets. Here are examples of valid expressions:
 
-- `F.col('close') < 300` (pyspark)
+- `nw.col('close') < 300` (Narwhals)
 - `close < 300` (SQL)
 - `COUNT(*) > 50` (SQL)
 
