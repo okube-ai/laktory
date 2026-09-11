@@ -22,6 +22,21 @@
     "roles/tagPolicy.creator": "Creator of tag policies",
     "roles/tagPolicy.manager": "Manager of a specific tag policy"
   },
+  "databricks_account_federation_policy": {
+    "audiences": "The allowed token audiences, as specified in the 'aud' claim of federated tokens. The audience identifier is intended to represent the recipient of the token. Can be any non-empty string value. As long as the audience in the token matches at least one audience in the policy, the token is considered a match. If audiences is unspecified, defaults to your Databricks account id",
+    "create_time": "Creation time of the federation policy",
+    "description": "Description of the federation policy",
+    "issuer": "The required token issuer, as specified in the 'iss' claim of federated tokens",
+    "jwks_json": "The public keys used to validate the signature of federated tokens, in JWKS format. Most use cases should not need to specify this field. If jwks_uri and jwks_json are both unspecified (recommended), Databricks automatically fetches the public keys from your issuer\u2019s well known endpoint. Databricks strongly recommends relying on your issuer\u2019s well known endpoint for discovering public keys",
+    "jwks_uri": "URL of the public keys used to validate the signature of federated tokens, in JWKS format. Most use cases should not need to specify this field. If jwks_uri and jwks_json are both unspecified (recommended), Databricks automatically fetches the public keys from your issuer\u2019s well known endpoint. Databricks strongly recommends relying on your issuer\u2019s well known endpoint for discovering public keys",
+    "name": "Resource name for the federation policy. Example values include `accounts/<account-id>/federationPolicies/my-federation-policy` for Account Federation Policies, and `accounts/<account-id>/servicePrincipals/<service-principal-id>/federationPolicies/my-federation-policy` for Service Principal Federation Policies. Typically an output parameter, which does not need to be specified in create or update requests. If specified in a request, must match the value in the request URL",
+    "policy_id": "The ID of the federation policy. Output only",
+    "service_principal_id": "The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies",
+    "subject": "The required token subject, as specified in the subject claim of federated tokens. Must be specified for service principal federation policies. Must not be specified for account federation policies",
+    "subject_claim": "The claim that contains the subject of the token. If unspecified, the default value is 'sub'",
+    "uid": "Unique, immutable id of the federation policy",
+    "update_time": "Last update time of the federation policy"
+  },
   "databricks_alert": {
     "bool_value": "boolean value (`true` or `false`) to compare against boolean results",
     "column": "Block describing the column from the query result to use for comparison in alert evaluation:",
@@ -299,7 +314,8 @@
     "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
   },
   "databricks_global_init_script": {
-    "content_base64": "The base64-encoded source code global init script. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances * `enabled` (bool, optional default: `false`) specifies if the script is enabled for execution, or not",
+    "content_base64": "The base64-encoded source code global init script. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances",
+    "enabled": "specifies if the script is enabled for execution, or not",
     "id": "ID assigned to a global init script by API",
     "name": "the name of the script.  It should be unique",
     "position": "the position of a global init script, where `0` represents the first global init script to run, `1` is the second global init script to run, and so on. When omitted, the script gets the last position",
@@ -352,6 +368,15 @@
     "url": "URL for the Docker image",
     "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with",
     "zone_id": "Identifier for the availability zone/datacenter in which the cluster resides. This string will be of a form like `us-central1-a`. The provided availability zone must be in the same region as the Databricks workspace"
+  },
+  "databricks_instance_profile": {
+    "iam_role_arn": "The AWS IAM role ARN of the role associated with the instance profile. It must have the form `arn:aws:iam::<account-id>:role/<name>`. This field is required if your role name and instance profile name do not match and you want to use the instance profile with Databricks SQL Serverless",
+    "id": "ARN for EC2 Instance Profile, that is registered with Databricks",
+    "instance_profile_arn": "`ARN` attribute of `aws_iam_instance_profile` output, the EC2 instance profile association to AWS IAM role. This ARN would be validated upon resource creation",
+    "is_meta_instance_profile": "Whether the instance profile is a meta instance profile. Used only in [IAM credential passthrough](https://docs.databricks.com/security/credential-passthrough/iam-passthrough.html)",
+    "provider_config": "Configure the provider for management through account provider. This block consists of the following fields:",
+    "skip_validation": "**For advanced usage only.** If validation fails with an error message that does not indicate an IAM related permission issue, (e.g. \"Your requested instance type is not supported in your requested availability zone\"), you can pass this flag to skip the validation and forcibly add the instance profile",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
   },
   "databricks_ip_access_list": {
     "enabled": "Boolean `true` or `false` indicating whether this list should be active.  Defaults to `true`",
@@ -680,9 +705,65 @@
     "workload_type": "The workload type of the served model. The workload type selects which type of compute to use in the endpoint. For deep learning workloads, GPU acceleration is available by selecting workload types like `GPU_SMALL` and others. See the documentation for all options. The default value is `CPU`",
     "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
   },
+  "databricks_mws_credentials": {
+    "account_id": "**(Deprecated)** Maintained for backwards compatibility and will be removed in a later version. It should now be specified under a provider instance where `host = \"https://accounts.cloud.databricks.com\"`",
+    "creation_time": "(Integer) time of credentials registration",
+    "credentials_id": "(String) identifier of credentials",
+    "credentials_name": "name of credentials to register",
+    "id": "Canonical unique identifier for the mws credentials",
+    "role_arn": "ARN of cross-account role"
+  },
+  "databricks_mws_customer_managed_keys": {
+    "MANAGED_SERVICES": "for encryption of the workspace objects (notebooks, secrets) that are stored in the control plane",
+    "STORAGE": "for encryption of the DBFS Storage & Cluster EBS Volumes",
+    "account_id": "Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)",
+    "aws_key_info": "This field is a block and is documented below. This conflicts with `gcp_key_info`",
+    "creation_time": "(Integer) Time in epoch milliseconds when the customer key was created",
+    "customer_managed_key_id": "(String) ID of the encryption key configuration object",
+    "gcp_key_info": "This field is a block and is documented below. This conflicts with `aws_key_info`",
+    "id": "Canonical unique identifier for the mws customer managed keys",
+    "key_alias": "The AWS KMS key alias",
+    "key_arn": "The AWS KMS key's Amazon Resource Name (ARN)",
+    "key_region": "(Computed) The AWS region in which KMS key is deployed to. This is not required",
+    "kms_key_id": "The GCP KMS key's resource name",
+    "use_cases": "*(since v0.3.4)* List of use cases for which this key will be used. *If you've used the resource before, please add `use_cases = [\"MANAGED_SERVICES\"]` to keep the previous behaviour.* Possible values are:"
+  },
+  "databricks_mws_log_delivery": {
+    "account_id": "Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)",
+    "config_id": "Databricks log delivery configuration ID",
+    "config_name": "The optional human-readable name of the log delivery configuration. Defaults to empty",
+    "credentials_id": "The ID for a Databricks [credential configuration](mws_credentials.md) that represents the AWS IAM role [with policy](../data-sources/aws_assume_role_policy.md) and [trust relationship](../data-sources/aws_assume_role_policy.md) as described in the main billable usage documentation page",
+    "delivery_path_prefix": "Defaults to empty, which means that logs are delivered to the root of the bucket. The value must be a valid S3 object key. It must not start or end with a slash character",
+    "delivery_start_time": "The optional start month and year for delivery, specified in YYYY-MM format. Defaults to current year and month. Usage is not available before 2019-03",
+    "id": "the ID of log delivery configuration in form of `account_id|config_id`",
+    "log_type": "The type of log delivery. `BILLABLE_USAGE` and `AUDIT_LOGS` are supported",
+    "output_format": "The file type of log delivery. Currently `CSV` (for `BILLABLE_USAGE`) and `JSON` (for `AUDIT_LOGS`) are supported",
+    "status": "Status of log delivery configuration. Set to ENABLED or DISABLED. Defaults to ENABLED. This is the only field you can update",
+    "storage_configuration_id": "The ID for a Databricks [storage configuration](mws_storage_configurations.md) that represents the S3 bucket with [bucket policy](../data-sources/aws_bucket_policy.md) as described in the main billable usage documentation page",
+    "workspace_ids_filter": "By default, this log configuration applies to all workspaces associated with your account ID. If your account is on the multitenant version of the platform or on a select custom plan that allows multiple workspaces per account, you may have multiple workspaces associated with your account ID. You can optionally set the field as mentioned earlier to an array of workspace IDs. If you plan to use different log delivery configurations for several workspaces, set this explicitly rather than leaving it blank. If you leave this blank and your account ID gets additional workspaces in the future, this configuration will also apply to the new workspaces"
+  },
   "databricks_mws_ncc_binding": {
     "network_connectivity_config_id": "Canonical unique identifier of Network Connectivity Config in Databricks Account",
     "workspace_id": "Identifier of the workspace to attach the NCC to. Change forces creation of a new resource"
+  },
+  "databricks_mws_ncc_private_endpoint_rule": {
+    "account_id": "The Databricks account ID that owns this private endpoint rule",
+    "connection_state": "The current status of this private endpoint. The private endpoint rules are effective only if the connection state is `ESTABLISHED`. Remember that you must approve new endpoints on your resources in the cloud console before they take effect. The possible values are: * `PENDING`: The endpoint has been created and pending approval. * `ESTABLISHED`: The endpoint has been approved and is ready to be used in your serverless compute resources. * `REJECTED`: Connection was rejected by the private link resource owner. * `DISCONNECTED`: Connection was removed by the private link resource owner, the private endpoint becomes informative and should be deleted for clean-up. * `EXPIRED`: If the endpoint was created but not approved in 14 days, it will be EXPIRED. * `CREATING`: The endpoint creation is in progress. Once successfully created, the state transitions to `PENDING`. * `CREATE_FAILED`: The endpoint creation failed; see `error_message` for details",
+    "creation_time": "Time in epoch milliseconds when this object was created",
+    "deactivated": "Whether this private endpoint is deactivated",
+    "deactivated_at": "Time in epoch milliseconds when this object was deactivated",
+    "domain_names": "List of domain names of target private link service (Azure, conflicts with `group_id`) or target resource FQDNs accessible via the VPC endpoint service (AWS, conflicts with `resource_names`)",
+    "enabled": "Activation status. Only used by private endpoints towards an AWS S3 service",
+    "endpoint_name": "The name of the Azure private endpoint resource, e.g. \"databricks-088781b3-77fa-4132-b429-1af0d91bc593-pe-3cb31234\"",
+    "endpoint_service": "(AWS only) Example `com.amazonaws.vpce.us-east-1.vpce-svc-123abcc1298abc123`. The full target AWS endpoint service name that connects to the destination resources of the private endpoint. Change forces creation of a new resource",
+    "error_message": "Error message describing why the rule is in a `CREATE_FAILED` or otherwise failed state, if any",
+    "group_id": "(Azure only) Not used by customer-managed private endpoint services. The sub-resource type (group ID) of the target resource. Must be one of supported resource types (i.e., `blob`, `dfs`, `sqlServer` , etc. Consult the [Azure documentation](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource) for full list of supported resources). Note that to connect to workspace root storage (root DBFS), you need two endpoints, one for `blob` and one for `dfs`. Change forces creation of a new resource. Conflicts with `domain_names`",
+    "id": "The composite resource identifier, in the form `<network_connectivity_config_id>/<rule_id>`, used for import",
+    "network_connectivity_config_id": "Canonical unique identifier of Network Connectivity Config in Databricks Account. Change forces creation of a new resource",
+    "resource_id": "(Azure only) The Azure resource ID of the target resource. Change forces creation of a new resource",
+    "resource_names": "(AWS only) Only used by private endpoints towards AWS S3 service. List of globally unique S3 bucket names that will be accessed via the VPC endpoint. The bucket names must be in the same region as the NCC/endpoint service. Conflict with `domain_names`",
+    "updated_time": "Time in epoch milliseconds when this object was updated",
+    "vpc_endpoint_id": "The AWS VPC endpoint ID. You can use this ID to identify the VPC endpoint created by Databricks"
   },
   "databricks_mws_network_connectivity_config": {
     "aws_private_endpoint_rules": "list containing information about configure AWS Private Endpoints",
@@ -703,6 +784,22 @@
     "target_services": "the Azure services to which this service endpoint rule applies to",
     "updated_time": "time in epoch milliseconds when this object was updated"
   },
+  "databricks_mws_networks": {
+    "account_id": "Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)",
+    "gcp_network_info": "(GCP only) a block consists of Google Cloud specific information for this network, for example the VPC ID, subnet ID, and secondary IP ranges. It has the following fields:",
+    "id": "Canonical unique identifier for the mws networks",
+    "network_id": "(String) id of network to be used for [databricks_mws_workspaces](mws_workspaces.md) resource",
+    "network_name": "name under which this network is registered",
+    "network_project_id": "The Google Cloud project ID of the VPC network",
+    "security_group_ids": "(AWS only) ids of [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group)",
+    "subnet_id": "The ID of the subnet associated with this network",
+    "subnet_ids": "(AWS only) ids of [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)",
+    "subnet_region": "The Google Cloud region of the workspace data plane. For example, `us-east4`",
+    "vpc_endpoints": "mapping of [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) for PrivateLink or Private Service Connect connections",
+    "vpc_id": "The ID of the VPC associated with this network. VPC IDs can be used in multiple network configurations",
+    "vpc_status": "(String) VPC attachment status",
+    "workspace_id": "(Integer) id of associated workspace"
+  },
   "databricks_mws_permission_assignment": {
     "\"ADMIN\"": "Adds principal to the workspace `admins` group. This gives workspace admin privileges to manage users and groups, workspace configurations, and more",
     "\"USER\"": "Adds principal to the workspace `users` group. This gives basic workspace access",
@@ -710,6 +807,70 @@
     "permissions": "The list of workspace permissions to assign to the principal:",
     "principal_id": "Databricks ID of the user, service principal, or group. The principal ID can be retrieved using the SCIM API, or using [databricks_user](../data-sources/user.md), [databricks_service_principal](../data-sources/service_principal.md) or [databricks_group](../data-sources/group.md) data sources",
     "workspace_id": "Databricks workspace ID"
+  },
+  "databricks_mws_private_access_settings": {
+    "allowed_vpc_endpoint_ids": "An array of [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md#vpc_endpoint_id) `vpc_endpoint_id` (not `id`). Only used when `private_access_level` is set to `ENDPOINT`. This is an allow list of [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) that in your account that can connect to your [databricks_mws_workspaces](mws_workspaces.md) over AWS PrivateLink. If hybrid access to your workspace is enabled by setting `public_access_enabled` to true, then this control only works for PrivateLink connections. To control how your workspace is accessed via public internet, see the article for [databricks_ip_access_list](ip_access_list.md)",
+    "id": "the ID of the Private Access Settings in form of `account_id/private_access_settings_id`",
+    "private_access_level": "The private access level controls which VPC endpoints can connect to the UI or API of any workspace that attaches this private access settings object. `ACCOUNT` level access _(default)_ lets only [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) that are registered in your Databricks account connect to your [databricks_mws_workspaces](mws_workspaces.md). `ENDPOINT` level access lets only specified [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) connect to your workspace. Please see the `allowed_vpc_endpoint_ids` documentation for more details",
+    "private_access_settings_id": "Canonical unique identifier of Private Access Settings in Databricks Account",
+    "private_access_settings_name": "Name of Private Access Settings in Databricks Account",
+    "public_access_enabled": "If `true`, the [databricks_mws_workspaces](mws_workspaces.md) can be accessed over the [databricks_mws_vpc_endpoint](mws_vpc_endpoint.md) as well as over the public network. In such a case, you could also configure an [databricks_ip_access_list](ip_access_list.md) for the workspace, to restrict the source networks that could be used to access it over the public network. If `false`, the workspace can be accessed only over VPC endpoints, and not over the public network. Once explicitly set, this field becomes mandatory",
+    "region": "Region of AWS VPC or the Google Cloud VPC network",
+    "status": "(AWS only) Status of Private Access Settings"
+  },
+  "databricks_mws_storage_configurations": {
+    "account_id": "Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)",
+    "bucket_name": "name of AWS S3 bucket",
+    "id": "Canonical unique identifier for the mws storage configurations",
+    "role_arn": "The ARN of the IAM role that Databricks will assume to access the S3 bucket. This allows sharing an S3 bucket between root storage and the default catalog for a workspace. See the [Databricks API documentation](https://docs.databricks.com/api/account/storage/create) for more details",
+    "storage_configuration_id": "(String) id of storage config to be used for `databricks_mws_workspace` resource",
+    "storage_configuration_name": "name under which this storage configuration is stored"
+  },
+  "databricks_mws_vpc_endpoint": {
+    "account_id": "Account Id that could be found in the Accounts Console for [AWS](https://accounts.cloud.databricks.com/) or [GCP](https://accounts.gcp.databricks.com/)",
+    "aws_endpoint_service_id": "(AWS Only) The ID of the Databricks endpoint service that this VPC endpoint is connected to. Please find the list of endpoint service IDs for each supported region in the [Databricks PrivateLink documentation](https://docs.databricks.com/administration-guide/cloud-configurations/aws/privatelink.html)",
+    "aws_vpc_endpoint_id": "(AWS only) ID of configured [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint)",
+    "endpoint_region": "Region of the PSC endpoint",
+    "gcp_vpc_endpoint_info": "(GCP only) a block consists of Google Cloud specific information for this PSC endpoint. It has the following fields:",
+    "id": "the ID of VPC Endpoint in form of `account_id/vpc_endpoint_id`",
+    "project_id": "The Google Cloud project ID of the VPC network where the PSC connection resides",
+    "psc_connection_id": "The unique ID of this PSC connection",
+    "psc_endpoint_name": "The name of the PSC endpoint in the Google Cloud project",
+    "region": "(AWS only) Region of AWS VPC",
+    "service_attachment_id": "The service attachment this PSC connection connects to",
+    "state": "(AWS Only) State of VPC Endpoint",
+    "vpc_endpoint_id": "Canonical unique identifier of VPC Endpoint in Databricks Account",
+    "vpc_endpoint_name": "Name of VPC Endpoint in Databricks Account"
+  },
+  "databricks_mws_workspaces": {
+    "account_id": "Account Id that could be found in the top right corner of [Accounts Console](https://accounts.cloud.databricks.com/)",
+    "aws_region": "(AWS only) region of VPC",
+    "cloud_resource_container": "(GCP only) A block that specifies GCP workspace configurations, consisting of following blocks:",
+    "comment": "Comment, that will appear in \"User Settings / Access Tokens\" page on Workspace UI. By default it's \"Terraform PAT\"",
+    "compute_mode": "- The compute mode for the workspace. When unset, a classic workspace is created, and both `credentials_id` and `storage_configuration_id` must be specified. When set to `SERVERLESS`, the resulting workspace is a serverless workspace, and `credentials_id` and `storage_configuration_id` must not be set. The only allowed value for this is `SERVERLESS`. Changing this field requires recreation of the workspace",
+    "creation_time": "(Integer) time when workspace was created",
+    "credentials_id": "(AWS only, Optional) `credentials_id` from [credentials](mws_credentials.md). This must not be specified when `compute_mode` is set to `SERVERLESS`",
+    "custom_tags": "(Map) Custom Tags (if present) added to workspace",
+    "deployment_name": "part of URL as in `https://<prefix>-<deployment-name>.cloud.databricks.com`. Deployment name cannot be used until a deployment name prefix is defined. Please contact your Databricks representative. Once a new deployment prefix is added/updated, it only will affect the new workspaces created",
+    "effective_compute_mode": "(String) The effective compute mode for the workspace. This is either `SERVERLESS` for serverless workspaces or `HYBRID` for classic workspaces",
+    "expected_workspace_status": "- The expected status of the workspace. When unset, it defaults to `RUNNING`. When set to `PROVISIONING`, workspace provisioning will pause and not enter `RUNNING` status. The only allowed values for this is `RUNNING` and `PROVISIONING`",
+    "gcp": "A block that consists of the following field:",
+    "gcp_workspace_sa": "(String, GCP only) identifier of a service account created for the workspace in form of `db-<workspace-id>@prod-gcp-<region>.iam.gserviceaccount.com`",
+    "id": "(String) Canonical unique identifier for the workspace, of the format `<account-id>/<workspace-id>`",
+    "lifetime_seconds": "Token expiry lifetime. By default its 2592000 (30 days)",
+    "location": "(GCP only) region of the subnet",
+    "managed_services_customer_managed_key_id": "`customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `MANAGED_SERVICES`. This is used to encrypt the workspace's notebook and secret data in the control plane",
+    "network_id": "(Optional) `network_id` from networks",
+    "pricing_tier": "- The pricing tier of the workspace",
+    "private_access_settings_id": "Canonical unique identifier of [databricks_mws_private_access_settings](mws_private_access_settings.md) in Databricks Account",
+    "project_id": "The Google Cloud project ID, which the workspace uses to instantiate cloud resources for your workspace",
+    "storage_configuration_id": "(AWS only, Optional) `storage_configuration_id` from [storage configuration](mws_storage_configurations.md). This must not be specified when `compute_mode` is set to `SERVERLESS`",
+    "storage_customer_managed_key_id": "`customer_managed_key_id` from [customer managed keys](mws_customer_managed_keys.md) with `use_cases` set to `STORAGE`. This is used to encrypt the DBFS Storage & Cluster Volumes",
+    "workspace_id": "(String) workspace id",
+    "workspace_name": "name of the workspace, will appear on UI",
+    "workspace_status": "(String) workspace status",
+    "workspace_status_message": "(String) updates on workspace status",
+    "workspace_url": "(String) URL of the workspace"
   },
   "databricks_notebook": {
     "content_base64": "The base64-encoded notebook source code. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances, like creating a notebook with configuration properties for a data pipeline",

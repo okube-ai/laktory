@@ -228,6 +228,7 @@ nav:
         - Databricks:
           - AccessControl: api/models/resources/databricks/accesscontrol.md
           - AccessControlRuleSet: api/models/resources/databricks/accesscontrolruleset.md
+          - AccountFederationPolicy: api/models/resources/databricks/accountfederationpolicy.md
           - api/models/resources/databricks/alert.md
           - App: api/models/resources/databricks/app.md
           - Budget: api/models/resources/databricks/budget.md
@@ -245,11 +246,14 @@ nav:
             - api/models/resources/databricks/pipeline.md
           - Entitlements: api/models/resources/databricks/entitlements.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
+          - GitCredential: api/models/resources/databricks/gitcredential.md
+          - GlobalInitScript: api/models/resources/databricks/globalinitscript.md
           - api/models/resources/databricks/grant.md
           - api/models/resources/databricks/grants.md
           - GroupMember: api/models/resources/databricks/groupmember.md
           - api/models/resources/databricks/group.md
           - InstancePool: api/models/resources/databricks/instancepool.md
+          - InstanceProfile: api/models/resources/databricks/instanceprofile.md
           - IpAccessList: api/models/resources/databricks/ipaccesslist.md
           - api/models/resources/databricks/job.md
           - Library: api/models/resources/databricks/library.md
@@ -260,9 +264,18 @@ nav:
           - MLflow Model: api/models/resources/databricks/mlflowmodel.md
           - MLflow Webhook: api/models/resources/databricks/mlflowwebhook.md
           - ModelServing: api/models/resources/databricks/modelserving.md
+          - MwsCredentials: api/models/resources/databricks/mwscredentials.md
+          - MwsCustomerManagedKeys: api/models/resources/databricks/mwscustomermanagedkeys.md
+          - MwsLogDelivery: api/models/resources/databricks/mwslogdelivery.md
           - MwsPermissionAssignment: api/models/resources/databricks/mwspermissionassignment.md
           - MwsNccBinding: api/models/resources/databricks/mwsnccbinding.md
+          - MwsNccPrivateEndpointRule: api/models/resources/databricks/mwsnccprivateendpointrule.md
           - MwsNetworkConnectivityConfig: api/models/resources/databricks/mwsnetworkconnectivityconfig.md
+          - MwsNetworks: api/models/resources/databricks/mwsnetworks.md
+          - MwsPrivateAccessSettings: api/models/resources/databricks/mwsprivateaccesssettings.md
+          - MwsStorageConfigurations: api/models/resources/databricks/mwsstorageconfigurations.md
+          - MwsVpcEndpoint: api/models/resources/databricks/mwsvpcendpoint.md
+          - MwsWorkspaces: api/models/resources/databricks/mwsworkspaces.md
           - api/models/resources/databricks/notebook.md
           - NotificationDestination: api/models/resources/databricks/notificationdestination.md
           - OboToken: api/models/resources/databricks/obotoken.md
