@@ -19,6 +19,9 @@ from laktory.models.resources.databricks._renderablefile import RenderableFileMi
 from laktory.models.resources.databricks.accesscontrolruleset import (
     AccessControlRuleSet,
 )
+from laktory.models.resources.databricks.accountfederationpolicy import (
+    AccountFederationPolicy,
+)
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.app import App
 from laktory.models.resources.databricks.budget import Budget
@@ -34,10 +37,13 @@ from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
 from laktory.models.resources.databricks.entitlements import Entitlements
 from laktory.models.resources.databricks.externallocation import ExternalLocation
+from laktory.models.resources.databricks.gitcredential import GitCredential
+from laktory.models.resources.databricks.globalinitscript import GlobalInitScript
 from laktory.models.resources.databricks.grant import Grant
 from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.group import Group
 from laktory.models.resources.databricks.instancepool import InstancePool
+from laktory.models.resources.databricks.instanceprofile import InstanceProfile
 from laktory.models.resources.databricks.ipaccesslist import IpAccessList
 from laktory.models.resources.databricks.job import Job
 from laktory.models.resources.databricks.library import Library
@@ -48,9 +54,26 @@ from laktory.models.resources.databricks.mlflowexperiment import MLflowExperimen
 from laktory.models.resources.databricks.mlflowmodel import MLflowModel
 from laktory.models.resources.databricks.mlflowwebhook import MLflowWebhook
 from laktory.models.resources.databricks.modelserving import ModelServing
+from laktory.models.resources.databricks.mwscredentials import MwsCredentials
+from laktory.models.resources.databricks.mwscustomermanagedkeys import (
+    MwsCustomerManagedKeys,
+)
+from laktory.models.resources.databricks.mwslogdelivery import MwsLogDelivery
+from laktory.models.resources.databricks.mwsnccprivateendpointrule import (
+    MwsNccPrivateEndpointRule,
+)
 from laktory.models.resources.databricks.mwsnetworkconnectivityconfig import (
     MwsNetworkConnectivityConfig,
 )
+from laktory.models.resources.databricks.mwsnetworks import MwsNetworks
+from laktory.models.resources.databricks.mwsprivateaccesssettings import (
+    MwsPrivateAccessSettings,
+)
+from laktory.models.resources.databricks.mwsstorageconfigurations import (
+    MwsStorageConfigurations,
+)
+from laktory.models.resources.databricks.mwsvpcendpoint import MwsVpcEndpoint
+from laktory.models.resources.databricks.mwsworkspaces import MwsWorkspaces
 from laktory.models.resources.databricks.notebook import Notebook
 from laktory.models.resources.databricks.notificationdestination import (
     NotificationDestination,
@@ -309,6 +332,7 @@ class StackResources(BaseModel):
     """
 
     databricks_accesscontrolrulesets: dict[str, AccessControlRuleSet] = {}
+    databricks_accountfederationpolicies: dict[str, AccountFederationPolicy] = {}
     databricks_alerts: dict[str, Alert] = {}
     databricks_apps: dict[str, App] = {}
     databricks_budgets: dict[str, Budget] = {}
@@ -324,10 +348,13 @@ class StackResources(BaseModel):
     databricks_entitlements: dict[str, Entitlements] = {}
     databricks_pipelines: dict[str, DatabricksPipeline] = {}
     databricks_externallocations: dict[str, ExternalLocation] = {}
+    databricks_gitcredentials: dict[str, GitCredential] = {}
+    databricks_globalinitscripts: dict[str, GlobalInitScript] = {}
     databricks_grant: dict[str, Grant] = {}
     databricks_grants: dict[str, Grants] = {}
     databricks_groups: dict[str, Group] = {}
     databricks_instancepools: dict[str, InstancePool] = {}
+    databricks_instanceprofiles: dict[str, InstanceProfile] = {}
     databricks_ipaccesslists: dict[str, IpAccessList] = {}
     databricks_jobs: dict[str, Job] = {}
     databricks_libraries: dict[str, Library] = {}
@@ -338,7 +365,16 @@ class StackResources(BaseModel):
     databricks_mlflowmodels: dict[str, MLflowModel] = {}
     databricks_mlflowwebhooks: dict[str, MLflowWebhook] = {}
     databricks_modelservings: dict[str, ModelServing] = {}
+    databricks_mwscredentials: dict[str, MwsCredentials] = {}
+    databricks_mwscustomermanagedkeys: dict[str, MwsCustomerManagedKeys] = {}
+    databricks_mwslogdeliveries: dict[str, MwsLogDelivery] = {}
+    databricks_mwsnccprivateendpointrules: dict[str, MwsNccPrivateEndpointRule] = {}
     databricks_networkconnectivityconfig: dict[str, MwsNetworkConnectivityConfig] = {}
+    databricks_mwsnetworks: dict[str, MwsNetworks] = {}
+    databricks_mwsprivateaccesssettings: dict[str, MwsPrivateAccessSettings] = {}
+    databricks_mwsstorageconfigurations: dict[str, MwsStorageConfigurations] = {}
+    databricks_mwsvpcendpoints: dict[str, MwsVpcEndpoint] = {}
+    databricks_mwsworkspaces: dict[str, MwsWorkspaces] = {}
     databricks_notebooks: dict[str, Notebook] = {}
     databricks_notificationdestinations: dict[str, NotificationDestination] = {}
     databricks_obotokens: dict[str, OboToken] = {}

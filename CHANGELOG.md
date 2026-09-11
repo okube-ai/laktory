@@ -3,6 +3,7 @@
 ## [0.12.7] - Unreleased
 ### Added
 * Added `ServicePrincipalFederationPolicy` model / `databricks_serviceprincipalfederationpolicies` stack resource, wrapping `databricks_service_principal_federation_policy` to declaratively manage OIDC workload-identity federation policies for service principals. Also addable inline via `ServicePrincipal.federation_policies`, mirroring the existing `roles`/`group_ids`/`workspace_permission_assignments` pattern. [[#664](https://github.com/okube-ai/laktory/issues/664)]
+* Added `AccountFederationPolicy`, `GitCredential`, `GlobalInitScript`, `InstanceProfile`, `MwsCredentials`, `MwsStorageConfigurations`, `MwsNetworks`, `MwsCustomerManagedKeys`, `MwsPrivateAccessSettings`, `MwsVpcEndpoint`, `MwsLogDelivery`, `MwsNccPrivateEndpointRule` and `MwsWorkspaces` models / stack resources, closing the remaining gaps in everyday workspace-admin and AWS account-provisioning (`mws_*`) coverage. [[#665](https://github.com/okube-ai/laktory/issues/665)]
 ### Fixed
 * n/a
 ### Updated
