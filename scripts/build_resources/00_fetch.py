@@ -123,6 +123,7 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_secret_acl",
     "databricks_secret_scope",
     "databricks_service_principal",
+    "databricks_service_principal_federation_policy",
     "databricks_service_principal_role",
     "databricks_share",
     "databricks_sql_endpoint",

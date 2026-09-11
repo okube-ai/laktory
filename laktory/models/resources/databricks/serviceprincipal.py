@@ -9,6 +9,9 @@ from laktory.models.resources.databricks.serviceprincipal_base import *  # NOQA:
 from laktory.models.resources.databricks.serviceprincipal_base import (
     ServicePrincipalBase,
 )
+from laktory.models.resources.databricks.serviceprincipalfederationpolicy import (
+    ServicePrincipalFederationPolicy,
+)
 from laktory.models.resources.databricks.serviceprincipalrole import (
     ServicePrincipalRole,
 )
@@ -57,6 +60,10 @@ class ServicePrincipal(ServicePrincipalBase):
         exclude=True,
         description="Import a pre-existing ServicePrincipal by `application_id` instead of creating it. The service principal becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
     )
+    federation_policies: list[ServicePrincipalFederationPolicy] = Field(
+        None,
+        description="List of OIDC federation policies (workload identity federation) trusting an external issuer to authenticate as this service principal.",
+    )
     group_ids: list[str] = Field(
         [], description="List of the group ids that the user should be member of."
     )
@@ -80,6 +87,7 @@ class ServicePrincipal(ServicePrincipalBase):
         """
         - service principal roles
         - service principal group members
+        - service principal federation policies
         """
         resources = []
         for role in self.roles:
@@ -105,6 +113,14 @@ class ServicePrincipal(ServicePrincipalBase):
                 if a.principal_id is None:
                     a.principal_id = f"${{resources.{self.resource_name}.id}}"
                 resources += [a]
+
+        # Federation Policies
+        if self.federation_policies:
+            for p in self.federation_policies:
+                if p.service_principal_id is None:
+                    p.service_principal_id = f"${{resources.{self.resource_name}.id}}"
+                resources += [p]
+
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -113,4 +129,10 @@ class ServicePrincipal(ServicePrincipalBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["groups", "roles", "group_ids", "workspace_permission_assignments"]
+        return [
+            "groups",
+            "roles",
+            "group_ids",
+            "workspace_permission_assignments",
+            "federation_policies",
+        ]

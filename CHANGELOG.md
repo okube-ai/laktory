@@ -2,7 +2,7 @@
 
 ## [0.12.7] - Unreleased
 ### Added
-* n/a
+* Added `ServicePrincipalFederationPolicy` model / `databricks_serviceprincipalfederationpolicies` stack resource, wrapping `databricks_service_principal_federation_policy` to declaratively manage OIDC workload-identity federation policies for service principals. Also addable inline via `ServicePrincipal.federation_policies`, mirroring the existing `roles`/`group_ids`/`workspace_permission_assignments` pattern. [[#664](https://github.com/okube-ai/laktory/issues/664)]
 ### Fixed
 * n/a
 ### Updated
