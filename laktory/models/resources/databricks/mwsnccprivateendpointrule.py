@@ -32,6 +32,8 @@ class MwsNccPrivateEndpointRule(MwsNccPrivateEndpointRuleBase):
     * [Databricks MWS NCC Private Endpoint Rule](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/mws_ncc_private_endpoint_rule)
     """
 
+    __optional_fields__ = ["network_connectivity_config_id"]
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
