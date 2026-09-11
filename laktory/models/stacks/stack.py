@@ -67,6 +67,9 @@ from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretscope import SecretScope
 from laktory.models.resources.databricks.serviceprincipal import ServicePrincipal
+from laktory.models.resources.databricks.serviceprincipalfederationpolicy import (
+    ServicePrincipalFederationPolicy,
+)
 from laktory.models.resources.databricks.share import Share
 from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.databricks.table import Table
@@ -350,6 +353,9 @@ class StackResources(BaseModel):
     databricks_secrets: dict[str, Secret] = {}
     databricks_secretscopes: dict[str, SecretScope] = {}
     databricks_serviceprincipals: dict[str, ServicePrincipal] = {}
+    databricks_serviceprincipalfederationpolicies: dict[
+        str, ServicePrincipalFederationPolicy
+    ] = {}
     databricks_shares: dict[str, Share] = {}
     databricks_storagecredentials: dict[str, StorageCredential] = {}
     databricks_tables: dict[str, Table] = {}

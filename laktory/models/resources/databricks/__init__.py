@@ -48,6 +48,7 @@ from .secret import Secret
 from .secretacl import SecretAcl
 from .secretscope import SecretScope
 from .serviceprincipal import ServicePrincipal
+from .serviceprincipalfederationpolicy import ServicePrincipalFederationPolicy
 from .serviceprincipalrole import ServicePrincipalRole
 from .share import Share
 from .storagecredential import StorageCredential

@@ -1027,6 +1027,21 @@
     "workspace_access": "This is a field to allow the service principal to have access to a Databricks Workspace",
     "workspace_consume": "This is a field to allow the service principal to have access to a Databricks Workspace as consumer, with limited access to workspace UI.  Couldn't be used with `workspace_access` or `databricks_sql_access`"
   },
+  "databricks_service_principal_federation_policy": {
+    "audiences": "The allowed token audiences, as specified in the 'aud' claim of federated tokens. The audience identifier is intended to represent the recipient of the token. Can be any non-empty string value. As long as the audience in the token matches at least one audience in the policy, the token is considered a match. If audiences is unspecified, defaults to your Databricks account id",
+    "create_time": "Creation time of the federation policy",
+    "description": "Description of the federation policy",
+    "issuer": "The required token issuer, as specified in the 'iss' claim of federated tokens",
+    "jwks_json": "The public keys used to validate the signature of federated tokens, in JWKS format. Most use cases should not need to specify this field. If jwks_uri and jwks_json are both unspecified (recommended), Databricks automatically fetches the public keys from your issuer\u2019s well known endpoint. Databricks strongly recommends relying on your issuer\u2019s well known endpoint for discovering public keys",
+    "jwks_uri": "URL of the public keys used to validate the signature of federated tokens, in JWKS format. Most use cases should not need to specify this field. If jwks_uri and jwks_json are both unspecified (recommended), Databricks automatically fetches the public keys from your issuer\u2019s well known endpoint. Databricks strongly recommends relying on your issuer\u2019s well known endpoint for discovering public keys",
+    "name": "Resource name for the federation policy.",
+    "policy_id": "The ID of the federation policy.",
+    "service_principal_id": "The service principal ID that this federation policy applies to.",
+    "subject": "The required token subject, as specified in the subject claim of federated tokens. Must be specified for service principal federation policies. Must not be specified for account federation policies",
+    "subject_claim": "The claim that contains the subject of the token. If unspecified, the default value is 'sub'",
+    "uid": "Unique, immutable id of the federation policy",
+    "update_time": "Last update time of the federation policy"
+  },
   "databricks_service_principal_role": {
     "api": "Specifies whether to use account-level or workspace-level API. Valid values are `account` and `workspace`. When not set, the API level is inferred from the provider host",
     "id": "The id in the format `<service_principal_id>|<role>`",
