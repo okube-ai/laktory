@@ -89,7 +89,11 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return super().terraform_excludes + ["dataframe_backend", "dataframe_api"]
+        return super().terraform_excludes + [
+            "dataframe_backend",
+            "dataframe_api",
+            "purge_mode",
+        ]
 
     @property
     def resource_type_id(self):

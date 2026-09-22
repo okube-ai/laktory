@@ -288,6 +288,15 @@ class LaktorySettings(BaseModel):
         to third parties like Databricks Declarative Bundles.
         """,
     )
+    purge_mode: Literal["DROP", "TRUNCATE"] = Field(
+        None,
+        description=(
+            "Stack-wide default strategy used to purge a data sink's data on `full_refresh` "
+            "(`DROP`/`TRUNCATE`), overridable per `Pipeline`, `PipelineNode`, or sink. "
+            "`DELETE_WHERE` is not available here - it can only be set directly on a sink. "
+            "See [Laktory Settings](../../../concepts/laktorysettings.md#purge-mode)."
+        ),
+    )
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
@@ -322,6 +331,9 @@ class LaktorySettings(BaseModel):
 
         if self.build_root:
             settings.build_root = self.build_root
+
+        if self.purge_mode:
+            settings.purge_mode = self.purge_mode
 
         return self
 

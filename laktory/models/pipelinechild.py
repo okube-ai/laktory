@@ -75,6 +75,40 @@ class PipelineChild(BaseChild):
         # Value from settings
         return settings.dataframe_api.upper()
 
+    purge_mode_: Literal["DROP", "TRUNCATE"] = Field(
+        None,
+        description="""
+        Strategy used to purge a sink's data when `full_refresh` is requested.
+
+        - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
+        - TRUNCATE: Remove all rows but keep the table/schema/location intact.
+
+        `DELETE_WHERE` is also available, but only directly on a data sink (see
+        `BaseDataSink.purge_mode`) - a deletion predicate is inherently specific to a single
+        sink, so it can't be a pipeline node, pipeline, or global default.
+        """,
+        validation_alias=AliasChoices("purge_mode", "purge_mode_"),
+        exclude=True,
+    )
+
+    def _resolve_purge_mode(self) -> str:
+        # Direct value
+        if self.purge_mode_ is not None:
+            return self.purge_mode_
+
+        # Value from parent
+        parent = self._parent
+        if parent is not None:
+            return parent.purge_mode
+
+        # Value from settings
+        return settings.purge_mode.upper()
+
+    @computed_field(description="purge_mode")
+    @property
+    def purge_mode(self) -> Literal["DROP", "TRUNCATE"]:
+        return self._resolve_purge_mode()
+
     @property
     def parent_pipeline(self):
         from laktory.models.pipeline.pipeline import Pipeline

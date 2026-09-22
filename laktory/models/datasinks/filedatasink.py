@@ -294,10 +294,28 @@ class FileDataSink(BaseDataSink):
     def exists(self):
         return os.path.exists(self.path)
 
-    def purge(self):
+    def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         """
         Delete sink data and checkpoints
+
+        Parameters
+        ----------
+        mode:
+            Optional override for `purge_mode`, taking precedence over the resolved
+            `self.purge_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
+            generically here, especially when purging multiple sinks/tables at once via
+            `PipelineNode.purge()`.
         """
+        purge_mode = mode or self.purge_mode
+        if purge_mode != "DROP":
+            raise NotImplementedError(
+                f"`purge_mode` '{purge_mode}' is not supported for FileDataSink. "
+                "Only 'DROP' is currently supported for file-based sinks. Use a table sink "
+                "(UnityCatalogDataSink/HiveMetastoreDataSink) if you need TRUNCATE/DELETE_WHERE "
+                "to protect a table shared by multiple writer pipelines."
+            )
+
         # Remove Data
         if self.exists():
             is_dir = os.path.isdir(self.path)
