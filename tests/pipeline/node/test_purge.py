@@ -170,6 +170,72 @@ def test_purge_never_executed(tmp_path):
     node.purge()  # should not raise
 
 
+def test_purge_mode_sink_override(tmp_path):
+    node = models.PipelineNode(
+        name="node0",
+        purge_mode="TRUNCATE",
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+        sinks=[
+            {
+                "format": "PARQUET",
+                "path": str(tmp_path / "sink/"),
+                "purge_mode": "DROP",
+            }
+        ],
+    )
+    assert node.sinks[0].purge_mode == "DROP"
+
+
+def test_purge_mode_pipeline_level_default(tmp_path):
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
+    )
+    models.Pipeline(name="pl", nodes=[node], purge_mode="TRUNCATE")
+    assert node.sinks[0].purge_mode == "TRUNCATE"
+
+
+def test_purge_mode_global_settings_default(tmp_path, monkeypatch):
+    from laktory._settings import settings
+
+    monkeypatch.setattr(settings, "purge_mode", "TRUNCATE")
+
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
+    )
+    assert node.sinks[0].purge_mode == "TRUNCATE"
+
+
+def test_purge_mode_delete_where_rejected_on_node(tmp_path):
+    with pytest.raises(ValueError):
+        models.PipelineNode(
+            name="node0",
+            purge_mode="DELETE_WHERE",
+            sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+            sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
+        )
+
+
+def test_purge_mode_delete_where_rejected_on_pipeline(tmp_path):
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
+    )
+    with pytest.raises(ValueError):
+        models.Pipeline(name="pl", nodes=[node], purge_mode="DELETE_WHERE")
+
+
+def test_purge_mode_delete_where_rejected_globally(monkeypatch):
+    from laktory._settings import settings
+
+    with pytest.raises(ValueError):
+        monkeypatch.setattr(settings, "purge_mode", "DELETE_WHERE")
+
+
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_pipeline_purge(backend, tmp_path):
     df0 = get_df0(backend)

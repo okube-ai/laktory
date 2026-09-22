@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import ConfigDict
 from pydantic import Field
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 from laktory._cache import cache_dir
@@ -40,6 +41,20 @@ class Settings(BaseSettings):
 
     # Narwhals extensions
     register_nw_extensions: bool = Field(True, alias="LAKTORY_REGISTER_NW_EXTENSIONS")
+
+    # Pipeline
+    purge_mode: str = Field("DROP", alias="LAKTORY_PURGE_MODE")
+
+    @field_validator("purge_mode")
+    @classmethod
+    def validate_purge_mode(cls, v: str) -> str:
+        if v and v.upper() == "DELETE_WHERE":
+            raise ValueError(
+                "`purge_mode` 'DELETE_WHERE' can only be set directly on a data sink, not as "
+                "a global default. A deletion predicate is inherently specific to a single "
+                "sink."
+            )
+        return v
 
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")

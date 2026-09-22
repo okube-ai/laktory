@@ -70,6 +70,33 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
+    purge_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
+        None,
+        description="""
+        Strategy used to purge this sink's data when `full_refresh` is requested.
+
+        - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
+        - TRUNCATE: Remove all rows but keep the table/schema/location intact.
+        - DELETE_WHERE: Delete only the rows matching `purge_delete_where`.
+        """,
+        validation_alias=AliasChoices("purge_mode", "purge_mode_"),
+        exclude=True,
+    )
+    purge_delete_where: str | None = Field(
+        None,
+        description="""
+        SQL WHERE-clause predicate used to select the rows to delete when `purge_mode` resolves
+        to 'DELETE_WHERE'. Should be set directly on the sink that owns the predicate - unlike
+        `purge_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
+        since a deletion predicate is inherently specific to a single sink.
+        """,
+    )
+
+    @computed_field(description="purge_mode")
+    @property
+    def purge_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
+        return self._resolve_purge_mode()
+
     mode: Literal.__getitem__(SUPPORTED_MODES) | None = Field(
         None,
         description="""
@@ -185,6 +212,14 @@ class BaseDataSink(BaseModel, PipelineChild):
                         "`merge_cdc_options` requires a value for `order_by` when Databricks Pipeline orchestrator is selected."
                     )
 
+        return self
+
+    @model_validator(mode="after")
+    def purge_delete_where_is_set(self) -> Any:
+        if self.purge_mode == "DELETE_WHERE" and not self.purge_delete_where:
+            raise ValueError(
+                "`purge_delete_where` must be set when `purge_mode` is 'DELETE_WHERE'."
+            )
         return self
 
     # ----------------------------------------------------------------------- #
@@ -710,9 +745,18 @@ class BaseDataSink(BaseModel, PipelineChild):
             )
             w.dbfs.delete(_path, recursive=True)
 
-    def purge(self):
+    def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         """
         Delete sink data and checkpoints
+
+        Parameters
+        ----------
+        mode:
+            Optional override for `purge_mode`, taking precedence over the resolved
+            `self.purge_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
+            generically here, especially when purging multiple sinks/tables at once via
+            `PipelineNode.purge()`.
         """
         raise NotImplementedError()
 

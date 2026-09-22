@@ -4,6 +4,7 @@ import shutil
 import warnings
 from pathlib import Path
 from typing import Any
+from typing import Literal
 
 import narwhals as nw
 from pydantic import AliasChoices
@@ -680,12 +681,12 @@ class PipelineNode(BaseModel, PipelineChild):
     # Execution                                                               #
     # ----------------------------------------------------------------------- #
 
-    def purge(self):
+    def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         logger.info(f"Purging pipeline node {self.name}")
 
         if self.has_sinks:
             for s in self.sinks:
-                s.purge()
+                s.purge(mode=mode)
 
         if self.expectations_checkpoint_path:
             # Try with simple paths (supported by local file system or Unity Catalog

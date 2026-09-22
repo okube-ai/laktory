@@ -229,6 +229,48 @@ sink = lk.models.TableDataSink(
 sink.write(df)
 ``` 
 
+##### Purge Modes
+
+When a pipeline node is run with `full_refresh=True`, each of its sinks is purged before being
+rewritten. `purge_mode` controls how that purge is done:
+
+- `purge_mode="DROP"` (default): drops the table entirely. It's recreated (schema and all) the
+  next time the sink is written to.
+- `purge_mode="TRUNCATE"`: empties the table - removes all rows, via an unconditional
+  `DELETE FROM` since Delta does not support the `TRUNCATE TABLE` SQL statement - but keeps the
+  table, its schema, and its location intact.
+- `purge_mode="DELETE_WHERE"`: deletes only the rows matching a `purge_delete_where` SQL
+  predicate, leaving every other row untouched. This is a good fit when a table is written to by
+  multiple, independently deployed pipelines (e.g. one pipeline per client appending into a
+  shared, cross-tenant table) - scoping the predicate to the rows a given pipeline owns lets it
+  reprocess its own data on `full_refresh` without touching what other pipelines wrote.
+
+```py
+import laktory as lk
+
+sink = lk.models.UnityCatalogDataSink(
+    schema_name="finance",
+    table_name="brz_stock_prices",
+    purge_mode="DELETE_WHERE",
+    purge_delete_where="client_id = 'acme'",
+)
+```
+
+`purge_delete_where` requires DELTA format and must be set directly on the sink that owns the
+predicate - it is not inherited from a parent pipeline node, pipeline, or global setting, since a
+deletion predicate is inherently specific to one sink. `purge_mode="DELETE_WHERE"` follows the
+same rule: it can only be set directly on a sink, and raises a validation error if set on a
+`PipelineNode`, `Pipeline`, or globally (`settings.purge_mode` / `LAKTORY_PURGE_MODE`). `DROP` and
+`TRUNCATE`, on the other hand, can be set at the sink, pipeline node, or pipeline level, or
+globally via the `LAKTORY_PURGE_MODE` environment variable / `settings.purge_mode` (see
+[Laktory Settings](laktorysettings.md)).
+
+Because a wrong or stale `purge_delete_where` predicate could otherwise silently delete the wrong
+rows, Laktory logs the number of rows matched by the predicate immediately before deleting them.
+
+`TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
+supports `purge_mode="DROP"`.
+
 #### Pipeline View Data Sink
 ??? "API Documentation"
     [`laktory.models.PipelineViewDataSink`][laktory.models.PipelineViewDataSink]<br>

@@ -234,6 +234,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
             "type",
             "dataframe_backend",
             "dataframe_api",
+            "purge_mode",
             "serverless_environment_version",
             "data_profiling_config_task",
         ]

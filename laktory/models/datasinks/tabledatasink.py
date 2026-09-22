@@ -63,6 +63,14 @@ class TableDataSink(BaseDataSink):
         return self
 
     @model_validator(mode="after")
+    def validate_format_purge_delete_where(self) -> Any:
+        if self.purge_mode == "DELETE_WHERE" and self.format != "DELTA":
+            raise ValueError(
+                f"`purge_mode` 'DELETE_WHERE' requires DELTA format, got '{self.format}'."
+            )
+        return self
+
+    @model_validator(mode="after")
     def validate_table_full_name(self) -> Any:
         name = self.table_name
         if name is None:
@@ -256,33 +264,80 @@ class TableDataSink(BaseDataSink):
         else:
             raise NotImplementedError()
 
-    def purge(self):
+    def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         """
         Delete sink data and checkpoints
+
+        Parameters
+        ----------
+        mode:
+            Optional override for `purge_mode`, taking precedence over the resolved
+            `self.purge_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
+            generically here, especially when purging multiple sinks/tables at once via
+            `PipelineNode.purge()`.
         """
+        if mode == "DELETE_WHERE":
+            raise ValueError(
+                "`DELETE_WHERE` is not supported as a `purge()` override - it requires a "
+                "sink-specific `purge_delete_where` predicate. Set `purge_mode`/"
+                "`purge_delete_where` directly on the sink instead."
+            )
 
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
 
             spark = get_spark_session()
 
-            # Remove Data
-            logger.info(
-                f"Dropping {self.table_type} {self.full_name}",
-            )
-            spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
+            purge_mode = mode or self.purge_mode
 
-            path = self.writer_kwargs.get("path", None)
-            if path:
-                path = Path(path)
-                if path.exists():
-                    is_dir = path.is_dir()
-                    if is_dir:
-                        logger.info(f"Deleting data dir {path}")
-                        shutil.rmtree(path)
-                    else:
-                        logger.info(f"Deleting data file {path}")
-                        os.remove(path)
+            if purge_mode == "DROP":
+                logger.info(f"Dropping {self.table_type} {self.full_name}")
+                spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
+
+                path = self.writer_kwargs.get("path", None)
+                if path:
+                    path = Path(path)
+                    if path.exists():
+                        is_dir = path.is_dir()
+                        if is_dir:
+                            logger.info(f"Deleting data dir {path}")
+                            shutil.rmtree(path)
+                        else:
+                            logger.info(f"Deleting data file {path}")
+                            os.remove(path)
+
+            elif purge_mode == "TRUNCATE":
+                if self.table_type != "TABLE":
+                    raise ValueError(
+                        f"`purge_mode` 'TRUNCATE' is not supported for table_type "
+                        f"'{self.table_type}'. Views cannot be truncated."
+                    )
+                # Delta does not implement Spark's `SupportsTruncate`/`TRUNCATE TABLE` DDL
+                # (verified: raises "Table does not support truncates"). `DELETE FROM` with
+                # no predicate is Delta's supported equivalent - an efficient, metadata-only
+                # removal of every current-version file.
+                logger.info(f"Truncating table {self.full_name}")
+                spark.sql(f"DELETE FROM {self.full_name}")
+
+            elif purge_mode == "DELETE_WHERE":
+                if not self.purge_delete_where:
+                    raise ValueError(
+                        "`purge_delete_where` must be set when `purge_mode` is 'DELETE_WHERE'."
+                    )
+                count = spark.sql(
+                    f"SELECT COUNT(*) FROM {self.full_name} WHERE {self.purge_delete_where}"
+                ).collect()[0][0]
+                logger.info(
+                    f"Deleting {count} rows from {self.full_name} where "
+                    f"{self.purge_delete_where}"
+                )
+                spark.sql(
+                    f"DELETE FROM {self.full_name} WHERE {self.purge_delete_where}"
+                )
+
+            else:
+                raise ValueError(f"`purge_mode` '{purge_mode}' is not supported.")
 
             # Remove Checkpoint
             self._purge_checkpoint()

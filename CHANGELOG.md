@@ -2,7 +2,7 @@
 
 ## [0.12.8] - Unreleased
 ### Added
-* n/a
+* Added `purge_mode` (`DROP`/`TRUNCATE`, settable at the sink, pipeline node, pipeline, `Stack.settings`, or global-settings (`LAKTORY_PURGE_MODE`) level) and `purge_delete_where` (`DELETE_WHERE` mode, sink-only) to data sinks, so a `full_refresh` on a `TableDataSink` shared by multiple independently-deployed pipelines can truncate or selectively delete rows instead of unconditionally dropping the whole table. [[#669](https://github.com/okube-ai/laktory/issues/669)]
 ### Fixed
 * n/a
 ### Updated

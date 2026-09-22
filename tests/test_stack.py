@@ -724,6 +724,22 @@ def test_stack_settings(monkeypatch):
     assert settings.runtime_root == custom_root
 
 
+def test_stack_settings_purge_mode(monkeypatch):
+    assert settings.purge_mode != "TRUNCATE"
+
+    monkeypatch.setattr(settings, "purge_mode", settings.purge_mode)
+    _ = models.Stack(name="one_stack", settings={"purge_mode": "TRUNCATE"})
+
+    assert settings.purge_mode == "TRUNCATE"
+
+
+def test_stack_settings_purge_mode_delete_where_rejected(monkeypatch):
+    monkeypatch.setattr(settings, "purge_mode", settings.purge_mode)
+
+    with pytest.raises(ValueError):
+        models.Stack(name="one_stack", settings={"purge_mode": "DELETE_WHERE"})
+
+
 def test_stack_settings_vars_construction(monkeypatch):
     """#617: settings.workspace_root using ${vars.x} stays an unresolved
     template right after Stack construction - same as any other templated
