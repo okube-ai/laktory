@@ -346,6 +346,34 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         return self
 
+    @model_validator(mode="after")
+    def validate_unique_declarative_sink_targets(self) -> Any:
+        if not isinstance(
+            self.orchestrator,
+            (
+                LakeflowDeclarativePipelineOrchestrator,
+                SparkDeclarativePipelineOrchestrator,
+            ),
+        ):
+            return self
+
+        seen = {}
+        for n in self.nodes:
+            for s in n.sinks:
+                name = getattr(s, "sdp_table_or_view_name", None)
+                if name is None:
+                    continue
+                if name in seen:
+                    raise ValueError(
+                        f"Pipeline nodes '{seen[name]}' and '{n.name}' both target "
+                        f"'{name}' - {type(self.orchestrator).__name__} does not support "
+                        "two nodes writing to the same table/view (no `append_flow` "
+                        "support)."
+                    )
+                seen[name] = n.name
+
+        return self
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #

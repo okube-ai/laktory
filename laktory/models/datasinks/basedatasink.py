@@ -222,6 +222,35 @@ class BaseDataSink(BaseModel, PipelineChild):
             )
         return self
 
+    @model_validator(mode="after")
+    def purge_mode_incompatible_with_declarative_orchestrator(self) -> Any:
+        if self.purge_mode != "DROP":
+            from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
+                LakeflowDeclarativePipelineOrchestrator,
+            )
+            from laktory.models.pipeline.orchestrators.sparkdeclarativepipelineorchestrator import (
+                SparkDeclarativePipelineOrchestrator,
+            )
+
+            orchestrator = (
+                self.parent_pipeline.orchestrator if self.parent_pipeline else None
+            )
+            if isinstance(
+                orchestrator,
+                (
+                    LakeflowDeclarativePipelineOrchestrator,
+                    SparkDeclarativePipelineOrchestrator,
+                ),
+            ):
+                raise ValueError(
+                    f"`purge_mode` '{self.purge_mode}' has no effect when using the "
+                    f"{type(orchestrator).__name__} - `full_refresh` is handled entirely by "
+                    "the Databricks/Spark Declarative Pipelines engine, which never calls "
+                    "Laktory's `purge()`. Remove `purge_mode`/`purge_delete_where` from this "
+                    "sink, or use the LAKEFLOW_JOB orchestrator."
+                )
+        return self
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #

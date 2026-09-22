@@ -356,6 +356,175 @@ def test_ldp_view_node_raises():
 
 
 # --------------------------------------------------------------------------- #
+# purge_mode incompatibility with LDP/SDP                                     #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+@pytest.mark.parametrize(
+    "sink_kwargs",
+    [
+        pytest.param({"purge_mode": "TRUNCATE"}, id="truncate"),
+        pytest.param(
+            {"purge_mode": "DELETE_WHERE", "purge_delete_where": "id = 1"},
+            id="delete_where",
+        ),
+    ],
+)
+def test_purge_mode_non_drop_raises_under_declarative_orchestrator(
+    orchestrator_dict, sink_kwargs
+):
+    with pytest.raises((ValueError, ValidationError), match="purge_mode"):
+        models.Pipeline.model_validate(
+            {
+                "name": "pl-declarative",
+                "orchestrator": orchestrator_dict,
+                "nodes": [
+                    {
+                        "name": "brz",
+                        "sources": [{"format": "JSON", "path": "/src/"}],
+                        "sinks": [{"table_name": "brz", **sink_kwargs}],
+                    },
+                ],
+            }
+        )
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_purge_mode_pipeline_level_raises_under_declarative_orchestrator(
+    orchestrator_dict,
+):
+    with pytest.raises((ValueError, ValidationError), match="purge_mode"):
+        models.Pipeline.model_validate(
+            {
+                "name": "pl-declarative",
+                "orchestrator": orchestrator_dict,
+                "purge_mode": "TRUNCATE",
+                "nodes": [
+                    {
+                        "name": "brz",
+                        "sources": [{"format": "JSON", "path": "/src/"}],
+                        "sinks": [{"table_name": "brz"}],
+                    },
+                ],
+            }
+        )
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_purge_mode_default_drop_ok_under_declarative_orchestrator(orchestrator_dict):
+    models.Pipeline.model_validate(
+        {
+            "name": "pl-declarative",
+            "orchestrator": orchestrator_dict,
+            "nodes": [
+                {
+                    "name": "brz",
+                    "sources": [{"format": "JSON", "path": "/src/"}],
+                    "sinks": [{"table_name": "brz"}],
+                },
+            ],
+        }
+    )
+
+
+def test_purge_mode_non_drop_ok_under_lakeflow_job():
+    models.Pipeline.model_validate(
+        {
+            "name": "pl-job",
+            "orchestrator": {
+                "type": "LAKEFLOW_JOB",
+                "serverless_environment_version": "1",
+            },
+            "nodes": [
+                {
+                    "name": "brz",
+                    "sources": [{"format": "JSON", "path": "/src/"}],
+                    "sinks": [{"table_name": "brz", "purge_mode": "TRUNCATE"}],
+                },
+            ],
+        }
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Duplicate sink targets under LDP/SDP (no append_flow support)               #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_duplicate_sink_target_raises_under_declarative_orchestrator(orchestrator_dict):
+    with pytest.raises((ValueError, ValidationError), match="append_flow"):
+        models.Pipeline.model_validate(
+            {
+                "name": "pl-declarative",
+                "orchestrator": orchestrator_dict,
+                "nodes": [
+                    {
+                        "name": "n1",
+                        "sources": [{"format": "JSON", "path": "/src1/"}],
+                        "sinks": [{"table_name": "shared"}],
+                    },
+                    {
+                        "name": "n2",
+                        "sources": [{"format": "JSON", "path": "/src2/"}],
+                        "sinks": [{"table_name": "shared"}],
+                    },
+                ],
+            }
+        )
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_distinct_sink_targets_ok_under_declarative_orchestrator(orchestrator_dict):
+    models.Pipeline.model_validate(
+        {
+            "name": "pl-declarative",
+            "orchestrator": orchestrator_dict,
+            "nodes": [
+                {
+                    "name": "n1",
+                    "sources": [{"format": "JSON", "path": "/src1/"}],
+                    "sinks": [{"table_name": "t_a"}],
+                },
+                {
+                    "name": "n2",
+                    "sources": [{"format": "JSON", "path": "/src2/"}],
+                    "sinks": [{"table_name": "t_b"}],
+                },
+            ],
+        }
+    )
+
+
+def test_duplicate_sink_target_ok_under_lakeflow_job():
+    """Two nodes deliberately sharing one output table is a valid pattern under
+    LAKEFLOW_JOB - unlike LDP/SDP, there's no engine-level single-registration
+    constraint, and it composes with sink-level `purge_mode`."""
+    models.Pipeline.model_validate(
+        {
+            "name": "pl-job",
+            "orchestrator": {
+                "type": "LAKEFLOW_JOB",
+                "serverless_environment_version": "1",
+            },
+            "nodes": [
+                {
+                    "name": "n1",
+                    "sources": [{"format": "JSON", "path": "/src1/"}],
+                    "sinks": [{"table_name": "shared"}],
+                },
+                {
+                    "name": "n2",
+                    "sources": [{"format": "JSON", "path": "/src2/"}],
+                    "sinks": [{"table_name": "shared"}],
+                },
+            ],
+        }
+    )
+
+
+# --------------------------------------------------------------------------- #
 # LDP dependency inference: batch -> batch node chain                          #
 # --------------------------------------------------------------------------- #
 
