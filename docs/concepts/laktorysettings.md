@@ -82,6 +82,8 @@ settings:
 It can also be set via the `LAKTORY_PURGE_MODE` environment variable. `DELETE_WHERE` cannot be
 set here (or on a `Pipeline`/`PipelineNode`) - it's only valid set directly on a sink, since its
 deletion predicate is inherently sink-specific; doing so anywhere else raises a validation error.
+`NONE` cannot be set here either - it's only valid on a sink, `PipelineNode` or `Pipeline`, to
+designate the writers of a shared sink that don't drive its purge.
 See
 [Data Sources and Sinks - Purge Modes](sourcessinks.md#purge-modes) for the full explanation and
 the sink-level `purge_delete_where` field it pairs with.

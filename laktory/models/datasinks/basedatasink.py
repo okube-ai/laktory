@@ -70,7 +70,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    purge_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
+    purge_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE", "NONE"] = Field(
         None,
         description="""
         Strategy used to purge this sink's data when `full_refresh` is requested.
@@ -78,6 +78,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
         - DELETE_WHERE: Delete only the rows matching `purge_delete_where`.
+        - NONE: Leave the data untouched. The checkpoint is still deleted, so the data is
+          reprocessed and re-appended. Used when multiple pipeline nodes write to the same
+          table/path: a single node purges the shared data and the others are set to NONE
+          and should be executed after it (`depends_on`) to be safe on `full_refresh`.
         """,
         validation_alias=AliasChoices("purge_mode", "purge_mode_"),
         exclude=True,
@@ -94,7 +98,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @computed_field(description="purge_mode")
     @property
-    def purge_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
+    def purge_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE", "NONE"]:
         return self._resolve_purge_mode()
 
     mode: Literal.__getitem__(SUPPORTED_MODES) | None = Field(
@@ -709,6 +713,15 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def exists(self):
         raise NotImplementedError()
+
+    @property
+    def purge_target(self) -> str | None:
+        """
+        Identifier of the physical data written by the sink. Sinks of different pipeline
+        nodes sharing a `purge_target` write to the same data. `None` if the sink does not
+        materialize data.
+        """
+        return None
 
     def _purge_checkpoint(self):
         if self.checkpoint_path:

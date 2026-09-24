@@ -810,6 +810,16 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Refresh
         if full_refresh:
+            if pl is not None:
+                for target, node_names in pl.shared_sink_purge_conflicts.items():
+                    if self.name in node_names:
+                        raise ValueError(
+                            f"Pipeline nodes {node_names} all write to '{target}' with "
+                            "`purge_mode` DROP or TRUNCATE. A `full_refresh` of any of "
+                            "them would delete the data written by the others. Set "
+                            "`purge_mode: NONE` on all of these nodes but one, and "
+                            "execute them after it using `depends_on`."
+                        )
             self.purge()
 
         # Read all declared sources into named_dfs with "sources." prefix

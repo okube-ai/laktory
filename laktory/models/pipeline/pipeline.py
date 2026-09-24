@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -374,6 +375,42 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         return self
 
+    @model_validator(mode="after")
+    def validate_shared_sinks_purge(self) -> Any:
+        for target, node_names in self.shared_sink_purge_conflicts.items():
+            warnings.warn(
+                f"Pipeline nodes {node_names} all write to '{target}' with `purge_mode` "
+                "DROP or TRUNCATE. On `full_refresh`, each of them would delete the data "
+                "written by the others. Set `purge_mode: NONE` on all of these nodes but "
+                "one, and execute them after it using `depends_on`."
+            )
+
+        for target, sinks in self.shared_sink_groups.items():
+            purging = {
+                s.parent_pipeline_node.name
+                for s in sinks
+                if s.purge_mode in ["DROP", "TRUNCATE"]
+            }
+            if len(purging) != 1:
+                continue
+            purging_node_name = purging.pop()
+            downstream = nx.descendants(self.dag, purging_node_name)
+            unordered = [
+                s.parent_pipeline_node.name
+                for s in sinks
+                if s.parent_pipeline_node.name != purging_node_name
+                and s.parent_pipeline_node.name not in downstream
+            ]
+            if unordered:
+                warnings.warn(
+                    f"Pipeline nodes {list(dict.fromkeys(unordered))} write to '{target}' "
+                    f"but are not executed after node '{purging_node_name}', which purges "
+                    "it on `full_refresh`. If executed in parallel, their data may be "
+                    f"deleted. Add '{purging_node_name}' to their `depends_on`."
+                )
+
+        return self
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #
@@ -592,6 +629,53 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                     break
 
         return nodes
+
+    @property
+    def shared_sink_groups(self) -> dict[str, list]:
+        """
+        Sinks of different nodes writing to the same physical target, grouped by
+        `purge_target`.
+
+        Returns
+        -------
+        :
+            Shared sinks keyed by purge target.
+        """
+        groups = {}
+        for node in self.nodes:
+            for s in node.all_sinks:
+                if s.purge_target is not None:
+                    groups.setdefault(s.purge_target, []).append(s)
+
+        return {
+            k: v
+            for k, v in groups.items()
+            if len({s.parent_pipeline_node.name for s in v}) > 1
+        }
+
+    @property
+    def shared_sink_purge_conflicts(self) -> dict[str, list[str]]:
+        """
+        Shared sinks purged entirely (`DROP`/`TRUNCATE`) by more than one node on
+        `full_refresh`, with the names of those nodes. Each of these nodes would delete
+        the data written by the others.
+
+        Returns
+        -------
+        :
+            Purging node names keyed by purge target.
+        """
+        conflicts = {}
+        for target, sinks in self.shared_sink_groups.items():
+            node_names = [
+                s.parent_pipeline_node.name
+                for s in sinks
+                if s.purge_mode in ["DROP", "TRUNCATE"]
+            ]
+            node_names = list(dict.fromkeys(node_names))
+            if len(node_names) > 1:
+                conflicts[target] = node_names
+        return conflicts
 
     # ----------------------------------------------------------------------- #
     # Data Sources                                                            #
