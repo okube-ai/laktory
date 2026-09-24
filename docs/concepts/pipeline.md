@@ -421,7 +421,17 @@ for node in pl.nodes:
 ```
 
 `pl.execute()` builds the artifacts and shells out to `spark-pipelines run`. Outputs are written to
-`spark-warehouse/` in the working directory as Parquet or Delta tables.
+`spark-warehouse/` in the working directory. When the Laktory Spark session has Delta configured, its
+jars and configuration are passed to `spark-pipelines` and tables default to Delta, as on Databricks.
+
+!!! warning "Local runs are one-shot"
+    A local `spark-pipelines` run can't be repeated over tables created by a previous run. Local runs
+    use an in-memory catalog, so a second run tries to re-create existing tables. With a persistent
+    (Hive) catalog, open-source SDP and Delta are not yet compatible on re-runs: SDP re-applies the
+    reserved `provider` property of existing tables and truncates materialized views, both rejected
+    by Delta. Local runs are therefore suited to testing and CI - clear `spark-warehouse/` and the
+    pipeline storage between runs - while incremental runs require Databricks. See
+    [#680](https://github.com/okube-ai/laktory/issues/680).
 
 #### Apache Airflow
 Apache Airflow is a widely used orchestrator for scheduling, monitoring, and managing data workflows. When used with
