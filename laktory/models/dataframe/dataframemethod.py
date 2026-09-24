@@ -337,23 +337,35 @@ class DataFrameMethod(BaseModel, PipelineChild):
             df = df.to_native()
 
         # Get Function
-        namespace = None
-        func_name = self.func_name
-        func_full_name = func_name
-        if "." in func_name:
-            namespace, func_name = func_name.split(".")
+        func_full_name = self.func_name
+        parts = func_full_name.split(".")
         df_as_input = False
 
         # Get from built-in narwhals and narwhals extension (including Laktory) functions
         f = None
         if f is None:
-            # Get function from namespace extension
-            if namespace:
-                f = getattr(getattr(df, namespace), func_name, None)
+            if len(parts) > 1:
+                # Walk the accessor chain (e.g. "namespace.sub.method"), one
+                # attribute at a time, so registered namespaces can nest arbitrarily
+                # deep (not just one level).
+                obj = df
+                resolved = []
+                for part in parts[:-1]:
+                    next_obj = getattr(obj, part, None)
+                    if next_obj is None:
+                        location = ".".join(resolved) if resolved else "the dataframe"
+                        raise ValueError(
+                            f"Function {func_full_name} is not available on dataframe of type "
+                            f"{type(df)} with {self.dataframe_api} API: "
+                            f"{location} has no attribute '{part}'"
+                        )
+                    obj = next_obj
+                    resolved.append(part)
+                f = getattr(obj, parts[-1], None)
             else:
                 # getattr requires schema analysis - which SDP blocks. hasattr is safe
-                if hasattr(type(df), func_name):
-                    f = getattr(df, func_name)
+                if hasattr(type(df), func_full_name):
+                    f = getattr(df, func_full_name)
 
         if f is None:
             df_type = type(df)

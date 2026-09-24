@@ -308,13 +308,16 @@ Inherits common fields from `BaseDataSource`.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `func_name` | `str` | required | Method, attribute, or importable function (e.g. `drop_duplicates`, `mypackage.my_func`) |
+| `func_name` | `str` | required | Method, attribute, or accessor-chain name (e.g. `drop_duplicates`, `dt.strftime`, `udp.bronze.my_func`) |
 | `func_args` | `list` | `[]` | Positional args; use `{df}`, `{sources.name}`, `{nodes.X}` as DataFrame references |
 | `func_kwargs` | `dict` | `{}` | Keyword args; same reference syntax as `func_args` |
 | `dataframe_api` | `NARWHALS \| NATIVE` | inherited | Override the DataFrame API for this step only |
 
-> When `func_name` contains a dot (e.g. `mypackage.my_func`), Laktory imports it as
-> `from mypackage import my_func` and calls it with the DataFrame as the first argument.
+> `func_name` is resolved as a chain of attribute lookups on the DataFrame object, one dot per
+> level (e.g. `udp.bronze.my_func` resolves `df.udp.bronze.my_func`) - arbitrarily deep, not just
+> `namespace.method`. This is how registered namespace accessors (e.g. via
+> `register_spark_dataframe_namespace`) are reached, and is unrelated to `CustomReader`/
+> `CustomWriter`'s `func_name`, which dynamically imports a standalone function instead.
 
 ---
 

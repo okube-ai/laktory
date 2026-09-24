@@ -177,6 +177,42 @@ def test_udf(backend):
     assert df.columns == ["m2"]
 
 
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_udf_nested_namespace(backend):
+    """
+    Regression: `func_name` accessor chains deeper than one dot (e.g.
+    "namespace.sub.method") must resolve like plain Python attribute access
+    instead of raising `ValueError: too many values to unpack`.
+    """
+    df0 = get_df0(backend)
+
+    class Sub:
+        def __init__(self, _df):
+            self._df = _df
+
+        def f3(self):
+            return self._df.select("x1")
+
+    @register_anyframe_namespace("c3")
+    class C3:
+        def __init__(self, _df):
+            self._df = _df
+
+        @property
+        def sub(self):
+            return Sub(self._df)
+
+    node = DataFrameMethod(func_name="c3.sub.f3")
+    df = node.execute(df0)
+    assert df.columns == ["x1"]
+
+    # A chain that doesn't resolve must still raise a clear error, not crash
+    # in the string-parsing step.
+    node = DataFrameMethod(func_name="c3.sub.missing_method")
+    with pytest.raises(ValueError, match="c3.sub"):
+        node.execute(df0)
+
+
 @pytest.mark.parametrize("backend", ["PYSPARK"])
 def test_json_roundtrip(backend):
     """
