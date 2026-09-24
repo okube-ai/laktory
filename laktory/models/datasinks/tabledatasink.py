@@ -265,6 +265,12 @@ class TableDataSink(BaseDataSink):
         else:
             raise NotImplementedError()
 
+    @property
+    def purge_target(self) -> str | None:
+        if self.table_type != "TABLE":
+            return None
+        return self.full_name
+
     def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         """
         Delete sink data and checkpoints
@@ -292,7 +298,12 @@ class TableDataSink(BaseDataSink):
 
             purge_mode = mode or self.purge_mode
 
-            if purge_mode == "DROP":
+            if purge_mode == "NONE":
+                logger.info(
+                    f"Skipping data purge of {self.table_type} {self.full_name}"
+                )
+
+            elif purge_mode == "DROP":
                 logger.info(f"Dropping {self.table_type} {self.full_name}")
                 spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
 

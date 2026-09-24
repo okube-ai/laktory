@@ -236,6 +236,13 @@ def test_purge_mode_delete_where_rejected_globally(monkeypatch):
         monkeypatch.setattr(settings, "purge_mode", "DELETE_WHERE")
 
 
+def test_purge_mode_none_rejected_globally(monkeypatch):
+    from laktory._settings import settings
+
+    with pytest.raises(ValueError):
+        monkeypatch.setattr(settings, "purge_mode", "NONE")
+
+
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
 def test_pipeline_purge(backend, tmp_path):
     df0 = get_df0(backend)
@@ -253,3 +260,101 @@ def test_pipeline_purge(backend, tmp_path):
 
     pl.purge()
     assert not Path(brz_path).exists()
+
+
+def test_purge_mode_none(tmp_path):
+    sink_path = tmp_path / "sink"
+    node = models.PipelineNode(
+        name="node0",
+        root_path_=tmp_path,
+        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+        sinks=[{"format": "DELTA", "path": str(sink_path), "purge_mode": "NONE"}],
+    )
+    checkpoint_path = node.sinks[0].checkpoint_path
+    sink_path.mkdir()
+    checkpoint_path.mkdir(parents=True)
+
+    node.purge()
+
+    # Data is kept, but checkpoint is reset
+    assert sink_path.exists()
+    assert not checkpoint_path.exists()
+
+
+def _shared_sink_pipeline(sink_path, purge_modes=None, upstreams=None):
+    purge_modes = purge_modes or {}
+    upstreams = upstreams or {"b": "a", "c": "b"}
+    df0 = get_df0("POLARS")
+    nodes = []
+    for name in ["a", "b", "c"]:
+        upstream = upstreams.get(name)
+        nodes += [
+            models.PipelineNode(
+                name=name,
+                depends_on=[upstream] if upstream else [],
+                **({"purge_mode": purge_modes[name]} if name in purge_modes else {}),
+                sources=[{"df": df0}],
+                transformer={
+                    "nodes": [{"expr": f"SELECT *, '{name}' AS feed FROM {{df}}"}]
+                },
+                sinks=[{"path": sink_path, "format": "DELTA", "mode": "APPEND"}],
+            )
+        ]
+    return models.Pipeline(name="pl", nodes=nodes, dataframe_backend="POLARS")
+
+
+def _feed_counts(pl):
+    df = pl.nodes_dict["a"].primary_sink.read().to_native().collect()
+    return dict(df.group_by("feed").len().sort("feed").iter_rows())
+
+
+_FOLLOWERS_NONE = {"b": "NONE", "c": "NONE"}
+
+
+def test_shared_sink_full_refresh(tmp_path):
+    pl = _shared_sink_pipeline(str(tmp_path / "shared"), _FOLLOWERS_NONE)
+
+    pl.execute()
+    assert _feed_counts(pl) == {"a": 3, "b": 3, "c": 3}
+
+    pl.execute(full_refresh=True)
+    assert _feed_counts(pl) == {"a": 3, "b": 3, "c": 3}
+
+
+def test_shared_sink_full_refresh_one_task_per_node(tmp_path):
+    """Mimics a Lakeflow Job, where each node runs in its own task"""
+    pl = _shared_sink_pipeline(str(tmp_path / "shared"), _FOLLOWERS_NONE)
+    tasks = pl.get_execution_plan().tasks
+    assert [t.node_names for t in tasks] == [["a"], ["b"], ["c"]]
+
+    for _ in range(2):
+        for task in tasks:
+            pl.execute(selects=task.node_names, full_refresh=True)
+        assert _feed_counts(pl) == {"a": 3, "b": 3, "c": 3}
+
+
+def test_shared_sink_purge_conflict(tmp_path):
+    with pytest.warns(UserWarning, match=r"\['a', 'b'\] all write to"):
+        pl = _shared_sink_pipeline(str(tmp_path / "shared"), {"c": "NONE"})
+    assert pl.shared_sink_purge_conflicts == {str(tmp_path / "shared"): ["a", "b"]}
+
+    pl.execute()
+    with pytest.raises(ValueError, match="purge_mode: NONE"):
+        pl.execute(full_refresh=True)
+
+    # Nothing purged
+    assert _feed_counts(pl) == {"a": 3, "b": 3, "c": 3}
+
+
+def test_shared_sink_no_conflict(tmp_path, recwarn):
+    pl = _shared_sink_pipeline(str(tmp_path / "shared"), _FOLLOWERS_NONE)
+    assert list(pl.shared_sink_groups) == [str(tmp_path / "shared")]
+    assert pl.shared_sink_purge_conflicts == {}
+    assert not [w for w in recwarn if "write to" in str(w.message)]
+
+
+def test_shared_sink_unordered_writer(tmp_path):
+    with pytest.warns(UserWarning, match=r"\['c'\] write to .* after node 'a'"):
+        _shared_sink_pipeline(
+            str(tmp_path / "shared"), _FOLLOWERS_NONE, upstreams={"b": "a"}
+        )

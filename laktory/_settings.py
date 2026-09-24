@@ -54,6 +54,12 @@ class Settings(BaseSettings):
                 "a global default. A deletion predicate is inherently specific to a single "
                 "sink."
             )
+        if v and v.upper() == "NONE":
+            raise ValueError(
+                "`purge_mode` 'NONE' can only be set on a data sink, pipeline node or "
+                "pipeline, not as a global default. It designates the writers of a shared "
+                "sink that don't drive its purge."
+            )
         return v
 
     # Logging

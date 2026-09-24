@@ -145,3 +145,50 @@ def test_purge_checkpoint_purged_in_all_modes(mode, tmp_path):
     sink.purge()
 
     assert not checkpoint_path.exists()
+
+
+def test_purge_none(tmp_path):
+    schema, table = "default", "purge_none"
+    _create_table(schema, table, tmp_path / "none")
+
+    sink = HiveMetastoreDataSink(
+        schema_name=schema, table_name=table, purge_mode="NONE"
+    )
+    sink.purge()
+
+    spark = get_spark_session()
+    assert spark.table(sink.full_name).count() == 3
+
+
+def test_purge_shared_table(tmp_path):
+    from laktory import models
+    from laktory._testing import get_df0
+
+    sink = {
+        "schema_name": "default",
+        "table_name": "purge_shared",
+        "mode": "APPEND",
+        "format": "PARQUET",
+        "writer_kwargs": {"path": (tmp_path / "shared").as_posix()},
+    }
+    pl = models.Pipeline(
+        name="pl",
+        dataframe_backend="PYSPARK",
+        nodes=[
+            models.PipelineNode(
+                name="a", sources=[{"df": get_df0("PYSPARK")}], sinks=[sink]
+            ),
+            models.PipelineNode(
+                name="b",
+                depends_on=["a"],
+                purge_mode="NONE",
+                sources=[{"df": get_df0("PYSPARK")}],
+                sinks=[sink],
+            ),
+        ],
+    )
+
+    spark = get_spark_session()
+    for _ in range(2):
+        pl.execute(full_refresh=True)
+        assert spark.table("default.purge_shared").count() == 6

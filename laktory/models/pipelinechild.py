@@ -75,13 +75,16 @@ class PipelineChild(BaseChild):
         # Value from settings
         return settings.dataframe_api.upper()
 
-    purge_mode_: Literal["DROP", "TRUNCATE"] = Field(
+    purge_mode_: Literal["DROP", "TRUNCATE", "NONE"] = Field(
         None,
         description="""
         Strategy used to purge a sink's data when `full_refresh` is requested.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
+        - NONE: Leave the data untouched, but still delete checkpoints so that data is
+          reprocessed. Used on the nodes that don't drive the purge of a sink shared with
+          other nodes.
 
         `DELETE_WHERE` is also available, but only directly on a data sink (see
         `BaseDataSink.purge_mode`) - a deletion predicate is inherently specific to a single
@@ -106,7 +109,7 @@ class PipelineChild(BaseChild):
 
     @computed_field(description="purge_mode")
     @property
-    def purge_mode(self) -> Literal["DROP", "TRUNCATE"]:
+    def purge_mode(self) -> Literal["DROP", "TRUNCATE", "NONE"]:
         return self._resolve_purge_mode()
 
     @property

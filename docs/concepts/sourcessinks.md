@@ -244,6 +244,8 @@ rewritten. `purge_mode` controls how that purge is done:
   multiple, independently deployed pipelines (e.g. one pipeline per client appending into a
   shared, cross-tenant table) - scoping the predicate to the rows a given pipeline owns lets it
   reprocess its own data on `full_refresh` without touching what other pipelines wrote.
+- `purge_mode="NONE"`: leaves the data untouched. The sink checkpoint is still deleted, so the
+  node reprocesses and re-appends its data. See [Shared sinks](#shared-sinks) below.
 
 ```py
 import laktory as lk
@@ -269,7 +271,44 @@ Because a wrong or stale `purge_delete_where` predicate could otherwise silently
 rows, Laktory logs the number of rows matched by the predicate immediately before deleting them.
 
 `TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
-supports `purge_mode="DROP"`.
+supports `purge_mode="DROP"` and `purge_mode="NONE"`.
+
+##### Shared sinks
+
+Multiple nodes of a pipeline can write to the same table or path, for example several `APPEND`
+feeds pooled into one table. With the default `DROP`, a `full_refresh` would make each node drop
+the data just written by the others. Instead, let a single node drive the purge, set
+`purge_mode: NONE` on the other nodes, and execute them after it using `depends_on`:
+
+```yaml
+nodes:
+  - name: feed_a
+    sinks:
+      - table_name: pooled
+        mode: APPEND
+  - name: feed_b
+    depends_on: [feed_a]
+    purge_mode: NONE
+    sinks:
+      - table_name: pooled
+        mode: APPEND
+```
+
+On `full_refresh`, `feed_a` drops `pooled` and `feed_b` only resets its checkpoint, so both
+reprocess their data into the new table. Laktory raises a warning when a pipeline is validated with
+more than one node writing to the same sink with `DROP` or `TRUNCATE`, and an error if such a
+node is executed with `full_refresh`. Nodes using `DELETE_WHERE` each delete their own rows and
+don't need `NONE`.
+
+Writers of a shared sink may run in parallel - concurrent Delta appends don't conflict - but on
+`full_refresh`, the purging node could then delete rows already written by the others. Laktory
+raises a validation warning for any writer that isn't executed after the purging node. Parallel
+writers also conflict when they change the table schema (e.g. appending different columns with
+schema merging); declaring the full table `schema` on the sinks avoids it.
+
+Executing a `NONE` node alone with `full_refresh` doesn't purge the shared data, so its rows are
+appended again. Use `DELETE_WHERE` (with a column identifying each node's rows) to refresh a
+single writer in isolation.
 
 #### Pipeline View Data Sink
 ??? "API Documentation"
