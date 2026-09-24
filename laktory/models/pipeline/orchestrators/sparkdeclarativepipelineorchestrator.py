@@ -1,9 +1,12 @@
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
+from urllib.request import url2pathname
 
 import yaml
 from pydantic import AliasChoices
@@ -15,6 +18,12 @@ from laktory.models.datasinks.tabledatasink import TableDataSink
 from laktory.models.pipelinechild import PipelineChild
 
 logger = get_logger(__name__)
+
+
+def _jar_module(filename: str) -> str:
+    """Module name of a `{module}-{version}.jar` file"""
+    match = re.match(r"(.+?)-\d[^/]*\.jar$", filename)
+    return match.group(1) if match else filename
 
 
 class SparkDeclarativePipelineOrchestrator(PipelineChild):
@@ -197,6 +206,47 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         target_script = root_dir / "laktory_sdp.py"
         shutil.copy(source_script, target_script)
 
+    def _get_launch_args(self, spark) -> list[str]:
+        """
+        `spark-pipelines` launch arguments forwarding the jars and Delta configuration
+        of the local Spark session. They are static configurations that can't be set
+        through the pipeline spec.
+        """
+        conf = spark.sparkContext.getConf()
+        args = []
+
+        # Jars go on the driver classpath, ahead of Spark's own jars. Dependencies
+        # already bundled with Spark (e.g. jackson, hadoop) are skipped to avoid
+        # overriding Spark's versions.
+        import pyspark
+
+        spark_modules = {
+            _jar_module(p.name)
+            for p in (Path(pyspark.__file__).parent / "jars").glob("*.jar")
+        }
+        jars = []
+        for jar in (conf.get("spark.jars") or "").split(","):
+            if not jar:
+                continue
+            path = url2pathname(urlparse(jar).path)
+            # Ivy jars are named `{organization}_{module}-{version}.jar`
+            if _jar_module(Path(path).name.split("_", 1)[-1]) in spark_modules:
+                continue
+            jars += [path]
+        if jars:
+            args += ["--driver-class-path", os.pathsep.join(jars)]
+
+        for key in ["spark.sql.extensions", "spark.sql.catalog.spark_catalog"]:
+            value = conf.get(key)
+            if value:
+                args += ["--conf", f"{key}={value}"]
+
+        # Match Databricks, where tables are Delta unless a format is specified
+        if "DeltaSparkSessionExtension" in (conf.get("spark.sql.extensions") or ""):
+            args += ["--conf", "spark.sql.sources.default=delta"]
+
+        return args
+
     def execute(
         self,
         full_refresh: bool = False,
@@ -227,7 +277,14 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         from laktory import get_spark_session
 
         self.build()
-        cmd = ["spark-pipelines", "run", "--spec", str(self.spec_filepath_rel)]
+        spark = get_spark_session()
+        cmd = [
+            "spark-pipelines",
+            *self._get_launch_args(spark),
+            "run",
+            "--spec",
+            str(self.spec_filepath_rel),
+        ]
         if cwd is None:
             cwd = self.parent_pipeline.root_path.absolute()
 
@@ -247,7 +304,6 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
                 PipelineViewDataSink,
             )
 
-            spark = get_spark_session()
             for node in self.parent_pipeline.nodes:
                 for sink in node.sinks:
                     if isinstance(sink, PipelineViewDataSink):
@@ -262,10 +318,11 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
                         node._output_df = sink.as_source().read()
                     else:
                         dataframe_path = warehouse_root / sink.table_name
-                        if dataframe_path.exists():
-                            # Hive tables can be saved as parquet or delta
-                            # We use parquet for simplicity because it will work in
-                            # both cases
+                        if (dataframe_path / "_delta_log").exists():
+                            node._output_df = spark.read.format("delta").load(
+                                str(dataframe_path)
+                            )
+                        elif dataframe_path.exists():
                             node._output_df = spark.read.parquet(str(dataframe_path))
 
     # ----------------------------------------------------------------------- #
