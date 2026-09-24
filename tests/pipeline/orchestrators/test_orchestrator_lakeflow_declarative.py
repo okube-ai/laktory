@@ -448,13 +448,14 @@ def test_purge_mode_non_drop_ok_under_lakeflow_job():
 
 
 # --------------------------------------------------------------------------- #
-# Duplicate sink targets under LDP/SDP (no append_flow support)               #
+# Shared sink targets under LDP/SDP (append flows)                            #
 # --------------------------------------------------------------------------- #
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
 def test_duplicate_sink_target_raises_under_declarative_orchestrator(orchestrator_dict):
-    with pytest.raises((ValueError, ValidationError), match="append_flow"):
+    """Batch sinks can't be written through append flows"""
+    with pytest.raises((ValueError, ValidationError), match="not a streaming table"):
         models.Pipeline.model_validate(
             {
                 "name": "pl-declarative",
@@ -495,6 +496,182 @@ def test_distinct_sink_targets_ok_under_declarative_orchestrator(orchestrator_di
             ],
         }
     )
+
+
+def _get_shared_pl(orchestrator_dict, sinks=None, expectations=None):
+    """Two streaming nodes appending to `shared`, one batch node writing `other`"""
+    sinks = sinks or {}
+    expectations = expectations or {}
+    nodes = []
+    for name in ["n1", "n2"]:
+        nodes += [
+            {
+                "name": name,
+                "sources": [{"format": "JSON", "path": f"/{name}/", "as_stream": True}],
+                "sinks": [{"table_name": "shared", **sinks.get(name, {})}],
+                "expectations": expectations.get(name, []),
+            }
+        ]
+    nodes += [
+        {
+            "name": "n3",
+            "sources": [{"format": "JSON", "path": "/n3/"}],
+            "sinks": [{"table_name": "other"}],
+        }
+    ]
+    return models.Pipeline.model_validate(
+        {"name": "pl-declarative", "orchestrator": orchestrator_dict, "nodes": nodes}
+    )
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_shared_streaming_sink_under_declarative_orchestrator(
+    orchestrator_dict, recwarn
+):
+    pl = _get_shared_pl(orchestrator_dict)
+
+    name = pl.nodes_dict["n1"].sinks[0].sdp_table_or_view_name
+    assert list(pl.sdp_append_flow_sinks) == [name]
+    assert [s.sdp_append_flow_name for s in pl.sdp_append_flow_sinks[name]] == [
+        "shared__n1",
+        "shared__n2",
+    ]
+    assert pl.get_sdp_streaming_table_kwargs(name) == {"name": name}
+
+    # Declarative pipelines purge shared tables once: no shared sink purge warnings
+    assert not [w for w in recwarn if "write to" in str(w.message)]
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_shared_sink_cdc_raises_under_declarative_orchestrator(orchestrator_dict):
+    cdc = {
+        "mode": "MERGE",
+        "merge_cdc_options": {"primary_keys": ["id"], "order_by": "id"},
+    }
+    with pytest.raises((ValueError, ValidationError), match="not a streaming table"):
+        _get_shared_pl(orchestrator_dict, sinks={"n2": cdc})
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_shared_sink_table_properties(orchestrator_dict):
+    # Declared on a single sink
+    comment = {"metadata": {"comment": "pooled"}}
+    pl = _get_shared_pl(orchestrator_dict, sinks={"n2": comment})
+    name = pl.nodes_dict["n1"].sinks[0].sdp_table_or_view_name
+    assert pl.get_sdp_streaming_table_kwargs(name)["comment"] == "pooled"
+
+    # Conflicting
+    with pytest.raises((ValueError, ValidationError), match="conflicting `comment`"):
+        _get_shared_pl(
+            orchestrator_dict,
+            sinks={"n1": {"metadata": {"comment": "other"}}, "n2": comment},
+        )
+
+    # Different formats
+    with pytest.raises((ValueError, ValidationError), match="different formats"):
+        _get_shared_pl(orchestrator_dict, sinks={"n2": {"format": "PARQUET"}})
+
+
+def test_shared_sink_ldp_expectations():
+    e = [{"name": "positive", "expr": "x1 > 0", "action": "WARN"}]
+    pl = _get_shared_pl(_LDP_ORCH, expectations={"n1": e, "n2": e})
+    name = pl.nodes_dict["n1"].sinks[0].sdp_table_or_view_name
+    assert pl.get_sdp_streaming_table_kwargs(name)["expect_all"] == {
+        "positive": "x1 > 0"
+    }
+
+    with pytest.raises((ValueError, ValidationError), match="different expectations"):
+        _get_shared_pl(_LDP_ORCH, expectations={"n1": e})
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_shared_sink_same_node_raises(orchestrator_dict):
+    with pytest.raises((ValueError, ValidationError), match="more than once"):
+        models.Pipeline.model_validate(
+            {
+                "name": "pl-declarative",
+                "orchestrator": orchestrator_dict,
+                "nodes": [
+                    {
+                        "name": "n1",
+                        "sources": [
+                            {"format": "JSON", "path": "/n1/", "as_stream": True}
+                        ],
+                        "sinks": [{"table_name": "shared"}, {"table_name": "shared"}],
+                    }
+                ],
+            }
+        )
+
+
+def _run_script(script_name, pl, config, tmp_path, monkeypatch):
+    """Run an LDP/SDP definition script against a mocked `pyspark.pipelines`"""
+    import runpy
+    import sys
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    import pyspark
+    from pyspark.sql import SparkSession
+
+    import laktory
+
+    config_filepath = tmp_path / "config.json"
+    config_filepath.write_text(json.dumps(config))
+    conf = {
+        "laktory.config_filepath": str(config_filepath),
+        "laktory.requirements": "[]",
+    }
+    spark = MagicMock()
+    spark.conf.get.side_effect = lambda key, *args: conf.get(
+        key, args[0] if args else None
+    )
+    monkeypatch.setattr(SparkSession, "getActiveSession", lambda: spark)
+
+    dp = MagicMock()
+    monkeypatch.setitem(sys.modules, "pyspark.pipelines", dp)
+    monkeypatch.setattr(pyspark, "pipelines", dp, raising=False)
+
+    script = Path(laktory.__file__).parent / "resources" / "scripts" / script_name
+    runpy.run_path(str(script), init_globals={"spark": spark})
+    return dp
+
+
+def test_ldp_script_shared_sink(tmp_path, monkeypatch):
+    e = [{"name": "positive", "expr": "x1 > 0", "action": "WARN"}]
+    pl = _get_shared_pl(_LDP_ORCH, expectations={"n1": e, "n2": e})
+    dp = _run_script(
+        "laktory_ldp.py",
+        pl,
+        pl.orchestrator.config_file.content_dict,
+        tmp_path,
+        monkeypatch,
+    )
+
+    dp.create_streaming_table.assert_called_once_with(
+        name="dev.sandbox.shared", expect_all={"positive": "x1 > 0"}
+    )
+    assert [c.kwargs for c in dp.append_flow.call_args_list] == [
+        {"target": "dev.sandbox.shared", "name": "shared__n1"},
+        {"target": "dev.sandbox.shared", "name": "shared__n2"},
+    ]
+    dp.materialized_view.assert_called_once_with(name="dev.sandbox.other")
+    dp.table.assert_not_called()
+
+
+def test_sdp_script_shared_sink(tmp_path, monkeypatch):
+    pl = _get_shared_pl(_SDP_ORCH)
+    dp = _run_script(
+        "laktory_sdp.py", pl, pl.orchestrator.config_dict, tmp_path, monkeypatch
+    )
+
+    dp.create_streaming_table.assert_called_once_with(name="shared")
+    assert [c.kwargs for c in dp.append_flow.call_args_list] == [
+        {"target": "shared", "name": "shared__n1"},
+        {"target": "shared", "name": "shared__n2"},
+    ]
+    dp.materialized_view.assert_called_once_with(name="other")
+    dp.table.assert_not_called()
 
 
 def test_duplicate_sink_target_ok_under_lakeflow_job():

@@ -310,6 +310,22 @@ Executing a `NONE` node alone with `full_refresh` doesn't purge the shared data,
 appended again. Use `DELETE_WHERE` (with a column identifying each node's rows) to refresh a
 single writer in isolation.
 
+With Lakeflow / Spark Declarative Pipeline orchestrators, the shared table is declared once as a
+streaming table and each node appends to it through its own append flow, named
+`{table_name}__{node_name}`. The declarative engine runs the flows in parallel and handles
+`full_refresh` itself - clearing the table once and resetting every flow - so neither
+`purge_mode: NONE` nor `depends_on` is needed. The following rules apply:
+
+- All sinks must be streaming, non-CDC (`MERGE`) table sinks.
+- Table properties (`comment`, `table_properties`, `format`) can be declared on any of the sinks,
+  but must not conflict.
+- With Lakeflow Declarative Pipelines, expectations are applied to the whole table (append flows
+  don't support them), so all nodes writing to it must declare the same expectations.
+
+A flow checkpoint is identified by its name. Adding a second node to an existing single-writer
+streaming table (or renaming a node) changes the flow name of the existing writer, which then
+reprocesses its source from scratch - run a full refresh of that table once after the change.
+
 #### Pipeline View Data Sink
 ??? "API Documentation"
     [`laktory.models.PipelineViewDataSink`][laktory.models.PipelineViewDataSink]<br>

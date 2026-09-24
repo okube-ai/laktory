@@ -517,6 +517,44 @@ def test_execute_declarative(tmp_path, monkeypatch, spark):
     not is_sdp_available(),
     reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
 )
+def test_execute_shared_sink(tmp_path, monkeypatch, spark):
+    """Two streaming nodes append to the same Delta table through append flows"""
+    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
+    StreamingSource("PYSPARK").write_to_json(tmp_path / "brz_source")
+
+    pl = models.Pipeline.model_validate(
+        {
+            "name": "pl-sdp-shared",
+            "orchestrator": _SDP_ORCH,
+            "nodes": [
+                {
+                    "name": "brz",
+                    "sources": [{"format": "JSON", "path": f"{tmp_path}/brz_source/"}],
+                    "sinks": [{"table_name": "brz"}],
+                },
+            ]
+            + [
+                {
+                    "name": name,
+                    "sources": [{"node_name": "brz", "as_stream": True}],
+                    "sinks": [{"table_name": "shared"}],
+                }
+                for name in ["feed_a", "feed_b"]
+            ],
+        }
+    )
+    pl.orchestrator.execute(read_output=True)
+
+    warehouse = pl.root_path.absolute() / "spark-warehouse"
+    assert (warehouse / "shared" / "_delta_log").exists()
+    df = pl.nodes_dict["feed_a"].output_df
+    assert nw.from_native(df).collect().shape[0] == 6
+
+
+@pytest.mark.skipif(
+    not is_sdp_available(),
+    reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
+)
 @pytest.mark.xfail(
     strict=False,
     reason=(

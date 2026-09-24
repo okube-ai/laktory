@@ -432,6 +432,15 @@ class TableDataSink(BaseDataSink):
         return kwargs
 
     @property
+    def sdp_append_flow_name(self) -> str:
+        """
+        Name of the append flow writing to the table when multiple pipeline nodes write
+        to it. It identifies the flow checkpoint, so it must be stable across runs.
+        """
+        table_name = self.sdp_table_or_view_name.split(".")[-1]
+        return f"{table_name}__{self.parent_pipeline_node.name}"
+
+    @property
     def ldp_warning_expectations(self):
         e = {}
         if not self.is_quarantine:

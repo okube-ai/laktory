@@ -59,9 +59,27 @@ def define_table(node, sink):
         dp.create_auto_cdc_flow(**sink.ldp_auto_cdc_flow_kwargs)
 
 
+def define_append_flow(node, sink):
+    # Expectations are defined on the shared streaming table, as append flows don't
+    # support them.
+    @dp.append_flow(target=sink.sdp_table_or_view_name, name=sink.sdp_append_flow_name)
+    def get_df():
+        node.execute()
+        if sink.is_quarantine:
+            df = node.quarantine_df
+        else:
+            df = node.output_df
+        return df.to_native()
+
+
 # --------------------------------------------------------------------------- #
 # Execution                                                                   #
 # --------------------------------------------------------------------------- #
+
+# Tables shared by multiple nodes are declared once and written by append flows
+shared_tables = pl.sdp_append_flow_sinks
+for table_name in shared_tables:
+    dp.create_streaming_table(**pl.get_sdp_streaming_table_kwargs(table_name))
 
 # Build nodes
 for node in pl.nodes:
@@ -69,4 +87,7 @@ for node in pl.nodes:
         continue
 
     for sink in node.sinks:
-        define_table(node, sink)
+        if getattr(sink, "sdp_table_or_view_name", None) in shared_tables:
+            define_append_flow(node, sink)
+        else:
+            define_table(node, sink)
