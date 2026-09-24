@@ -7,6 +7,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.basemodel import BaseModel
+from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
@@ -14,7 +15,7 @@ logger = get_logger(__name__)
 SUPPORTED_BACKENDS = [DataFrameBackends.PYSPARK]
 
 
-class DataSinkMergeCDCOptions(BaseModel):
+class DataSinkMergeCDCOptions(BaseModel, PipelineChild):
     """
     Options for merging a change data capture (CDC).
 
@@ -118,7 +119,6 @@ class DataSinkMergeCDCOptions(BaseModel):
     )
     # track_history_columns: Union[list[str], None] = None
     # track_history_except_columns: Union[list[str], None] = None
-    _parent: Any = None
     _source_schema: Any = None
     _source_columns: list[str] = None
 

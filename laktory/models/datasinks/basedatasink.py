@@ -192,8 +192,6 @@ class BaseDataSink(BaseModel, PipelineChild):
                 raise ValueError(
                     "If 'MERGE' `mode` is selected, `merge_cdc_options` must be specified."
                 )
-            else:
-                self.merge_cdc_options._parent = self
 
             from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
                 LakeflowDeclarativePipelineOrchestrator,
@@ -257,7 +255,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @property
     def children_names(self):
-        return ["custom_writer"]
+        return ["custom_writer", "merge_cdc_options"]
 
     # -------------------------------------------------------------------------------- #
     # Properties                                                                       #
