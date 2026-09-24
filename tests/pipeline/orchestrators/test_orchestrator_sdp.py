@@ -47,7 +47,6 @@ nodes:
       path: {tmp_path}/brz_source/
     sinks:
       - table_name: brz
-        format: PARQUET
     transformer:
       dataframe_api: NATIVE
       nodes:
@@ -60,7 +59,6 @@ nodes:
     - node_name: brz
     sinks:
       - table_name: slv
-        format: PARQUET
     transformer:
       dataframe_api: NATIVE
       nodes:
@@ -73,7 +71,6 @@ nodes:
     - node_name: brz
     sinks:
       - table_name: slv_nw
-        format: PARQUET
     transformer:
       dataframe_api: NARWHALS
       nodes:
@@ -360,13 +357,23 @@ def test_cli_flags(tmp_path, monkeypatch, mocker):
     pl.execute(use_orchestrator=True)
     cmd = mock_run.call_args[0][0]
     assert cmd[0] == "spark-pipelines"
-    assert cmd[1] == "run"
+    assert "run" in cmd
     assert "--spec" in cmd
     assert cmd[cmd.index("--spec") + 1] == "spark-pipeline.yaml"
     assert mock_run.call_args[1]["cwd"] == pl.root_path.absolute()
     assert "--full-refresh-all" not in cmd
     assert "--full-refresh" not in cmd
     assert "--refresh" not in cmd
+
+    # Local Spark session jars and Delta configuration forwarded before `run`
+    launch_args = cmd[1 : cmd.index("run")]
+    assert "--driver-class-path" in launch_args
+    jars = launch_args[launch_args.index("--driver-class-path") + 1]
+    assert "delta-spark" in jars
+    assert "file:" not in jars
+    assert "jackson-databind" not in jars  # bundled with Spark
+    assert "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" in launch_args
+    assert "spark.sql.sources.default=delta" in launch_args
 
     # full_refresh only → --full-refresh-all
     mock_run.reset_mock()
@@ -402,8 +409,7 @@ def test_execute(tmp_path, monkeypatch, spark):
     """
     Four-node pipeline: NATIVE transformer, NARWHALS transformer, SQL JOIN node.
     Output values are verified end-to-end for each node.
-    HiveMetastore default sink format is DELTA (overridden to PARQUET here for
-    read-back simplicity, but the default is confirmed by test_sink_default_format).
+    Sinks use the default DELTA format, except gld_join which covers PARQUET.
     """
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
 
@@ -501,6 +507,11 @@ def test_execute_declarative(tmp_path, monkeypatch, spark):
     # gld_view: temporary pipeline view - not persisted to warehouse
     assert nd["gld_view"].output_df is None
 
+    # Tables default to Delta, as on Databricks
+    warehouse = pl.root_path.absolute() / "spark-warehouse"
+    for table in ["brz", "slv", "slv_stream"]:
+        assert (warehouse / table / "_delta_log").exists()
+
 
 @pytest.mark.skipif(
     not is_sdp_available(),
@@ -509,10 +520,10 @@ def test_execute_declarative(tmp_path, monkeypatch, spark):
 @pytest.mark.xfail(
     strict=False,
     reason=(
-        "Requires Delta Lake in the spark-pipelines subprocess. "
-        "Static Spark configs (spark.jars) cannot be forwarded via spec configuration "
-        "because sql_conf re-applies them at runtime. "
-        "Passes on Databricks where Delta is built-in."
+        "Local spark-pipelines runs use an in-memory catalog, so a second run tries to "
+        "re-create existing streaming tables (LOCATION_ALREADY_EXISTS for Parquet, "
+        "DELTA_CREATE_TABLE_WITH_NON_EMPTY_LOCATION for Delta). With a Hive catalog, "
+        "Delta re-runs fail with DELTA_CANNOT_CHANGE_PROVIDER. Passes on Databricks. See #680."
     ),
 )
 def test_streaming_incremental(tmp_path, monkeypatch, spark):

@@ -7,6 +7,7 @@
 * Fixed `DataSinkMergeCDCOptions._parent` going stale after `Pipeline.inject_vars(inplace=False)`'s deep copy (same root cause as #653, different mechanism: it was wired up via a one-off manual assignment instead of the standard `children_names` recursion), corrupting `merge_cdc_options.target_name`/`.target_path`/`.sink` for any sink using `mode: MERGE`. [[#656](https://github.com/okube-ai/laktory/issues/656)]
 ### Updated
 * DataFrame namespaces to support multi-level names (accessor chains deeper than one dot e.g. `namespace.sub.method`). [[#672](https://github.com/okube-ai/laktory/issues/672)]
+* Local Spark Declarative Pipeline runs (`execute()`) now load Delta from the Laktory Spark session, so sinks default to Delta as on Databricks. [[#679](https://github.com/okube-ai/laktory/issues/679)]
 ### Breaking changes
 * n/a
 
