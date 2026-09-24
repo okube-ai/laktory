@@ -96,6 +96,36 @@ def test_parents_after_inject_vars():
     assert tn2.parent_pipeline_node is node2
 
 
+def test_merge_cdc_options_parent():
+    # `DataSinkMergeCDCOptions` isn't a `BaseChild` field wired through the
+    # standard `children_names` recursion by default - it was manually
+    # assigned once at construction (`BaseDataSink.merge_has_options`), so it
+    # never got re-parented after a `model_copy(deep=True)` - see issue #656,
+    # a follow-up to #653 through a different mechanism.
+    pl = models.Pipeline(
+        name="pl",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                sinks=[
+                    {
+                        "table_name": "t1",
+                        "mode": "MERGE",
+                        "merge_cdc_options": {"primary_keys": ["id"]},
+                    }
+                ],
+            ),
+        ],
+    )
+    sink = pl.nodes[0].sinks[0]
+    assert sink.merge_cdc_options.parent is sink
+
+    pl2 = pl.inject_vars()
+    sink2 = pl2.nodes[0].sinks[0]
+    assert sink2.merge_cdc_options.parent is sink2
+    assert sink2.merge_cdc_options.target_name == "t1"
+
+
 def test_orchestrator_parent():
     pl = models.Pipeline(
         name="pl",

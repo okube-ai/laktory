@@ -135,6 +135,7 @@ class TableDataSink(BaseDataSink):
         return [
             "metadata",
             "custom_writer",
+            "merge_cdc_options",
         ]
 
     # ----------------------------------------------------------------------- #
