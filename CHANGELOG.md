@@ -4,7 +4,7 @@
 ### Added
 * Added `purge_mode` (`DROP`/`TRUNCATE`, settable at the sink, pipeline node, pipeline, `Stack.settings`, or global-settings (`LAKTORY_PURGE_MODE`) level) and `purge_delete_where` (`DELETE_WHERE` mode, sink-only) to data sinks, so a `full_refresh` on a `TableDataSink` shared by multiple independently-deployed pipelines can truncate or selectively delete rows instead of unconditionally dropping the whole table. [[#669](https://github.com/okube-ai/laktory/issues/669)]
 ### Fixed
-* n/a
+* Fixed `DataFrameMethod.func_name` raising `ValueError: too many values to unpack` for accessor chains deeper than one dot (e.g. `namespace.sub.method`) instead of resolving them like plain Python attribute access. [[#672](https://github.com/okube-ai/laktory/issues/672)]
 ### Updated
 * n/a
 ### Breaking changes
