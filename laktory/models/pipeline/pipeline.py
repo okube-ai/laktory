@@ -349,34 +349,37 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
     @model_validator(mode="after")
     def validate_unique_declarative_sink_targets(self) -> Any:
-        if not isinstance(
-            self.orchestrator,
-            (
-                LakeflowDeclarativePipelineOrchestrator,
-                SparkDeclarativePipelineOrchestrator,
-            ),
-        ):
+        from laktory.models.datasinks.tabledatasink import TableDataSink
+
+        if not (self.is_orchestrator_ldp or self.is_orchestrator_sdp):
             return self
 
-        seen = {}
-        for n in self.nodes:
-            for s in n.sinks:
-                name = getattr(s, "sdp_table_or_view_name", None)
-                if name is None:
-                    continue
-                if name in seen:
+        for name, sinks in self.sdp_append_flow_sinks.items():
+            node_names = [s.parent_pipeline_node.name for s in sinks]
+            if len(set(node_names)) < len(node_names):
+                raise ValueError(
+                    f"Pipeline nodes {node_names} target '{name}' more than once. A "
+                    "pipeline node can only write once to a given table."
+                )
+            for s in sinks:
+                if not isinstance(s, TableDataSink) or s.is_cdc or not s.is_streaming():
                     raise ValueError(
-                        f"Pipeline nodes '{seen[name]}' and '{n.name}' both target "
-                        f"'{name}' - {type(self.orchestrator).__name__} does not support "
-                        "two nodes writing to the same table/view (no `append_flow` "
-                        "support)."
+                        f"Pipeline nodes {node_names} all target '{name}', but the sink "
+                        f"of node '{s.parent_pipeline_node.name}' is not a streaming "
+                        f"table sink. With {type(self.orchestrator).__name__}, multiple "
+                        "nodes can only write to the same table through append flows, "
+                        "which require streaming, non-CDC (MERGE) table sinks."
                     )
-                seen[name] = n.name
+            self.get_sdp_streaming_table_kwargs(name)
 
         return self
 
     @model_validator(mode="after")
     def validate_shared_sinks_purge(self) -> Any:
+        # Declarative pipelines purge shared tables once, for all append flows
+        if self.is_orchestrator_ldp or self.is_orchestrator_sdp:
+            return self
+
         for target, node_names in self.shared_sink_purge_conflicts.items():
             warnings.warn(
                 f"Pipeline nodes {node_names} all write to '{target}' with `purge_mode` "
@@ -652,6 +655,85 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             for k, v in groups.items()
             if len({s.parent_pipeline_node.name for s in v}) > 1
         }
+
+    @property
+    def sdp_append_flow_sinks(self) -> dict[str, list]:
+        """
+        Sinks of different nodes targeting the same table of a declarative pipeline
+        (Lakeflow / Spark Declarative Pipeline), keyed by table name. Such a table is
+        declared once as a streaming table and each sink appends to it through its own
+        append flow.
+
+        Returns
+        -------
+        :
+            Sinks keyed by table name.
+        """
+        groups = {}
+        for node in self.nodes:
+            for s in node.sinks:
+                name = getattr(s, "sdp_table_or_view_name", None)
+                if name is not None:
+                    groups.setdefault(name, []).append(s)
+
+        return {k: v for k, v in groups.items() if len(v) > 1}
+
+    def get_sdp_streaming_table_kwargs(self, table_name: str) -> dict:
+        """
+        Keyword arguments of the streaming table shared by multiple append flows. Table
+        properties can be declared on any of the sinks, but must not conflict. With
+        Lakeflow Declarative Pipelines, expectations apply to the whole table and must
+        be identical for all sinks.
+
+        Parameters
+        ----------
+        table_name:
+            Name of the shared table
+
+        Returns
+        -------
+        :
+            `create_streaming_table` keyword arguments
+        """
+        sinks = self.sdp_append_flow_sinks[table_name]
+        node_names = [s.parent_pipeline_node.name for s in sinks]
+
+        formats = {(s.format or "DELTA").upper() for s in sinks}
+        if len(formats) > 1:
+            raise ValueError(
+                f"Pipeline nodes {node_names} write to '{table_name}' with different "
+                f"formats {sorted(formats)}."
+            )
+
+        kwargs = {}
+        for s in sinks:
+            for k, v in s.sdp_table_or_view_kwargs.items():
+                if k in kwargs and kwargs[k] != v:
+                    raise ValueError(
+                        f"Pipeline nodes {node_names} write to '{table_name}' with "
+                        f"conflicting `{k}` values: {kwargs[k]!r} and {v!r}. Declare "
+                        "table properties on a single sink or use identical values."
+                    )
+                kwargs[k] = v
+
+        if self.is_orchestrator_ldp:
+            for key, attr in [
+                ("expect_all", "ldp_warning_expectations"),
+                ("expect_all_or_drop", "ldp_drop_expectations"),
+                ("expect_all_or_fail", "ldp_fail_expectations"),
+            ]:
+                values = [getattr(s, attr) for s in sinks]
+                if any(v != values[0] for v in values):
+                    raise ValueError(
+                        f"Pipeline nodes {node_names} write to '{table_name}' with "
+                        "different expectations. Lakeflow Declarative Pipelines apply "
+                        "expectations to the whole table, so they must be identical "
+                        "for all nodes writing to it."
+                    )
+                if values[0]:
+                    kwargs[key] = values[0]
+
+        return kwargs
 
     @property
     def shared_sink_purge_conflicts(self) -> dict[str, list[str]]:
