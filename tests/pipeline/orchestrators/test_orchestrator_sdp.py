@@ -561,7 +561,9 @@ def test_execute_shared_sink(tmp_path, monkeypatch, spark):
         "Local spark-pipelines runs use an in-memory catalog, so a second run tries to "
         "re-create existing streaming tables (LOCATION_ALREADY_EXISTS for Parquet, "
         "DELTA_CREATE_TABLE_WITH_NON_EMPTY_LOCATION for Delta). With a Hive catalog, "
-        "Delta re-runs fail with DELTA_CANNOT_CHANGE_PROVIDER. Passes on Databricks. See #680."
+        "Delta re-runs fail with DELTA_CANNOT_CHANGE_PROVIDER (open-source SDP / Delta "
+        "gap, still present with PySpark 4.2.0 and delta-spark 4.4.0). Passes on "
+        "Databricks. See #680."
     ),
 )
 def test_streaming_incremental(tmp_path, monkeypatch, spark):
