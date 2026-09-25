@@ -147,48 +147,54 @@ def test_purge_checkpoint_purged_in_all_modes(mode, tmp_path):
     assert not checkpoint_path.exists()
 
 
-def test_purge_none(tmp_path):
-    schema, table = "default", "purge_none"
-    _create_table(schema, table, tmp_path / "none")
-
-    sink = HiveMetastoreDataSink(
-        schema_name=schema, table_name=table, purge_mode="NONE"
-    )
-    sink.purge()
-
-    spark = get_spark_session()
-    assert spark.table(sink.full_name).count() == 3
-
-
-def test_purge_shared_table(tmp_path):
+def _shared_pipeline(name, table, path, shared, node_names):
     from laktory import models
     from laktory._testing import get_df0
 
     sink = {
         "schema_name": "default",
-        "table_name": "purge_shared",
+        "table_name": table,
         "mode": "APPEND",
-        "format": "PARQUET",
-        "writer_kwargs": {"path": (tmp_path / "shared").as_posix()},
+        "format": "DELTA",
+        "writer_kwargs": {"path": path},
+        "shared": shared,
     }
-    pl = models.Pipeline(
-        name="pl",
+    return models.Pipeline(
+        name=name,
         dataframe_backend="PYSPARK",
         nodes=[
             models.PipelineNode(
-                name="a", sources=[{"df": get_df0("PYSPARK")}], sinks=[sink]
-            ),
-            models.PipelineNode(
-                name="b",
-                depends_on=["a"],
-                purge_mode="NONE",
-                sources=[{"df": get_df0("PYSPARK")}],
-                sinks=[sink],
-            ),
+                name=n, sources=[{"df": get_df0("PYSPARK")}], sinks=[sink]
+            )
+            for n in node_names
         ],
     )
+
+
+def test_purge_shared_internal_table(tmp_path):
+    table = "purge_shared_internal"
+    pl = _shared_pipeline(
+        "pl", table, (tmp_path / "t").as_posix(), {"internal": True}, ["a", "b"]
+    )
+    assert [t.name for t in pl.get_execution_plan().tasks] == [f"shared-{table}"]
 
     spark = get_spark_session()
     for _ in range(2):
         pl.execute(full_refresh=True)
-        assert spark.table("default.purge_shared").count() == 6
+        assert spark.table(f"default.{table}").count() == 6
+
+
+def test_purge_shared_external_table(tmp_path):
+    table = "purge_shared_external"
+    path = (tmp_path / "t").as_posix()
+    pl1 = _shared_pipeline("pl1", table, path, {"external": True}, ["a"])
+    pl2 = _shared_pipeline("pl2", table, path, {"external": True}, ["b"])
+
+    spark = get_spark_session()
+    pl1.execute(full_refresh=True)
+    pl2.execute(full_refresh=True)
+    pl2.execute(full_refresh=True)
+    df = spark.table(f"default.{table}")
+    assert df.columns[0] == "_laktory_writer"
+    rows = df.groupBy("_laktory_writer").count().collect()
+    assert {r[0]: r[1] for r in rows} == {"pl1": 3, "pl2": 3}

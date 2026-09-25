@@ -1460,3 +1460,65 @@ def test_current_user_variable_shares_single_lookup_with_user_root_and_backend(
 
     assert current_user.user_name == "user@test.com"
     mock_wc.current_user.me.assert_called_once()
+
+
+# --------------------------------------------------------------------------- #
+# Shared sinks across pipelines                                               #
+# --------------------------------------------------------------------------- #
+
+
+def _stack_with_shared(shared1, shared2, orchestrator2=None, writer_id2=None):
+    def _pl(name, shared, orchestrator=None, writer_id=None):
+        sink = {"schema_name": "default", "table_name": "pooled", "mode": "APPEND"}
+        if shared is not None:
+            sink["shared"] = {**shared}
+            if writer_id:
+                sink["shared"]["writer_id"] = writer_id
+        d = {
+            "name": name,
+            "nodes": [
+                {
+                    "name": "n",
+                    "sources": [
+                        {"format": "JSON", "path": f"/{name}/", "as_stream": True}
+                    ],
+                    "sinks": [sink],
+                }
+            ],
+        }
+        if orchestrator:
+            d["orchestrator"] = orchestrator
+        return d
+
+    return models.Stack(
+        name="stack",
+        resources={
+            "pipelines": {
+                "pl1": _pl("pl1", shared1),
+                "pl2": _pl("pl2", shared2, orchestrator2, writer_id2),
+            }
+        },
+    )
+
+
+def test_stack_shared_sink_external():
+    _stack_with_shared({"external": True}, {"external": True})
+
+
+def test_stack_shared_sink_missing_external_raises():
+    with pytest.raises(ValueError, match="`shared.external: true`"):
+        _stack_with_shared({"external": True}, None)
+
+
+def test_stack_shared_sink_declarative_raises():
+    with pytest.raises(ValueError, match="declarative orchestrator"):
+        _stack_with_shared(
+            {"external": True},
+            None,
+            orchestrator2={"type": "SPARK_DECLARATIVE_PIPELINE"},
+        )
+
+
+def test_stack_shared_sink_duplicate_writer_id_raises():
+    with pytest.raises(ValueError, match="same `shared.writer_id`"):
+        _stack_with_shared({"external": True}, {"external": True}, writer_id2="pl1")

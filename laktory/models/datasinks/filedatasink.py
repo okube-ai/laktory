@@ -298,6 +298,29 @@ class FileDataSink(BaseDataSink):
     def purge_target(self) -> str | None:
         return self.path.rstrip("/")
 
+    @property
+    def _supports_shared(self) -> bool:
+        return self.format.upper() == "DELTA"
+
+    def _purge_shared_data(self):
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            predicate = self._shared_delete_predicate()
+            logger.info(f"Deleting rows from shared data {self.path} where {predicate}")
+            get_spark_session().sql(
+                f"DELETE FROM delta.`{self.path}` WHERE {predicate}"
+            )
+        else:
+            from deltalake import DeltaTable
+
+            predicate = self._shared_delete_predicate(quote='"')
+            metrics = DeltaTable(self.path).delete(predicate)
+            logger.info(
+                f"Deleted {metrics.get('num_deleted_rows')} rows from shared data "
+                f"{self.path} where {predicate}"
+            )
+
     def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         """
         Delete sink data and checkpoints
@@ -312,17 +335,17 @@ class FileDataSink(BaseDataSink):
             `PipelineNode.purge()`.
         """
         purge_mode = mode or self.purge_mode
-        if purge_mode not in ["DROP", "NONE"]:
+        if not self._deletes_writer_rows(mode) and purge_mode != "DROP":
             raise NotImplementedError(
                 f"`purge_mode` '{purge_mode}' is not supported for FileDataSink. "
-                "Only 'DROP' and 'NONE' are currently supported for file-based sinks. Use a table sink "
-                "(UnityCatalogDataSink/HiveMetastoreDataSink) if you need TRUNCATE/DELETE_WHERE "
-                "to protect a table shared by multiple writer pipelines."
+                "Only 'DROP' is currently supported for file-based sinks. Use a table sink "
+                "(UnityCatalogDataSink/HiveMetastoreDataSink) if you need TRUNCATE/DELETE_WHERE."
             )
 
         # Remove Data
-        if purge_mode == "NONE":
-            logger.info(f"Skipping data purge of {self.path}")
+        if self._deletes_writer_rows(mode):
+            if self.exists():
+                self._purge_shared_data()
         elif self.exists():
             is_dir = os.path.isdir(self.path)
             if is_dir:

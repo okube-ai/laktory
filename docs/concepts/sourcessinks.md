@@ -238,14 +238,10 @@ rewritten. `purge_mode` controls how that purge is done:
   next time the sink is written to.
 - `purge_mode="TRUNCATE"`: empties the table - removes all rows, via an unconditional
   `DELETE FROM` since Delta does not support the `TRUNCATE TABLE` SQL statement - but keeps the
-  table, its schema, and its location intact.
+  table, its schema, its location and its grants intact.
 - `purge_mode="DELETE_WHERE"`: deletes only the rows matching a `purge_delete_where` SQL
-  predicate, leaving every other row untouched. This is a good fit when a table is written to by
-  multiple, independently deployed pipelines (e.g. one pipeline per client appending into a
-  shared, cross-tenant table) - scoping the predicate to the rows a given pipeline owns lets it
-  reprocess its own data on `full_refresh` without touching what other pipelines wrote.
-- `purge_mode="NONE"`: leaves the data untouched. The sink checkpoint is still deleted, so the
-  node reprocesses and re-appends its data. See [Shared sinks](#shared-sinks) below.
+  predicate, leaving every other row untouched. For tables written by multiple pipelines, prefer
+  [shared sinks](#shared-sinks), which track row ownership automatically.
 
 ```py
 import laktory as lk
@@ -271,50 +267,76 @@ Because a wrong or stale `purge_delete_where` predicate could otherwise silently
 rows, Laktory logs the number of rows matched by the predicate immediately before deleting them.
 
 `TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
-supports `purge_mode="DROP"` and `purge_mode="NONE"`.
+supports `purge_mode="DROP"`.
+
+The configured `purge_mode` can be overridden for a single run, e.g. to force a `DROP` after a
+schema change on a sink configured with `TRUNCATE`:
+
+- `pl.execute(full_refresh=True, purge_mode="DROP")`
+- the `purge_mode` job parameter of the `LAKEFLOW_JOB` orchestrator (e.g. using *Run now with
+  different parameters*, together with `full_refresh=true`)
 
 ##### Shared sinks
 
-Multiple nodes of a pipeline can write to the same table or path, for example several `APPEND`
-feeds pooled into one table. With the default `DROP`, a `full_refresh` would make each node drop
-the data just written by the others. Instead, let a single node drive the purge, set
-`purge_mode: NONE` on the other nodes, and execute them after it using `depends_on`:
+A sink can be written by multiple writers: other nodes of the same pipeline and/or other
+pipelines (e.g. several feeds pooled into one table, or one pipeline per client appending into a
+cross-tenant table). Declare it with the `shared` options, on every sink writing to the target:
 
 ```yaml
-nodes:
-  - name: feed_a
-    sinks:
-      - table_name: pooled
-        mode: APPEND
-  - name: feed_b
-    depends_on: [feed_a]
-    purge_mode: NONE
-    sinks:
-      - table_name: pooled
-        mode: APPEND
+sinks:
+- table_name: prices
+  mode: APPEND
+  shared:
+    internal: true    # other nodes of this pipeline also write to this table
+    external: false   # other pipelines also write to this table
+    isolated: false   # true: own task, refreshes only its own rows
+                      # false: grouped in a single task with the other writers
 ```
 
-On `full_refresh`, `feed_a` drops `pooled` and `feed_b` only resets its checkpoint, so both
-reprocess their data into the new table. Laktory raises a warning when a pipeline is validated with
-more than one node writing to the same sink with `DROP` or `TRUNCATE`, and an error if such a
-node is executed with `full_refresh`. Nodes using `DELETE_WHERE` each delete their own rows and
-don't need `NONE`.
+| `internal` | `external` | `isolated` | Execution | `full_refresh` |
+|---|---|---|---|---|
+| true | false | false | writers grouped in a single task | table purged once (`purge_mode`), then all writers reprocess |
+| true | false | true | one task per writer (can run in parallel) | each node deletes and reprocesses its own rows |
+| false | true | - | regular task | this pipeline's rows are deleted and reprocessed |
+| true | true | false | writers grouped in a single task | this pipeline's rows are deleted once, then all writers reprocess |
+| true | true | true | one task per writer | each node deletes and reprocesses its own rows |
 
-Writers of a shared sink may run in parallel - concurrent Delta appends don't conflict - but on
-`full_refresh`, the purging node could then delete rows already written by the others. Laktory
-raises a validation warning for any writer that isn't executed after the purging node. Parallel
-writers also conflict when they change the table schema (e.g. appending different columns with
-schema merging); declaring the full table `schema` on the sinks avoids it.
+**Grouped writers** (`internal`, not `isolated`) behave like a table with multiple append flows
+in a declarative pipeline: the writers are executed together in one task - named
+`shared-{table_name}`, or after their common `execution_task_name` - which purges the table once
+and then runs them. Use `depends_on` to control their order, e.g. to have a node creating all the
+columns run first. Selecting one of the writers (`selects`, or a task of a job run) always runs
+all of them. Rows of a removed writer are gone after the next `full_refresh`.
 
-Executing a `NONE` node alone with `full_refresh` doesn't purge the shared data, so its rows are
-appended again. Use `DELETE_WHERE` (with a column identifying each node's rows) to refresh a
-single writer in isolation.
+**Isolated writers** (`isolated`) and **external writers** (`external`) require a DELTA table or
+file sink. Each written row carries the writer identifier in a `_laktory_writer` column (first
+column, configurable with `column`): `{pipeline_name}.{node_name}` for isolated writers,
+`{pipeline_name}` otherwise (overridable with `writer_id`). On `full_refresh`, only the rows
+of the writer are deleted, so the data of the other writers is untouched and `purge_mode`
+can't be set. Keep the identifiers stable:
 
-With Lakeflow / Spark Declarative Pipeline orchestrators, the shared table is declared once as a
-streaming table and each node appends to it through its own append flow, named
-`{table_name}__{node_name}`. The declarative engine runs the flows in parallel and handles
-`full_refresh` itself - clearing the table once and resetting every flow - so neither
-`purge_mode: NONE` nor `depends_on` is needed. The following rules apply:
+- Rows of a removed or renamed isolated node, or of a decommissioned pipeline, are not deleted by
+  any `full_refresh`. Pin `writer_id` before renaming, or clean them up with
+  `DELETE FROM <table> WHERE _laktory_writer = '<writer_id>'`.
+- Rows written before a table is declared `external` or `isolated` have no writer: drop the table
+  once when converting.
+- Parallel writers adding different columns conflict when evolving the table schema: declare the
+  full `schema` on the sinks, or group the writers.
+
+To reset a whole `external` table (e.g. after a schema change), run a full refresh with the
+`purge_mode` override (`DROP` or `TRUNCATE`): the table is purged once, including the rows written
+by other pipelines, which then need a full refresh too. The override is not supported for
+isolated writers - purge the table manually, then run a full refresh.
+
+Laktory validates shared sinks: writers of a same target must all declare `internal` (and share
+the same options), `internal` requires at least two writers in the pipeline, and pipelines of a
+same Stack writing to the same target must all declare `external`.
+
+With Lakeflow / Spark Declarative Pipeline orchestrators, only `internal` is supported: the table
+is declared once as a streaming table and each node appends to it through its own append flow,
+named `{table_name}__{node_name}`. The declarative engine runs the flows in parallel and handles
+`full_refresh` itself, clearing the table once and resetting every flow. A table written by a
+declarative pipeline can't be shared with other pipelines. The following rules apply:
 
 - All sinks must be streaming, non-CDC (`MERGE`) table sinks.
 - Table properties (`comment`, `table_properties`, `format`) can be declared on any of the sinks,

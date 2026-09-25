@@ -169,6 +169,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
 
         self.parameter = [
             JobParameter(name="full_refresh", default="false"),
+            JobParameter(name="purge_mode", default=""),
         ]
 
     # ----------------------------------------------------------------------- #

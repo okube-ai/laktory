@@ -54,11 +54,10 @@ class Settings(BaseSettings):
                 "a global default. A deletion predicate is inherently specific to a single "
                 "sink."
             )
-        if v and v.upper() == "NONE":
+        if v and v.upper() not in ["DROP", "TRUNCATE"]:
             raise ValueError(
-                "`purge_mode` 'NONE' can only be set on a data sink, pipeline node or "
-                "pipeline, not as a global default. It designates the writers of a shared "
-                "sink that don't drive its purge."
+                f"`purge_mode` '{v}' is not supported as a global default. Use 'DROP' or "
+                "'TRUNCATE'."
             )
         return v
 

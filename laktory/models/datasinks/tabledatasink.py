@@ -132,11 +132,7 @@ class TableDataSink(BaseDataSink):
 
     @property
     def children_names(self):
-        return [
-            "metadata",
-            "custom_writer",
-            "merge_cdc_options",
-        ]
+        return ["metadata"] + super().children_names
 
     # ----------------------------------------------------------------------- #
     # Create                                                                  #
@@ -271,6 +267,12 @@ class TableDataSink(BaseDataSink):
             return None
         return self.full_name
 
+    @property
+    def _supports_shared(self) -> bool:
+        return (
+            self.table_type == "TABLE" and (self.format or "DELTA").upper() == "DELTA"
+        )
+
     def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         """
         Delete sink data and checkpoints
@@ -298,10 +300,17 @@ class TableDataSink(BaseDataSink):
 
             purge_mode = mode or self.purge_mode
 
-            if purge_mode == "NONE":
-                logger.info(
-                    f"Skipping data purge of {self.table_type} {self.full_name}"
-                )
+            if self._deletes_writer_rows(mode):
+                if self.exists():
+                    predicate = self._shared_delete_predicate()
+                    count = spark.sql(
+                        f"SELECT COUNT(*) FROM {self.full_name} WHERE {predicate}"
+                    ).collect()[0][0]
+                    logger.info(
+                        f"Deleting {count} rows from shared table {self.full_name} "
+                        f"where {predicate}"
+                    )
+                    spark.sql(f"DELETE FROM {self.full_name} WHERE {predicate}")
 
             elif purge_mode == "DROP":
                 logger.info(f"Dropping {self.table_type} {self.full_name}")

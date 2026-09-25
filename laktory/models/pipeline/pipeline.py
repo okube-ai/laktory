@@ -1,6 +1,5 @@
 import os
 import re
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -375,42 +374,70 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def validate_shared_sinks_purge(self) -> Any:
-        # Declarative pipelines purge shared tables once, for all append flows
-        if self.is_orchestrator_ldp or self.is_orchestrator_sdp:
+    def validate_shared_sinks(self) -> Any:
+        is_declarative = self.is_orchestrator_ldp or self.is_orchestrator_sdp
+
+        for target, sinks in self.sink_targets.items():
+            node_names = list(dict.fromkeys(s.parent_pipeline_node.name for s in sinks))
+            shared = [s.shared for s in sinks if s.shared is not None]
+
+            if len(node_names) > 1:
+                missing = [
+                    s.parent_pipeline_node.name
+                    for s in sinks
+                    if s.shared is None or not s.shared.internal
+                ]
+                if missing:
+                    raise ValueError(
+                        f"Pipeline nodes {node_names} all write to '{target}', but the "
+                        f"sinks of nodes {missing} don't declare `shared.internal: true`. "
+                        "Declare it on every sink writing to this target (or fix the "
+                        "target if it is not meant to be shared)."
+                    )
+                options = {(o.external, o.isolated, o.column) for o in shared}
+                if len(options) > 1:
+                    raise ValueError(
+                        f"Pipeline nodes {node_names} write to '{target}' with different "
+                        "`shared` options. All writers of a target must use the same "
+                        "`external`, `isolated` and `column` values."
+                    )
+                if shared[0].isolated:
+                    writer_ids = [o.writer_id for o in shared]
+                    duplicates = sorted(
+                        {w for w in writer_ids if writer_ids.count(w) > 1}
+                    )
+                    if duplicates:
+                        raise ValueError(
+                            f"Sinks writing to '{target}' use duplicate "
+                            f"`shared.writer_id` {duplicates}. Isolated writers need a "
+                            "unique identifier."
+                        )
+            elif any(o.internal for o in shared):
+                raise ValueError(
+                    f"Sink of node '{node_names[0]}' declares `shared.internal`, but it is "
+                    f"the only node of the pipeline writing to '{target}'."
+                )
+
+            if is_declarative and any(o.uses_writer_column for o in shared):
+                raise ValueError(
+                    f"`shared.external` and `shared.isolated` are not supported with "
+                    f"{type(self.orchestrator).__name__} (target '{target}'): the "
+                    "declarative engine owns the table and refreshes it as a whole."
+                )
+
+        # Validate grouped execution tasks
+        if not self.grouped_task_names:
             return self
 
-        for target, node_names in self.shared_sink_purge_conflicts.items():
-            warnings.warn(
-                f"Pipeline nodes {node_names} all write to '{target}' with `purge_mode` "
-                "DROP or TRUNCATE. On `full_refresh`, each of them would delete the data "
-                "written by the others. Set `purge_mode: NONE` on all of these nodes but "
-                "one, and execute them after it using `depends_on`."
-            )
+        from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
 
-        for target, sinks in self.shared_sink_groups.items():
-            purging = {
-                s.parent_pipeline_node.name
-                for s in sinks
-                if s.purge_mode in ["DROP", "TRUNCATE"]
-            }
-            if len(purging) != 1:
-                continue
-            purging_node_name = purging.pop()
-            downstream = nx.descendants(self.dag, purging_node_name)
-            unordered = [
-                s.parent_pipeline_node.name
-                for s in sinks
-                if s.parent_pipeline_node.name != purging_node_name
-                and s.parent_pipeline_node.name not in downstream
-            ]
-            if unordered:
-                warnings.warn(
-                    f"Pipeline nodes {list(dict.fromkeys(unordered))} write to '{target}' "
-                    f"but are not executed after node '{purging_node_name}', which purges "
-                    "it on `full_refresh`. If executed in parallel, their data may be "
-                    f"deleted. Add '{purging_node_name}' to their `depends_on`."
-                )
+        plan = PipelineExecutionPlan.model_construct(pipeline=self, selects=None)
+        if not nx.is_directed_acyclic_graph(plan.dag):
+            raise ValueError(
+                "Grouping the writers of shared sinks into single tasks creates a cycle "
+                "between execution tasks. Review the dependencies of the nodes writing to "
+                "shared sinks."
+            )
 
         return self
 
@@ -634,27 +661,80 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         return nodes
 
     @property
-    def shared_sink_groups(self) -> dict[str, list]:
+    def sink_targets(self) -> dict[str, list]:
         """
-        Sinks of different nodes writing to the same physical target, grouped by
-        `purge_target`.
+        Sinks grouped by physical target (`purge_target`).
 
         Returns
         -------
         :
-            Shared sinks keyed by purge target.
+            Sinks keyed by target.
         """
-        groups = {}
+        targets = {}
         for node in self.nodes:
             for s in node.all_sinks:
                 if s.purge_target is not None:
-                    groups.setdefault(s.purge_target, []).append(s)
+                    targets.setdefault(s.purge_target, []).append(s)
+        return targets
 
-        return {
-            k: v
-            for k, v in groups.items()
-            if len({s.parent_pipeline_node.name for s in v}) > 1
-        }
+    @property
+    def grouped_task_names(self) -> dict[str, str]:
+        """
+        Execution task name of the nodes writing to a `shared.internal` (not `isolated`)
+        sink. All the writers of such a sink, and of any other grouped sink written by one of
+        them, are executed in the same task. The task is named after the common explicit
+        `execution_task_name` of its nodes, if any, or after the sink target.
+
+        Returns
+        -------
+        :
+            Task names keyed by node name.
+        """
+        groups = []
+        for target, sinks in self.sink_targets.items():
+            if not any(
+                s.shared is not None and s.shared.internal and not s.shared.isolated
+                for s in sinks
+            ):
+                continue
+            names = {s.parent_pipeline_node.name for s in sinks}
+            merged = [g for g in groups if g[0] & names]
+            for g in merged:
+                groups.remove(g)
+                names |= g[0]
+            targets = [target] + [t for g in merged for t in g[1]]
+            groups.append((names, targets))
+
+        mapping = {}
+        used = set()
+        for node_names, targets in groups:
+            explicit = {
+                self.nodes_dict[n].execution_task_name_
+                for n in node_names
+                if self.nodes_dict[n].execution_task_name_
+            }
+            if len(explicit) > 1:
+                raise ValueError(
+                    f"Pipeline nodes {sorted(node_names)} write to shared sinks and must "
+                    f"be executed in the same task, but define different "
+                    f"`execution_task_name` {sorted(explicit)}."
+                )
+            if explicit:
+                task_name = explicit.pop()
+            else:
+                base = targets[0].rstrip("/").split("/")[-1]
+                if "/" not in targets[0]:
+                    base = base.split(".")[-1]
+                base = re.sub(r"[^A-Za-z0-9_-]", "_", base)
+                task_name = f"shared-{base}"
+                i = 1
+                while task_name in used:
+                    i += 1
+                    task_name = f"shared-{base}-{i}"
+            used.add(task_name)
+            for n in node_names:
+                mapping[n] = task_name
+        return mapping
 
     @property
     def sdp_append_flow_sinks(self) -> dict[str, list]:
@@ -735,30 +815,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         return kwargs
 
-    @property
-    def shared_sink_purge_conflicts(self) -> dict[str, list[str]]:
-        """
-        Shared sinks purged entirely (`DROP`/`TRUNCATE`) by more than one node on
-        `full_refresh`, with the names of those nodes. Each of these nodes would delete
-        the data written by the others.
-
-        Returns
-        -------
-        :
-            Purging node names keyed by purge target.
-        """
-        conflicts = {}
-        for target, sinks in self.shared_sink_groups.items():
-            node_names = [
-                s.parent_pipeline_node.name
-                for s in sinks
-                if s.purge_mode in ["DROP", "TRUNCATE"]
-            ]
-            node_names = list(dict.fromkeys(node_names))
-            if len(node_names) > 1:
-                conflicts[target] = node_names
-        return conflicts
-
     # ----------------------------------------------------------------------- #
     # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
@@ -828,6 +884,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
         use_orchestrator: bool = False,
+        purge_mode: str | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -859,9 +916,23 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             that `pl.execute()` always runs in-process unless explicitly
             requested. This flag is ignored when already running inside an
             orchestrator context (e.g. inside `laktory_sdp.py`).
+        purge_mode:
+            Override of the sinks `purge_mode` for this run (`DROP` or `TRUNCATE`), only used
+            when `full_refresh` is `True`. For `shared.external` sinks, the whole table is
+            purged, including the rows written by other pipelines.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
+
+        if purge_mode:
+            purge_mode = purge_mode.upper()
+            if purge_mode not in ["DROP", "TRUNCATE"]:
+                raise ValueError(
+                    f"`purge_mode` override '{purge_mode}' is not supported. Use 'DROP' or "
+                    "'TRUNCATE'."
+                )
+        else:
+            purge_mode = None
 
         if use_orchestrator:
             if self.orchestrator is None:
@@ -896,6 +967,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
+                purge_mode=purge_mode if full_refresh else None,
             )
 
     def update_tables_metadata(self):

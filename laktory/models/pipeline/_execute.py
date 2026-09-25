@@ -36,12 +36,20 @@ def _execute():
         default=False,
         required=False,
     )
+    parser.add_argument(
+        "--purge_mode",
+        type=str,
+        help="Override of sinks purge mode on full refresh (DROP or TRUNCATE)",
+        default=None,
+        required=False,
+    )
 
     # Get arguments
     args, unknown = parser.parse_known_args()
     filepath = args.filepath
     selects = args.selects
     full_refresh = args.full_refresh
+    purge_mode = args.purge_mode or None
     selects_str = ""
     if selects:
         selects = selects.split(",")
@@ -58,4 +66,4 @@ def _execute():
             pl = lk.models.Pipeline.model_validate_json(fp.read())
 
     # Execute
-    pl.execute(full_refresh=full_refresh, selects=selects)
+    pl.execute(full_refresh=full_refresh, selects=selects, purge_mode=purge_mode)

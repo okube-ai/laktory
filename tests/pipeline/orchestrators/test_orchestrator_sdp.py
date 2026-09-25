@@ -537,7 +537,7 @@ def test_execute_shared_sink(tmp_path, monkeypatch, spark):
                 {
                     "name": name,
                     "sources": [{"node_name": "brz", "as_stream": True}],
-                    "sinks": [{"table_name": "shared"}],
+                    "sinks": [{"table_name": "shared", "shared": {"internal": True}}],
                 }
                 for name in ["feed_a", "feed_b"]
             ],
