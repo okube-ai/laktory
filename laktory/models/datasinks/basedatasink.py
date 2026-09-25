@@ -71,26 +71,26 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    purge_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
+    full_refresh_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
         None,
         description="""
         Strategy used to purge this sink's data when `full_refresh` is requested.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
-        - DELETE_WHERE: Delete only the rows matching `purge_delete_where`.
+        - DELETE_WHERE: Delete only the rows matching `full_refresh_delete_where`.
 
         Not used by shared sinks (see `shared`), which only delete their own rows.
         """,
-        validation_alias=AliasChoices("purge_mode", "purge_mode_"),
+        validation_alias=AliasChoices("full_refresh_mode", "full_refresh_mode_"),
         exclude=True,
     )
-    purge_delete_where: str | None = Field(
+    full_refresh_delete_where: str | None = Field(
         None,
         description="""
-        SQL WHERE-clause predicate used to select the rows to delete when `purge_mode` resolves
+        SQL WHERE-clause predicate used to select the rows to delete when `full_refresh_mode` resolves
         to 'DELETE_WHERE'. Should be set directly on the sink that owns the predicate - unlike
-        `purge_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
+        `full_refresh_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
         since a deletion predicate is inherently specific to a single sink.
         """,
     )
@@ -104,10 +104,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         """,
     )
 
-    @computed_field(description="purge_mode")
+    @computed_field(description="full_refresh_mode")
     @property
-    def purge_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
-        return self._resolve_purge_mode()
+    def full_refresh_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
+        return self._resolve_full_refresh_mode()
 
     @field_validator("shared", mode="before")
     @classmethod
@@ -135,9 +135,9 @@ class BaseDataSink(BaseModel, PipelineChild):
                     f"{type(self).__name__} with format '{getattr(self, 'format', None)}'. "
                     "They require a DELTA table or file sink."
                 )
-            if self.purge_mode_ is not None:
+            if self.full_refresh_mode_ is not None:
                 raise ValueError(
-                    "`purge_mode` can't be set on a `shared.external` / `shared.isolated` "
+                    "`full_refresh_mode` can't be set on a `shared.external` / `shared.isolated` "
                     "sink: `full_refresh` only deletes the rows of this writer."
                 )
         return self
@@ -258,16 +258,19 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def purge_delete_where_is_set(self) -> Any:
-        if self.purge_mode == "DELETE_WHERE" and not self.purge_delete_where:
+    def full_refresh_delete_where_is_set(self) -> Any:
+        if (
+            self.full_refresh_mode == "DELETE_WHERE"
+            and not self.full_refresh_delete_where
+        ):
             raise ValueError(
-                "`purge_delete_where` must be set when `purge_mode` is 'DELETE_WHERE'."
+                "`full_refresh_delete_where` must be set when `full_refresh_mode` is 'DELETE_WHERE'."
             )
         return self
 
     @model_validator(mode="after")
-    def purge_mode_incompatible_with_declarative_orchestrator(self) -> Any:
-        if self.purge_mode != "DROP":
+    def full_refresh_mode_incompatible_with_declarative_orchestrator(self) -> Any:
+        if self.full_refresh_mode != "DROP":
             from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
                 LakeflowDeclarativePipelineOrchestrator,
             )
@@ -286,10 +289,10 @@ class BaseDataSink(BaseModel, PipelineChild):
                 ),
             ):
                 raise ValueError(
-                    f"`purge_mode` '{self.purge_mode}' has no effect when using the "
+                    f"`full_refresh_mode` '{self.full_refresh_mode}' has no effect when using the "
                     f"{type(orchestrator).__name__} - `full_refresh` is handled entirely by "
                     "the Databricks/Spark Declarative Pipelines engine, which never calls "
-                    "Laktory's `purge()`. Remove `purge_mode`/`purge_delete_where` from this "
+                    "Laktory's `purge()`. Remove `full_refresh_mode`/`full_refresh_delete_where` from this "
                     "sink, or use the LAKEFLOW_JOB orchestrator."
                 )
         return self
@@ -775,7 +778,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             return True
         if self.shared.isolated:
             raise ValueError(
-                f"`purge_mode` override '{mode}' is not supported for `shared.isolated` sinks, "
+                f"`full_refresh_mode` override '{mode}' is not supported for `shared.isolated` sinks, "
                 "whose writers are executed independently. Purge the target manually, then "
                 "run a full refresh."
             )
@@ -904,8 +907,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         Parameters
         ----------
         mode:
-            Optional override for `purge_mode`, taking precedence over the resolved
-            `self.purge_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            Optional override for `full_refresh_mode`, taking precedence over the resolved
+            `self.full_refresh_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
             `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
             generically here, especially when purging multiple sinks/tables at once via
             `PipelineNode.purge()`.

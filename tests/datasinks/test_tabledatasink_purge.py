@@ -19,13 +19,13 @@ def test_purge_drop_unchanged(tmp_path):
     _create_table(schema, table, tmp_path / "drop")
 
     sink = HiveMetastoreDataSink(schema_name=schema, table_name=table)
-    assert sink.purge_mode == "DROP"
+    assert sink.full_refresh_mode == "DROP"
 
     sink.purge()
     assert not sink.exists()
 
 
-def test_purge_mode_override_rejects_delete_where(tmp_path):
+def test_full_refresh_mode_override_rejects_delete_where(tmp_path):
     schema, table = "default", "purge_override_reject"
     _create_table(schema, table, tmp_path / "override_reject")
 
@@ -34,12 +34,12 @@ def test_purge_mode_override_rejects_delete_where(tmp_path):
         sink.purge(mode="DELETE_WHERE")
 
 
-def test_purge_mode_override_drop(tmp_path):
+def test_full_refresh_mode_override_drop(tmp_path):
     schema, table = "default", "purge_override_drop"
     _create_table(schema, table, tmp_path / "override_drop")
 
     sink = HiveMetastoreDataSink(
-        schema_name=schema, table_name=table, purge_mode="TRUNCATE"
+        schema_name=schema, table_name=table, full_refresh_mode="TRUNCATE"
     )
     sink.purge(mode="DROP")
     assert not sink.exists()
@@ -50,7 +50,7 @@ def test_purge_truncate_table(tmp_path):
     _create_table(schema, table, tmp_path / "truncate")
 
     sink = HiveMetastoreDataSink(
-        schema_name=schema, table_name=table, purge_mode="TRUNCATE"
+        schema_name=schema, table_name=table, full_refresh_mode="TRUNCATE"
     )
     sink.purge()
 
@@ -72,25 +72,25 @@ def test_purge_truncate_view_raises(tmp_path):
         schema_name=schema,
         table_name=view,
         table_type="VIEW",
-        purge_mode="TRUNCATE",
+        full_refresh_mode="TRUNCATE",
     )
     with pytest.raises(ValueError):
         sink.purge()
 
 
-def test_purge_delete_where(tmp_path, caplog, monkeypatch):
+def test_full_refresh_delete_where(tmp_path, caplog, monkeypatch):
     import laktory.models.datasinks.tabledatasink as tds_module
 
     monkeypatch.setattr(tds_module.logger, "propagate", True)
 
-    schema, table = "default", "purge_delete_where"
+    schema, table = "default", "full_refresh_delete_where"
     _create_table(schema, table, tmp_path / "delete_where")
 
     sink = HiveMetastoreDataSink(
         schema_name=schema,
         table_name=table,
-        purge_mode="DELETE_WHERE",
-        purge_delete_where="client_id = 'acme'",
+        full_refresh_mode="DELETE_WHERE",
+        full_refresh_delete_where="client_id = 'acme'",
     )
     with caplog.at_level("INFO"):
         sink.purge()
@@ -103,23 +103,23 @@ def test_purge_delete_where(tmp_path, caplog, monkeypatch):
     assert "Deleting 2 rows" in caplog.text
 
 
-def test_purge_delete_where_missing_predicate():
+def test_full_refresh_delete_where_missing_predicate():
     with pytest.raises(ValueError):
         HiveMetastoreDataSink(
             schema_name="default",
-            table_name="purge_delete_where_missing",
-            purge_mode="DELETE_WHERE",
+            table_name="full_refresh_delete_where_missing",
+            full_refresh_mode="DELETE_WHERE",
         )
 
 
-def test_purge_delete_where_requires_delta():
+def test_full_refresh_delete_where_requires_delta():
     with pytest.raises(ValueError):
         HiveMetastoreDataSink(
             schema_name="default",
-            table_name="purge_delete_where_format",
+            table_name="full_refresh_delete_where_format",
             format="PARQUET",
-            purge_mode="DELETE_WHERE",
-            purge_delete_where="client_id = 'acme'",
+            full_refresh_mode="DELETE_WHERE",
+            full_refresh_delete_where="client_id = 'acme'",
         )
 
 
@@ -133,12 +133,12 @@ def test_purge_checkpoint_purged_in_all_modes(mode, tmp_path):
 
     kwargs = {}
     if mode == "DELETE_WHERE":
-        kwargs["purge_delete_where"] = "client_id = 'acme'"
+        kwargs["full_refresh_delete_where"] = "client_id = 'acme'"
 
     sink = HiveMetastoreDataSink(
         schema_name=schema,
         table_name=table,
-        purge_mode=mode,
+        full_refresh_mode=mode,
         checkpoint_path_=checkpoint_path,
         **kwargs,
     )

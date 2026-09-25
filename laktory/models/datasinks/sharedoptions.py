@@ -15,7 +15,7 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
     (`internal`) and/or other pipelines (`external`).
 
     - `internal`, not `isolated`: the writers are grouped in a single execution task. On
-      `full_refresh`, the table is reset once (according to `purge_mode`), then all writers
+      `full_refresh`, the table is reset once (according to `full_refresh_mode`), then all writers
       reprocess their data.
     - `internal` and `isolated`: each writer runs in its own task (possibly in parallel) and
       rows carry the writer identifier (`{pipeline_name}.{node_name}`). On `full_refresh`, a

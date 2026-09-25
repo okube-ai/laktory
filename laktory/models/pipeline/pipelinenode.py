@@ -709,7 +709,7 @@ class PipelineNode(BaseModel, PipelineChild):
         Parameters
         ----------
         mode:
-            Optional override for sinks `purge_mode`.
+            Optional override for sinks `full_refresh_mode`.
         purged_targets:
             Targets already purged by another writer of the same execution task. Only the
             checkpoints of the sinks writing to these targets are deleted.
@@ -795,7 +795,7 @@ class PipelineNode(BaseModel, PipelineChild):
         full_refresh: bool = False,
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
-        purge_mode: Literal["DROP", "TRUNCATE"] | None = None,
+        full_refresh_mode: Literal["DROP", "TRUNCATE"] | None = None,
         purged_targets: set[str] | None = None,
     ) -> AnyFrame:
         """
@@ -819,8 +819,8 @@ class PipelineNode(BaseModel, PipelineChild):
             Named DataFrame passed to transformer nodes
         update_tables_metadata:
             Update tables metadata
-        purge_mode:
-            Optional override for sinks `purge_mode` when `full_refresh` is `True`.
+        full_refresh_mode:
+            Optional override for sinks `full_refresh_mode` when `full_refresh` is `True`.
         purged_targets:
             Targets already purged by another writer of the same execution task.
 
@@ -852,7 +852,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Refresh
         if full_refresh:
-            self.purge(mode=purge_mode, purged_targets=purged_targets)
+            self.purge(mode=full_refresh_mode, purged_targets=purged_targets)
 
         # Read all declared sources into named_dfs with "sources." prefix
         if named_dfs is None:

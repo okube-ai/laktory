@@ -328,16 +328,16 @@ class FileDataSink(BaseDataSink):
         Parameters
         ----------
         mode:
-            Optional override for `purge_mode`, taking precedence over the resolved
-            `self.purge_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            Optional override for `full_refresh_mode`, taking precedence over the resolved
+            `self.full_refresh_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
             `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
             generically here, especially when purging multiple sinks/tables at once via
             `PipelineNode.purge()`.
         """
-        purge_mode = mode or self.purge_mode
-        if not self._deletes_writer_rows(mode) and purge_mode != "DROP":
+        full_refresh_mode = mode or self.full_refresh_mode
+        if not self._deletes_writer_rows(mode) and full_refresh_mode != "DROP":
             raise NotImplementedError(
-                f"`purge_mode` '{purge_mode}' is not supported for FileDataSink. "
+                f"`full_refresh_mode` '{full_refresh_mode}' is not supported for FileDataSink. "
                 "Only 'DROP' is currently supported for file-based sinks. Use a table sink "
                 "(UnityCatalogDataSink/HiveMetastoreDataSink) if you need TRUNCATE/DELETE_WHERE."
             )

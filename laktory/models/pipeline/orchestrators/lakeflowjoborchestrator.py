@@ -169,7 +169,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
 
         self.parameter = [
             JobParameter(name="full_refresh", default="false"),
-            JobParameter(name="purge_mode", default=""),
+            JobParameter(name="full_refresh_mode", default=""),
         ]
 
     # ----------------------------------------------------------------------- #
@@ -235,7 +235,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
             "type",
             "dataframe_backend",
             "dataframe_api",
-            "purge_mode",
+            "full_refresh_mode",
             "serverless_environment_version",
             "data_profiling_config_task",
         ]

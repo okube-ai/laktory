@@ -170,78 +170,78 @@ def test_purge_never_executed(tmp_path):
     node.purge()  # should not raise
 
 
-def test_purge_mode_sink_override(tmp_path):
+def test_full_refresh_mode_sink_override(tmp_path):
     node = models.PipelineNode(
         name="node0",
-        purge_mode="TRUNCATE",
+        full_refresh_mode="TRUNCATE",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[
             {
                 "format": "PARQUET",
                 "path": str(tmp_path / "sink/"),
-                "purge_mode": "DROP",
+                "full_refresh_mode": "DROP",
             }
         ],
     )
-    assert node.sinks[0].purge_mode == "DROP"
+    assert node.sinks[0].full_refresh_mode == "DROP"
 
 
-def test_purge_mode_pipeline_level_default(tmp_path):
+def test_full_refresh_mode_pipeline_level_default(tmp_path):
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
     )
-    models.Pipeline(name="pl", nodes=[node], purge_mode="TRUNCATE")
-    assert node.sinks[0].purge_mode == "TRUNCATE"
+    models.Pipeline(name="pl", nodes=[node], full_refresh_mode="TRUNCATE")
+    assert node.sinks[0].full_refresh_mode == "TRUNCATE"
 
 
-def test_purge_mode_global_settings_default(tmp_path, monkeypatch):
+def test_full_refresh_mode_global_settings_default(tmp_path, monkeypatch):
     from laktory._settings import settings
 
-    monkeypatch.setattr(settings, "purge_mode", "TRUNCATE")
+    monkeypatch.setattr(settings, "full_refresh_mode", "TRUNCATE")
 
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
     )
-    assert node.sinks[0].purge_mode == "TRUNCATE"
+    assert node.sinks[0].full_refresh_mode == "TRUNCATE"
 
 
-def test_purge_mode_delete_where_rejected_on_node(tmp_path):
+def test_full_refresh_mode_delete_where_rejected_on_node(tmp_path):
     with pytest.raises(ValueError):
         models.PipelineNode(
             name="node0",
-            purge_mode="DELETE_WHERE",
+            full_refresh_mode="DELETE_WHERE",
             sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
             sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
         )
 
 
-def test_purge_mode_delete_where_rejected_on_pipeline(tmp_path):
+def test_full_refresh_mode_delete_where_rejected_on_pipeline(tmp_path):
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
     )
     with pytest.raises(ValueError):
-        models.Pipeline(name="pl", nodes=[node], purge_mode="DELETE_WHERE")
+        models.Pipeline(name="pl", nodes=[node], full_refresh_mode="DELETE_WHERE")
 
 
-def test_purge_mode_delete_where_rejected_globally(monkeypatch):
+def test_full_refresh_mode_delete_where_rejected_globally(monkeypatch):
     from laktory._settings import settings
 
     with pytest.raises(ValueError):
-        monkeypatch.setattr(settings, "purge_mode", "DELETE_WHERE")
+        monkeypatch.setattr(settings, "full_refresh_mode", "DELETE_WHERE")
 
 
-@pytest.mark.parametrize("purge_mode", ["NONE", "UNKNOWN"])
-def test_purge_mode_invalid_rejected_globally(purge_mode, monkeypatch):
+@pytest.mark.parametrize("full_refresh_mode", ["NONE", "UNKNOWN"])
+def test_full_refresh_mode_invalid_rejected_globally(full_refresh_mode, monkeypatch):
     from laktory._settings import settings
 
     with pytest.raises(ValueError):
-        monkeypatch.setattr(settings, "purge_mode", purge_mode)
+        monkeypatch.setattr(settings, "full_refresh_mode", full_refresh_mode)
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -395,7 +395,7 @@ def test_shared_isolated_override_rejected(tmp_path):
     pl = _pipeline(_writers(path, _ISOLATED))
     pl.execute()
     with pytest.raises(ValueError, match="not supported for `shared.isolated`"):
-        pl.execute(full_refresh=True, purge_mode="DROP")
+        pl.execute(full_refresh=True, full_refresh_mode="DROP")
 
 
 def test_shared_external(tmp_path):
@@ -418,16 +418,16 @@ def test_shared_external(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
     # Override drops the whole table, pl1 rows lost until pl1 is refreshed
-    pl2.execute(full_refresh=True, purge_mode="DROP")
+    pl2.execute(full_refresh=True, full_refresh_mode="DROP")
     assert _feed_counts(path) == {"b": 3, "c": 3}
     pl1.execute(full_refresh=True)
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_shared_purge_mode_override_invalid(tmp_path):
+def test_shared_full_refresh_mode_override_invalid(tmp_path):
     pl = _pipeline(_writers(str(tmp_path / "shared"), _INTERNAL))
     with pytest.raises(ValueError, match="not supported"):
-        pl.execute(full_refresh=True, purge_mode="DELETE_WHERE")
+        pl.execute(full_refresh=True, full_refresh_mode="DELETE_WHERE")
 
 
 @pytest.mark.parametrize(

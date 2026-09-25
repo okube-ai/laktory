@@ -229,17 +229,17 @@ sink = lk.models.TableDataSink(
 sink.write(df)
 ``` 
 
-##### Purge Modes
+##### Full Refresh Modes
 
 When a pipeline node is run with `full_refresh=True`, each of its sinks is purged before being
-rewritten. `purge_mode` controls how that purge is done:
+rewritten. `full_refresh_mode` controls how that purge is done:
 
-- `purge_mode="DROP"` (default): drops the table entirely. It's recreated (schema and all) the
+- `full_refresh_mode="DROP"` (default): drops the table entirely. It's recreated (schema and all) the
   next time the sink is written to.
-- `purge_mode="TRUNCATE"`: empties the table - removes all rows, via an unconditional
+- `full_refresh_mode="TRUNCATE"`: empties the table - removes all rows, via an unconditional
   `DELETE FROM` since Delta does not support the `TRUNCATE TABLE` SQL statement - but keeps the
   table, its schema, its location and its grants intact.
-- `purge_mode="DELETE_WHERE"`: deletes only the rows matching a `purge_delete_where` SQL
+- `full_refresh_mode="DELETE_WHERE"`: deletes only the rows matching a `full_refresh_delete_where` SQL
   predicate, leaving every other row untouched. For tables written by multiple pipelines, prefer
   [shared sinks](#shared-sinks), which track row ownership automatically.
 
@@ -249,31 +249,31 @@ import laktory as lk
 sink = lk.models.UnityCatalogDataSink(
     schema_name="finance",
     table_name="brz_stock_prices",
-    purge_mode="DELETE_WHERE",
-    purge_delete_where="client_id = 'acme'",
+    full_refresh_mode="DELETE_WHERE",
+    full_refresh_delete_where="client_id = 'acme'",
 )
 ```
 
-`purge_delete_where` requires DELTA format and must be set directly on the sink that owns the
+`full_refresh_delete_where` requires DELTA format and must be set directly on the sink that owns the
 predicate - it is not inherited from a parent pipeline node, pipeline, or global setting, since a
-deletion predicate is inherently specific to one sink. `purge_mode="DELETE_WHERE"` follows the
+deletion predicate is inherently specific to one sink. `full_refresh_mode="DELETE_WHERE"` follows the
 same rule: it can only be set directly on a sink, and raises a validation error if set on a
-`PipelineNode`, `Pipeline`, or globally (`settings.purge_mode` / `LAKTORY_PURGE_MODE`). `DROP` and
+`PipelineNode`, `Pipeline`, or globally (`settings.full_refresh_mode` / `LAKTORY_FULL_REFRESH_MODE`). `DROP` and
 `TRUNCATE`, on the other hand, can be set at the sink, pipeline node, or pipeline level, or
-globally via the `LAKTORY_PURGE_MODE` environment variable / `settings.purge_mode` (see
+globally via the `LAKTORY_FULL_REFRESH_MODE` environment variable / `settings.full_refresh_mode` (see
 [Laktory Settings](laktorysettings.md)).
 
-Because a wrong or stale `purge_delete_where` predicate could otherwise silently delete the wrong
+Because a wrong or stale `full_refresh_delete_where` predicate could otherwise silently delete the wrong
 rows, Laktory logs the number of rows matched by the predicate immediately before deleting them.
 
 `TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
-supports `purge_mode="DROP"`.
+supports `full_refresh_mode="DROP"`.
 
-The configured `purge_mode` can be overridden for a single run, e.g. to force a `DROP` after a
+The configured `full_refresh_mode` can be overridden for a single run, e.g. to force a `DROP` after a
 schema change on a sink configured with `TRUNCATE`:
 
-- `pl.execute(full_refresh=True, purge_mode="DROP")`
-- the `purge_mode` job parameter of the `LAKEFLOW_JOB` orchestrator (e.g. using *Run now with
+- `pl.execute(full_refresh=True, full_refresh_mode="DROP")`
+- the `full_refresh_mode` job parameter of the `LAKEFLOW_JOB` orchestrator (e.g. using *Run now with
   different parameters*, together with `full_refresh=true`)
 
 ##### Shared sinks
@@ -295,7 +295,7 @@ sinks:
 
 | `internal` | `external` | `isolated` | Execution | `full_refresh` |
 |---|---|---|---|---|
-| true | false | false | writers grouped in a single task | table purged once (`purge_mode`), then all writers reprocess |
+| true | false | false | writers grouped in a single task | table purged once (`full_refresh_mode`), then all writers reprocess |
 | true | false | true | one task per writer (can run in parallel) | each node deletes and reprocesses its own rows |
 | false | true | - | regular task | this pipeline's rows are deleted and reprocessed |
 | true | true | false | writers grouped in a single task | this pipeline's rows are deleted once, then all writers reprocess |
@@ -312,7 +312,7 @@ all of them. Rows of a removed writer are gone after the next `full_refresh`.
 file sink. Each written row carries the writer identifier in a `_laktory_writer` column (first
 column, configurable with `column`): `{pipeline_name}.{node_name}` for isolated writers,
 `{pipeline_name}` otherwise (overridable with `writer_id`). On `full_refresh`, only the rows
-of the writer are deleted, so the data of the other writers is untouched and `purge_mode`
+of the writer are deleted, so the data of the other writers is untouched and `full_refresh_mode`
 can't be set. Keep the identifiers stable:
 
 - Rows of a removed or renamed isolated node, or of a decommissioned pipeline, are not deleted by
@@ -324,7 +324,7 @@ can't be set. Keep the identifiers stable:
   full `schema` on the sinks, or group the writers.
 
 To reset a whole `external` table (e.g. after a schema change), run a full refresh with the
-`purge_mode` override (`DROP` or `TRUNCATE`): the table is purged once, including the rows written
+`full_refresh_mode` override (`DROP` or `TRUNCATE`): the table is purged once, including the rows written
 by other pipelines, which then need a full refresh too. The override is not supported for
 isolated writers - purge the table manually, then run a full refresh.
 

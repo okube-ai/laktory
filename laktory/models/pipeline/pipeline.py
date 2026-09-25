@@ -884,7 +884,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
         use_orchestrator: bool = False,
-        purge_mode: str | None = None,
+        full_refresh_mode: str | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -916,23 +916,28 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             that `pl.execute()` always runs in-process unless explicitly
             requested. This flag is ignored when already running inside an
             orchestrator context (e.g. inside `laktory_sdp.py`).
-        purge_mode:
-            Override of the sinks `purge_mode` for this run (`DROP` or `TRUNCATE`), only used
+        full_refresh_mode:
+            Override of the sinks `full_refresh_mode` for this run (`DROP` or `TRUNCATE`), only used
             when `full_refresh` is `True`. For `shared.external` sinks, the whole table is
             purged, including the rows written by other pipelines.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
 
-        if purge_mode:
-            purge_mode = purge_mode.upper()
-            if purge_mode not in ["DROP", "TRUNCATE"]:
+        if full_refresh_mode:
+            full_refresh_mode = full_refresh_mode.upper()
+            if full_refresh_mode not in ["DROP", "TRUNCATE"]:
                 raise ValueError(
-                    f"`purge_mode` override '{purge_mode}' is not supported. Use 'DROP' or "
+                    f"`full_refresh_mode` override '{full_refresh_mode}' is not supported. Use 'DROP' or "
                     "'TRUNCATE'."
                 )
+            if not full_refresh:
+                logger.warning(
+                    f"`full_refresh_mode` '{full_refresh_mode}' is ignored because "
+                    "`full_refresh` is not enabled."
+                )
         else:
-            purge_mode = None
+            full_refresh_mode = None
 
         if use_orchestrator:
             if self.orchestrator is None:
@@ -967,7 +972,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
-                purge_mode=purge_mode if full_refresh else None,
+                full_refresh_mode=full_refresh_mode if full_refresh else None,
             )
 
     def update_tables_metadata(self):

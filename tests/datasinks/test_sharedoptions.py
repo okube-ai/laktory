@@ -81,12 +81,12 @@ def test_writer_column_requires_delta():
         )
 
 
-def test_writer_column_rejects_purge_mode():
+def test_writer_column_rejects_full_refresh_mode():
     # Allowed when the table is reset as a whole
-    _sink(shared={"internal": True}, purge_mode="TRUNCATE")
+    _sink(shared={"internal": True}, full_refresh_mode="TRUNCATE")
 
-    with pytest.raises(ValidationError, match="`purge_mode` can't be set"):
-        _sink(shared={"external": True}, purge_mode="TRUNCATE")
+    with pytest.raises(ValidationError, match="`full_refresh_mode` can't be set"):
+        _sink(shared={"external": True}, full_refresh_mode="TRUNCATE")
 
 
 def test_standalone_write_requires_writer_id():
