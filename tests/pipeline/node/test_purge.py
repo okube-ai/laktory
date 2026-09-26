@@ -565,14 +565,19 @@ def test_reset_external(tmp_path):
     assert not Path(path).exists()
 
 
-def test_refresh_parameters(tmp_path):
+def test_refresh_parameters(tmp_path, caplog, monkeypatch):
+    from laktory.models.pipeline import pipeline as pipeline_module
+
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, None))
     pl.execute()
 
-    # Deprecated alias
+    # Deprecated alias, also logged (DeprecationWarning is hidden by default)
+    monkeypatch.setattr(pipeline_module.logger, "propagate", True)
     with pytest.warns(DeprecationWarning, match="refresh='full'"):
-        pl.execute(full_refresh=True)
+        with caplog.at_level("WARNING"):
+            pl.execute(full_refresh=True)
+    assert "`full_refresh` is deprecated" in caplog.text
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
     with pytest.raises(ValueError, match="requires `refresh`"):

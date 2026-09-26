@@ -942,12 +942,13 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         logger.info(f"Executing pipeline '{self.name}'")
 
         if full_refresh is not None:
-            warnings.warn(
+            msg = (
                 "`full_refresh` is deprecated and will be removed in a future version. Use "
-                "`refresh='full'` instead.",
-                DeprecationWarning,
-                stacklevel=2,
+                "`refresh='full'` instead."
             )
+            # Also logged: DeprecationWarning is hidden by default, e.g. in job task logs
+            logger.warning(msg)
+            warnings.warn(msg, DeprecationWarning, stacklevel=2)
             if full_refresh:
                 if refresh not in ["incremental", "full"]:
                     raise ValueError(

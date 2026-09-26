@@ -63,7 +63,8 @@ def _execute():
         selects = selects.split(",")
         selects_str = f" nodes {selects} from"
     logger.info(
-        f"Executing{selects_str} pipeline '{filepath}' with refresh '{refresh}'"
+        f"Executing{selects_str} pipeline '{filepath}' with refresh "
+        f"'{'full' if full_refresh and refresh == 'incremental' else refresh}'"
     )
 
     # Read
