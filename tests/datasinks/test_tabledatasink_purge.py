@@ -79,9 +79,9 @@ def test_purge_truncate_view_raises(tmp_path):
 
 
 def test_reset_delete_where(tmp_path, caplog, monkeypatch):
-    import laktory.models.datasinks.tabledatasink as tds_module
+    import laktory.models.datasinks.basedatasink as bds_module
 
-    monkeypatch.setattr(tds_module.logger, "propagate", True)
+    monkeypatch.setattr(bds_module.logger, "propagate", True)
 
     schema, table = "default", "reset_delete_where"
     _create_table(schema, table, tmp_path / "delete_where")
@@ -100,7 +100,7 @@ def test_reset_delete_where(tmp_path, caplog, monkeypatch):
     rows = spark.table(sink.full_name).collect()
     assert len(rows) == 1
     assert rows[0]["client_id"] == "other"
-    assert "Deleting 2 rows" in caplog.text
+    assert "Deleted 2 rows" in caplog.text
 
 
 def test_reset_delete_where_missing_predicate():

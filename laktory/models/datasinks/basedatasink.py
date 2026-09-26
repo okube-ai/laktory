@@ -813,6 +813,16 @@ class BaseDataSink(BaseModel, PipelineChild):
                 "pipeline."
             )
 
+    def _delete_where_spark(self, target: str, predicate: str) -> None:
+        """Delete rows of a Delta target with Spark and log the number of deleted rows."""
+        from laktory import get_spark_session
+
+        rows = (
+            get_spark_session().sql(f"DELETE FROM {target} WHERE {predicate}").collect()
+        )
+        count = rows[0][0] if rows else None
+        logger.info(f"Deleted {count} rows from {target} where {predicate}")
+
     def _shared_delete_predicate(self, quote: str = "`") -> str:
         self._check_writer_id()
         writer_id = self.shared.writer_id.replace("'", "''")

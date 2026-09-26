@@ -303,15 +303,9 @@ class TableDataSink(BaseDataSink):
 
             if self._deletes_writer_rows(mode):
                 if self.exists():
-                    predicate = self._shared_delete_predicate()
-                    count = spark.sql(
-                        f"SELECT COUNT(*) FROM {self.full_name} WHERE {predicate}"
-                    ).collect()[0][0]
-                    logger.info(
-                        f"Deleting {count} rows from shared table {self.full_name} "
-                        f"where {predicate}"
+                    self._delete_where_spark(
+                        self.full_name, self._shared_delete_predicate()
                     )
-                    spark.sql(f"DELETE FROM {self.full_name} WHERE {predicate}")
 
             elif reset_mode == "DROP":
                 logger.info(f"Dropping {self.table_type} {self.full_name}")
@@ -361,16 +355,7 @@ class TableDataSink(BaseDataSink):
                     raise ValueError(
                         "`reset_delete_where` must be set when `reset_mode` is 'DELETE_WHERE'."
                     )
-                count = spark.sql(
-                    f"SELECT COUNT(*) FROM {self.full_name} WHERE {self.reset_delete_where}"
-                ).collect()[0][0]
-                logger.info(
-                    f"Deleting {count} rows from {self.full_name} where "
-                    f"{self.reset_delete_where}"
-                )
-                spark.sql(
-                    f"DELETE FROM {self.full_name} WHERE {self.reset_delete_where}"
-                )
+                self._delete_where_spark(self.full_name, self.reset_delete_where)
 
             else:
                 raise ValueError(f"`reset_mode` '{reset_mode}' is not supported.")

@@ -304,12 +304,8 @@ class FileDataSink(BaseDataSink):
 
     def _purge_shared_data(self):
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
-            from laktory import get_spark_session
-
-            predicate = self._shared_delete_predicate()
-            logger.info(f"Deleting rows from shared data {self.path} where {predicate}")
-            get_spark_session().sql(
-                f"DELETE FROM delta.`{self.path}` WHERE {predicate}"
+            self._delete_where_spark(
+                f"delta.`{self.path}`", self._shared_delete_predicate()
             )
         else:
             from deltalake import DeltaTable
