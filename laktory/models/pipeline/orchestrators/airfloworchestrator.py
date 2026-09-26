@@ -215,12 +215,16 @@ class AirflowOrchestrator(PipelineChild):
                 params = ctx.get("params") or {}
 
                 # Let conf override params override hard defaults
-                full_refresh = conf.get(
-                    "full_refresh", params.get("full_refresh", False)
+                refresh, reset_mode = pl.validate_run_parameters(
+                    conf.get("refresh", params.get("refresh")),
+                    conf.get("reset_mode", params.get("reset_mode")),
+                    node_names=pl_task.node_names,
                 )
 
                 pl_task.execute(
-                    full_refresh=bool(full_refresh),
+                    full_refresh=refresh == "full",
+                    reset_mode=reset_mode,
+                    reset_only=refresh == "reset",
                 )
 
             return airflow_task
@@ -228,7 +232,8 @@ class AirflowOrchestrator(PipelineChild):
         kwargs = {
             "dag_id": pl.name,
             "params": {
-                "full_refresh": False,
+                "refresh": "incremental",
+                "reset_mode": "",
             },
         }
         for fname in self.model_fields_set:

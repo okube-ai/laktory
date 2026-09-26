@@ -3,10 +3,6 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
-def str2bool(v):
-    return v.lower() in ("yes", "true", "t", "1")
-
-
 def _execute():
     """Execute pipeline as a script"""
     # TODO: Refactor and integrate into dispatcher / executor / CLI
@@ -43,13 +39,6 @@ def _execute():
         default=None,
         required=False,
     )
-    parser.add_argument(
-        "--full_refresh",
-        type=str2bool,
-        help="Deprecated, use `--refresh full` instead",
-        default=False,
-        required=False,
-    )
 
     # Get arguments
     args, unknown = parser.parse_known_args()
@@ -57,14 +46,12 @@ def _execute():
     selects = args.selects
     refresh = args.refresh or "incremental"
     reset_mode = args.reset_mode or None
-    full_refresh = True if args.full_refresh else None
     selects_str = ""
     if selects:
         selects = selects.split(",")
         selects_str = f" nodes {selects} from"
     logger.info(
-        f"Executing{selects_str} pipeline '{filepath}' with refresh "
-        f"'{'full' if full_refresh and refresh == 'incremental' else refresh}'"
+        f"Executing{selects_str} pipeline '{filepath}' with refresh '{refresh}'"
     )
 
     # Read
@@ -76,7 +63,6 @@ def _execute():
 
     # Execute
     pl.execute(
-        full_refresh=full_refresh,
         selects=selects,
         refresh=refresh,
         reset_mode=reset_mode,

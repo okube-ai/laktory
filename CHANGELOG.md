@@ -5,12 +5,13 @@
 * Added shared sinks, written by multiple nodes of a pipeline (detected automatically and grouped in a single task, or `shared.isolated`) and/or by multiple pipelines (`shared.external`), with a full refresh purging the table once or only the writer's rows, including through append flows with Lakeflow / Spark Declarative Pipelines. [[#675](https://github.com/okube-ai/laktory/issues/675)] [[#676](https://github.com/okube-ai/laktory/issues/676)] [[#677](https://github.com/okube-ai/laktory/issues/677)]
 * Added a `refresh` run parameter (`incremental`, `full`, `reset`) - `reset` resets tables without reprocessing data, e.g. from a job run without table grants - and `reset_mode` (`DROP`, `TRUNCATE`, `DELETE_WHERE`) to control how sinks are reset, overridable per run (`pl.execute(refresh=..., reset_mode=...)`, `refresh` / `reset_mode` job parameters). [[#669](https://github.com/okube-ai/laktory/issues/669)]
 ### Fixed
+* Fixed the `AIRFLOW` orchestrator running a full refresh when the `full_refresh` DAG param was passed as the string `"false"` (replaced by the validated `refresh` / `reset_mode` params).
 * Fixed `DataSinkMergeCDCOptions._parent` going stale after `Pipeline.inject_vars(inplace=False)`'s deep copy (same root cause as #653, different mechanism: it was wired up via a one-off manual assignment instead of the standard `children_names` recursion), corrupting `merge_cdc_options.target_name`/`.target_path`/`.sink` for any sink using `mode: MERGE`. [[#656](https://github.com/okube-ai/laktory/issues/656)]
 ### Updated
 * DataFrame namespaces to support multi-level names (accessor chains deeper than one dot e.g. `namespace.sub.method`). [[#672](https://github.com/okube-ai/laktory/issues/672)]
 * Local Spark Declarative Pipeline runs (`execute()`) now load Delta from the Laktory Spark session, so sinks default to Delta as on Databricks (previously written as Parquet locally). [[#679](https://github.com/okube-ai/laktory/issues/679)]
-* Deprecated `full_refresh` (`pl.execute`, job parameter) in favor of `refresh="full"`; still accepted, with a deprecation warning.
 ### Breaking changes
+* Replaced `full_refresh` by `refresh` (`incremental`, `full`, `reset`) and `reset_mode` in `Pipeline.execute()`, the job parameters of the `LAKEFLOW_JOB` orchestrator and the DAG params of the `AIRFLOW` orchestrator: use `refresh="full"` instead of `full_refresh=True` (code, runs from the UI, API or schedules).
 * Nodes of a pipeline writing to the same sink target are now executed in a single task named `shared-{table}` (instead of one `node-{name}` task each), which purges the target once on a full refresh - previously, each node purged it, deleting the data written by the others. Deploying changes the task graph of the corresponding jobs; declare `shared.isolated: true` to keep independent tasks. [[#675](https://github.com/okube-ai/laktory/issues/675)]
 
 ## [0.12.7] - 2026-09-11

@@ -15,15 +15,15 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
     other pipelines.
 
     Nodes of a pipeline writing to the same sink target are detected automatically: by
-    default, they are grouped in a single execution task and, on `full_refresh`, the table is
+    default, they are grouped in a single execution task and, on a full refresh, the table is
     reset once (according to `reset_mode`) before all writers reprocess their data.
     These options are only required to change this default:
 
     - `isolated`: each writer runs in its own task (possibly in parallel) and rows carry the
-      writer identifier (`{pipeline_name}.{node_name}`). On `full_refresh`, a writer only
+      writer identifier (`{pipeline_name}.{node_name}`). On a full refresh, a writer only
       deletes and reprocesses its own rows.
     - `external`: other pipelines also write to the sink. Rows carry the pipeline identifier
-      (`{pipeline_name}`) and, on `full_refresh`, only the rows written by this pipeline are
+      (`{pipeline_name}`) and, on a full refresh, only the rows written by this pipeline are
       deleted and reprocessed, leaving the data of other pipelines untouched.
 
     Examples
@@ -58,9 +58,9 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
     isolated: bool = Field(
         False,
         description="""
-        If `True`, the node writes on its own: it runs in its own task and `full_refresh` only
+        If `True`, the node writes on its own: it runs in its own task and a full refresh only
         deletes and reprocesses its own rows. Rows of a removed or renamed node are no longer
-        deleted on `full_refresh`. If `False`, the writers of the sink within the pipeline are
+        deleted on a full refresh. If `False`, the writers of the sink within the pipeline are
         grouped in a single task.
         """,
     )
@@ -70,7 +70,7 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
         Identifier stored in `column` for each written row, when a writer column is used
         (`external` or `isolated`). Defaults to `{pipeline_name}.{node_name}` if `isolated`,
         `{pipeline_name}` otherwise. Must be stable across runs: rows written with a previous
-        identifier are no longer deleted on `full_refresh`.
+        identifier are no longer deleted on a full refresh.
         """,
         validation_alias=AliasChoices("writer_id", "writer_id_"),
         exclude=True,

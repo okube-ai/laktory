@@ -170,8 +170,6 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
         self.parameter = [
             JobParameter(name="refresh", default="incremental"),
             JobParameter(name="reset_mode", default=""),
-            # Deprecated, kept for backward compatibility: use `refresh=full`
-            JobParameter(name="full_refresh", default="false"),
         ]
 
     # ----------------------------------------------------------------------- #

@@ -1,6 +1,5 @@
 import os
 import re
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -672,7 +671,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         """
         Sink targets written by multiple nodes of the pipeline, not `shared.isolated`. Their
         writers are executed in a single task, which purges the target once on
-        `full_refresh`.
+        a full refresh.
 
         Returns
         -------
@@ -884,10 +883,82 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         self._plan = plan
         return plan
 
+    def validate_run_parameters(
+        self,
+        refresh: str | None,
+        reset_mode: str | None,
+        node_names: list[str] | None = None,
+    ) -> tuple[str, str | None]:
+        """
+        Validate and normalize the run parameters of an execution.
+
+        Parameters
+        ----------
+        refresh:
+            `incremental`, `full` or `reset` (case-insensitive). Defaults to `incremental`.
+        reset_mode:
+            Optional `reset_mode` override (`DROP` or `TRUNCATE`, case-insensitive).
+        node_names:
+            Names of the executed nodes. If provided, the override is also validated
+            against their sinks.
+
+        Returns
+        -------
+        :
+            Normalized `refresh` and `reset_mode`
+        """
+        refresh = (refresh or "incremental").lower()
+        if refresh not in ["incremental", "full", "reset"]:
+            raise ValueError(
+                f"`refresh` '{refresh}' is not supported. Use 'incremental', 'full' or "
+                "'reset'."
+            )
+
+        if reset_mode:
+            reset_mode = reset_mode.upper()
+            if reset_mode not in ["DROP", "TRUNCATE"]:
+                raise ValueError(
+                    f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
+                    "'TRUNCATE'."
+                )
+            if refresh == "incremental":
+                raise ValueError(
+                    f"`reset_mode` '{reset_mode}' requires `refresh` 'full' or 'reset'."
+                )
+        else:
+            reset_mode = None
+
+        if refresh == "reset" and (
+            self.is_orchestrator_ldp or self.is_orchestrator_sdp
+        ):
+            raise NotImplementedError(
+                "`refresh='reset'` is not supported with declarative orchestrators, whose "
+                "tables are managed by the declarative engine. Use `refresh='full'` instead."
+            )
+
+        if refresh == "full" and reset_mode and node_names:
+            isolated = [
+                n
+                for n in node_names
+                if any(
+                    s.shared is not None and s.shared.isolated
+                    for s in self.nodes_dict[n].all_sinks
+                )
+            ]
+            if isolated:
+                raise ValueError(
+                    f"`reset_mode` override '{reset_mode}' is not supported for "
+                    f"the `shared.isolated` sinks of nodes {isolated}, whose writers are "
+                    "executed independently. Run with `refresh='reset'` and the "
+                    "`reset_mode` override to reset their tables, then run with "
+                    "`refresh='full'`."
+                )
+
+        return refresh, reset_mode
+
     def execute(
         self,
         write_sinks=True,
-        full_refresh: bool | None = None,
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
@@ -904,8 +975,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         ----------
         write_sinks:
             If `False` writing of node sinks will be skipped
-        full_refresh:
-            Deprecated, use `refresh="full"` instead.
         named_dfs:
             Named DataFrames to be passed to pipeline nodes transformer.
         update_tables_metadata:
@@ -941,50 +1010,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         logger.info(f"Executing pipeline '{self.name}'")
 
-        if full_refresh is not None:
-            msg = (
-                "`full_refresh` is deprecated and will be removed in a future version. Use "
-                "`refresh='full'` instead."
-            )
-            # Also logged: DeprecationWarning is hidden by default, e.g. in job task logs
-            logger.warning(msg)
-            warnings.warn(msg, DeprecationWarning, stacklevel=2)
-            if full_refresh:
-                if refresh not in ["incremental", "full"]:
-                    raise ValueError(
-                        f"`full_refresh=True` conflicts with `refresh='{refresh}'`."
-                    )
-                refresh = "full"
-
-        refresh = (refresh or "incremental").lower()
-        if refresh not in ["incremental", "full", "reset"]:
-            raise ValueError(
-                f"`refresh` '{refresh}' is not supported. Use 'incremental', 'full' or "
-                "'reset'."
-            )
-
-        if reset_mode:
-            reset_mode = reset_mode.upper()
-            if reset_mode not in ["DROP", "TRUNCATE"]:
-                raise ValueError(
-                    f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
-                    "'TRUNCATE'."
-                )
-            if refresh == "incremental":
-                raise ValueError(
-                    f"`reset_mode` '{reset_mode}' requires `refresh` 'full' or 'reset'."
-                )
-        else:
-            reset_mode = None
+        refresh, reset_mode = self.validate_run_parameters(refresh, reset_mode)
 
         full_refresh = refresh == "full"
         reset_only = refresh == "reset"
-
-        if reset_only and (self.is_orchestrator_ldp or self.is_orchestrator_sdp):
-            raise NotImplementedError(
-                "`refresh='reset'` is not supported with declarative orchestrators, whose "
-                "tables are managed by the declarative engine. Use `refresh='full'` instead."
-            )
 
         if use_orchestrator:
             if self.orchestrator is None:
@@ -1010,23 +1039,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         logger.info(f"Selected nodes: {node_names}")
 
-        if full_refresh and reset_mode:
-            isolated = [
-                n
-                for n in node_names
-                if any(
-                    s.shared is not None and s.shared.isolated
-                    for s in self.nodes_dict[n].all_sinks
-                )
-            ]
-            if isolated:
-                raise ValueError(
-                    f"`reset_mode` override '{reset_mode}' is not supported for "
-                    f"the `shared.isolated` sinks of nodes {isolated}, whose writers are "
-                    "executed independently. Run with `refresh='reset'` and the "
-                    "`reset_mode` override to reset their tables, then run with "
-                    "`refresh='full'`."
-                )
+        self.validate_run_parameters(refresh, reset_mode, node_names=node_names)
 
         if named_dfs is None:
             named_dfs = {}

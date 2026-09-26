@@ -565,24 +565,28 @@ def test_reset_external(tmp_path):
     assert not Path(path).exists()
 
 
-def test_refresh_parameters(tmp_path, caplog, monkeypatch):
-    from laktory.models.pipeline import pipeline as pipeline_module
-
+def test_refresh_parameters(tmp_path):
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, None))
     pl.execute()
 
-    # Deprecated alias, also logged (DeprecationWarning is hidden by default)
-    monkeypatch.setattr(pipeline_module.logger, "propagate", True)
-    with pytest.warns(DeprecationWarning, match="refresh='full'"):
-        with caplog.at_level("WARNING"):
-            pl.execute(full_refresh=True)
-    assert "`full_refresh` is deprecated" in caplog.text
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
-
     with pytest.raises(ValueError, match="requires `refresh`"):
         pl.execute(reset_mode="DROP")
-    with pytest.raises(ValueError, match="conflicts with"):
-        pl.execute(full_refresh=True, refresh="reset")
     with pytest.raises(ValueError, match="is not supported"):
         pl.execute(refresh="partial")
+    with pytest.raises(TypeError):
+        pl.execute(full_refresh=True)
+
+
+def test_validate_run_parameters(tmp_path):
+    pl = _pipeline(_writers(str(tmp_path / "shared"), _ISOLATED))
+
+    assert pl.validate_run_parameters(None, None) == ("incremental", None)
+    assert pl.validate_run_parameters("FULL", "drop") == ("full", "DROP")
+    assert pl.validate_run_parameters("reset", "") == ("reset", None)
+    assert pl.validate_run_parameters("reset", "DROP", node_names=["a"]) == (
+        "reset",
+        "DROP",
+    )
+    with pytest.raises(ValueError, match="Run with `refresh='reset'`"):
+        pl.validate_run_parameters("full", "DROP", node_names=["a"])

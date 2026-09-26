@@ -74,7 +74,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     reset_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
         None,
         description="""
-        Strategy used to purge this sink's data when `full_refresh` is requested.
+        Strategy used to reset this sink's data on a full refresh or a reset run.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
@@ -101,7 +101,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         description="""
         Declares a sink written by multiple writers: other nodes of the same pipeline
         (`internal`) and/or other pipelines (`external`). Defines how writers are executed and
-        what `full_refresh` deletes. See `DataSinkSharedOptions`.
+        what a full refresh deletes. See `DataSinkSharedOptions`.
         """,
     )
 
@@ -282,7 +282,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             ):
                 raise ValueError(
                     f"`reset_mode` '{self.reset_mode}' has no effect when using the "
-                    f"{type(orchestrator).__name__} - `full_refresh` is handled entirely by "
+                    f"{type(orchestrator).__name__} - the full refresh is handled entirely by "
                     "the Databricks/Spark Declarative Pipelines engine, which never calls "
                     "Laktory's `purge()`. Remove `reset_mode`/`reset_delete_where` from this "
                     "sink, or use the LAKEFLOW_JOB orchestrator."

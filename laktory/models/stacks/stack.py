@@ -291,7 +291,7 @@ class LaktorySettings(BaseModel):
     reset_mode: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description=(
-            "Stack-wide default strategy used to purge a data sink's data on `full_refresh` "
+            "Stack-wide default strategy used to purge a data sink's data on a full refresh "
             "(`DROP`/`TRUNCATE`), overridable per `Pipeline`, `PipelineNode`, or sink. "
             "`DELETE_WHERE` is not available here - it can only be set directly on a sink. "
             "See [Laktory Settings](../../../concepts/laktorysettings.md#reset-mode)."
@@ -494,7 +494,7 @@ class StackResources(BaseModel):
                     f"Pipelines {pl_names} all write to '{target}', but the sinks of "
                     f"nodes {missing} don't declare `shared.external: true`. Declare it on "
                     "every sink writing to this target, so that a pipeline only deletes "
-                    "its own rows on `full_refresh`."
+                    "its own rows on a full refresh."
                 )
 
             writer_ids = {}

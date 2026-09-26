@@ -116,6 +116,10 @@ def test_dag_attributes():
     assert dag.access_control == {"a": {"DAGs": {"1", "2"}}}
     assert dag.tags == {"stocks", "pipeline"}
     assert not dag.fail_fast
+    assert {k: dag.params[k] for k in ["refresh", "reset_mode"]} == {
+        "refresh": "incremental",
+        "reset_mode": "",
+    }
 
 
 # --------------------------------------------------------------------------- #

@@ -232,7 +232,8 @@ sink.write(df)
 ##### Reset Modes
 
 A pipeline run does one of the following, selected with `refresh` (`pl.execute(refresh=...)`,
-or the `refresh` job parameter of the `LAKEFLOW_JOB` orchestrator):
+the `refresh` job parameter of the `LAKEFLOW_JOB` orchestrator, or the `refresh` DAG param of
+the `AIRFLOW` orchestrator):
 
 | `refresh` | What the run does |
 |---|---|
@@ -240,8 +241,9 @@ or the `refresh` job parameter of the `LAKEFLOW_JOB` orchestrator):
 | `full` | resets the sinks of the selected nodes (data and checkpoints), then reprocesses all the data |
 | `reset` | only resets the sinks of the selected nodes, without reading or writing data (see [Resetting tables](#resetting-tables)) |
 
-`full_refresh=True` (and the `full_refresh` job parameter) is a deprecated alias of
-`refresh="full"`.
+`refresh` replaces the `full_refresh` parameter of `pl.execute()`, the `full_refresh` job
+parameter of the `LAKEFLOW_JOB` orchestrator and the `full_refresh` DAG param of the `AIRFLOW`
+orchestrator: use `refresh="full"` instead.
 
 `reset_mode` controls how a sink is reset:
 

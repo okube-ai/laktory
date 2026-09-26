@@ -78,7 +78,7 @@ class PipelineChild(BaseChild):
     reset_mode_: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description="""
-        Strategy used to purge a sink's data when `full_refresh` is requested.
+        Strategy used to reset a sink's data on a full refresh or a reset run.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
