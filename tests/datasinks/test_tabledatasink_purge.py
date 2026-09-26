@@ -173,9 +173,7 @@ def _shared_pipeline(name, table, path, shared, node_names):
 
 def test_purge_shared_internal_table(tmp_path):
     table = "purge_shared_internal"
-    pl = _shared_pipeline(
-        "pl", table, (tmp_path / "t").as_posix(), {"internal": True}, ["a", "b"]
-    )
+    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), None, ["a", "b"])
     assert [t.name for t in pl.get_execution_plan().tasks] == [f"shared-{table}"]
 
     spark = get_spark_session()

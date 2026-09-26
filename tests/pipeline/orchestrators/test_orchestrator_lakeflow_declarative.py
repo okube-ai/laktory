@@ -513,13 +513,7 @@ def _get_shared_pl(orchestrator_dict, sinks=None, expectations=None):
             {
                 "name": name,
                 "sources": [{"format": "JSON", "path": f"/{name}/", "as_stream": True}],
-                "sinks": [
-                    {
-                        "table_name": "shared",
-                        "shared": {"internal": True},
-                        **sinks.get(name, {}),
-                    }
-                ],
+                "sinks": [{"table_name": "shared", **sinks.get(name, {})}],
                 "expectations": expectations.get(name, []),
             }
         ]
@@ -559,7 +553,7 @@ def test_shared_sink_cdc_raises_under_declarative_orchestrator(orchestrator_dict
         "mode": "MERGE",
         "merge_cdc_options": {"primary_keys": ["id"], "order_by": "id"},
     }
-    with pytest.raises((ValueError, ValidationError), match="only support `APPEND`"):
+    with pytest.raises((ValueError, ValidationError), match="not a streaming table"):
         _get_shared_pl(orchestrator_dict, sinks={"n2": cdc})
 
 
@@ -575,7 +569,7 @@ def test_shared_sink_inferred_under_declarative_orchestrator(orchestrator_dict):
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
 @pytest.mark.parametrize(
     "shared",
-    [{"internal": True, "isolated": True}, {"internal": True, "external": True}],
+    [{"isolated": True}, {"external": True}],
 )
 def test_shared_sink_writer_column_under_declarative_orchestrator(
     orchestrator_dict, shared
@@ -710,8 +704,7 @@ def test_sdp_script_shared_sink(tmp_path, monkeypatch):
 
 
 def test_duplicate_sink_target_ok_under_lakeflow_job():
-    """Two nodes deliberately sharing one output table is a valid pattern under
-    LAKEFLOW_JOB when declared with `shared.internal`."""
+    """Two nodes writing to the same output table are grouped under LAKEFLOW_JOB"""
     models.Pipeline.model_validate(
         {
             "name": "pl-job",
@@ -723,12 +716,12 @@ def test_duplicate_sink_target_ok_under_lakeflow_job():
                 {
                     "name": "n1",
                     "sources": [{"format": "JSON", "path": "/src1/"}],
-                    "sinks": [{"table_name": "shared", "shared": {"internal": True}}],
+                    "sinks": [{"table_name": "shared"}],
                 },
                 {
                     "name": "n2",
                     "sources": [{"format": "JSON", "path": "/src2/"}],
-                    "sinks": [{"table_name": "shared", "shared": {"internal": True}}],
+                    "sinks": [{"table_name": "shared"}],
                 },
             ],
         }

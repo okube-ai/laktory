@@ -2,7 +2,7 @@
 
 ## [0.13.0] - Unreleased
 ### Added
-* Added shared sinks, written by multiple nodes of a pipeline (detected automatically and grouped in a single task, or `shared.isolated`) and/or by multiple pipelines (`shared.external`), with a full refresh purging the table once or only the writer's rows, including through append flows with Lakeflow / Spark Declarative Pipelines. [[#675](https://github.com/okube-ai/laktory/issues/675)] [[#676](https://github.com/okube-ai/laktory/issues/676)] [[#677](https://github.com/okube-ai/laktory/issues/677)]
+* Added shared sinks, written by multiple nodes of a pipeline (detected automatically and grouped in a single task, or `shared.isolated`) and/or by multiple pipelines (`shared.external`), with a full refresh purging the table once or only the writer's rows, including through append flows with Lakeflow / Spark Declarative Pipelines. [[#675](https://github.com/okube-ai/laktory/issues/675)], [[#676](https://github.com/okube-ai/laktory/issues/676)], [[#677](https://github.com/okube-ai/laktory/issues/677)]
 * Added a `refresh` run parameter (`incremental`, `full`, `reset`) - `reset` resets tables without reprocessing data, e.g. from a job run without table grants - and `reset_mode` (`DROP`, `TRUNCATE`, `DELETE_WHERE`) to control how sinks are reset, overridable per run (`pl.execute(refresh=..., reset_mode=...)`, `refresh` / `reset_mode` job parameters). [[#669](https://github.com/okube-ai/laktory/issues/669)]
 ### Fixed
 * Fixed the `AIRFLOW` orchestrator running a full refresh when the `full_refresh` DAG param was passed as the string `"false"` (replaced by the validated `refresh` / `reset_mode` params).

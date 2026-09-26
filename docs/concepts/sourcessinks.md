@@ -157,6 +157,10 @@ It is generally used as a component of a [pipeline](pipeline.md) node.
 
 Data sinks also support the merge of a [Change Data Capture (CDC)](cdc.md).
 
+On a full refresh, sinks are reset according to their `reset_mode` (see
+[Refresh and Reset](refresh.md)). A sink written by multiple nodes or pipelines is a shared sink
+(see [Shared Sinks](sharedsinks.md)).
+
 #### File Data Sink
 ??? "API Documentation"
     [`laktory.models.FileDataSink`][laktory.models.FileDataSink]<br>
@@ -228,156 +232,6 @@ sink = lk.models.TableDataSink(
 )
 sink.write(df)
 ``` 
-
-##### Reset Modes
-
-A pipeline run does one of the following, selected with `refresh` (`pl.execute(refresh=...)`,
-the `refresh` job parameter of the `LAKEFLOW_JOB` orchestrator, or the `refresh` DAG param of
-the `AIRFLOW` orchestrator):
-
-| `refresh` | What the run does |
-|---|---|
-| `incremental` (default) | runs without resetting anything first: sinks are written according to their `mode` (e.g. `OVERWRITE` replaces the data, `APPEND` adds rows) and streaming sources resume from their checkpoint |
-| `full` | resets the sinks of the selected nodes (data and checkpoints), then runs: all the data is reprocessed |
-| `reset` | only resets the sinks of the selected nodes, without reading or writing data (see [Resetting tables](#resetting-tables)) |
-
-`refresh` replaces the `full_refresh` parameter of `pl.execute()`, the `full_refresh` job
-parameter of the `LAKEFLOW_JOB` orchestrator and the `full_refresh` DAG param of the `AIRFLOW`
-orchestrator: use `refresh="full"` instead.
-
-`reset_mode` controls how a sink is reset:
-
-- `reset_mode="DROP"` (default): drops the table entirely. It's recreated (schema and all) the
-  next time the sink is written to.
-- `reset_mode="TRUNCATE"`: empties the table - removes all rows, via an unconditional
-  `DELETE FROM` since Delta does not support the `TRUNCATE TABLE` SQL statement - but keeps the
-  table, its schema, its location and its grants intact.
-- `reset_mode="DELETE_WHERE"`: deletes only the rows matching a `reset_delete_where` SQL
-  predicate, leaving every other row untouched. For tables written by multiple pipelines, prefer
-  [shared sinks](#shared-sinks), which track row ownership automatically.
-
-```py
-import laktory as lk
-
-sink = lk.models.UnityCatalogDataSink(
-    schema_name="finance",
-    table_name="brz_stock_prices",
-    reset_mode="DELETE_WHERE",
-    reset_delete_where="client_id = 'acme'",
-)
-```
-
-`reset_delete_where` requires DELTA format and must be set directly on the sink that owns the
-predicate - it is not inherited from a parent pipeline node, pipeline, or global setting, since a
-deletion predicate is inherently specific to one sink. `reset_mode="DELETE_WHERE"` follows the
-same rule: it can only be set directly on a sink, and raises a validation error if set on a
-`PipelineNode`, `Pipeline`, or globally (`settings.reset_mode` / `LAKTORY_RESET_MODE`). `DROP` and
-`TRUNCATE`, on the other hand, can be set at the sink, pipeline node, or pipeline level, or
-globally via the `LAKTORY_RESET_MODE` environment variable / `settings.reset_mode` (see
-[Laktory Settings](laktorysettings.md)).
-
-`TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
-supports `reset_mode="DROP"`.
-
-The configured `reset_mode` can be overridden for a single run, e.g. to force a `DROP` after a
-schema change on a sink configured with `TRUNCATE`:
-
-- `pl.execute(refresh="full", reset_mode="DROP")`
-- the `reset_mode` job parameter of the `LAKEFLOW_JOB` orchestrator (e.g. using *Run now with
-  different parameters*, together with `refresh=full`)
-
-To only reset the tables, without reprocessing the data, see
-[Resetting tables](#resetting-tables).
-
-##### Shared sinks
-
-A sink can be written by multiple writers: other nodes of the same pipeline and/or other
-pipelines (e.g. several feeds pooled into one table, or one pipeline per client appending into a
-cross-tenant table). Nodes of a pipeline writing to the same target are detected automatically
-and grouped. The `shared` options, declared on every sink writing to the target, change this
-default:
-
-```yaml
-sinks:
-- table_name: prices
-  mode: APPEND
-  shared:
-    internal: true    # optional (documentation): other nodes of this pipeline write here
-    external: false   # other pipelines also write to this table
-    isolated: false   # true: own task, refreshes only its own rows
-                      # false: grouped in a single task with the other writers
-```
-
-| Writers | `external` | `isolated` | Execution | Full refresh |
-|---|---|---|---|---|
-| several nodes | false | false | writers grouped in a single task (default) | table purged once (`reset_mode`), then all writers reprocess |
-| several nodes | false | true | one task per writer (can run in parallel) | each node deletes and reprocesses its own rows |
-| one node | true | - | regular task | this pipeline's rows are deleted and reprocessed |
-| several nodes | true | false | writers grouped in a single task | this pipeline's rows are deleted once, then all writers reprocess |
-| several nodes | true | true | one task per writer | each node deletes and reprocesses its own rows |
-
-**Grouped writers** (default) behave like a table with multiple append flows in a declarative
-pipeline: the writers are executed together in one task - named
-`shared-{table_name}`, or after their common `execution_task_name` - which purges the table once
-and then runs them. Use `depends_on` to control their order, e.g. to have a node creating all the
-columns run first. Selecting one of the writers (`selects`, or a task of a job run) always runs
-all of them. Rows of a removed writer are gone after the next full refresh.
-
-**Isolated writers** (`isolated`) and **external writers** (`external`) require a DELTA table or
-file sink. Each written row carries the writer identifier in a `_laktory_writer` column (first
-column, configurable with `column`): `{pipeline_name}.{node_name}` for isolated writers,
-`{pipeline_name}` otherwise (overridable with `writer_id`). On a full refresh, only the rows
-of the writer are deleted, so the data of the other writers is untouched and the configured
-`reset_mode` is ignored. Keep the identifiers stable:
-
-- Rows of a removed or renamed isolated node, or of a decommissioned pipeline, are not deleted by
-  any full refresh. Pin `writer_id` before renaming, or clean them up with
-  `DELETE FROM <table> WHERE _laktory_writer = '<writer_id>'`.
-- Rows written before a table is declared `external` or `isolated` have no writer: drop the table
-  once when converting.
-- Parallel writers adding different columns conflict when evolving the table schema: declare the
-  full `schema` on the sinks, or group the writers.
-
-###### Resetting tables
-
-A table may need to be reset as a whole, e.g. before a breaking schema change or after a data
-corruption, by someone who can run the pipeline but not drop tables. Run the pipeline with
-`refresh="reset"` and the `reset_mode` override: the tables written by the selected nodes are
-reset (`DROP` or `TRUNCATE`), without reading or writing any data. The next run reprocesses all
-the data.
-
-- Lakeflow Job: *Run now with different parameters* with `refresh=reset` and `reset_mode=DROP`
-  (optionally on a selection of tasks), then *Run now*.
-- In Python: `pl.execute(refresh="reset", reset_mode="DROP")`, then `pl.execute()`.
-
-This works for every kind of sink, including `isolated` ones. For `external` tables, the rows
-written by other pipelines are reset too: these pipelines need a full refresh. Without the
-override, a reset run resets each sink as a full refresh would (configured `reset_mode`, or the
-writer's own rows).
-
-A full refresh (`refresh="full"`) can also take the `reset_mode` override directly, for regular
-and grouped sinks and for `external` sinks (whole table reset once). It is rejected for
-`isolated` writers, which are executed independently: run with `refresh="reset"` first.
-
-Laktory validates shared sinks: writers of a same target in a pipeline must use the same
-`shared` options, and pipelines of a same Stack writing to the same target must all declare
-`external`.
-
-With Lakeflow / Spark Declarative Pipeline orchestrators, only grouped writers are supported: the table
-is declared once as a streaming table and each node appends to it through its own append flow,
-named `{table_name}__{node_name}`. The declarative engine runs the flows in parallel and handles
-`full_refresh` itself, clearing the table once and resetting every flow. A table written by a
-declarative pipeline can't be shared with other pipelines. The following rules apply:
-
-- All sinks must be streaming, non-CDC (`MERGE`) table sinks.
-- Table properties (`comment`, `table_properties`, `format`) can be declared on any of the sinks,
-  but must not conflict.
-- With Lakeflow Declarative Pipelines, expectations are applied to the whole table (append flows
-  don't support them), so all nodes writing to it must declare the same expectations.
-
-A flow checkpoint is identified by its name. Adding a second node to an existing single-writer
-streaming table (or renaming a node) changes the flow name of the existing writer, which then
-reprocesses its source from scratch - run a full refresh of that table once after the change.
 
 #### Pipeline View Data Sink
 ??? "API Documentation"

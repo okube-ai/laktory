@@ -44,13 +44,6 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
     ```
     """
 
-    internal: bool = Field(
-        False,
-        description="""
-        Other nodes of the same pipeline also write to this sink. Optional, for documentation
-        purposes only: writers of a same sink target are detected automatically.
-        """,
-    )
     external: bool = Field(
         False,
         description="Other pipelines also write to this sink.",
@@ -82,11 +75,11 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_flags(self) -> Any:
-        if not (self.internal or self.external or self.isolated):
+        if not (self.external or self.isolated):
             raise ValueError(
-                "`shared` requires at least one of `internal`, `external` or `isolated` to be "
-                "`true`. Nodes of a pipeline writing to the same sink don't need `shared`: "
-                "they are grouped automatically."
+                "`shared` requires `external` and/or `isolated` to be `true`. Nodes of a "
+                "pipeline writing to the same sink don't need `shared`: they are grouped "
+                "automatically."
             )
         return self
 

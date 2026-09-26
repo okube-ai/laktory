@@ -309,13 +309,12 @@ def _feed_counts(sink_path):
     return dict(_read(sink_path).group_by("feed").len().sort("feed").iter_rows())
 
 
-_INTERNAL = {"internal": True}
-_ISOLATED = {"internal": True, "isolated": True}
+_ISOLATED = {"isolated": True}
 
 
-def test_shared_internal_grouped(tmp_path):
+def test_shared_grouped(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, _INTERNAL))
+    pl = _pipeline(_writers(path, None))
 
     # Writers grouped in a single task, no writer column
     tasks = pl.get_execution_plan().tasks
@@ -332,16 +331,16 @@ def test_shared_internal_grouped(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_shared_internal_order(tmp_path):
+def test_shared_grouped_order(tmp_path):
     path = str(tmp_path / "shared")
-    nodes = _writers(path, _INTERNAL, node_kwargs={"a": {"depends_on": ["c"]}})
+    nodes = _writers(path, None, node_kwargs={"a": {"depends_on": ["c"]}})
     pl = _pipeline(nodes)
     assert pl.get_execution_plan().tasks[0].node_names[-1] == "a"
 
 
-def test_shared_internal_selection(tmp_path):
+def test_shared_grouped_selection(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, _INTERNAL))
+    pl = _pipeline(_writers(path, None))
     pl.execute()
 
     # Selecting one writer selects the whole group: table reset, no rows lost
@@ -350,12 +349,12 @@ def test_shared_internal_selection(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_shared_internal_removed_node(tmp_path):
+def test_shared_grouped_removed_node(tmp_path):
     path = str(tmp_path / "shared")
-    _pipeline(_writers(path, _INTERNAL)).execute()
+    _pipeline(_writers(path, None)).execute()
 
     # Node c removed and pipeline "redeployed": full refresh leaves no leftovers
-    pl = _pipeline(_writers(path, _INTERNAL, names=("a", "b")))
+    pl = _pipeline(_writers(path, None, names=("a", "b")))
     pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3}
 
@@ -405,7 +404,7 @@ def test_shared_external(tmp_path):
     # Two pipelines writing to the same target
     pl1 = _pipeline(_writers(path, external, names=("a",)), name="pl1")
     pl2 = _pipeline(
-        _writers(path, {"internal": True, "external": True}, names=("b", "c")),
+        _writers(path, {"external": True}, names=("b", "c")),
         name="pl2",
     )
     pl1.execute()
@@ -425,7 +424,7 @@ def test_shared_external(tmp_path):
 
 
 def test_shared_reset_mode_override_invalid(tmp_path):
-    pl = _pipeline(_writers(str(tmp_path / "shared"), _INTERNAL))
+    pl = _pipeline(_writers(str(tmp_path / "shared"), None))
     with pytest.raises(ValueError, match="not supported"):
         pl.execute(refresh="full", reset_mode="DELETE_WHERE")
 
@@ -435,7 +434,7 @@ def test_shared_reset_mode_override_invalid(tmp_path):
     [
         ({"a": _ISOLATED, "b": _ISOLATED}, "different `shared` options"),
         (
-            {"a": _INTERNAL, "b": _INTERNAL, "c": _ISOLATED},
+            {"a": None, "b": None, "c": _ISOLATED},
             "different `shared` options",
         ),
         (
@@ -453,30 +452,10 @@ def test_shared_pipeline_validation(tmp_path, shared, match):
         _pipeline(_writers(str(tmp_path / "shared"), shared))
 
 
-def test_shared_inferred(tmp_path):
-    """Writers of a same target are grouped without any `shared` declaration"""
-    path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
-    tasks = pl.get_execution_plan().tasks
-    assert [(t.name, sorted(t.node_names)) for t in tasks] == [
-        ("shared-shared", ["a", "b", "c"])
-    ]
-
-    pl.execute()
-    pl.execute(refresh="full")
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
-
-
-def test_shared_internal_single_writer(tmp_path):
-    """`internal` is documentation only: a single writer is a regular task"""
-    pl = _pipeline(_writers(str(tmp_path / "shared"), _INTERNAL, names=("a",)))
-    assert [t.name for t in pl.get_execution_plan().tasks] == ["node-a"]
-
-
 def test_shared_grouped_task_name_conflict(tmp_path):
     nodes = _writers(
         str(tmp_path / "shared"),
-        _INTERNAL,
+        None,
         names=("a", "b"),
         node_kwargs={
             "a": {"execution_task_name": "t1"},

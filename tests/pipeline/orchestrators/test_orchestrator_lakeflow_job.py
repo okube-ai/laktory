@@ -374,7 +374,6 @@ def test_shared_sink_writers_grouped_in_one_task():
         "format": "DELTA",
         "mode": "APPEND",
         "path": "/pooled/",
-        "shared": {"internal": True},
     }
     pl = models.Pipeline(
         name="pl-job",

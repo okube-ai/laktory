@@ -99,9 +99,10 @@ class BaseDataSink(BaseModel, PipelineChild):
     shared: DataSinkSharedOptions | None = Field(
         None,
         description="""
-        Declares a sink written by multiple writers: other nodes of the same pipeline
-        (`internal`) and/or other pipelines (`external`). Defines how writers are executed and
-        what a full refresh deletes. See `DataSinkSharedOptions`.
+        Options for a sink written by multiple writers. Nodes of a pipeline writing to the same
+        sink are grouped automatically; declare `isolated` to execute them independently, and
+        `external` when other pipelines also write to the sink. Defines how writers are
+        executed and what a full refresh deletes. See `DataSinkSharedOptions`.
         """,
     )
 
@@ -115,9 +116,9 @@ class BaseDataSink(BaseModel, PipelineChild):
     def shared_is_options(cls, v):
         if isinstance(v, bool):
             raise ValueError(
-                "`shared` expects options, not a boolean. Use e.g. `shared: {internal: true}` "
-                "(other nodes of the pipeline write to the sink) and/or "
-                "`shared: {external: true}` (other pipelines write to the sink)."
+                "`shared` expects options, not a boolean. Use `shared: {external: true}` "
+                "(other pipelines write to the sink) and/or `shared: {isolated: true}` (the "
+                "node writes independently from the other nodes writing to the sink)."
             )
         return v
 

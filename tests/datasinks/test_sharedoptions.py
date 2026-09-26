@@ -11,20 +11,18 @@ def _sink(**kwargs):
 
 
 def test_defaults():
-    sink = _sink(shared={"internal": True})
-    assert sink.shared.external is False
+    sink = _sink(shared={"external": True})
     assert sink.shared.isolated is False
     assert sink.shared.column == "_laktory_writer"
-    assert sink.shared.uses_writer_column is False
+    assert sink.shared.uses_writer_column is True
 
 
 @pytest.mark.parametrize(
     "shared,uses_writer_column",
     [
-        ({"internal": True}, False),
-        ({"internal": True, "isolated": True}, True),
+        ({"isolated": True}, True),
         ({"external": True}, True),
-        ({"internal": True, "external": True}, True),
+        ({"external": True, "isolated": True}, True),
     ],
 )
 def test_uses_writer_column(shared, uses_writer_column):
@@ -47,7 +45,7 @@ def test_writer_id():
     "shared,match",
     [
         (True, "expects options, not a boolean"),
-        ({}, "requires at least one"),
+        ({}, "requires `external` and/or `isolated`"),
     ],
 )
 def test_invalid_options(shared, match):
@@ -55,7 +53,7 @@ def test_invalid_options(shared, match):
         _sink(shared=shared)
 
 
-def test_isolated_without_internal():
+def test_isolated():
     assert _sink(shared={"isolated": True}).shared.uses_writer_column
 
 
@@ -65,16 +63,11 @@ def test_invalid_mode():
             schema_name="default",
             table_name="shared",
             mode="OVERWRITE",
-            shared={"internal": True},
+            shared={"external": True},
         )
 
 
 def test_writer_column_requires_delta():
-    # Grouped internal sinks don't need a writer column: any format
-    models.FileDataSink(
-        path="/tmp/shared/", format="PARQUET", mode="APPEND", shared={"internal": True}
-    )
-
     with pytest.raises(ValidationError, match="require a DELTA"):
         models.FileDataSink(
             path="/tmp/shared/",
@@ -87,7 +80,6 @@ def test_writer_column_requires_delta():
 def test_writer_column_ignores_reset_mode():
     # Accepted (and ignored on full refresh) so that serialized configs, where inherited
     # values are explicit, can be reloaded
-    _sink(shared={"internal": True}, reset_mode="TRUNCATE")
     _sink(shared={"external": True}, reset_mode="TRUNCATE")
 
 
