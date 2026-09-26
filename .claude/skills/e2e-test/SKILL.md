@@ -37,7 +37,9 @@ apart.
 - `git branch --show-current` and `git rev-parse --short HEAD`, for the README.
 - Read `laktory/_version.py` for the wheel filename.
 - Find a SQL warehouse for checks: `databricks warehouses list -p laktory-dev-cli`
-  (prefer "Starter Warehouse"). It starts on first query.
+  and use the serverless "laktory" warehouse. Don't use "Starter Warehouse": it's a classic
+  warehouse that can't start (Azure VM quota). It starts on first query: while it does, the
+  statement API returns `PENDING` - poll `GET /api/2.0/sql/statements/<statement_id>`.
 
 ## Step 2 - Design the test and get approval
 
