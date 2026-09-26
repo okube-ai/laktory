@@ -256,8 +256,20 @@ class LaktorySettings(BaseModel):
     Laktory Settings
     """
 
-    dataframe_backend: str = Field(None, description="DataFrame backend")
-    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(None, description="")
+    dataframe_backend: str = Field(
+        None,
+        description=(
+            "DataFrame backend (`POLARS` / `PYSPARK`). Default: `PYSPARK` (from "
+            "`LAKTORY_DATAFRAME_BACKEND`)."
+        ),
+    )
+    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(
+        None,
+        description=(
+            "DataFrame API (`NARWHALS` / `NATIVE`). Default: `NARWHALS` (from "
+            "`LAKTORY_DATAFRAME_API`)."
+        ),
+    )
     workspace_root: str = Field(
         "/.laktory/",
         description=(
@@ -291,9 +303,9 @@ class LaktorySettings(BaseModel):
     reset_mode: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description=(
-            "Fallback strategy used to reset a data sink's data (`DROP`/`TRUNCATE`) for the "
-            "sinks, nodes and pipelines that don't set one - explicit values always take "
-            "precedence. If not set, `LAKTORY_RESET_MODE` applies (default `DROP`). "
+            "How data sinks are reset on a full refresh or reset run (`DROP`/`TRUNCATE`), for "
+            "the sinks, nodes and pipelines that don't set one. Default: `DROP` (from "
+            "`LAKTORY_RESET_MODE`). "
             "`DELETE_WHERE` is not available here - it can only be set directly on a sink. "
             "See [Laktory Settings](../../../concepts/laktorysettings.md#reset-mode)."
         ),

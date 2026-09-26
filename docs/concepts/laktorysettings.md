@@ -5,9 +5,13 @@
 | [`workspace_root`](#workspace-root) | `/.laktory/` | Databricks Workspace root where deployed objects (notebooks, workspace files, dashboards, ...) land |
 | [`runtime_root`](#runtime-root) | `/laktory/` | Root Laktory writes pipeline runtime artifacts (checkpoints) to |
 | [`build_root`](#build-root) | Laktory cache directory | Local directory for generated build artifacts |
-| [`dataframe_backend`](#dataframe-backend-and-api) | none | Stack-wide default DataFrame backend (`POLARS` / `PYSPARK`) |
-| [`dataframe_api`](#dataframe-backend-and-api) | none | Stack-wide default DataFrame API (`NARWHALS` / `NATIVE`) |
-| [`reset_mode`](#reset-mode) | none | Fallback reset mode (`DROP` / `TRUNCATE`) for sinks, nodes and pipelines that don't set one. If not set, `LAKTORY_RESET_MODE` applies (default `DROP`) |
+| [`dataframe_backend`](#dataframe-backend-and-api) | `PYSPARK` | DataFrame backend (`POLARS` / `PYSPARK`) |
+| [`dataframe_api`](#dataframe-backend-and-api) | `NARWHALS` | DataFrame API (`NARWHALS` / `NATIVE`) |
+| [`reset_mode`](#reset-mode) | `DROP` | How sinks are reset on a full refresh or reset run (`DROP` / `TRUNCATE`), for sinks, nodes and pipelines that don't set one |
+
+Defaults come from the matching `LAKTORY_*` environment variables (e.g. `LAKTORY_RESET_MODE`). A
+value set in the Stack `settings` overrides them. For `dataframe_backend`, `dataframe_api` and
+`reset_mode`, values set on a pipeline, pipeline node or sink always take precedence.
 
 Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)):
 
@@ -70,18 +74,16 @@ Override it when file generation is delegated to a third party that expects thos
 
 ## Reset Mode
 
-`reset_mode` (`DROP` / `TRUNCATE`) is the fallback strategy used to reset a data sink's data on a
-full refresh or a reset run, for the sinks, nodes and pipelines that don't set one. The value
-used for a sink is the first one set among: the sink, its [`PipelineNode`](pipeline.md), its
-[`Pipeline`](pipeline.md), and this setting. Explicit values always take precedence:
+`reset_mode` (`DROP` / `TRUNCATE`, default `DROP`) is how a data sink is reset on a full refresh or
+a reset run. The value used for a sink is the first one set among: the sink, its
+[`PipelineNode`](pipeline.md), its [`Pipeline`](pipeline.md), and this setting:
 
 ```yaml title="stack.yaml"
 settings:
   reset_mode: TRUNCATE
 ```
 
-If not set (the default), the `LAKTORY_RESET_MODE` environment variable applies, itself
-defaulting to `DROP`. Setting it here overrides the environment variable. `DELETE_WHERE` cannot be
+It can also be set via the `LAKTORY_RESET_MODE` environment variable. `DELETE_WHERE` cannot be
 set here (or on a `Pipeline`/`PipelineNode`) - it's only valid set directly on a sink, since its
 deletion predicate is inherently sink-specific; doing so anywhere else raises a validation error.
 See
