@@ -43,20 +43,20 @@ class Settings(BaseSettings):
     register_nw_extensions: bool = Field(True, alias="LAKTORY_REGISTER_NW_EXTENSIONS")
 
     # Pipeline
-    full_refresh_mode: str = Field("DROP", alias="LAKTORY_FULL_REFRESH_MODE")
+    reset_mode: str = Field("DROP", alias="LAKTORY_RESET_MODE")
 
-    @field_validator("full_refresh_mode")
+    @field_validator("reset_mode")
     @classmethod
-    def validate_full_refresh_mode(cls, v: str) -> str:
+    def validate_reset_mode(cls, v: str) -> str:
         if v and v.upper() == "DELETE_WHERE":
             raise ValueError(
-                "`full_refresh_mode` 'DELETE_WHERE' can only be set directly on a data sink, not as "
+                "`reset_mode` 'DELETE_WHERE' can only be set directly on a data sink, not as "
                 "a global default. A deletion predicate is inherently specific to a single "
                 "sink."
             )
         if v and v.upper() not in ["DROP", "TRUNCATE"]:
             raise ValueError(
-                f"`full_refresh_mode` '{v}' is not supported as a global default. Use 'DROP' or "
+                f"`reset_mode` '{v}' is not supported as a global default. Use 'DROP' or "
                 "'TRUNCATE'."
             )
         return v

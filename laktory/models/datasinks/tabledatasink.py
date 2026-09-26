@@ -64,10 +64,10 @@ class TableDataSink(BaseDataSink):
         return self
 
     @model_validator(mode="after")
-    def validate_format_full_refresh_delete_where(self) -> Any:
-        if self.full_refresh_mode == "DELETE_WHERE" and self.format != "DELTA":
+    def validate_format_reset_delete_where(self) -> Any:
+        if self.reset_mode == "DELETE_WHERE" and self.format != "DELTA":
             raise ValueError(
-                f"`full_refresh_mode` 'DELETE_WHERE' requires DELTA format, got '{self.format}'."
+                f"`reset_mode` 'DELETE_WHERE' requires DELTA format, got '{self.format}'."
             )
         return self
 
@@ -281,8 +281,8 @@ class TableDataSink(BaseDataSink):
         Parameters
         ----------
         mode:
-            Optional override for `full_refresh_mode`, taking precedence over the resolved
-            `self.full_refresh_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            Optional override for `reset_mode`, taking precedence over the resolved
+            `self.reset_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
             `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
             generically here, especially when purging multiple sinks/tables at once via
             `PipelineNode.purge()`.
@@ -290,8 +290,8 @@ class TableDataSink(BaseDataSink):
         if mode == "DELETE_WHERE":
             raise ValueError(
                 "`DELETE_WHERE` is not supported as a `purge()` override - it requires a "
-                "sink-specific `full_refresh_delete_where` predicate. Set `full_refresh_mode`/"
-                "`full_refresh_delete_where` directly on the sink instead."
+                "sink-specific `reset_delete_where` predicate. Set `reset_mode`/"
+                "`reset_delete_where` directly on the sink instead."
             )
 
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
@@ -299,7 +299,7 @@ class TableDataSink(BaseDataSink):
 
             spark = get_spark_session()
 
-            full_refresh_mode = mode or self.full_refresh_mode
+            reset_mode = mode or self.reset_mode
 
             if self._deletes_writer_rows(mode):
                 if self.exists():
@@ -313,7 +313,7 @@ class TableDataSink(BaseDataSink):
                     )
                     spark.sql(f"DELETE FROM {self.full_name} WHERE {predicate}")
 
-            elif full_refresh_mode == "DROP":
+            elif reset_mode == "DROP":
                 logger.info(f"Dropping {self.table_type} {self.full_name}")
                 spark.sql(f"DROP {self.table_type} IF EXISTS {self.full_name}")
 
@@ -329,10 +329,10 @@ class TableDataSink(BaseDataSink):
                             logger.info(f"Deleting data file {path}")
                             os.remove(path)
 
-            elif full_refresh_mode == "TRUNCATE":
+            elif reset_mode == "TRUNCATE":
                 if self.table_type != "TABLE":
                     raise ValueError(
-                        f"`full_refresh_mode` 'TRUNCATE' is not supported for table_type "
+                        f"`reset_mode` 'TRUNCATE' is not supported for table_type "
                         f"'{self.table_type}'. Views cannot be truncated."
                     )
                 # Delta does not implement Spark's `SupportsTruncate`/`TRUNCATE TABLE` DDL
@@ -342,7 +342,7 @@ class TableDataSink(BaseDataSink):
                 if self.exists():
                     logger.info(f"Truncating table {self.full_name}")
                     # Writers of a shared target may truncate it concurrently (e.g. isolated
-                    # writers of a `purge_only` run): once another writer emptied it, a retry
+                    # writers of a `refresh="reset"` run): once another writer emptied it, a retry
                     # has nothing left to delete.
                     for attempt in range(3):
                         try:
@@ -356,26 +356,24 @@ class TableDataSink(BaseDataSink):
                             )
                             time.sleep(2)
 
-            elif full_refresh_mode == "DELETE_WHERE":
-                if not self.full_refresh_delete_where:
+            elif reset_mode == "DELETE_WHERE":
+                if not self.reset_delete_where:
                     raise ValueError(
-                        "`full_refresh_delete_where` must be set when `full_refresh_mode` is 'DELETE_WHERE'."
+                        "`reset_delete_where` must be set when `reset_mode` is 'DELETE_WHERE'."
                     )
                 count = spark.sql(
-                    f"SELECT COUNT(*) FROM {self.full_name} WHERE {self.full_refresh_delete_where}"
+                    f"SELECT COUNT(*) FROM {self.full_name} WHERE {self.reset_delete_where}"
                 ).collect()[0][0]
                 logger.info(
                     f"Deleting {count} rows from {self.full_name} where "
-                    f"{self.full_refresh_delete_where}"
+                    f"{self.reset_delete_where}"
                 )
                 spark.sql(
-                    f"DELETE FROM {self.full_name} WHERE {self.full_refresh_delete_where}"
+                    f"DELETE FROM {self.full_name} WHERE {self.reset_delete_where}"
                 )
 
             else:
-                raise ValueError(
-                    f"`full_refresh_mode` '{full_refresh_mode}' is not supported."
-                )
+                raise ValueError(f"`reset_mode` '{reset_mode}' is not supported.")
 
             # Remove Checkpoint
             self._purge_checkpoint()

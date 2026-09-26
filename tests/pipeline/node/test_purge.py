@@ -170,78 +170,78 @@ def test_purge_never_executed(tmp_path):
     node.purge()  # should not raise
 
 
-def test_full_refresh_mode_sink_override(tmp_path):
+def test_reset_mode_sink_override(tmp_path):
     node = models.PipelineNode(
         name="node0",
-        full_refresh_mode="TRUNCATE",
+        reset_mode="TRUNCATE",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[
             {
                 "format": "PARQUET",
                 "path": str(tmp_path / "sink/"),
-                "full_refresh_mode": "DROP",
+                "reset_mode": "DROP",
             }
         ],
     )
-    assert node.sinks[0].full_refresh_mode == "DROP"
+    assert node.sinks[0].reset_mode == "DROP"
 
 
-def test_full_refresh_mode_pipeline_level_default(tmp_path):
+def test_reset_mode_pipeline_level_default(tmp_path):
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
     )
-    models.Pipeline(name="pl", nodes=[node], full_refresh_mode="TRUNCATE")
-    assert node.sinks[0].full_refresh_mode == "TRUNCATE"
+    models.Pipeline(name="pl", nodes=[node], reset_mode="TRUNCATE")
+    assert node.sinks[0].reset_mode == "TRUNCATE"
 
 
-def test_full_refresh_mode_global_settings_default(tmp_path, monkeypatch):
+def test_reset_mode_global_settings_default(tmp_path, monkeypatch):
     from laktory._settings import settings
 
-    monkeypatch.setattr(settings, "full_refresh_mode", "TRUNCATE")
+    monkeypatch.setattr(settings, "reset_mode", "TRUNCATE")
 
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
     )
-    assert node.sinks[0].full_refresh_mode == "TRUNCATE"
+    assert node.sinks[0].reset_mode == "TRUNCATE"
 
 
-def test_full_refresh_mode_delete_where_rejected_on_node(tmp_path):
+def test_reset_mode_delete_where_rejected_on_node(tmp_path):
     with pytest.raises(ValueError):
         models.PipelineNode(
             name="node0",
-            full_refresh_mode="DELETE_WHERE",
+            reset_mode="DELETE_WHERE",
             sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
             sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
         )
 
 
-def test_full_refresh_mode_delete_where_rejected_on_pipeline(tmp_path):
+def test_reset_mode_delete_where_rejected_on_pipeline(tmp_path):
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
         sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
     )
     with pytest.raises(ValueError):
-        models.Pipeline(name="pl", nodes=[node], full_refresh_mode="DELETE_WHERE")
+        models.Pipeline(name="pl", nodes=[node], reset_mode="DELETE_WHERE")
 
 
-def test_full_refresh_mode_delete_where_rejected_globally(monkeypatch):
+def test_reset_mode_delete_where_rejected_globally(monkeypatch):
     from laktory._settings import settings
 
     with pytest.raises(ValueError):
-        monkeypatch.setattr(settings, "full_refresh_mode", "DELETE_WHERE")
+        monkeypatch.setattr(settings, "reset_mode", "DELETE_WHERE")
 
 
-@pytest.mark.parametrize("full_refresh_mode", ["NONE", "UNKNOWN"])
-def test_full_refresh_mode_invalid_rejected_globally(full_refresh_mode, monkeypatch):
+@pytest.mark.parametrize("reset_mode", ["NONE", "UNKNOWN"])
+def test_reset_mode_invalid_rejected_globally(reset_mode, monkeypatch):
     from laktory._settings import settings
 
     with pytest.raises(ValueError):
-        monkeypatch.setattr(settings, "full_refresh_mode", full_refresh_mode)
+        monkeypatch.setattr(settings, "reset_mode", reset_mode)
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -328,7 +328,7 @@ def test_shared_internal_grouped(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
     # Table reset once, all writers reprocess
-    pl.execute(full_refresh=True)
+    pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
@@ -346,7 +346,7 @@ def test_shared_internal_selection(tmp_path):
 
     # Selecting one writer selects the whole group: table reset, no rows lost
     assert sorted(pl.get_execution_plan(selects=["b"]).node_names) == ["a", "b", "c"]
-    pl.execute(selects=["b"], full_refresh=True)
+    pl.execute(selects=["b"], refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
@@ -356,7 +356,7 @@ def test_shared_internal_removed_node(tmp_path):
 
     # Node c removed and pipeline "redeployed": full refresh leaves no leftovers
     pl = _pipeline(_writers(path, _INTERNAL, names=("a", "b")))
-    pl.execute(full_refresh=True)
+    pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3}
 
 
@@ -381,12 +381,12 @@ def test_shared_isolated(tmp_path):
     # Incremental run of b only appends b rows, refresh of b only replaces b rows
     pl.execute(selects=["b"])
     assert _feed_counts(path) == {"a": 3, "b": 6, "c": 3}
-    pl.execute(selects=["b"], full_refresh=True)
+    pl.execute(selects=["b"], refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
     # Any order
     for name in ["c", "a"]:
-        pl.execute(selects=[name], full_refresh=True)
+        pl.execute(selects=[name], refresh="full")
         assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
@@ -394,8 +394,8 @@ def test_shared_isolated_override_rejected(tmp_path):
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, _ISOLATED))
     pl.execute()
-    with pytest.raises(ValueError, match="Run with `purge_only`"):
-        pl.execute(full_refresh=True, full_refresh_mode="DROP")
+    with pytest.raises(ValueError, match="Run with `refresh='reset'`"):
+        pl.execute(refresh="full", reset_mode="DROP")
 
 
 def test_shared_external(tmp_path):
@@ -414,20 +414,20 @@ def test_shared_external(tmp_path):
     assert sorted(_read(path)["_laktory_writer"].unique()) == ["pl1", "pl2"]
 
     # Full refresh of pl2 deletes its rows once, pl1 rows untouched
-    pl2.execute(full_refresh=True)
+    pl2.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
     # Override drops the whole table, pl1 rows lost until pl1 is refreshed
-    pl2.execute(full_refresh=True, full_refresh_mode="DROP")
+    pl2.execute(refresh="full", reset_mode="DROP")
     assert _feed_counts(path) == {"b": 3, "c": 3}
-    pl1.execute(full_refresh=True)
+    pl1.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_shared_full_refresh_mode_override_invalid(tmp_path):
+def test_shared_reset_mode_override_invalid(tmp_path):
     pl = _pipeline(_writers(str(tmp_path / "shared"), _INTERNAL))
     with pytest.raises(ValueError, match="not supported"):
-        pl.execute(full_refresh=True, full_refresh_mode="DELETE_WHERE")
+        pl.execute(refresh="full", reset_mode="DELETE_WHERE")
 
 
 @pytest.mark.parametrize(
@@ -463,7 +463,7 @@ def test_shared_inferred(tmp_path):
     ]
 
     pl.execute()
-    pl.execute(full_refresh=True)
+    pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
@@ -489,7 +489,7 @@ def test_shared_grouped_task_name_conflict(tmp_path):
 
 def test_shared_config_round_trip(tmp_path):
     """Job tasks reload the pipeline from its config file, where inherited values such as
-    `full_refresh_mode` are serialized explicitly."""
+    `reset_mode` are serialized explicitly."""
     import json
 
     def _node(name, path, shared):
@@ -510,7 +510,7 @@ def test_shared_config_round_trip(tmp_path):
     pl = models.Pipeline(
         name="pl",
         nodes=nodes,
-        full_refresh_mode="TRUNCATE",
+        reset_mode="TRUNCATE",
         orchestrator={"type": "LAKEFLOW_JOB", "serverless_environment_version": "3"},
     )
     content = pl.orchestrator.config_file.content_dict
@@ -519,47 +519,65 @@ def test_shared_config_round_trip(tmp_path):
     assert pl2.nodes_dict["c"].sinks[0].shared.writer_id == "pl"
 
 
-def test_purge_only_grouped(tmp_path):
+def test_reset_grouped(tmp_path):
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, None))
     pl.execute()
 
-    pl.execute(purge_only=True)
+    pl.execute(refresh="reset")
     assert not Path(path).exists()
 
     pl.execute()
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_purge_only_isolated(tmp_path):
+def test_reset_isolated(tmp_path):
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, _ISOLATED))
     pl.execute()
 
     # Without override: each writer deletes its own rows
-    pl.execute(purge_only=True, selects=["b"])
+    pl.execute(refresh="reset", selects=["b"])
     assert _feed_counts(path) == {"a": 3, "c": 3}
-    pl.execute(purge_only=True)
+    pl.execute(refresh="reset")
     assert Path(path).exists()
     assert _read(path).height == 0
 
     # With override: the table is dropped, e.g. before a breaking schema change
     pl.execute()
-    pl.execute(purge_only=True, full_refresh_mode="DROP")
+    pl.execute(refresh="reset", reset_mode="DROP")
     assert not Path(path).exists()
     pl.execute()
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_purge_only_external(tmp_path):
+def test_reset_external(tmp_path):
     path = str(tmp_path / "shared")
     pl1 = _pipeline(_writers(path, {"external": True}, names=("a",)), name="pl1")
     pl2 = _pipeline(_writers(path, {"external": True}, names=("b",)), name="pl2")
     pl1.execute()
     pl2.execute()
 
-    pl2.execute(purge_only=True)
+    pl2.execute(refresh="reset")
     assert _feed_counts(path) == {"a": 3}
 
-    pl2.execute(purge_only=True, full_refresh_mode="DROP")
+    pl2.execute(refresh="reset", reset_mode="DROP")
     assert not Path(path).exists()
+
+
+def test_refresh_parameters(tmp_path):
+    path = str(tmp_path / "shared")
+    pl = _pipeline(_writers(path, None))
+    pl.execute()
+
+    # Deprecated alias
+    with pytest.warns(DeprecationWarning, match="refresh='full'"):
+        pl.execute(full_refresh=True)
+    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+
+    with pytest.raises(ValueError, match="requires `refresh`"):
+        pl.execute(reset_mode="DROP")
+    with pytest.raises(ValueError, match="conflicts with"):
+        pl.execute(full_refresh=True, refresh="reset")
+    with pytest.raises(ValueError, match="is not supported"):
+        pl.execute(refresh="partial")

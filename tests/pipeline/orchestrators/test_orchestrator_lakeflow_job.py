@@ -367,9 +367,9 @@ def test_job_parameters():
     pl = _get_pl()
     params = {p.name: p.default for p in pl.orchestrator.parameter}
     assert params == {
+        "refresh": "incremental",
+        "reset_mode": "",
         "full_refresh": "false",
-        "full_refresh_mode": "",
-        "purge_only": "false",
     }
 
 

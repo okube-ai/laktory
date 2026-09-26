@@ -16,7 +16,7 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
 
     Nodes of a pipeline writing to the same sink target are detected automatically: by
     default, they are grouped in a single execution task and, on `full_refresh`, the table is
-    reset once (according to `full_refresh_mode`) before all writers reprocess their data.
+    reset once (according to `reset_mode`) before all writers reprocess their data.
     These options are only required to change this default:
 
     - `isolated`: each writer runs in its own task (possibly in parallel) and rows carry the

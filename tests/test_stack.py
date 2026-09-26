@@ -724,20 +724,20 @@ def test_stack_settings(monkeypatch):
     assert settings.runtime_root == custom_root
 
 
-def test_stack_settings_full_refresh_mode(monkeypatch):
-    assert settings.full_refresh_mode != "TRUNCATE"
+def test_stack_settings_reset_mode(monkeypatch):
+    assert settings.reset_mode != "TRUNCATE"
 
-    monkeypatch.setattr(settings, "full_refresh_mode", settings.full_refresh_mode)
-    _ = models.Stack(name="one_stack", settings={"full_refresh_mode": "TRUNCATE"})
+    monkeypatch.setattr(settings, "reset_mode", settings.reset_mode)
+    _ = models.Stack(name="one_stack", settings={"reset_mode": "TRUNCATE"})
 
-    assert settings.full_refresh_mode == "TRUNCATE"
+    assert settings.reset_mode == "TRUNCATE"
 
 
-def test_stack_settings_full_refresh_mode_delete_where_rejected(monkeypatch):
-    monkeypatch.setattr(settings, "full_refresh_mode", settings.full_refresh_mode)
+def test_stack_settings_reset_mode_delete_where_rejected(monkeypatch):
+    monkeypatch.setattr(settings, "reset_mode", settings.reset_mode)
 
     with pytest.raises(ValueError):
-        models.Stack(name="one_stack", settings={"full_refresh_mode": "DELETE_WHERE"})
+        models.Stack(name="one_stack", settings={"reset_mode": "DELETE_WHERE"})
 
 
 def test_stack_settings_vars_construction(monkeypatch):

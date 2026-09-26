@@ -2,15 +2,16 @@
 
 ## [0.13.0] - Unreleased
 ### Added
-* Added shared sinks, written by multiple nodes of a pipeline (detected automatically and grouped in a single task, or `shared.isolated`) and/or by multiple pipelines (`shared.external`), with `full_refresh` purging the table once or only the writer's rows, including through append flows with Lakeflow / Spark Declarative Pipelines. [[#675](https://github.com/okube-ai/laktory/issues/675)] [[#676](https://github.com/okube-ai/laktory/issues/676)] [[#677](https://github.com/okube-ai/laktory/issues/677)]
-* Added `full_refresh_mode` (`DROP`, `TRUNCATE`, `DELETE_WHERE`) to control how sinks are purged on `full_refresh`, overridable per run (`pl.execute(full_refresh_mode=...)`, `full_refresh_mode` job parameter), and `purge_only` runs to reset tables without reprocessing data (e.g. from a job run, without table grants). [[#669](https://github.com/okube-ai/laktory/issues/669)]
+* Added shared sinks, written by multiple nodes of a pipeline (detected automatically and grouped in a single task, or `shared.isolated`) and/or by multiple pipelines (`shared.external`), with a full refresh purging the table once or only the writer's rows, including through append flows with Lakeflow / Spark Declarative Pipelines. [[#675](https://github.com/okube-ai/laktory/issues/675)] [[#676](https://github.com/okube-ai/laktory/issues/676)] [[#677](https://github.com/okube-ai/laktory/issues/677)]
+* Added a `refresh` run parameter (`incremental`, `full`, `reset`) - `reset` resets tables without reprocessing data, e.g. from a job run without table grants - and `reset_mode` (`DROP`, `TRUNCATE`, `DELETE_WHERE`) to control how sinks are reset, overridable per run (`pl.execute(refresh=..., reset_mode=...)`, `refresh` / `reset_mode` job parameters). [[#669](https://github.com/okube-ai/laktory/issues/669)]
 ### Fixed
 * Fixed `DataSinkMergeCDCOptions._parent` going stale after `Pipeline.inject_vars(inplace=False)`'s deep copy (same root cause as #653, different mechanism: it was wired up via a one-off manual assignment instead of the standard `children_names` recursion), corrupting `merge_cdc_options.target_name`/`.target_path`/`.sink` for any sink using `mode: MERGE`. [[#656](https://github.com/okube-ai/laktory/issues/656)]
 ### Updated
 * DataFrame namespaces to support multi-level names (accessor chains deeper than one dot e.g. `namespace.sub.method`). [[#672](https://github.com/okube-ai/laktory/issues/672)]
 * Local Spark Declarative Pipeline runs (`execute()`) now load Delta from the Laktory Spark session, so sinks default to Delta as on Databricks (previously written as Parquet locally). [[#679](https://github.com/okube-ai/laktory/issues/679)]
+* Deprecated `full_refresh` (`pl.execute`, job parameter) in favor of `refresh="full"`; still accepted, with a deprecation warning.
 ### Breaking changes
-* Nodes of a pipeline writing to the same sink target are now executed in a single task named `shared-{table}` (instead of one `node-{name}` task each), which purges the target once on `full_refresh` - previously, each node purged it, deleting the data written by the others. Deploying changes the task graph of the corresponding jobs; declare `shared.isolated: true` to keep independent tasks. [[#675](https://github.com/okube-ai/laktory/issues/675)]
+* Nodes of a pipeline writing to the same sink target are now executed in a single task named `shared-{table}` (instead of one `node-{name}` task each), which purges the target once on a full refresh - previously, each node purged it, deleting the data written by the others. Deploying changes the task graph of the corresponding jobs; declare `shared.isolated: true` to keep independent tasks. [[#675](https://github.com/okube-ai/laktory/issues/675)]
 
 ## [0.12.7] - 2026-09-11
 ### Added

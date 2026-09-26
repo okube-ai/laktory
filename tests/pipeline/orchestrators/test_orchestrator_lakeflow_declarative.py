@@ -356,7 +356,7 @@ def test_ldp_view_node_raises():
 
 
 # --------------------------------------------------------------------------- #
-# full_refresh_mode incompatibility with LDP/SDP                                     #
+# reset_mode incompatibility with LDP/SDP                                     #
 # --------------------------------------------------------------------------- #
 
 
@@ -364,20 +364,20 @@ def test_ldp_view_node_raises():
 @pytest.mark.parametrize(
     "sink_kwargs",
     [
-        pytest.param({"full_refresh_mode": "TRUNCATE"}, id="truncate"),
+        pytest.param({"reset_mode": "TRUNCATE"}, id="truncate"),
         pytest.param(
             {
-                "full_refresh_mode": "DELETE_WHERE",
-                "full_refresh_delete_where": "id = 1",
+                "reset_mode": "DELETE_WHERE",
+                "reset_delete_where": "id = 1",
             },
             id="delete_where",
         ),
     ],
 )
-def test_full_refresh_mode_non_drop_raises_under_declarative_orchestrator(
+def test_reset_mode_non_drop_raises_under_declarative_orchestrator(
     orchestrator_dict, sink_kwargs
 ):
-    with pytest.raises((ValueError, ValidationError), match="full_refresh_mode"):
+    with pytest.raises((ValueError, ValidationError), match="reset_mode"):
         models.Pipeline.model_validate(
             {
                 "name": "pl-declarative",
@@ -394,15 +394,15 @@ def test_full_refresh_mode_non_drop_raises_under_declarative_orchestrator(
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
-def test_full_refresh_mode_pipeline_level_raises_under_declarative_orchestrator(
+def test_reset_mode_pipeline_level_raises_under_declarative_orchestrator(
     orchestrator_dict,
 ):
-    with pytest.raises((ValueError, ValidationError), match="full_refresh_mode"):
+    with pytest.raises((ValueError, ValidationError), match="reset_mode"):
         models.Pipeline.model_validate(
             {
                 "name": "pl-declarative",
                 "orchestrator": orchestrator_dict,
-                "full_refresh_mode": "TRUNCATE",
+                "reset_mode": "TRUNCATE",
                 "nodes": [
                     {
                         "name": "brz",
@@ -415,7 +415,7 @@ def test_full_refresh_mode_pipeline_level_raises_under_declarative_orchestrator(
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
-def test_full_refresh_mode_default_drop_ok_under_declarative_orchestrator(
+def test_reset_mode_default_drop_ok_under_declarative_orchestrator(
     orchestrator_dict,
 ):
     models.Pipeline.model_validate(
@@ -433,7 +433,7 @@ def test_full_refresh_mode_default_drop_ok_under_declarative_orchestrator(
     )
 
 
-def test_full_refresh_mode_non_drop_ok_under_lakeflow_job():
+def test_reset_mode_non_drop_ok_under_lakeflow_job():
     models.Pipeline.model_validate(
         {
             "name": "pl-job",
@@ -445,7 +445,7 @@ def test_full_refresh_mode_non_drop_ok_under_lakeflow_job():
                 {
                     "name": "brz",
                     "sources": [{"format": "JSON", "path": "/src/"}],
-                    "sinks": [{"table_name": "brz", "full_refresh_mode": "TRUNCATE"}],
+                    "sinks": [{"table_name": "brz", "reset_mode": "TRUNCATE"}],
                 },
             ],
         }

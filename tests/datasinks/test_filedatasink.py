@@ -102,10 +102,10 @@ def test_unknown_format():
 def test_purge_unsupported_modes_rejected(mode, tmp_path):
     kwargs = {}
     if mode == "DELETE_WHERE":
-        kwargs["full_refresh_delete_where"] = "id = 1"
+        kwargs["reset_delete_where"] = "id = 1"
 
     sink = FileDataSink(
-        path=str(tmp_path / "sink"), full_refresh_mode=mode, format="DELTA", **kwargs
+        path=str(tmp_path / "sink"), reset_mode=mode, format="DELTA", **kwargs
     )
     with pytest.raises(NotImplementedError):
         sink.purge()

@@ -17,10 +17,10 @@ def test_settings():
     assert settings2.runtime_root == "/tmp2/laktory/"
 
 
-def test_settings_full_refresh_mode_delete_where_rejected():
+def test_settings_reset_mode_delete_where_rejected():
     with pytest.raises(ValueError):
-        Settings(full_refresh_mode="DELETE_WHERE")
+        Settings(reset_mode="DELETE_WHERE")
 
     settings = Settings()
     with pytest.raises(ValueError):
-        settings.full_refresh_mode = "DELETE_WHERE"
+        settings.reset_mode = "DELETE_WHERE"

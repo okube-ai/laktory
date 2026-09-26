@@ -1,8 +1,10 @@
 import os
 import re
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Literal
 
 import networkx as nx
 from pydantic import AliasChoices
@@ -885,13 +887,13 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     def execute(
         self,
         write_sinks=True,
-        full_refresh: bool = False,
+        full_refresh: bool | None = None,
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
         use_orchestrator: bool = False,
-        full_refresh_mode: str | None = None,
-        purge_only: bool = False,
+        refresh: Literal["incremental", "full", "reset"] = "incremental",
+        reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -903,8 +905,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         write_sinks:
             If `False` writing of node sinks will be skipped
         full_refresh:
-            If `True` all nodes will be completely re-processed by deleting
-            existing data and checkpoints before processing.
+            Deprecated, use `refresh="full"` instead.
         named_dfs:
             Named DataFrames to be passed to pipeline nodes transformer.
         update_tables_metadata:
@@ -923,34 +924,66 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             that `pl.execute()` always runs in-process unless explicitly
             requested. This flag is ignored when already running inside an
             orchestrator context (e.g. inside `laktory_sdp.py`).
-        full_refresh_mode:
-            Override of the sinks `full_refresh_mode` for this run (`DROP` or `TRUNCATE`), only used
-            when `full_refresh` or `purge_only` is `True`. For `shared.external` and
-            `shared.isolated` sinks, the whole table is purged, including the rows written by
-            other writers.
-        purge_only:
-            If `True`, the sinks of the selected nodes are only purged (according to their
-            `full_refresh_mode`, or the override), without reading or writing data. The next
-            run reprocesses all the data. Used to reset tables, e.g. before a breaking schema
-            change, including the tables of `shared.isolated` sinks.
+        refresh:
+            What the run does:
+
+            - `incremental`: process new data (default).
+            - `full`: reset the sinks of the selected nodes (data and checkpoints, according
+              to their `reset_mode`), then reprocess all the data.
+            - `reset`: only reset the sinks of the selected nodes, without reading or writing
+              data. The next run reprocesses all the data. Used to reset tables, e.g. before
+              a breaking schema change, including the tables of `shared.isolated` sinks.
+        reset_mode:
+            Override of the sinks `reset_mode` for this run (`DROP` or `TRUNCATE`), with
+            `refresh` `full` or `reset`. For `shared.external` and `shared.isolated` sinks,
+            the whole table is reset, including the rows written by other writers.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
 
-        if full_refresh_mode:
-            full_refresh_mode = full_refresh_mode.upper()
-            if full_refresh_mode not in ["DROP", "TRUNCATE"]:
+        if full_refresh is not None:
+            warnings.warn(
+                "`full_refresh` is deprecated and will be removed in a future version. Use "
+                "`refresh='full'` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if full_refresh:
+                if refresh not in ["incremental", "full"]:
+                    raise ValueError(
+                        f"`full_refresh=True` conflicts with `refresh='{refresh}'`."
+                    )
+                refresh = "full"
+
+        refresh = (refresh or "incremental").lower()
+        if refresh not in ["incremental", "full", "reset"]:
+            raise ValueError(
+                f"`refresh` '{refresh}' is not supported. Use 'incremental', 'full' or "
+                "'reset'."
+            )
+
+        if reset_mode:
+            reset_mode = reset_mode.upper()
+            if reset_mode not in ["DROP", "TRUNCATE"]:
                 raise ValueError(
-                    f"`full_refresh_mode` override '{full_refresh_mode}' is not supported. Use 'DROP' or "
+                    f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
                     "'TRUNCATE'."
                 )
-            if not (full_refresh or purge_only):
-                logger.warning(
-                    f"`full_refresh_mode` '{full_refresh_mode}' is ignored because "
-                    "`full_refresh` is not enabled."
+            if refresh == "incremental":
+                raise ValueError(
+                    f"`reset_mode` '{reset_mode}' requires `refresh` 'full' or 'reset'."
                 )
         else:
-            full_refresh_mode = None
+            reset_mode = None
+
+        full_refresh = refresh == "full"
+        reset_only = refresh == "reset"
+
+        if reset_only and (self.is_orchestrator_ldp or self.is_orchestrator_sdp):
+            raise NotImplementedError(
+                "`refresh='reset'` is not supported with declarative orchestrators, whose "
+                "tables are managed by the declarative engine. Use `refresh='full'` instead."
+            )
 
         if use_orchestrator:
             if self.orchestrator is None:
@@ -971,18 +1004,12 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 )
                 return
 
-        if purge_only and (self.is_orchestrator_ldp or self.is_orchestrator_sdp):
-            raise NotImplementedError(
-                "`purge_only` is not supported with declarative orchestrators, whose tables "
-                "are managed by the declarative engine. Use a full refresh instead."
-            )
-
         plan = self.get_execution_plan(selects=selects)
         node_names = plan.node_names
 
         logger.info(f"Selected nodes: {node_names}")
 
-        if full_refresh and full_refresh_mode and not purge_only:
+        if full_refresh and reset_mode:
             isolated = [
                 n
                 for n in node_names
@@ -993,11 +1020,11 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             ]
             if isolated:
                 raise ValueError(
-                    f"`full_refresh_mode` override '{full_refresh_mode}' is not supported for "
+                    f"`reset_mode` override '{reset_mode}' is not supported for "
                     f"the `shared.isolated` sinks of nodes {isolated}, whose writers are "
-                    "executed independently. Run with `purge_only` and the "
-                    "`full_refresh_mode` override to reset their tables, then run a full "
-                    "refresh."
+                    "executed independently. Run with `refresh='reset'` and the "
+                    "`reset_mode` override to reset their tables, then run with "
+                    "`refresh='full'`."
                 )
 
         if named_dfs is None:
@@ -1009,10 +1036,8 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
-                full_refresh_mode=full_refresh_mode
-                if (full_refresh or purge_only)
-                else None,
-                purge_only=purge_only,
+                reset_mode=reset_mode,
+                reset_only=reset_only,
             )
 
     def update_tables_metadata(self):

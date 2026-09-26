@@ -46,8 +46,8 @@ class PipelineTask(BaseModel):
         full_refresh: bool = False,
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
-        full_refresh_mode: str | None = None,
-        purge_only: bool = False,
+        reset_mode: str | None = None,
+        reset_only: bool = False,
     ) -> None:
         """
         Execute the pipeline task.
@@ -63,11 +63,11 @@ class PipelineTask(BaseModel):
             Named DataFrames to be passed to pipeline nodes transformer.
         update_tables_metadata:
             Update tables metadata
-        full_refresh_mode:
-            Optional override for sinks `full_refresh_mode` when `full_refresh` or
-            `purge_only` is `True`.
-        purge_only:
-            If `True`, the sinks of the task nodes are only purged, without reading or
+        reset_mode:
+            Optional override for sinks `reset_mode` when `full_refresh` or
+            `reset_only` is `True`.
+        reset_only:
+            If `True`, the sinks of the task nodes are only reset, without reading or
             writing data.
         """
 
@@ -89,8 +89,8 @@ class PipelineTask(BaseModel):
             if named_dfs is None:
                 named_dfs = {}
 
-            if purge_only:
-                node.purge(mode=full_refresh_mode, purged_targets=set(purged_targets))
+            if reset_only:
+                node.purge(mode=reset_mode, purged_targets=set(purged_targets))
                 purged_targets |= node.grouped_sink_targets
                 continue
 
@@ -99,7 +99,7 @@ class PipelineTask(BaseModel):
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
-                full_refresh_mode=full_refresh_mode,
+                reset_mode=reset_mode,
                 purged_targets=set(purged_targets),
             )
             purged_targets |= node.grouped_sink_targets

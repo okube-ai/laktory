@@ -75,7 +75,7 @@ class PipelineChild(BaseChild):
         # Value from settings
         return settings.dataframe_api.upper()
 
-    full_refresh_mode_: Literal["DROP", "TRUNCATE"] = Field(
+    reset_mode_: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description="""
         Strategy used to purge a sink's data when `full_refresh` is requested.
@@ -84,30 +84,30 @@ class PipelineChild(BaseChild):
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
 
         `DELETE_WHERE` is also available, but only directly on a data sink (see
-        `BaseDataSink.full_refresh_mode`) - a deletion predicate is inherently specific to a single
+        `BaseDataSink.reset_mode`) - a deletion predicate is inherently specific to a single
         sink, so it can't be a pipeline node, pipeline, or global default.
         """,
-        validation_alias=AliasChoices("full_refresh_mode", "full_refresh_mode_"),
+        validation_alias=AliasChoices("reset_mode", "reset_mode_"),
         exclude=True,
     )
 
-    def _resolve_full_refresh_mode(self) -> str:
+    def _resolve_reset_mode(self) -> str:
         # Direct value
-        if self.full_refresh_mode_ is not None:
-            return self.full_refresh_mode_
+        if self.reset_mode_ is not None:
+            return self.reset_mode_
 
         # Value from parent
         parent = self._parent
         if parent is not None:
-            return parent.full_refresh_mode
+            return parent.reset_mode
 
         # Value from settings
-        return settings.full_refresh_mode.upper()
+        return settings.reset_mode.upper()
 
-    @computed_field(description="full_refresh_mode")
+    @computed_field(description="reset_mode")
     @property
-    def full_refresh_mode(self) -> Literal["DROP", "TRUNCATE"]:
-        return self._resolve_full_refresh_mode()
+    def reset_mode(self) -> Literal["DROP", "TRUNCATE"]:
+        return self._resolve_reset_mode()
 
     @property
     def parent_pipeline(self):

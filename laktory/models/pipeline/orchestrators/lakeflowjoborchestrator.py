@@ -168,9 +168,10 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
         self.sort_tasks(self.task)
 
         self.parameter = [
+            JobParameter(name="refresh", default="incremental"),
+            JobParameter(name="reset_mode", default=""),
+            # Deprecated, kept for backward compatibility: use `refresh=full`
             JobParameter(name="full_refresh", default="false"),
-            JobParameter(name="full_refresh_mode", default=""),
-            JobParameter(name="purge_only", default="false"),
         ]
 
     # ----------------------------------------------------------------------- #
@@ -236,7 +237,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
             "type",
             "dataframe_backend",
             "dataframe_api",
-            "full_refresh_mode",
+            "reset_mode",
             "serverless_environment_version",
             "data_profiling_config_task",
         ]

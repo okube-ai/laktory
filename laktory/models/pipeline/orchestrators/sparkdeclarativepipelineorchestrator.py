@@ -119,7 +119,7 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
                     "type",
                     "dataframe_backend",
                     "dataframe_api",
-                    "full_refresh_mode",
+                    "reset_mode",
                     "configuration",
                 ],
                 by_alias=True,

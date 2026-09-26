@@ -71,27 +71,27 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    full_refresh_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
+    reset_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
         None,
         description="""
         Strategy used to purge this sink's data when `full_refresh` is requested.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
-        - DELETE_WHERE: Delete only the rows matching `full_refresh_delete_where`.
+        - DELETE_WHERE: Delete only the rows matching `reset_delete_where`.
 
         Ignored by `shared.external` and `shared.isolated` sinks, which only delete their
         own rows.
         """,
-        validation_alias=AliasChoices("full_refresh_mode", "full_refresh_mode_"),
+        validation_alias=AliasChoices("reset_mode", "reset_mode_"),
         exclude=True,
     )
-    full_refresh_delete_where: str | None = Field(
+    reset_delete_where: str | None = Field(
         None,
         description="""
-        SQL WHERE-clause predicate used to select the rows to delete when `full_refresh_mode` resolves
+        SQL WHERE-clause predicate used to select the rows to delete when `reset_mode` resolves
         to 'DELETE_WHERE'. Should be set directly on the sink that owns the predicate - unlike
-        `full_refresh_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
+        `reset_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
         since a deletion predicate is inherently specific to a single sink.
         """,
     )
@@ -105,10 +105,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         """,
     )
 
-    @computed_field(description="full_refresh_mode")
+    @computed_field(description="reset_mode")
     @property
-    def full_refresh_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
-        return self._resolve_full_refresh_mode()
+    def reset_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
+        return self._resolve_reset_mode()
 
     @field_validator("shared", mode="before")
     @classmethod
@@ -253,19 +253,16 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def full_refresh_delete_where_is_set(self) -> Any:
-        if (
-            self.full_refresh_mode == "DELETE_WHERE"
-            and not self.full_refresh_delete_where
-        ):
+    def reset_delete_where_is_set(self) -> Any:
+        if self.reset_mode == "DELETE_WHERE" and not self.reset_delete_where:
             raise ValueError(
-                "`full_refresh_delete_where` must be set when `full_refresh_mode` is 'DELETE_WHERE'."
+                "`reset_delete_where` must be set when `reset_mode` is 'DELETE_WHERE'."
             )
         return self
 
     @model_validator(mode="after")
-    def full_refresh_mode_incompatible_with_declarative_orchestrator(self) -> Any:
-        if self.full_refresh_mode != "DROP":
+    def reset_mode_incompatible_with_declarative_orchestrator(self) -> Any:
+        if self.reset_mode != "DROP":
             from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
                 LakeflowDeclarativePipelineOrchestrator,
             )
@@ -284,10 +281,10 @@ class BaseDataSink(BaseModel, PipelineChild):
                 ),
             ):
                 raise ValueError(
-                    f"`full_refresh_mode` '{self.full_refresh_mode}' has no effect when using the "
+                    f"`reset_mode` '{self.reset_mode}' has no effect when using the "
                     f"{type(orchestrator).__name__} - `full_refresh` is handled entirely by "
                     "the Databricks/Spark Declarative Pipelines engine, which never calls "
-                    "Laktory's `purge()`. Remove `full_refresh_mode`/`full_refresh_delete_where` from this "
+                    "Laktory's `purge()`. Remove `reset_mode`/`reset_delete_where` from this "
                     "sink, or use the LAKEFLOW_JOB orchestrator."
                 )
         return self
@@ -767,7 +764,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _deletes_writer_rows(self, mode: str | None) -> bool:
         """
-        `True` if a purge only deletes the rows of this writer. With a `full_refresh_mode`
+        `True` if a purge only deletes the rows of this writer. With a `reset_mode`
         override, the whole target is purged instead.
         """
         if self.shared is None or not self.shared.uses_writer_column:
@@ -899,8 +896,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         Parameters
         ----------
         mode:
-            Optional override for `full_refresh_mode`, taking precedence over the resolved
-            `self.full_refresh_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            Optional override for `reset_mode`, taking precedence over the resolved
+            `self.reset_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
             `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
             generically here, especially when purging multiple sinks/tables at once via
             `PipelineNode.purge()`.

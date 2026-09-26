@@ -30,24 +30,24 @@ def _execute():
         required=False,
     )
     parser.add_argument(
+        "--refresh",
+        type=str,
+        help="What the run does: incremental, full or reset",
+        default="incremental",
+        required=False,
+    )
+    parser.add_argument(
+        "--reset_mode",
+        type=str,
+        help="Override of sinks reset mode (DROP or TRUNCATE)",
+        default=None,
+        required=False,
+    )
+    parser.add_argument(
         "--full_refresh",
         type=str2bool,
-        help="Full refresh",
+        help="Deprecated, use `--refresh full` instead",
         default=False,
-        required=False,
-    )
-    parser.add_argument(
-        "--purge_only",
-        type=str2bool,
-        help="Only purge sinks, without reading or writing data",
-        default=False,
-        required=False,
-    )
-    parser.add_argument(
-        "--full_refresh_mode",
-        type=str,
-        help="Override of sinks full refresh mode (DROP or TRUNCATE)",
-        default=None,
         required=False,
     )
 
@@ -55,15 +55,15 @@ def _execute():
     args, unknown = parser.parse_known_args()
     filepath = args.filepath
     selects = args.selects
-    full_refresh = args.full_refresh
-    full_refresh_mode = args.full_refresh_mode or None
-    purge_only = args.purge_only
+    refresh = args.refresh or "incremental"
+    reset_mode = args.reset_mode or None
+    full_refresh = True if args.full_refresh else None
     selects_str = ""
     if selects:
         selects = selects.split(",")
         selects_str = f" nodes {selects} from"
     logger.info(
-        f"Executing{selects_str} pipeline '{filepath}' with full refresh {full_refresh}"
+        f"Executing{selects_str} pipeline '{filepath}' with refresh '{refresh}'"
     )
 
     # Read
@@ -77,6 +77,6 @@ def _execute():
     pl.execute(
         full_refresh=full_refresh,
         selects=selects,
-        full_refresh_mode=full_refresh_mode,
-        purge_only=purge_only,
+        refresh=refresh,
+        reset_mode=reset_mode,
     )

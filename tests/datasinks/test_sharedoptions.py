@@ -84,11 +84,11 @@ def test_writer_column_requires_delta():
         )
 
 
-def test_writer_column_ignores_full_refresh_mode():
+def test_writer_column_ignores_reset_mode():
     # Accepted (and ignored on full refresh) so that serialized configs, where inherited
     # values are explicit, can be reloaded
-    _sink(shared={"internal": True}, full_refresh_mode="TRUNCATE")
-    _sink(shared={"external": True}, full_refresh_mode="TRUNCATE")
+    _sink(shared={"internal": True}, reset_mode="TRUNCATE")
+    _sink(shared={"external": True}, reset_mode="TRUNCATE")
 
 
 def test_standalone_write_requires_writer_id():
