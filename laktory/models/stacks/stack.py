@@ -291,8 +291,9 @@ class LaktorySettings(BaseModel):
     reset_mode: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description=(
-            "Stack-wide default strategy used to purge a data sink's data on a full refresh "
-            "(`DROP`/`TRUNCATE`), overridable per `Pipeline`, `PipelineNode`, or sink. "
+            "Fallback strategy used to reset a data sink's data (`DROP`/`TRUNCATE`) for the "
+            "sinks, nodes and pipelines that don't set one - explicit values always take "
+            "precedence. If not set, `LAKTORY_RESET_MODE` applies (default `DROP`). "
             "`DELETE_WHERE` is not available here - it can only be set directly on a sink. "
             "See [Laktory Settings](../../../concepts/laktorysettings.md#reset-mode)."
         ),

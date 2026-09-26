@@ -7,7 +7,7 @@
 | [`build_root`](#build-root) | Laktory cache directory | Local directory for generated build artifacts |
 | [`dataframe_backend`](#dataframe-backend-and-api) | none | Stack-wide default DataFrame backend (`POLARS` / `PYSPARK`) |
 | [`dataframe_api`](#dataframe-backend-and-api) | none | Stack-wide default DataFrame API (`NARWHALS` / `NATIVE`) |
-| [`reset_mode`](#reset-mode) | none | Stack-wide default data sink purge strategy (`DROP` / `TRUNCATE`) |
+| [`reset_mode`](#reset-mode) | none | Fallback reset mode (`DROP` / `TRUNCATE`) for sinks, nodes and pipelines that don't set one. If not set, `LAKTORY_RESET_MODE` applies (default `DROP`) |
 
 Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)):
 
@@ -70,16 +70,18 @@ Override it when file generation is delegated to a third party that expects thos
 
 ## Reset Mode
 
-`reset_mode` (`DROP` / `TRUNCATE`) is the stack-wide default strategy used to purge a data sink's
-data on a full refresh, overridable per [`Pipeline`](pipeline.md), `PipelineNode`, or directly on
-a sink:
+`reset_mode` (`DROP` / `TRUNCATE`) is the fallback strategy used to reset a data sink's data on a
+full refresh or a reset run, for the sinks, nodes and pipelines that don't set one. The value
+used for a sink is the first one set among: the sink, its [`PipelineNode`](pipeline.md), its
+[`Pipeline`](pipeline.md), and this setting. Explicit values always take precedence:
 
 ```yaml title="stack.yaml"
 settings:
   reset_mode: TRUNCATE
 ```
 
-It can also be set via the `LAKTORY_RESET_MODE` environment variable. `DELETE_WHERE` cannot be
+If not set (the default), the `LAKTORY_RESET_MODE` environment variable applies, itself
+defaulting to `DROP`. Setting it here overrides the environment variable. `DELETE_WHERE` cannot be
 set here (or on a `Pipeline`/`PipelineNode`) - it's only valid set directly on a sink, since its
 deletion predicate is inherently sink-specific; doing so anywhere else raises a validation error.
 See
