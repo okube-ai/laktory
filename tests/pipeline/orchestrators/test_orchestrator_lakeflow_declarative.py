@@ -564,11 +564,12 @@ def test_shared_sink_cdc_raises_under_declarative_orchestrator(orchestrator_dict
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
-def test_shared_sink_missing_internal_under_declarative_orchestrator(
-    orchestrator_dict,
-):
-    with pytest.raises((ValueError, ValidationError), match="shared.internal: true"):
-        _get_shared_pl(orchestrator_dict, sinks={"n2": {"shared": None}})
+def test_shared_sink_inferred_under_declarative_orchestrator(orchestrator_dict):
+    pl = _get_shared_pl(
+        orchestrator_dict, sinks={"n1": {"shared": None}, "n2": {"shared": None}}
+    )
+    name = pl.nodes_dict["n1"].sinks[0].sdp_table_or_view_name
+    assert list(pl.sdp_append_flow_sinks) == [name]
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)

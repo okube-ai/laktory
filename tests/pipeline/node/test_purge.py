@@ -394,7 +394,7 @@ def test_shared_isolated_override_rejected(tmp_path):
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, _ISOLATED))
     pl.execute()
-    with pytest.raises(ValueError, match="not supported for `shared.isolated`"):
+    with pytest.raises(ValueError, match="Run with `purge_only`"):
         pl.execute(full_refresh=True, full_refresh_mode="DROP")
 
 
@@ -433,7 +433,7 @@ def test_shared_full_refresh_mode_override_invalid(tmp_path):
 @pytest.mark.parametrize(
     "shared,match",
     [
-        ({"a": _INTERNAL, "b": _INTERNAL}, "don't declare `shared.internal"),
+        ({"a": _ISOLATED, "b": _ISOLATED}, "different `shared` options"),
         (
             {"a": _INTERNAL, "b": _INTERNAL, "c": _ISOLATED},
             "different `shared` options",
@@ -453,9 +453,24 @@ def test_shared_pipeline_validation(tmp_path, shared, match):
         _pipeline(_writers(str(tmp_path / "shared"), shared))
 
 
-def test_shared_internal_single_writer_raises(tmp_path):
-    with pytest.raises(ValueError, match="the only node"):
-        _pipeline(_writers(str(tmp_path / "shared"), _INTERNAL, names=("a",)))
+def test_shared_inferred(tmp_path):
+    """Writers of a same target are grouped without any `shared` declaration"""
+    path = str(tmp_path / "shared")
+    pl = _pipeline(_writers(path, None))
+    tasks = pl.get_execution_plan().tasks
+    assert [(t.name, sorted(t.node_names)) for t in tasks] == [
+        ("shared-shared", ["a", "b", "c"])
+    ]
+
+    pl.execute()
+    pl.execute(full_refresh=True)
+    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+
+
+def test_shared_internal_single_writer(tmp_path):
+    """`internal` is documentation only: a single writer is a regular task"""
+    pl = _pipeline(_writers(str(tmp_path / "shared"), _INTERNAL, names=("a",)))
+    assert [t.name for t in pl.get_execution_plan().tasks] == ["node-a"]
 
 
 def test_shared_grouped_task_name_conflict(tmp_path):
@@ -470,3 +485,81 @@ def test_shared_grouped_task_name_conflict(tmp_path):
     )
     with pytest.raises(ValueError, match="different `execution_task_name`"):
         _pipeline(nodes)
+
+
+def test_shared_config_round_trip(tmp_path):
+    """Job tasks reload the pipeline from its config file, where inherited values such as
+    `full_refresh_mode` are serialized explicitly."""
+    import json
+
+    def _node(name, path, shared):
+        return {
+            "name": name,
+            "sources": [{"format": "JSON", "path": str(tmp_path / "src")}],
+            "sinks": [
+                {"path": path, "format": "DELTA", "mode": "APPEND", "shared": shared}
+            ],
+        }
+
+    shared_path = str(tmp_path / "shared")
+    nodes = [
+        _node("a", shared_path, _ISOLATED),
+        _node("b", shared_path, _ISOLATED),
+        _node("c", str(tmp_path / "ext"), {"external": True}),
+    ]
+    pl = models.Pipeline(
+        name="pl",
+        nodes=nodes,
+        full_refresh_mode="TRUNCATE",
+        orchestrator={"type": "LAKEFLOW_JOB", "serverless_environment_version": "3"},
+    )
+    content = pl.orchestrator.config_file.content_dict
+    pl2 = models.Pipeline.model_validate_json(json.dumps(content))
+    assert pl2.nodes_dict["a"].sinks[0].shared.writer_id == "pl.a"
+    assert pl2.nodes_dict["c"].sinks[0].shared.writer_id == "pl"
+
+
+def test_purge_only_grouped(tmp_path):
+    path = str(tmp_path / "shared")
+    pl = _pipeline(_writers(path, None))
+    pl.execute()
+
+    pl.execute(purge_only=True)
+    assert not Path(path).exists()
+
+    pl.execute()
+    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+
+
+def test_purge_only_isolated(tmp_path):
+    path = str(tmp_path / "shared")
+    pl = _pipeline(_writers(path, _ISOLATED))
+    pl.execute()
+
+    # Without override: each writer deletes its own rows
+    pl.execute(purge_only=True, selects=["b"])
+    assert _feed_counts(path) == {"a": 3, "c": 3}
+    pl.execute(purge_only=True)
+    assert Path(path).exists()
+    assert _read(path).height == 0
+
+    # With override: the table is dropped, e.g. before a breaking schema change
+    pl.execute()
+    pl.execute(purge_only=True, full_refresh_mode="DROP")
+    assert not Path(path).exists()
+    pl.execute()
+    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+
+
+def test_purge_only_external(tmp_path):
+    path = str(tmp_path / "shared")
+    pl1 = _pipeline(_writers(path, {"external": True}, names=("a",)), name="pl1")
+    pl2 = _pipeline(_writers(path, {"external": True}, names=("b",)), name="pl2")
+    pl1.execute()
+    pl2.execute()
+
+    pl2.execute(purge_only=True)
+    assert _feed_counts(path) == {"a": 3}
+
+    pl2.execute(purge_only=True, full_refresh_mode="DROP")
+    assert not Path(path).exists()

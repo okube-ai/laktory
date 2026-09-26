@@ -11,18 +11,20 @@ from laktory.models.pipelinechild import PipelineChild
 
 class DataSinkSharedOptions(BaseModel, PipelineChild):
     """
-    Options for a sink shared by multiple writers: other nodes of the same pipeline
-    (`internal`) and/or other pipelines (`external`).
+    Options for a sink shared by multiple writers: other nodes of the same pipeline and/or
+    other pipelines.
 
-    - `internal`, not `isolated`: the writers are grouped in a single execution task. On
-      `full_refresh`, the table is reset once (according to `full_refresh_mode`), then all writers
-      reprocess their data.
-    - `internal` and `isolated`: each writer runs in its own task (possibly in parallel) and
-      rows carry the writer identifier (`{pipeline_name}.{node_name}`). On `full_refresh`, a
-      writer only deletes and reprocesses its own rows.
-    - `external`: rows carry the pipeline identifier (`{pipeline_name}`). On `full_refresh`,
-      only the rows written by this pipeline are deleted and reprocessed, leaving the data of
-      other pipelines untouched.
+    Nodes of a pipeline writing to the same sink target are detected automatically: by
+    default, they are grouped in a single execution task and, on `full_refresh`, the table is
+    reset once (according to `full_refresh_mode`) before all writers reprocess their data.
+    These options are only required to change this default:
+
+    - `isolated`: each writer runs in its own task (possibly in parallel) and rows carry the
+      writer identifier (`{pipeline_name}.{node_name}`). On `full_refresh`, a writer only
+      deletes and reprocesses its own rows.
+    - `external`: other pipelines also write to the sink. Rows carry the pipeline identifier
+      (`{pipeline_name}`) and, on `full_refresh`, only the rows written by this pipeline are
+      deleted and reprocessed, leaving the data of other pipelines untouched.
 
     Examples
     --------
@@ -44,7 +46,10 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
 
     internal: bool = Field(
         False,
-        description="Other nodes of the same pipeline also write to this sink.",
+        description="""
+        Other nodes of the same pipeline also write to this sink. Optional, for documentation
+        purposes only: writers of a same sink target are detected automatically.
+        """,
     )
     external: bool = Field(
         False,
@@ -56,7 +61,7 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
         If `True`, the node writes on its own: it runs in its own task and `full_refresh` only
         deletes and reprocesses its own rows. Rows of a removed or renamed node are no longer
         deleted on `full_refresh`. If `False`, the writers of the sink within the pipeline are
-        grouped in a single task. Requires `internal`.
+        grouped in a single task.
         """,
     )
     writer_id_: str | None = Field(
@@ -77,13 +82,12 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_flags(self) -> Any:
-        if not (self.internal or self.external):
+        if not (self.internal or self.external or self.isolated):
             raise ValueError(
-                "`shared` requires `internal` (other nodes of the pipeline write to the sink) "
-                "and/or `external` (other pipelines write to the sink) to be `true`."
+                "`shared` requires at least one of `internal`, `external` or `isolated` to be "
+                "`true`. Nodes of a pipeline writing to the same sink don't need `shared`: "
+                "they are grouped automatically."
             )
-        if self.isolated and not self.internal:
-            raise ValueError("`shared.isolated` requires `shared.internal`.")
         return self
 
     @property

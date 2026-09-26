@@ -403,13 +403,12 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def grouped_sink_targets(self) -> set[str]:
         """Targets of the sinks written together with other nodes in a single task."""
+        pl = self.parent_pipeline
+        if pl is None:
+            return set()
+        grouped_targets = pl.grouped_targets
         return {
-            s.purge_target
-            for s in self.all_sinks
-            if s.shared is not None
-            and s.shared.internal
-            and not s.shared.isolated
-            and s.purge_target is not None
+            s.purge_target for s in self.all_sinks if s.purge_target in grouped_targets
         }
 
     @property

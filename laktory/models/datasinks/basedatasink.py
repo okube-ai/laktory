@@ -80,7 +80,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
         - DELETE_WHERE: Delete only the rows matching `full_refresh_delete_where`.
 
-        Not used by shared sinks (see `shared`), which only delete their own rows.
+        Ignored by `shared.external` and `shared.isolated` sinks, which only delete their
+        own rows.
         """,
         validation_alias=AliasChoices("full_refresh_mode", "full_refresh_mode_"),
         exclude=True,
@@ -128,18 +129,12 @@ class BaseDataSink(BaseModel, PipelineChild):
             raise ValueError(
                 f"`shared` sinks only support `APPEND` mode, not '{self.mode}'."
             )
-        if self.shared.uses_writer_column:
-            if not self._supports_shared:
-                raise ValueError(
-                    f"`shared.external` / `shared.isolated` are not supported for "
-                    f"{type(self).__name__} with format '{getattr(self, 'format', None)}'. "
-                    "They require a DELTA table or file sink."
-                )
-            if self.full_refresh_mode_ is not None:
-                raise ValueError(
-                    "`full_refresh_mode` can't be set on a `shared.external` / `shared.isolated` "
-                    "sink: `full_refresh` only deletes the rows of this writer."
-                )
+        if self.shared.uses_writer_column and not self._supports_shared:
+            raise ValueError(
+                f"`shared.external` / `shared.isolated` are not supported for "
+                f"{type(self).__name__} with format '{getattr(self, 'format', None)}'. "
+                "They require a DELTA table or file sink."
+            )
         return self
 
     mode: Literal.__getitem__(SUPPORTED_MODES) | None = Field(
@@ -771,20 +766,17 @@ class BaseDataSink(BaseModel, PipelineChild):
         return False
 
     def _deletes_writer_rows(self, mode: str | None) -> bool:
-        """`True` if a purge only deletes the rows of this writer (no run override)."""
+        """
+        `True` if a purge only deletes the rows of this writer. With a `full_refresh_mode`
+        override, the whole target is purged instead.
+        """
         if self.shared is None or not self.shared.uses_writer_column:
             return False
         if mode is None:
             return True
-        if self.shared.isolated:
-            raise ValueError(
-                f"`full_refresh_mode` override '{mode}' is not supported for `shared.isolated` sinks, "
-                "whose writers are executed independently. Purge the target manually, then "
-                "run a full refresh."
-            )
         logger.warning(
             f"Purging shared target '{self.purge_target}' entirely ({mode}), including rows "
-            "written by other pipelines. These pipelines need a full refresh."
+            "written by other writers. These writers need to reprocess their data."
         )
         return False
 

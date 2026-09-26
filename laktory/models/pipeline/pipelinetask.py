@@ -47,6 +47,7 @@ class PipelineTask(BaseModel):
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         full_refresh_mode: str | None = None,
+        purge_only: bool = False,
     ) -> None:
         """
         Execute the pipeline task.
@@ -63,7 +64,11 @@ class PipelineTask(BaseModel):
         update_tables_metadata:
             Update tables metadata
         full_refresh_mode:
-            Optional override for sinks `full_refresh_mode` when `full_refresh` is `True`.
+            Optional override for sinks `full_refresh_mode` when `full_refresh` or
+            `purge_only` is `True`.
+        purge_only:
+            If `True`, the sinks of the task nodes are only purged, without reading or
+            writing data.
         """
 
         logger.info(f"Executing pipeline task '{self.name}'")
@@ -71,12 +76,23 @@ class PipelineTask(BaseModel):
         # Targets written by multiple nodes of this task are purged once, by the first
         # writer, before any of them writes.
         purged_targets = set()
+        grouped = sorted({t for n in self.nodes for t in n.grouped_sink_targets})
+        if grouped:
+            logger.info(
+                f"Nodes {self.node_names} write to the same targets {grouped} and are "
+                "executed together."
+            )
 
         # Execute nodes
         for node_name in self.node_names:
             node = self.pipeline.nodes_dict[node_name]
             if named_dfs is None:
                 named_dfs = {}
+
+            if purge_only:
+                node.purge(mode=full_refresh_mode, purged_targets=set(purged_targets))
+                purged_targets |= node.grouped_sink_targets
+                continue
 
             node.execute(
                 write_sinks=write_sinks,

@@ -366,7 +366,11 @@ def test_no_terraform_depends_on_cycle():
 def test_job_parameters():
     pl = _get_pl()
     params = {p.name: p.default for p in pl.orchestrator.parameter}
-    assert params == {"full_refresh": "false", "full_refresh_mode": ""}
+    assert params == {
+        "full_refresh": "false",
+        "full_refresh_mode": "",
+        "purge_only": "false",
+    }
 
 
 def test_shared_sink_writers_grouped_in_one_task():

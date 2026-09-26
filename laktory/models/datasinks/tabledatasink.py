@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import time
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -338,8 +339,22 @@ class TableDataSink(BaseDataSink):
                 # (verified: raises "Table does not support truncates"). `DELETE FROM` with
                 # no predicate is Delta's supported equivalent - an efficient, metadata-only
                 # removal of every current-version file.
-                logger.info(f"Truncating table {self.full_name}")
-                spark.sql(f"DELETE FROM {self.full_name}")
+                if self.exists():
+                    logger.info(f"Truncating table {self.full_name}")
+                    # Writers of a shared target may truncate it concurrently (e.g. isolated
+                    # writers of a `purge_only` run): once another writer emptied it, a retry
+                    # has nothing left to delete.
+                    for attempt in range(3):
+                        try:
+                            spark.sql(f"DELETE FROM {self.full_name}")
+                            break
+                        except Exception as e:
+                            if attempt == 2 or "concurrent" not in str(e).lower():
+                                raise
+                            logger.info(
+                                f"Concurrent update of {self.full_name}, retrying"
+                            )
+                            time.sleep(2)
 
             elif full_refresh_mode == "DELETE_WHERE":
                 if not self.full_refresh_delete_where:

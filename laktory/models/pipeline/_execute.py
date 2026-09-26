@@ -37,6 +37,13 @@ def _execute():
         required=False,
     )
     parser.add_argument(
+        "--purge_only",
+        type=str2bool,
+        help="Only purge sinks, without reading or writing data",
+        default=False,
+        required=False,
+    )
+    parser.add_argument(
         "--full_refresh_mode",
         type=str,
         help="Override of sinks full refresh mode (DROP or TRUNCATE)",
@@ -50,6 +57,7 @@ def _execute():
     selects = args.selects
     full_refresh = args.full_refresh
     full_refresh_mode = args.full_refresh_mode or None
+    purge_only = args.purge_only
     selects_str = ""
     if selects:
         selects = selects.split(",")
@@ -67,5 +75,8 @@ def _execute():
 
     # Execute
     pl.execute(
-        full_refresh=full_refresh, selects=selects, full_refresh_mode=full_refresh_mode
+        full_refresh=full_refresh,
+        selects=selects,
+        full_refresh_mode=full_refresh_mode,
+        purge_only=purge_only,
     )

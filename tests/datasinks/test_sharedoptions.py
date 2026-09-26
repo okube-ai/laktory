@@ -47,13 +47,16 @@ def test_writer_id():
     "shared,match",
     [
         (True, "expects options, not a boolean"),
-        ({}, "requires `internal`"),
-        ({"external": True, "isolated": True}, "requires `shared.internal`"),
+        ({}, "requires at least one"),
     ],
 )
 def test_invalid_options(shared, match):
     with pytest.raises(ValidationError, match=match):
         _sink(shared=shared)
+
+
+def test_isolated_without_internal():
+    assert _sink(shared={"isolated": True}).shared.uses_writer_column
 
 
 def test_invalid_mode():
@@ -81,12 +84,11 @@ def test_writer_column_requires_delta():
         )
 
 
-def test_writer_column_rejects_full_refresh_mode():
-    # Allowed when the table is reset as a whole
+def test_writer_column_ignores_full_refresh_mode():
+    # Accepted (and ignored on full refresh) so that serialized configs, where inherited
+    # values are explicit, can be reloaded
     _sink(shared={"internal": True}, full_refresh_mode="TRUNCATE")
-
-    with pytest.raises(ValidationError, match="`full_refresh_mode` can't be set"):
-        _sink(shared={"external": True}, full_refresh_mode="TRUNCATE")
+    _sink(shared={"external": True}, full_refresh_mode="TRUNCATE")
 
 
 def test_standalone_write_requires_writer_id():

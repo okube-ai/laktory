@@ -276,33 +276,38 @@ schema change on a sink configured with `TRUNCATE`:
 - the `full_refresh_mode` job parameter of the `LAKEFLOW_JOB` orchestrator (e.g. using *Run now with
   different parameters*, together with `full_refresh=true`)
 
+To only reset the tables, without reprocessing the data, see
+[Resetting tables](#resetting-tables).
+
 ##### Shared sinks
 
 A sink can be written by multiple writers: other nodes of the same pipeline and/or other
 pipelines (e.g. several feeds pooled into one table, or one pipeline per client appending into a
-cross-tenant table). Declare it with the `shared` options, on every sink writing to the target:
+cross-tenant table). Nodes of a pipeline writing to the same target are detected automatically
+and grouped. The `shared` options, declared on every sink writing to the target, change this
+default:
 
 ```yaml
 sinks:
 - table_name: prices
   mode: APPEND
   shared:
-    internal: true    # other nodes of this pipeline also write to this table
+    internal: true    # optional (documentation): other nodes of this pipeline write here
     external: false   # other pipelines also write to this table
     isolated: false   # true: own task, refreshes only its own rows
                       # false: grouped in a single task with the other writers
 ```
 
-| `internal` | `external` | `isolated` | Execution | `full_refresh` |
+| Writers | `external` | `isolated` | Execution | `full_refresh` |
 |---|---|---|---|---|
-| true | false | false | writers grouped in a single task | table purged once (`full_refresh_mode`), then all writers reprocess |
-| true | false | true | one task per writer (can run in parallel) | each node deletes and reprocesses its own rows |
-| false | true | - | regular task | this pipeline's rows are deleted and reprocessed |
-| true | true | false | writers grouped in a single task | this pipeline's rows are deleted once, then all writers reprocess |
-| true | true | true | one task per writer | each node deletes and reprocesses its own rows |
+| several nodes | false | false | writers grouped in a single task (default) | table purged once (`full_refresh_mode`), then all writers reprocess |
+| several nodes | false | true | one task per writer (can run in parallel) | each node deletes and reprocesses its own rows |
+| one node | true | - | regular task | this pipeline's rows are deleted and reprocessed |
+| several nodes | true | false | writers grouped in a single task | this pipeline's rows are deleted once, then all writers reprocess |
+| several nodes | true | true | one task per writer | each node deletes and reprocesses its own rows |
 
-**Grouped writers** (`internal`, not `isolated`) behave like a table with multiple append flows
-in a declarative pipeline: the writers are executed together in one task - named
+**Grouped writers** (default) behave like a table with multiple append flows in a declarative
+pipeline: the writers are executed together in one task - named
 `shared-{table_name}`, or after their common `execution_task_name` - which purges the table once
 and then runs them. Use `depends_on` to control their order, e.g. to have a node creating all the
 columns run first. Selecting one of the writers (`selects`, or a task of a job run) always runs
@@ -312,8 +317,8 @@ all of them. Rows of a removed writer are gone after the next `full_refresh`.
 file sink. Each written row carries the writer identifier in a `_laktory_writer` column (first
 column, configurable with `column`): `{pipeline_name}.{node_name}` for isolated writers,
 `{pipeline_name}` otherwise (overridable with `writer_id`). On `full_refresh`, only the rows
-of the writer are deleted, so the data of the other writers is untouched and `full_refresh_mode`
-can't be set. Keep the identifiers stable:
+of the writer are deleted, so the data of the other writers is untouched and the configured
+`full_refresh_mode` is ignored. Keep the identifiers stable:
 
 - Rows of a removed or renamed isolated node, or of a decommissioned pipeline, are not deleted by
   any `full_refresh`. Pin `writer_id` before renaming, or clean them up with
@@ -323,16 +328,32 @@ can't be set. Keep the identifiers stable:
 - Parallel writers adding different columns conflict when evolving the table schema: declare the
   full `schema` on the sinks, or group the writers.
 
-To reset a whole `external` table (e.g. after a schema change), run a full refresh with the
-`full_refresh_mode` override (`DROP` or `TRUNCATE`): the table is purged once, including the rows written
-by other pipelines, which then need a full refresh too. The override is not supported for
-isolated writers - purge the table manually, then run a full refresh.
+###### Resetting tables
 
-Laktory validates shared sinks: writers of a same target must all declare `internal` (and share
-the same options), `internal` requires at least two writers in the pipeline, and pipelines of a
-same Stack writing to the same target must all declare `external`.
+A table may need to be reset as a whole, e.g. before a breaking schema change or after a data
+corruption, by someone who can run the pipeline but not drop tables. Run the pipeline with
+`purge_only` and the `full_refresh_mode` override: the tables written by the selected nodes are
+purged (`DROP` or `TRUNCATE`), without reading or writing any data. The next run reprocesses all
+the data.
 
-With Lakeflow / Spark Declarative Pipeline orchestrators, only `internal` is supported: the table
+- Lakeflow Job: *Run now with different parameters* with `purge_only=true` and
+  `full_refresh_mode=DROP` (optionally on a selection of tasks), then *Run now*.
+- In Python: `pl.execute(purge_only=True, full_refresh_mode="DROP")`, then `pl.execute()`.
+
+This works for every kind of sink, including `isolated` ones. For `external` tables, the rows
+written by other pipelines are purged too: these pipelines need a full refresh. Without the
+override, a `purge_only` run purges each sink as a full refresh would (configured
+`full_refresh_mode`, or the writer's own rows).
+
+A full refresh can also take the `full_refresh_mode` override directly, for regular and grouped
+sinks and for `external` sinks (whole table purged once). It is rejected for `isolated` writers,
+which are executed independently: use a `purge_only` run first.
+
+Laktory validates shared sinks: writers of a same target in a pipeline must use the same
+`shared` options, and pipelines of a same Stack writing to the same target must all declare
+`external`.
+
+With Lakeflow / Spark Declarative Pipeline orchestrators, only grouped writers are supported: the table
 is declared once as a streaming table and each node appends to it through its own append flow,
 named `{table_name}__{node_name}`. The declarative engine runs the flows in parallel and handles
 `full_refresh` itself, clearing the table once and resetting every flow. A table written by a
