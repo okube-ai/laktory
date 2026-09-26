@@ -9,8 +9,7 @@
 | [`dataframe_api`](#dataframe-backend-and-api) | `NARWHALS` | DataFrame API (`NARWHALS` / `NATIVE`) |
 | [`reset_mode`](#reset-mode) | `DROP` | How sinks are reset on a full refresh or reset run (`DROP` / `TRUNCATE`), for sinks, nodes and pipelines that don't set one |
 
-Defaults come from the matching `LAKTORY_*` environment variables (e.g. `LAKTORY_RESET_MODE`). A
-value set in the Stack `settings` overrides them. For `dataframe_backend`, `dataframe_api` and
+A value set in the Stack `settings` overrides internal laktory settings. For `dataframe_backend`, `dataframe_api` and
 `reset_mode`, values set on a pipeline, pipeline node or sink always take precedence.
 
 Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)):
