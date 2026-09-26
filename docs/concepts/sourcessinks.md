@@ -276,9 +276,6 @@ same rule: it can only be set directly on a sink, and raises a validation error 
 globally via the `LAKTORY_RESET_MODE` environment variable / `settings.reset_mode` (see
 [Laktory Settings](laktorysettings.md)).
 
-Laktory logs the number of rows deleted by `reset_delete_where`: check it in the run logs to catch
-a wrong or stale predicate.
-
 `TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
 supports `reset_mode="DROP"`.
 
