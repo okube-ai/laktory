@@ -237,8 +237,8 @@ the `AIRFLOW` orchestrator):
 
 | `refresh` | What the run does |
 |---|---|
-| `incremental` (default) | processes new data |
-| `full` | resets the sinks of the selected nodes (data and checkpoints), then reprocesses all the data |
+| `incremental` (default) | runs without resetting anything first: sinks are written according to their `mode` (e.g. `OVERWRITE` replaces the data, `APPEND` adds rows) and streaming sources resume from their checkpoint |
+| `full` | resets the sinks of the selected nodes (data and checkpoints), then runs: all the data is reprocessed |
 | `reset` | only resets the sinks of the selected nodes, without reading or writing data (see [Resetting tables](#resetting-tables)) |
 
 `refresh` replaces the `full_refresh` parameter of `pl.execute()`, the `full_refresh` job

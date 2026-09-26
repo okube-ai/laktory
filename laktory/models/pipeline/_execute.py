@@ -28,7 +28,10 @@ def _execute():
     parser.add_argument(
         "--refresh",
         type=str,
-        help="What the run does: incremental, full or reset",
+        help=(
+            "What the run does: incremental (no reset, sinks written according to their "
+            "mode), full (reset, then reprocess all the data) or reset (reset only)"
+        ),
         default="incremental",
         required=False,
     )

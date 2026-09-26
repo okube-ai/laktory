@@ -996,9 +996,11 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         refresh:
             What the run does:
 
-            - `incremental`: process new data (default).
+            - `incremental` (default): run without resetting anything first. Sinks are
+              written according to their `mode` (e.g. `OVERWRITE` replaces the data,
+              `APPEND` adds rows) and streaming sources resume from their checkpoint.
             - `full`: reset the sinks of the selected nodes (data and checkpoints, according
-              to their `reset_mode`), then reprocess all the data.
+              to their `reset_mode`), then run: all the data is reprocessed.
             - `reset`: only reset the sinks of the selected nodes, without reading or writing
               data. The next run reprocesses all the data. Used to reset tables, e.g. before
               a breaking schema change, including the tables of `shared.isolated` sinks.
