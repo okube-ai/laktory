@@ -377,7 +377,7 @@ def test_cli_flags(tmp_path, monkeypatch, mocker):
 
     # full_refresh only → --full-refresh-all
     mock_run.reset_mock()
-    pl.execute(use_orchestrator=True, full_refresh=True)
+    pl.execute(use_orchestrator=True, refresh="full")
     cmd = mock_run.call_args[0][0]
     assert "--full-refresh-all" in cmd
 
@@ -390,7 +390,7 @@ def test_cli_flags(tmp_path, monkeypatch, mocker):
 
     # full_refresh + selects → --full-refresh datasets
     mock_run.reset_mock()
-    pl.execute(use_orchestrator=True, full_refresh=True, selects=["brz"])
+    pl.execute(use_orchestrator=True, refresh="full", selects=["brz"])
     cmd = mock_run.call_args[0][0]
     assert "--full-refresh" in cmd
     assert cmd[cmd.index("--full-refresh") + 1] == "brz"
@@ -537,7 +537,7 @@ def test_execute_shared_sink(tmp_path, monkeypatch, spark):
                 {
                     "name": name,
                     "sources": [{"node_name": "brz", "as_stream": True}],
-                    "sinks": [{"table_name": "shared"}],
+                    "sinks": [{"table_name": "shared", "shared": {"internal": True}}],
                 }
                 for name in ["feed_a", "feed_b"]
             ],

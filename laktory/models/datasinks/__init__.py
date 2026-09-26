@@ -4,6 +4,7 @@ from .filedatasink import FileDataSink
 from .hivemetastoredatasink import HiveMetastoreDataSink
 from .mergecdcoptions import DataSinkMergeCDCOptions
 from .pipelineviewdatasink import PipelineViewDataSink
+from .sharedoptions import DataSinkSharedOptions
 from .tabledatasink import TableDataSink
 from .tabledatasinkmetadata import TableDataSinkMetadata
 from .unitycatalogdatasink import UnityCatalogDataSink

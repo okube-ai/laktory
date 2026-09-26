@@ -5,19 +5,21 @@ import pytest
 
 from laktory import models
 
-_SINK = {"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}
+
+def _sink(name):
+    return {"format": "JSON", "mode": "OVERWRITE", "path": f"{name}.json"}
 
 
 def _linear_pl():
     return models.Pipeline(
         name="pl-linear",
         nodes=[
-            models.PipelineNode(name="brz", sinks=[_SINK]),
+            models.PipelineNode(name="brz", sinks=[_sink("brz")]),
             models.PipelineNode(
-                name="slv", sources=[{"node_name": "brz"}], sinks=[_SINK]
+                name="slv", sources=[{"node_name": "brz"}], sinks=[_sink("slv")]
             ),
             models.PipelineNode(
-                name="gld", sources=[{"node_name": "slv"}], sinks=[_SINK]
+                name="gld", sources=[{"node_name": "slv"}], sinks=[_sink("gld")]
             ),
         ],
     )
@@ -27,18 +29,18 @@ def _diamond_pl():
     return models.Pipeline(
         name="pl-diamond",
         nodes=[
-            models.PipelineNode(name="brz", sinks=[_SINK]),
+            models.PipelineNode(name="brz", sinks=[_sink("brz")]),
             models.PipelineNode(
-                name="slv1", sources=[{"node_name": "brz"}], sinks=[_SINK]
+                name="slv1", sources=[{"node_name": "brz"}], sinks=[_sink("slv1")]
             ),
             models.PipelineNode(
-                name="slv2", sources=[{"node_name": "brz"}], sinks=[_SINK]
+                name="slv2", sources=[{"node_name": "brz"}], sinks=[_sink("slv2")]
             ),
             models.PipelineNode(
                 name="gld",
                 sources=[{"node_name": "slv1"}],
                 transformer={"nodes": [{"expr": "SELECT * from {nodes.slv2}"}]},
-                sinks=[_SINK],
+                sinks=[_sink("gld")],
             ),
         ],
     )
@@ -91,11 +93,11 @@ def test_no_source_node():
     pl = models.Pipeline(
         name="pl",
         nodes=[
-            models.PipelineNode(name="brz", sinks=[_SINK]),
+            models.PipelineNode(name="brz", sinks=[_sink("brz")]),
             models.PipelineNode(
                 name="gld",
                 transformer={"nodes": [{"expr": "SELECT * from {nodes.brz}"}]},
-                sinks=[_SINK],
+                sinks=[_sink("gld")],
             ),
         ],
     )

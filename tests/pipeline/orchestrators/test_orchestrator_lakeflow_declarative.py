@@ -356,7 +356,7 @@ def test_ldp_view_node_raises():
 
 
 # --------------------------------------------------------------------------- #
-# purge_mode incompatibility with LDP/SDP                                     #
+# reset_mode incompatibility with LDP/SDP                                     #
 # --------------------------------------------------------------------------- #
 
 
@@ -364,17 +364,20 @@ def test_ldp_view_node_raises():
 @pytest.mark.parametrize(
     "sink_kwargs",
     [
-        pytest.param({"purge_mode": "TRUNCATE"}, id="truncate"),
+        pytest.param({"reset_mode": "TRUNCATE"}, id="truncate"),
         pytest.param(
-            {"purge_mode": "DELETE_WHERE", "purge_delete_where": "id = 1"},
+            {
+                "reset_mode": "DELETE_WHERE",
+                "reset_delete_where": "id = 1",
+            },
             id="delete_where",
         ),
     ],
 )
-def test_purge_mode_non_drop_raises_under_declarative_orchestrator(
+def test_reset_mode_non_drop_raises_under_declarative_orchestrator(
     orchestrator_dict, sink_kwargs
 ):
-    with pytest.raises((ValueError, ValidationError), match="purge_mode"):
+    with pytest.raises((ValueError, ValidationError), match="reset_mode"):
         models.Pipeline.model_validate(
             {
                 "name": "pl-declarative",
@@ -391,15 +394,15 @@ def test_purge_mode_non_drop_raises_under_declarative_orchestrator(
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
-def test_purge_mode_pipeline_level_raises_under_declarative_orchestrator(
+def test_reset_mode_pipeline_level_raises_under_declarative_orchestrator(
     orchestrator_dict,
 ):
-    with pytest.raises((ValueError, ValidationError), match="purge_mode"):
+    with pytest.raises((ValueError, ValidationError), match="reset_mode"):
         models.Pipeline.model_validate(
             {
                 "name": "pl-declarative",
                 "orchestrator": orchestrator_dict,
-                "purge_mode": "TRUNCATE",
+                "reset_mode": "TRUNCATE",
                 "nodes": [
                     {
                         "name": "brz",
@@ -412,7 +415,9 @@ def test_purge_mode_pipeline_level_raises_under_declarative_orchestrator(
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
-def test_purge_mode_default_drop_ok_under_declarative_orchestrator(orchestrator_dict):
+def test_reset_mode_default_drop_ok_under_declarative_orchestrator(
+    orchestrator_dict,
+):
     models.Pipeline.model_validate(
         {
             "name": "pl-declarative",
@@ -428,7 +433,7 @@ def test_purge_mode_default_drop_ok_under_declarative_orchestrator(orchestrator_
     )
 
 
-def test_purge_mode_non_drop_ok_under_lakeflow_job():
+def test_reset_mode_non_drop_ok_under_lakeflow_job():
     models.Pipeline.model_validate(
         {
             "name": "pl-job",
@@ -440,7 +445,7 @@ def test_purge_mode_non_drop_ok_under_lakeflow_job():
                 {
                     "name": "brz",
                     "sources": [{"format": "JSON", "path": "/src/"}],
-                    "sinks": [{"table_name": "brz", "purge_mode": "TRUNCATE"}],
+                    "sinks": [{"table_name": "brz", "reset_mode": "TRUNCATE"}],
                 },
             ],
         }
@@ -508,7 +513,13 @@ def _get_shared_pl(orchestrator_dict, sinks=None, expectations=None):
             {
                 "name": name,
                 "sources": [{"format": "JSON", "path": f"/{name}/", "as_stream": True}],
-                "sinks": [{"table_name": "shared", **sinks.get(name, {})}],
+                "sinks": [
+                    {
+                        "table_name": "shared",
+                        "shared": {"internal": True},
+                        **sinks.get(name, {}),
+                    }
+                ],
                 "expectations": expectations.get(name, []),
             }
         ]
@@ -548,8 +559,32 @@ def test_shared_sink_cdc_raises_under_declarative_orchestrator(orchestrator_dict
         "mode": "MERGE",
         "merge_cdc_options": {"primary_keys": ["id"], "order_by": "id"},
     }
-    with pytest.raises((ValueError, ValidationError), match="not a streaming table"):
+    with pytest.raises((ValueError, ValidationError), match="only support `APPEND`"):
         _get_shared_pl(orchestrator_dict, sinks={"n2": cdc})
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_shared_sink_inferred_under_declarative_orchestrator(orchestrator_dict):
+    pl = _get_shared_pl(
+        orchestrator_dict, sinks={"n1": {"shared": None}, "n2": {"shared": None}}
+    )
+    name = pl.nodes_dict["n1"].sinks[0].sdp_table_or_view_name
+    assert list(pl.sdp_append_flow_sinks) == [name]
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+@pytest.mark.parametrize(
+    "shared",
+    [{"internal": True, "isolated": True}, {"internal": True, "external": True}],
+)
+def test_shared_sink_writer_column_under_declarative_orchestrator(
+    orchestrator_dict, shared
+):
+    with pytest.raises((ValueError, ValidationError), match="not supported with"):
+        _get_shared_pl(
+            orchestrator_dict,
+            sinks={"n1": {"shared": shared}, "n2": {"shared": shared}},
+        )
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
@@ -676,8 +711,7 @@ def test_sdp_script_shared_sink(tmp_path, monkeypatch):
 
 def test_duplicate_sink_target_ok_under_lakeflow_job():
     """Two nodes deliberately sharing one output table is a valid pattern under
-    LAKEFLOW_JOB - unlike LDP/SDP, there's no engine-level single-registration
-    constraint, and it composes with sink-level `purge_mode`."""
+    LAKEFLOW_JOB when declared with `shared.internal`."""
     models.Pipeline.model_validate(
         {
             "name": "pl-job",
@@ -689,12 +723,12 @@ def test_duplicate_sink_target_ok_under_lakeflow_job():
                 {
                     "name": "n1",
                     "sources": [{"format": "JSON", "path": "/src1/"}],
-                    "sinks": [{"table_name": "shared"}],
+                    "sinks": [{"table_name": "shared", "shared": {"internal": True}}],
                 },
                 {
                     "name": "n2",
                     "sources": [{"format": "JSON", "path": "/src2/"}],
-                    "sinks": [{"table_name": "shared"}],
+                    "sinks": [{"table_name": "shared", "shared": {"internal": True}}],
                 },
             ],
         }

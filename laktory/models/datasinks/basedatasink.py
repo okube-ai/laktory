@@ -20,6 +20,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframeschema import DataFrameSchema
 from laktory.models.datasinks.customwriter import CustomWriter
 from laktory.models.datasinks.mergecdcoptions import DataSinkMergeCDCOptions
+from laktory.models.datasinks.sharedoptions import DataSinkSharedOptions
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.readerwritermethod import ReaderWriterMethod
 from laktory.typing import AnyFrame
@@ -70,36 +71,71 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    purge_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE", "NONE"] = Field(
+    reset_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
         None,
         description="""
-        Strategy used to purge this sink's data when `full_refresh` is requested.
+        Strategy used to reset this sink's data on a full refresh or a reset run.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
-        - DELETE_WHERE: Delete only the rows matching `purge_delete_where`.
-        - NONE: Leave the data untouched. The checkpoint is still deleted, so the data is
-          reprocessed and re-appended. Used when multiple pipeline nodes write to the same
-          table/path: a single node purges the shared data and the others are set to NONE
-          and should be executed after it (`depends_on`) to be safe on `full_refresh`.
+        - DELETE_WHERE: Delete only the rows matching `reset_delete_where`.
+
+        Ignored by `shared.external` and `shared.isolated` sinks, which only delete their
+        own rows.
         """,
-        validation_alias=AliasChoices("purge_mode", "purge_mode_"),
+        validation_alias=AliasChoices("reset_mode", "reset_mode_"),
         exclude=True,
     )
-    purge_delete_where: str | None = Field(
+    reset_delete_where: str | None = Field(
         None,
         description="""
-        SQL WHERE-clause predicate used to select the rows to delete when `purge_mode` resolves
+        SQL WHERE-clause predicate used to select the rows to delete when `reset_mode` resolves
         to 'DELETE_WHERE'. Should be set directly on the sink that owns the predicate - unlike
-        `purge_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
+        `reset_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
         since a deletion predicate is inherently specific to a single sink.
         """,
     )
 
-    @computed_field(description="purge_mode")
+    shared: DataSinkSharedOptions | None = Field(
+        None,
+        description="""
+        Declares a sink written by multiple writers: other nodes of the same pipeline
+        (`internal`) and/or other pipelines (`external`). Defines how writers are executed and
+        what a full refresh deletes. See `DataSinkSharedOptions`.
+        """,
+    )
+
+    @computed_field(description="reset_mode")
     @property
-    def purge_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE", "NONE"]:
-        return self._resolve_purge_mode()
+    def reset_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
+        return self._resolve_reset_mode()
+
+    @field_validator("shared", mode="before")
+    @classmethod
+    def shared_is_options(cls, v):
+        if isinstance(v, bool):
+            raise ValueError(
+                "`shared` expects options, not a boolean. Use e.g. `shared: {internal: true}` "
+                "(other nodes of the pipeline write to the sink) and/or "
+                "`shared: {external: true}` (other pipelines write to the sink)."
+            )
+        return v
+
+    @model_validator(mode="after")
+    def validate_shared(self) -> Any:
+        if self.shared is None:
+            return self
+        if self.mode not in [None, "APPEND"]:
+            raise ValueError(
+                f"`shared` sinks only support `APPEND` mode, not '{self.mode}'."
+            )
+        if self.shared.uses_writer_column and not self._supports_shared:
+            raise ValueError(
+                f"`shared.external` / `shared.isolated` are not supported for "
+                f"{type(self).__name__} with format '{getattr(self, 'format', None)}'. "
+                "They require a DELTA table or file sink."
+            )
+        return self
 
     mode: Literal.__getitem__(SUPPORTED_MODES) | None = Field(
         None,
@@ -217,16 +253,16 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def purge_delete_where_is_set(self) -> Any:
-        if self.purge_mode == "DELETE_WHERE" and not self.purge_delete_where:
+    def reset_delete_where_is_set(self) -> Any:
+        if self.reset_mode == "DELETE_WHERE" and not self.reset_delete_where:
             raise ValueError(
-                "`purge_delete_where` must be set when `purge_mode` is 'DELETE_WHERE'."
+                "`reset_delete_where` must be set when `reset_mode` is 'DELETE_WHERE'."
             )
         return self
 
     @model_validator(mode="after")
-    def purge_mode_incompatible_with_declarative_orchestrator(self) -> Any:
-        if self.purge_mode != "DROP":
+    def reset_mode_incompatible_with_declarative_orchestrator(self) -> Any:
+        if self.reset_mode != "DROP":
             from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
                 LakeflowDeclarativePipelineOrchestrator,
             )
@@ -245,10 +281,10 @@ class BaseDataSink(BaseModel, PipelineChild):
                 ),
             ):
                 raise ValueError(
-                    f"`purge_mode` '{self.purge_mode}' has no effect when using the "
-                    f"{type(orchestrator).__name__} - `full_refresh` is handled entirely by "
+                    f"`reset_mode` '{self.reset_mode}' has no effect when using the "
+                    f"{type(orchestrator).__name__} - the full refresh is handled entirely by "
                     "the Databricks/Spark Declarative Pipelines engine, which never calls "
-                    "Laktory's `purge()`. Remove `purge_mode`/`purge_delete_where` from this "
+                    "Laktory's `purge()`. Remove `reset_mode`/`reset_delete_where` from this "
                     "sink, or use the LAKEFLOW_JOB orchestrator."
                 )
         return self
@@ -259,7 +295,7 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @property
     def children_names(self):
-        return ["custom_writer", "merge_cdc_options"]
+        return ["custom_writer", "merge_cdc_options", "shared"]
 
     # -------------------------------------------------------------------------------- #
     # Properties                                                                       #
@@ -409,7 +445,14 @@ class BaseDataSink(BaseModel, PipelineChild):
         dataframe_backend = None
         if self.schema_definition:
             schema = self.schema_definition
+            if self.shared is not None and self.shared.uses_writer_column:
+                columns = [c for c in schema.columns if c.name != self.shared.column]
+                schema = DataFrameSchema(
+                    columns=[{"name": self.shared.column, "dtype": "string"}]
+                    + [c.model_dump(exclude_unset=True) for c in columns]
+                )
         elif df is not None:
+            df = self.with_writer_column(df)
             schema = DataFrameSchema.from_df(df)
             dataframe_backend = DataFrameBackends.from_df(df)
 
@@ -502,6 +545,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
             df = nw.from_native(df)
         self._update_backend_from_df(df)
+        df = self.with_writer_column(df)
 
         # Custom Writer
         if self.custom_writer:
@@ -715,6 +759,76 @@ class BaseDataSink(BaseModel, PipelineChild):
         raise NotImplementedError()
 
     @property
+    def _supports_shared(self) -> bool:
+        return False
+
+    def _deletes_writer_rows(self, mode: str | None) -> bool:
+        """
+        `True` if a purge only deletes the rows of this writer. With a `reset_mode`
+        override, the whole target is purged instead.
+        """
+        if self.shared is None or not self.shared.uses_writer_column:
+            return False
+        if mode is None:
+            return True
+        logger.warning(
+            f"Purging shared target '{self.purge_target}' entirely ({mode}), including rows "
+            "written by other writers. These writers need to reprocess their data."
+        )
+        return False
+
+    def with_writer_column(self, df: AnyFrame) -> AnyFrame:
+        """
+        Add the writer identifier column to a DataFrame written by a shared sink, as the
+        first column so that its statistics are collected. Returns the DataFrame unchanged
+        if the sink is not shared.
+
+        Parameters
+        ----------
+        df:
+            DataFrame to be written
+
+        Returns
+        -------
+        :
+            DataFrame with writer identifier column
+        """
+        if self.shared is None or not self.shared.uses_writer_column:
+            return df
+
+        self._check_writer_id()
+        is_nw = isinstance(df, (nw.DataFrame, nw.LazyFrame))
+        _df = df if is_nw else nw.from_native(df)
+        column = self.shared.column
+        columns = [c for c in _df.columns if c != column]
+        _df = _df.with_columns(nw.lit(self.shared.writer_id).alias(column)).select(
+            [column] + columns
+        )
+        return _df if is_nw else _df.to_native()
+
+    def _check_writer_id(self):
+        if self.shared.writer_id is None:
+            raise ValueError(
+                "`shared.writer_id` must be set for a shared sink that is not part of a "
+                "pipeline."
+            )
+
+    def _delete_where_spark(self, target: str, predicate: str) -> None:
+        """Delete rows of a Delta target with Spark and log the number of deleted rows."""
+        from laktory import get_spark_session
+
+        rows = (
+            get_spark_session().sql(f"DELETE FROM {target} WHERE {predicate}").collect()
+        )
+        count = rows[0][0] if rows else None
+        logger.info(f"Deleted {count} rows from {target} where {predicate}")
+
+    def _shared_delete_predicate(self, quote: str = "`") -> str:
+        self._check_writer_id()
+        writer_id = self.shared.writer_id.replace("'", "''")
+        return f"{quote}{self.shared.column}{quote} = '{writer_id}'"
+
+    @property
     def purge_target(self) -> str | None:
         """
         Identifier of the physical data written by the sink. Sinks of different pipeline
@@ -792,8 +906,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         Parameters
         ----------
         mode:
-            Optional override for `purge_mode`, taking precedence over the resolved
-            `self.purge_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
+            Optional override for `reset_mode`, taking precedence over the resolved
+            `self.reset_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
             `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
             generically here, especially when purging multiple sinks/tables at once via
             `PipelineNode.purge()`.

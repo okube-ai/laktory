@@ -3,10 +3,6 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
-def str2bool(v):
-    return v.lower() in ("yes", "true", "t", "1")
-
-
 def _execute():
     """Execute pipeline as a script"""
     # TODO: Refactor and integrate into dispatcher / executor / CLI
@@ -30,10 +26,20 @@ def _execute():
         required=False,
     )
     parser.add_argument(
-        "--full_refresh",
-        type=str2bool,
-        help="Full refresh",
-        default=False,
+        "--refresh",
+        type=str,
+        help=(
+            "What the run does: incremental (no reset, sinks written according to their "
+            "mode), full (reset, then reprocess all the data) or reset (reset only)"
+        ),
+        default="incremental",
+        required=False,
+    )
+    parser.add_argument(
+        "--reset_mode",
+        type=str,
+        help="Override of sinks reset mode (DROP or TRUNCATE)",
+        default=None,
         required=False,
     )
 
@@ -41,13 +47,14 @@ def _execute():
     args, unknown = parser.parse_known_args()
     filepath = args.filepath
     selects = args.selects
-    full_refresh = args.full_refresh
+    refresh = args.refresh or "incremental"
+    reset_mode = args.reset_mode or None
     selects_str = ""
     if selects:
         selects = selects.split(",")
         selects_str = f" nodes {selects} from"
     logger.info(
-        f"Executing{selects_str} pipeline '{filepath}' with full refresh {full_refresh}"
+        f"Executing{selects_str} pipeline '{filepath}' with refresh '{refresh}'"
     )
 
     # Read
@@ -58,4 +65,8 @@ def _execute():
             pl = lk.models.Pipeline.model_validate_json(fp.read())
 
     # Execute
-    pl.execute(full_refresh=full_refresh, selects=selects)
+    pl.execute(
+        selects=selects,
+        refresh=refresh,
+        reset_mode=reset_mode,
+    )

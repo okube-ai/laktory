@@ -129,7 +129,7 @@ markers = [
 
 [tool.ruff]
 builtins = ["spark", "display", "dbutils"]
-extend-exclude=["scratchpad/*"]
+extend-exclude=["scratch/*"]
 fix = true
 indent-width = 4
 line-length = 88  # default length. standard or many python projects

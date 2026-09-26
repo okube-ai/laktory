@@ -75,42 +75,39 @@ class PipelineChild(BaseChild):
         # Value from settings
         return settings.dataframe_api.upper()
 
-    purge_mode_: Literal["DROP", "TRUNCATE", "NONE"] = Field(
+    reset_mode_: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description="""
-        Strategy used to purge a sink's data when `full_refresh` is requested.
+        Strategy used to reset a sink's data on a full refresh or a reset run.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
-        - NONE: Leave the data untouched, but still delete checkpoints so that data is
-          reprocessed. Used on the nodes that don't drive the purge of a sink shared with
-          other nodes.
 
         `DELETE_WHERE` is also available, but only directly on a data sink (see
-        `BaseDataSink.purge_mode`) - a deletion predicate is inherently specific to a single
+        `BaseDataSink.reset_mode`) - a deletion predicate is inherently specific to a single
         sink, so it can't be a pipeline node, pipeline, or global default.
         """,
-        validation_alias=AliasChoices("purge_mode", "purge_mode_"),
+        validation_alias=AliasChoices("reset_mode", "reset_mode_"),
         exclude=True,
     )
 
-    def _resolve_purge_mode(self) -> str:
+    def _resolve_reset_mode(self) -> str:
         # Direct value
-        if self.purge_mode_ is not None:
-            return self.purge_mode_
+        if self.reset_mode_ is not None:
+            return self.reset_mode_
 
         # Value from parent
         parent = self._parent
         if parent is not None:
-            return parent.purge_mode
+            return parent.reset_mode
 
         # Value from settings
-        return settings.purge_mode.upper()
+        return settings.reset_mode.upper()
 
-    @computed_field(description="purge_mode")
+    @computed_field(description="reset_mode")
     @property
-    def purge_mode(self) -> Literal["DROP", "TRUNCATE", "NONE"]:
-        return self._resolve_purge_mode()
+    def reset_mode(self) -> Literal["DROP", "TRUNCATE"]:
+        return self._resolve_reset_mode()
 
     @property
     def parent_pipeline(self):

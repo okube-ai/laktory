@@ -356,3 +356,53 @@ def test_no_terraform_depends_on_cycle():
         n for n in depends_on_by_node if n.startswith("databricks_workspace_file.")
     )
     assert any("databricks_job.pl-job" in dep for dep in depends_on_by_node[cfg])
+
+
+# --------------------------------------------------------------------------- #
+# Shared sinks and run parameters                                             #
+# --------------------------------------------------------------------------- #
+
+
+def test_job_parameters():
+    pl = _get_pl()
+    params = {p.name: p.default for p in pl.orchestrator.parameter}
+    assert params == {"refresh": "incremental", "reset_mode": ""}
+
+
+def test_shared_sink_writers_grouped_in_one_task():
+    shared_sink = {
+        "format": "DELTA",
+        "mode": "APPEND",
+        "path": "/pooled/",
+        "shared": {"internal": True},
+    }
+    pl = models.Pipeline(
+        name="pl-job",
+        nodes=[
+            models.PipelineNode(
+                name="brz",
+                sources=[{"format": "JSON", "path": "/brz_source/"}],
+                sinks=[{"format": "DELTA", "mode": "APPEND", "path": "/brz_sink/"}],
+            ),
+            models.PipelineNode(
+                name="feed_a", sources=[{"node_name": "brz"}], sinks=[shared_sink]
+            ),
+            models.PipelineNode(
+                name="feed_b",
+                sources=[{"node_name": "brz"}],
+                sinks=[shared_sink],
+                depends_on=["feed_a"],
+            ),
+        ],
+        orchestrator={
+            "type": "LAKEFLOW_JOB",
+            "name": "pl-job",
+            "serverless_environment_version": "3",
+        },
+    )
+    tasks = {t.task_key: t for t in pl.orchestrator.task}
+    assert sorted(tasks) == ["node-brz", "shared-pooled"]
+    assert tasks["shared-pooled"].python_wheel_task.named_parameters["selects"] == (
+        "feed_a,feed_b"
+    )
+    assert [d.task_key for d in tasks["shared-pooled"].depends_on] == ["node-brz"]

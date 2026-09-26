@@ -4,7 +4,7 @@ set -e
 TEMPLATE="${1:?Usage: $0 <template>}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-STACK_DIR="$PROJECT_ROOT/scratchpad/quickstarts/$TEMPLATE"
+STACK_DIR="$PROJECT_ROOT/scratch/quickstarts/$TEMPLATE"
 
 pwd
 rm -rf "$STACK_DIR"

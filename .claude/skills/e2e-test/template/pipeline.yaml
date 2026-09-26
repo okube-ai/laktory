@@ -1,0 +1,37 @@
+#
+# {What this pipeline exercises, one bullet per behavior under test}
+#
+name: pl-e2e-{slug}
+
+dependencies:
+  - ${vars.laktory_wheel}
+
+orchestrator:
+  type: LAKEFLOW_DECLARATIVE_PIPELINE
+  development: ${vars.is_dev}
+  serverless: true
+  catalog: laktory
+  schema: unit_tests
+  libraries:
+  - notebook:
+      path: ${settings.workspace_root}notebooks/laktory_ldp.py
+
+nodes:
+
+- name: e2e_{prefix}_brz
+  sources:
+  - path: dbfs:/laktory/e2e/{slug}/source/
+    as_stream: true
+    format: JSONL
+    infer_schema: true
+  transformer:
+    nodes:
+    - expr: >
+        SELECT
+          CAST(data.created_at AS TIMESTAMP) AS created_at,
+          data.symbol AS symbol,
+          CAST(data.open AS DOUBLE) AS open,
+          CAST(data.close AS DOUBLE) AS close
+        FROM {df}
+  sinks:
+  - table_name: e2e_{prefix}_brz

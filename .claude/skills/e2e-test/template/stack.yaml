@@ -1,0 +1,49 @@
+name: e2e-{slug}
+description: Live end-to-end test - {one line on what is being checked} ({issue ref})
+
+settings:
+  # Deploys under /Users/{you}/.laktory/e2e-{slug}/dev/ so concurrent e2e stacks never
+  # share notebooks, wheels or the pipeline notebook.
+  workspace_root: user_root
+
+resources:
+
+  # Laktory built from this working tree (the feature under test is unreleased).
+  # Drop this block and `dependencies` in the pipeline if the test doesn't need it.
+  databricks_pythonpackages:
+    workspace-file-laktory-package:
+      package_name: laktory
+      config_filepath: ../../../pyproject.toml
+      dirpath: wheels/
+
+  # LDP definition notebook from this working tree. Must be deployed as a notebook (LDP
+  # can't load a plain workspace file). Needed for LDP pipelines only.
+  databricks_notebooks:
+    notebook-laktory-ldp:
+      source: ../../../laktory/resources/scripts/laktory_ldp.py
+      dirpath: notebooks/
+      language: PYTHON
+
+  # Source data, landed under a per-test folder. Reuse repo data when possible:
+  #   ../../../laktory/resources/quickstart-stacks/workflows/data/stock_prices.json (80 rows, JSONL)
+  #   ../../../laktory/resources/quickstart-stacks/local-pipeline/data/stock_metadata.json
+  databricks_dbfsfiles:
+    dbfs-file-{slug}-source:
+      path: /laktory/e2e/{slug}/source/stock_prices.json
+      source: ../../../laktory/resources/quickstart-stacks/workflows/data/stock_prices.json
+
+  pipelines:
+    pl-e2e-{slug}: !use pl-e2e-{slug}.yaml
+
+  providers:
+    databricks:
+      profile: laktory-dev-cli
+
+  variables:
+    laktory_wheel: /Workspace${settings.workspace_root}wheels/laktory-{version}-py3-none-any.whl
+
+environments:
+  dev:
+    variables:
+      env: dev
+      is_dev: true

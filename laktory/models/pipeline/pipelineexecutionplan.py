@@ -152,6 +152,14 @@ class PipelineExecutionPlan(BaseModel):
                         )
                     selected_nodes.update(task_or_tag_nodes)
 
+        # Writers of a grouped shared sink are always executed together
+        grouped = self.pipeline.grouped_task_names
+        for node_name in list(selected_nodes):
+            if node_name in grouped:
+                selected_nodes.update(
+                    n for n, t in grouped.items() if t == grouped[node_name]
+                )
+
         # Sort nodes based on DAG topological order
         sorted_node_names = [
             node for node in self.pipeline.sorted_node_names if node in selected_nodes

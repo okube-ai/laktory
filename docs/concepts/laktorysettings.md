@@ -5,9 +5,12 @@
 | [`workspace_root`](#workspace-root) | `/.laktory/` | Databricks Workspace root where deployed objects (notebooks, workspace files, dashboards, ...) land |
 | [`runtime_root`](#runtime-root) | `/laktory/` | Root Laktory writes pipeline runtime artifacts (checkpoints) to |
 | [`build_root`](#build-root) | Laktory cache directory | Local directory for generated build artifacts |
-| [`dataframe_backend`](#dataframe-backend-and-api) | none | Stack-wide default DataFrame backend (`POLARS` / `PYSPARK`) |
-| [`dataframe_api`](#dataframe-backend-and-api) | none | Stack-wide default DataFrame API (`NARWHALS` / `NATIVE`) |
-| [`purge_mode`](#purge-mode) | none | Stack-wide default data sink purge strategy (`DROP` / `TRUNCATE`) |
+| [`dataframe_backend`](#dataframe-backend-and-api) | `PYSPARK` | DataFrame backend (`POLARS` / `PYSPARK`) |
+| [`dataframe_api`](#dataframe-backend-and-api) | `NARWHALS` | DataFrame API (`NARWHALS` / `NATIVE`) |
+| [`reset_mode`](#reset-mode) | `DROP` | How sinks are reset on a full refresh or reset run (`DROP` / `TRUNCATE`), for sinks, nodes and pipelines that don't set one |
+
+A value set in the Stack `settings` overrides internal laktory settings. For `dataframe_backend`, `dataframe_api` and
+`reset_mode`, values set on a pipeline, pipeline node or sink always take precedence.
 
 Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)):
 
@@ -68,22 +71,20 @@ Override it when file generation is delegated to a third party that expects thos
 
 `dataframe_backend` (`POLARS` / `PYSPARK`) and `dataframe_api` (`NARWHALS` / `NATIVE`) set stack-wide defaults for how pipelines process data, overridable per [`Pipeline`](pipeline.md) or `PipelineNode`. Unlike the three root settings above, they aren't path/location configuration, so their full explanation lives with the rest of the DataFrame documentation: see [Data Pipeline](pipeline.md) for backend selection and [Data Transformer](transformer.md) for the NARWHALS/NATIVE API choice.
 
-## Purge Mode
+## Reset Mode
 
-`purge_mode` (`DROP` / `TRUNCATE`) is the stack-wide default strategy used to purge a data sink's
-data on `full_refresh`, overridable per [`Pipeline`](pipeline.md), `PipelineNode`, or directly on
-a sink:
+`reset_mode` (`DROP` / `TRUNCATE`, default `DROP`) is how a data sink is reset on a full refresh or
+a reset run. The value used for a sink is the first one set among: the sink, its
+[`PipelineNode`](pipeline.md), its [`Pipeline`](pipeline.md), and this setting:
 
 ```yaml title="stack.yaml"
 settings:
-  purge_mode: TRUNCATE
+  reset_mode: TRUNCATE
 ```
 
-It can also be set via the `LAKTORY_PURGE_MODE` environment variable. `DELETE_WHERE` cannot be
+It can also be set via the `LAKTORY_RESET_MODE` environment variable. `DELETE_WHERE` cannot be
 set here (or on a `Pipeline`/`PipelineNode`) - it's only valid set directly on a sink, since its
 deletion predicate is inherently sink-specific; doing so anywhere else raises a validation error.
-`NONE` cannot be set here either - it's only valid on a sink, `PipelineNode` or `Pipeline`, to
-designate the writers of a shared sink that don't drive its purge.
 See
-[Data Sources and Sinks - Purge Modes](sourcessinks.md#purge-modes) for the full explanation and
-the sink-level `purge_delete_where` field it pairs with.
+[Data Sources and Sinks - Reset Modes](sourcessinks.md#reset-modes) for the full explanation and
+the sink-level `reset_delete_where` field it pairs with.

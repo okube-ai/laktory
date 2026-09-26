@@ -1,9 +1,9 @@
 import os
 import re
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import Literal
 
 import networkx as nx
 from pydantic import AliasChoices
@@ -375,42 +375,58 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def validate_shared_sinks_purge(self) -> Any:
-        # Declarative pipelines purge shared tables once, for all append flows
-        if self.is_orchestrator_ldp or self.is_orchestrator_sdp:
+    def validate_shared_sinks(self) -> Any:
+        is_declarative = self.is_orchestrator_ldp or self.is_orchestrator_sdp
+
+        for target, sinks in self.sink_targets.items():
+            node_names = list(dict.fromkeys(s.parent_pipeline_node.name for s in sinks))
+            shared = [s.shared for s in sinks if s.shared is not None]
+
+            if len(node_names) > 1:
+                options = {
+                    (False, False, "_laktory_writer")
+                    if s.shared is None
+                    else (s.shared.external, s.shared.isolated, s.shared.column)
+                    for s in sinks
+                }
+                if len(options) > 1:
+                    raise ValueError(
+                        f"Pipeline nodes {node_names} write to '{target}' with different "
+                        "`shared` options. All writers of a target must use the same "
+                        "`external`, `isolated` and `column` values."
+                    )
+                if shared and shared[0].isolated:
+                    writer_ids = [o.writer_id for o in shared]
+                    duplicates = sorted(
+                        {w for w in writer_ids if writer_ids.count(w) > 1}
+                    )
+                    if duplicates:
+                        raise ValueError(
+                            f"Sinks writing to '{target}' use duplicate "
+                            f"`shared.writer_id` {duplicates}. Isolated writers need a "
+                            "unique identifier."
+                        )
+
+            if is_declarative and any(o.uses_writer_column for o in shared):
+                raise ValueError(
+                    f"`shared.external` and `shared.isolated` are not supported with "
+                    f"{type(self.orchestrator).__name__} (target '{target}'): the "
+                    "declarative engine owns the table and refreshes it as a whole."
+                )
+
+        # Validate grouped execution tasks
+        if not self.grouped_task_names:
             return self
 
-        for target, node_names in self.shared_sink_purge_conflicts.items():
-            warnings.warn(
-                f"Pipeline nodes {node_names} all write to '{target}' with `purge_mode` "
-                "DROP or TRUNCATE. On `full_refresh`, each of them would delete the data "
-                "written by the others. Set `purge_mode: NONE` on all of these nodes but "
-                "one, and execute them after it using `depends_on`."
-            )
+        from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
 
-        for target, sinks in self.shared_sink_groups.items():
-            purging = {
-                s.parent_pipeline_node.name
-                for s in sinks
-                if s.purge_mode in ["DROP", "TRUNCATE"]
-            }
-            if len(purging) != 1:
-                continue
-            purging_node_name = purging.pop()
-            downstream = nx.descendants(self.dag, purging_node_name)
-            unordered = [
-                s.parent_pipeline_node.name
-                for s in sinks
-                if s.parent_pipeline_node.name != purging_node_name
-                and s.parent_pipeline_node.name not in downstream
-            ]
-            if unordered:
-                warnings.warn(
-                    f"Pipeline nodes {list(dict.fromkeys(unordered))} write to '{target}' "
-                    f"but are not executed after node '{purging_node_name}', which purges "
-                    "it on `full_refresh`. If executed in parallel, their data may be "
-                    f"deleted. Add '{purging_node_name}' to their `depends_on`."
-                )
+        plan = PipelineExecutionPlan.model_construct(pipeline=self, selects=None)
+        if not nx.is_directed_acyclic_graph(plan.dag):
+            raise ValueError(
+                "Grouping the writers of a same sink into single tasks creates a cycle "
+                "between execution tasks. Review the dependencies of these nodes, or declare "
+                "`shared.isolated: true` on their sinks to execute them independently."
+            )
 
         return self
 
@@ -634,27 +650,98 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         return nodes
 
     @property
-    def shared_sink_groups(self) -> dict[str, list]:
+    def sink_targets(self) -> dict[str, list]:
         """
-        Sinks of different nodes writing to the same physical target, grouped by
-        `purge_target`.
+        Sinks grouped by physical target (`purge_target`).
 
         Returns
         -------
         :
-            Shared sinks keyed by purge target.
+            Sinks keyed by target.
         """
-        groups = {}
+        targets = {}
         for node in self.nodes:
             for s in node.all_sinks:
                 if s.purge_target is not None:
-                    groups.setdefault(s.purge_target, []).append(s)
+                    targets.setdefault(s.purge_target, []).append(s)
+        return targets
 
+    @property
+    def grouped_targets(self) -> set[str]:
+        """
+        Sink targets written by multiple nodes of the pipeline, not `shared.isolated`. Their
+        writers are executed in a single task, which purges the target once on
+        a full refresh.
+
+        Returns
+        -------
+        :
+            Grouped targets
+        """
         return {
-            k: v
-            for k, v in groups.items()
-            if len({s.parent_pipeline_node.name for s in v}) > 1
+            target
+            for target, sinks in self.sink_targets.items()
+            if len({s.parent_pipeline_node.name for s in sinks}) > 1
+            and not any(s.shared is not None and s.shared.isolated for s in sinks)
         }
+
+    @property
+    def grouped_task_names(self) -> dict[str, str]:
+        """
+        Execution task name of the nodes writing to a grouped target (see
+        `grouped_targets`). All the writers of such a target, and of any other grouped target
+        written by one of them, are executed in the same task. The task is named after the
+        common explicit `execution_task_name` of its nodes, if any, or after the target.
+
+        Returns
+        -------
+        :
+            Task names keyed by node name.
+        """
+        groups = []
+        grouped_targets = self.grouped_targets
+        for target, sinks in self.sink_targets.items():
+            if target not in grouped_targets:
+                continue
+            names = {s.parent_pipeline_node.name for s in sinks}
+            merged = [g for g in groups if g[0] & names]
+            for g in merged:
+                groups.remove(g)
+                names |= g[0]
+            targets = [target] + [t for g in merged for t in g[1]]
+            groups.append((names, targets))
+
+        mapping = {}
+        used = set()
+        for node_names, targets in groups:
+            explicit = {
+                self.nodes_dict[n].execution_task_name_
+                for n in node_names
+                if self.nodes_dict[n].execution_task_name_
+            }
+            if len(explicit) > 1:
+                raise ValueError(
+                    f"Pipeline nodes {sorted(node_names)} write to the same sinks and must "
+                    f"be executed in the same task, but define different "
+                    f"`execution_task_name` {sorted(explicit)}. Declare "
+                    "`shared.isolated: true` on their sinks to execute them independently."
+                )
+            if explicit:
+                task_name = explicit.pop()
+            else:
+                base = targets[0].rstrip("/").split("/")[-1]
+                if "/" not in targets[0]:
+                    base = base.split(".")[-1]
+                base = re.sub(r"[^A-Za-z0-9_-]", "_", base)
+                task_name = f"shared-{base}"
+                i = 1
+                while task_name in used:
+                    i += 1
+                    task_name = f"shared-{base}-{i}"
+            used.add(task_name)
+            for n in node_names:
+                mapping[n] = task_name
+        return mapping
 
     @property
     def sdp_append_flow_sinks(self) -> dict[str, list]:
@@ -735,30 +822,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         return kwargs
 
-    @property
-    def shared_sink_purge_conflicts(self) -> dict[str, list[str]]:
-        """
-        Shared sinks purged entirely (`DROP`/`TRUNCATE`) by more than one node on
-        `full_refresh`, with the names of those nodes. Each of these nodes would delete
-        the data written by the others.
-
-        Returns
-        -------
-        :
-            Purging node names keyed by purge target.
-        """
-        conflicts = {}
-        for target, sinks in self.shared_sink_groups.items():
-            node_names = [
-                s.parent_pipeline_node.name
-                for s in sinks
-                if s.purge_mode in ["DROP", "TRUNCATE"]
-            ]
-            node_names = list(dict.fromkeys(node_names))
-            if len(node_names) > 1:
-                conflicts[target] = node_names
-        return conflicts
-
     # ----------------------------------------------------------------------- #
     # Data Sources                                                            #
     # ----------------------------------------------------------------------- #
@@ -820,14 +883,88 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         self._plan = plan
         return plan
 
+    def validate_run_parameters(
+        self,
+        refresh: str | None,
+        reset_mode: str | None,
+        node_names: list[str] | None = None,
+    ) -> tuple[str, str | None]:
+        """
+        Validate and normalize the run parameters of an execution.
+
+        Parameters
+        ----------
+        refresh:
+            `incremental`, `full` or `reset` (case-insensitive). Defaults to `incremental`.
+        reset_mode:
+            Optional `reset_mode` override (`DROP` or `TRUNCATE`, case-insensitive).
+        node_names:
+            Names of the executed nodes. If provided, the override is also validated
+            against their sinks.
+
+        Returns
+        -------
+        :
+            Normalized `refresh` and `reset_mode`
+        """
+        refresh = (refresh or "incremental").lower()
+        if refresh not in ["incremental", "full", "reset"]:
+            raise ValueError(
+                f"`refresh` '{refresh}' is not supported. Use 'incremental', 'full' or "
+                "'reset'."
+            )
+
+        if reset_mode:
+            reset_mode = reset_mode.upper()
+            if reset_mode not in ["DROP", "TRUNCATE"]:
+                raise ValueError(
+                    f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
+                    "'TRUNCATE'."
+                )
+            if refresh == "incremental":
+                raise ValueError(
+                    f"`reset_mode` '{reset_mode}' requires `refresh` 'full' or 'reset'."
+                )
+        else:
+            reset_mode = None
+
+        if refresh == "reset" and (
+            self.is_orchestrator_ldp or self.is_orchestrator_sdp
+        ):
+            raise NotImplementedError(
+                "`refresh='reset'` is not supported with declarative orchestrators, whose "
+                "tables are managed by the declarative engine. Use `refresh='full'` instead."
+            )
+
+        if refresh == "full" and reset_mode and node_names:
+            isolated = [
+                n
+                for n in node_names
+                if any(
+                    s.shared is not None and s.shared.isolated
+                    for s in self.nodes_dict[n].all_sinks
+                )
+            ]
+            if isolated:
+                raise ValueError(
+                    f"`reset_mode` override '{reset_mode}' is not supported for "
+                    f"the `shared.isolated` sinks of nodes {isolated}, whose writers are "
+                    "executed independently. Run with `refresh='reset'` and the "
+                    "`reset_mode` override to reset their tables, then run with "
+                    "`refresh='full'`."
+                )
+
+        return refresh, reset_mode
+
     def execute(
         self,
         write_sinks=True,
-        full_refresh: bool = False,
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
         use_orchestrator: bool = False,
+        refresh: Literal["incremental", "full", "reset"] = "incremental",
+        reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -838,9 +975,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         ----------
         write_sinks:
             If `False` writing of node sinks will be skipped
-        full_refresh:
-            If `True` all nodes will be completely re-processed by deleting
-            existing data and checkpoints before processing.
         named_dfs:
             Named DataFrames to be passed to pipeline nodes transformer.
         update_tables_metadata:
@@ -859,9 +993,29 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             that `pl.execute()` always runs in-process unless explicitly
             requested. This flag is ignored when already running inside an
             orchestrator context (e.g. inside `laktory_sdp.py`).
+        refresh:
+            What the run does:
+
+            - `incremental` (default): run without resetting anything first. Sinks are
+              written according to their `mode` (e.g. `OVERWRITE` replaces the data,
+              `APPEND` adds rows) and streaming sources resume from their checkpoint.
+            - `full`: reset the sinks of the selected nodes (data and checkpoints, according
+              to their `reset_mode`), then run: all the data is reprocessed.
+            - `reset`: only reset the sinks of the selected nodes, without reading or writing
+              data. The next run reprocesses all the data. Used to reset tables, e.g. before
+              a breaking schema change, including the tables of `shared.isolated` sinks.
+        reset_mode:
+            Override of the sinks `reset_mode` for this run (`DROP` or `TRUNCATE`), with
+            `refresh` `full` or `reset`. For `shared.external` and `shared.isolated` sinks,
+            the whole table is reset, including the rows written by other writers.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
+
+        refresh, reset_mode = self.validate_run_parameters(refresh, reset_mode)
+
+        full_refresh = refresh == "full"
+        reset_only = refresh == "reset"
 
         if use_orchestrator:
             if self.orchestrator is None:
@@ -887,6 +1041,8 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         logger.info(f"Selected nodes: {node_names}")
 
+        self.validate_run_parameters(refresh, reset_mode, node_names=node_names)
+
         if named_dfs is None:
             named_dfs = {}
 
@@ -896,6 +1052,8 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
+                reset_mode=reset_mode,
+                reset_only=reset_only,
             )
 
     def update_tables_metadata(self):

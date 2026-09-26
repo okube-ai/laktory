@@ -256,8 +256,20 @@ class LaktorySettings(BaseModel):
     Laktory Settings
     """
 
-    dataframe_backend: str = Field(None, description="DataFrame backend")
-    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(None, description="")
+    dataframe_backend: str = Field(
+        None,
+        description=(
+            "DataFrame backend (`POLARS` / `PYSPARK`). Default: `PYSPARK` (from "
+            "`LAKTORY_DATAFRAME_BACKEND`)."
+        ),
+    )
+    dataframe_api: Literal["NARWHALS", "NATIVE"] = Field(
+        None,
+        description=(
+            "DataFrame API (`NARWHALS` / `NATIVE`). Default: `NARWHALS` (from "
+            "`LAKTORY_DATAFRAME_API`)."
+        ),
+    )
     workspace_root: str = Field(
         "/.laktory/",
         description=(
@@ -288,13 +300,14 @@ class LaktorySettings(BaseModel):
         to third parties like Databricks Declarative Bundles.
         """,
     )
-    purge_mode: Literal["DROP", "TRUNCATE"] = Field(
+    reset_mode: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description=(
-            "Stack-wide default strategy used to purge a data sink's data on `full_refresh` "
-            "(`DROP`/`TRUNCATE`), overridable per `Pipeline`, `PipelineNode`, or sink. "
+            "How data sinks are reset on a full refresh or reset run (`DROP`/`TRUNCATE`), for "
+            "the sinks, nodes and pipelines that don't set one. Default: `DROP` (from "
+            "`LAKTORY_RESET_MODE`). "
             "`DELETE_WHERE` is not available here - it can only be set directly on a sink. "
-            "See [Laktory Settings](../../../concepts/laktorysettings.md#purge-mode)."
+            "See [Laktory Settings](../../../concepts/laktorysettings.md#reset-mode)."
         ),
     )
 
@@ -332,8 +345,8 @@ class LaktorySettings(BaseModel):
         if self.build_root:
             settings.build_root = self.build_root
 
-        if self.purge_mode:
-            settings.purge_mode = self.purge_mode
+        if self.reset_mode:
+            settings.reset_mode = self.reset_mode
 
         return self
 
@@ -455,6 +468,59 @@ class StackResources(BaseModel):
                     f"Provided resource name {r.resource_options.name} does not match provided key {k}"
                 )
             r.resource_options.name = k
+        return self
+
+    @model_validator(mode="after")
+    def validate_shared_sinks(self) -> Any:
+        groups = {}
+        for pl in self.pipelines.values():
+            for node in pl.nodes:
+                for s in node.all_sinks:
+                    if s.purge_target is not None:
+                        groups.setdefault(s.purge_target, []).append((pl, s))
+
+        for target, items in groups.items():
+            pl_names = list(dict.fromkeys(pl.name for pl, _ in items))
+            if len(pl_names) < 2:
+                continue
+
+            declarative = [
+                pl.name
+                for pl, _ in items
+                if pl.is_orchestrator_ldp or pl.is_orchestrator_sdp
+            ]
+            if declarative:
+                raise ValueError(
+                    f"Pipelines {pl_names} all write to '{target}', but pipelines "
+                    f"{list(dict.fromkeys(declarative))} use a declarative orchestrator. A "
+                    "table written by a Lakeflow / Spark Declarative Pipeline is owned by "
+                    "that pipeline and can't be shared with other pipelines."
+                )
+
+            missing = [
+                f"{pl.name}.{s.parent_pipeline_node.name}"
+                for pl, s in items
+                if s.shared is None or not s.shared.external
+            ]
+            if missing:
+                raise ValueError(
+                    f"Pipelines {pl_names} all write to '{target}', but the sinks of "
+                    f"nodes {missing} don't declare `shared.external: true`. Declare it on "
+                    "every sink writing to this target, so that a pipeline only deletes "
+                    "its own rows on a full refresh."
+                )
+
+            writer_ids = {}
+            for pl, s in items:
+                writer_ids.setdefault(s.shared.writer_id, set()).add(pl.name)
+            duplicates = sorted(w for w, pls in writer_ids.items() if len(pls) > 1)
+            if duplicates:
+                raise ValueError(
+                    f"Pipelines {pl_names} write to '{target}' with the same "
+                    f"`shared.writer_id` {duplicates}. Each pipeline needs a unique "
+                    "identifier."
+                )
+
         return self
 
     def _get_all(self, providers_excluded=False, providers_only=False):
