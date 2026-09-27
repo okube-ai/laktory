@@ -200,6 +200,8 @@ class AirflowOrchestrator(PipelineChild):
         from airflow.sdk import get_current_context
         from airflow.sdk import task
 
+        from laktory.models.pipeline._execute import check_legacy_full_refresh
+
         pl = self.parent_pipeline
         plan = pl.get_execution_plan()
 
@@ -213,6 +215,11 @@ class AirflowOrchestrator(PipelineChild):
 
                 # Defaults from DAG params (if set)
                 params = ctx.get("params") or {}
+
+                # Former `full_refresh` param, e.g. from existing triggers
+                check_legacy_full_refresh(
+                    conf.get("full_refresh", params.get("full_refresh"))
+                )
 
                 # Let conf override params override hard defaults
                 refresh, reset_mode = pl.validate_run_parameters(

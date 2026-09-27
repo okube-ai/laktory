@@ -18,7 +18,9 @@ Set it wherever a pipeline runs:
 | `LAKEFLOW_JOB` | `refresh` job parameter (*Run now with different parameters*) |
 | `AIRFLOW` | `refresh` DAG param |
 
-`refresh="full"` replaces `full_refresh=True` (Python, job parameter and DAG param).
+`refresh="full"` replaces `full_refresh=True`. A job or Airflow run still passing
+`full_refresh=true` (e.g. a job deployed before 0.13.0, or an existing trigger) fails instead of
+running incrementally: redeploy the job and update the trigger.
 
 ## Reset Modes
 

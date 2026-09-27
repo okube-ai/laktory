@@ -3,6 +3,37 @@ from laktory._logger import get_logger
 logger = get_logger(__name__)
 
 
+def check_legacy_full_refresh(full_refresh) -> None:
+    """
+    Fail on the `full_refresh` flag replaced by `refresh` in 0.13.0, still passed by jobs
+    deployed before 0.13.0 or runs triggered with the former parameters (UI, API, other jobs,
+    Airflow `conf`): ignoring it would silently run incrementally instead of fully refreshing.
+
+    Parameters
+    ----------
+    full_refresh:
+        Former `full_refresh` flag (`bool` or string), `None` if not set.
+    """
+    if full_refresh is None or full_refresh == "":
+        return
+
+    if isinstance(full_refresh, str):
+        full_refresh = full_refresh.strip().lower() in ("yes", "true", "t", "1")
+
+    if full_refresh:
+        raise ValueError(
+            "`full_refresh` was replaced by `refresh` in Laktory 0.13.0 and is not "
+            "supported anymore: run with `refresh='full'` instead. For a job deployed "
+            "before 0.13.0, redeploy it to get the `refresh` job parameter."
+        )
+
+    # `full_refresh=false` runs incrementally, as intended
+    logger.warning(
+        "`full_refresh` was replaced by `refresh` in Laktory 0.13.0: redeploy jobs deployed "
+        "before 0.13.0 and update the triggers passing it."
+    )
+
+
 def _execute():
     """Execute pipeline as a script"""
     # TODO: Refactor and integrate into dispatcher / executor / CLI
@@ -42,11 +73,21 @@ def _execute():
         default=None,
         required=False,
     )
+    parser.add_argument(
+        "--full_refresh",
+        type=str,
+        help="Replaced by `--refresh` in 0.13.0: fails if `true`",
+        default=None,
+        required=False,
+    )
 
     # Get arguments
     args, unknown = parser.parse_known_args()
+    if unknown:
+        logger.warning(f"Ignoring unknown arguments {unknown}")
     filepath = args.filepath
     selects = args.selects
+    check_legacy_full_refresh(args.full_refresh)
     refresh = args.refresh or "incremental"
     reset_mode = args.reset_mode or None
     selects_str = ""

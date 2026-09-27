@@ -850,8 +850,9 @@ What a run does is selected with `refresh`:
 | `reset` | only reset the sinks of the selected nodes; no data read or written |
 
 - Python: `pl.execute(refresh="full")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
-  different parameters*); `AIRFLOW`: `refresh` DAG param. `full_refresh` was removed in 0.13.0 and
-  is rejected - never generate it.
+  different parameters*); `AIRFLOW`: `refresh` DAG param. `full_refresh` was replaced in 0.13.0:
+  `pl.execute(full_refresh=...)` is rejected, and job / Airflow tasks receiving
+  `full_refresh=true` fail (redeploy jobs deployed before 0.13.0) - never generate it.
 - How a sink is reset is set by `reset_mode`: `DROP` (default; recreated on next write),
   `TRUNCATE` (keeps table, schema, grants). `TRUNCATE` is not supported by `FileDataSink` or
   declarative orchestrators. To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
