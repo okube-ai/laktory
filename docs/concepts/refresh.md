@@ -92,7 +92,7 @@ overridden:
 | `full` | reset (`reset_mode`), reprocess | delete the writer's rows, reprocess |
 | `reset` | reset (`reset_mode`) | delete the writer's rows |
 | `reset` + override | reset (override) | reset the whole table (override), from any writer's task |
-| `full` + override | reset (override), reprocess | rejected if several nodes of the pipeline write to the table |
+| `full` + override | reset (override), reprocess | rejected: a full refresh never deletes the rows of the other writers |
 
 See [Resetting a Shared Table](sharedsinks.md#resetting-a-shared-table).
 

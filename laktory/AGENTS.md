@@ -513,8 +513,8 @@ sinks:
   readers of the table need a full refresh too.
 - Reset / drop a shared table as a whole: `refresh=reset` + `reset_mode=DROP` (or `TRUNCATE`) on
   any selection of writer tasks (one is enough); the checkpoints of all its writers in the
-  pipeline are reset too. `refresh=full` + override is rejected for tables with several node
-  writers.
+  pipeline are reset too. `refresh=full` + override is rejected on shared sinks (a full
+  refresh never deletes the other writers' rows).
 - `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: no `shared` options, no writer
   column (one streaming table, one append flow per node named `{table}__{node}`); all sinks
   streaming, non-`MERGE`, with the same expectations.
@@ -866,8 +866,8 @@ What a run does is selected with `refresh`:
   `shared: {where: ...}` instead.
 - Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `full`
   or `reset` (rejected on `incremental`): `pl.execute(refresh="full", reset_mode="DROP")`, or the
-  `reset_mode` job parameter / DAG param. Rejected on a full refresh of tables written by
-  several nodes: run `refresh="reset"` with the override first, then a normal run.
+  `reset_mode` job parameter / DAG param. Rejected on a full refresh of shared sinks: run
+  `refresh="reset"` with the override first, then a normal run.
 - Resetting a table without table grants (e.g. before a breaking schema change): run the job with
   `refresh=reset` and `reset_mode=DROP` (optionally on a subset of tasks), then a normal run.
 - The deleted-row count of shared-sink deletes (writer column or `shared.where`) is logged:

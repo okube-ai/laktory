@@ -855,8 +855,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         if mode is None:
             return True
         logger.warning(
-            f"Purging shared target '{self.purge_target}' entirely ({mode}), including rows "
-            "written by other writers. These writers need to reprocess their data."
+            f"Resetting shared target '{self.purge_target}' entirely ({mode}), including the "
+            "rows of the other writers: the other writers (other nodes and pipelines) need a "
+            "full refresh."
         )
         return False
 

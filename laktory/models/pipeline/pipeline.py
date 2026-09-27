@@ -890,26 +890,18 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             )
 
         if refresh == "full" and reset_mode and node_names:
-            multi_writers = {
-                target
-                for target, sinks in self.sink_targets.items()
-                if len({s.parent_pipeline_node.name for s in sinks}) > 1
-            }
             nodes = [
                 n
                 for n in node_names
-                if any(
-                    s.purge_target in multi_writers
-                    for s in self.nodes_dict[n].all_sinks
-                )
+                if any(s.shared is not None for s in self.nodes_dict[n].all_sinks)
             ]
-            if nodes and not (self.is_orchestrator_ldp or self.is_orchestrator_sdp):
+            if nodes:
                 raise ValueError(
                     f"`reset_mode` override '{reset_mode}' is not supported with "
-                    f"`refresh='full'` for nodes {nodes}, which write to tables also "
-                    "written by other nodes: each node would reset the table after the "
-                    "others wrote to it. Run with `refresh='reset'` and the `reset_mode` "
-                    "override to reset their tables, then run normally."
+                    f"`refresh='full'` for nodes {nodes}, which write to shared tables: it "
+                    "would also delete the rows of the other writers. Run with "
+                    "`refresh='reset'` and the `reset_mode` override to reset the whole "
+                    "table, then run normally."
                 )
 
         return refresh, reset_mode
@@ -965,8 +957,8 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         reset_mode:
             Override of the sinks `reset_mode` for this run (`DROP` or `TRUNCATE`), with
             `refresh` `full` or `reset`. For shared sinks (`shared`), the whole table is
-            reset, including the rows written by other writers. For tables written by
-            several nodes, only supported with `refresh='reset'`.
+            reset, including the rows written by other writers: only supported with
+            `refresh='reset'`.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")

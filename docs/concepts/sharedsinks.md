@@ -100,8 +100,8 @@ When the whole table is reset:
 - The checkpoints of all its writers in the pipeline are reset too, whether or not they're part
   of the run: they reprocess all their data on their next run.
 - Other pipelines writing to the table need a full refresh.
-- `refresh=full` with the override is rejected if several nodes of the pipeline write to the
-  table: each one would reset the table after the others wrote to it.
+- `refresh=full` with the override is rejected: a full refresh never deletes the rows of the
+  other writers. Reset the table with `refresh=reset`, then run normally.
 
 ## Keeping Ownership Consistent
 

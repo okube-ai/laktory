@@ -537,8 +537,14 @@ def test_shared_several_pipelines(tmp_path):
     pl2.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3}
 
-    # Override drops the whole table, pl1 rows lost until pl1 is refreshed
-    pl2.execute(refresh="full", reset_mode="DROP")
+    # A full refresh never deletes the rows of the other writers: override rejected
+    with pytest.raises(ValueError, match="would also delete the rows of the other"):
+        pl2.execute(refresh="full", reset_mode="DROP")
+    assert _feed_counts(path) == {"a": 3, "b": 3}
+
+    # Reset of the whole table, pl1 rows lost until pl1 is refreshed
+    pl2.execute(refresh="reset", reset_mode="DROP")
+    pl2.execute()
     assert _feed_counts(path) == {"b": 3}
     pl1.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3}
