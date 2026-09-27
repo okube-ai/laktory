@@ -3,9 +3,11 @@ import os
 import re
 import time
 from copy import deepcopy
+from pathlib import PurePosixPath
 from typing import Any
 from typing import Literal
 
+import networkx as nx
 from pydantic import Field
 from pydantic import field_validator
 from pydantic import model_validator
@@ -921,6 +923,76 @@ class Stack(BaseModel):
                 _r.resource_options.depends_on = expanded
 
     @staticmethod
+    def _order_workspace_files_creation(resources: dict) -> None:
+        """Add dependencies so that each new workspace folder is created by a
+        single file. The Databricks provider creates the parent folder of a
+        workspace file or notebook when it doesn't exist, but concurrent
+        creations in the same new folder race and some fail with `The parent
+        folder ... does not exist` (#686).
+
+        Files of a folder depend on the folder's first file. The first file
+        of a folder depends on the first file of its closest parent folder
+        with files, or of the previous folder with the same parent, so that
+        new parent folders shared by sibling folders are also created once.
+        Dependencies that would create a cycle are skipped."""
+        pattern = re.compile(r"\$\{resources\.([^}.]+)")
+        graph = nx.DiGraph()
+        for name, _r in resources.items():
+            graph.add_node(name)
+            for dep in _r.resource_options.depends_on:
+                m = pattern.search(dep)
+                if m:
+                    graph.add_edge(name, m.group(1))
+
+        folders = {}
+        for name in sorted(resources):
+            _r = resources[name]
+            if _r.lookup_existing or _r.terraform_resource_type not in (
+                "databricks_workspace_file",
+                "databricks_notebook",
+            ):
+                continue
+            path = _r.path
+            if not path or not path.startswith("/") or "${" in path:
+                continue
+            folders.setdefault(PurePosixPath(path).parent.as_posix(), []).append(name)
+
+        def _add_dependency(name, upstream):
+            if nx.has_path(graph, upstream, name):
+                return
+            ref = f"${{resources.{upstream}}}"
+            do = resources[name].resource_options.depends_on
+            if ref not in do:
+                resources[name].resource_options.depends_on = do + [ref]
+            graph.add_edge(name, upstream)
+
+        first_files = {}
+        last_first_files = {}
+        for folder in sorted(folders):
+            names = folders[folder]
+            # A file depending on another file of the folder can't come first
+            first = next(
+                (n for n in names if nx.descendants(graph, n).isdisjoint(names)),
+                names[0],
+            )
+            parent = next(
+                (
+                    p.as_posix()
+                    for p in PurePosixPath(folder).parents
+                    if p.as_posix() in folders
+                ),
+                None,
+            )
+            upstream = last_first_files.get(parent, first_files.get(parent))
+            if upstream:
+                _add_dependency(first, upstream)
+            first_files[folder] = first
+            last_first_files[parent] = first
+            for name in names:
+                if name != first:
+                    _add_dependency(name, first)
+
+    @staticmethod
     def _check_depends_on(
         resources: dict, providers: dict, virtual_children: dict = None
     ) -> None:
@@ -995,6 +1067,8 @@ class Stack(BaseModel):
         # Terraform, which has no block to point at otherwise.
         if virtual_children:
             self._expand_virtual_depends_on(resources, virtual_children)
+
+        self._order_workspace_files_creation(resources)
 
         self._check_depends_on(resources, providers, virtual_children)
 

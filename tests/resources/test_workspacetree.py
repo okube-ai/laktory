@@ -460,10 +460,11 @@ def test_depends_on_directions():
     )
     assert child_names
 
-    # Direction 1: each child inherits the tree's upstream dependency.
+    # Direction 1: each child inherits the tree's upstream dependency. Other
+    # dependencies order the creation of workspace folders (#686).
     for rtype in ("databricks_notebook", "databricks_workspace_file"):
         for body in d["resource"].get(rtype, {}).values():
-            assert body.get("depends_on") == ["databricks_cluster.cluster-pre"]
+            assert body.get("depends_on")[0] == "databricks_cluster.cluster-pre"
 
     # Direction 2: the job's dependency on the virtual tree expands to all its
     # children, and the virtual name never leaks into the Terraform output.
