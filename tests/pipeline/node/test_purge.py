@@ -309,7 +309,7 @@ def _feed_counts(sink_path):
     return dict(_read(sink_path).group_by("feed").len().sort("feed").iter_rows())
 
 
-_ISOLATED = {"isolated": True}
+_NODE_OWNED = {"owner": "node"}
 
 
 def test_shared_grouped(tmp_path):
@@ -359,9 +359,9 @@ def test_shared_grouped_removed_node(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3}
 
 
-def test_shared_isolated(tmp_path):
+def test_shared_node_owned(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, _ISOLATED))
+    pl = _pipeline(_writers(path, _NODE_OWNED))
 
     # One task per writer
     assert sorted(t.name for t in pl.get_execution_plan().tasks) == [
@@ -389,22 +389,22 @@ def test_shared_isolated(tmp_path):
         assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_shared_isolated_override_rejected(tmp_path):
+def test_shared_node_owned_override_rejected(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, _ISOLATED))
+    pl = _pipeline(_writers(path, _NODE_OWNED))
     pl.execute()
     with pytest.raises(ValueError, match="Run with `refresh='reset'`"):
         pl.execute(refresh="full", reset_mode="DROP")
 
 
-def test_shared_external(tmp_path):
+def test_shared_pipeline_owned(tmp_path):
     path = str(tmp_path / "shared")
-    external = {"external": True}
+    pipeline_owned = {"owner": "pipeline"}
 
     # Two pipelines writing to the same target
-    pl1 = _pipeline(_writers(path, external, names=("a",)), name="pl1")
+    pl1 = _pipeline(_writers(path, pipeline_owned, names=("a",)), name="pl1")
     pl2 = _pipeline(
-        _writers(path, {"external": True}, names=("b", "c")),
+        _writers(path, {"owner": "pipeline"}, names=("b", "c")),
         name="pl2",
     )
     pl1.execute()
@@ -432,16 +432,16 @@ def test_shared_reset_mode_override_invalid(tmp_path):
 @pytest.mark.parametrize(
     "shared,match",
     [
-        ({"a": _ISOLATED, "b": _ISOLATED}, "different `shared` options"),
+        ({"a": _NODE_OWNED, "b": _NODE_OWNED}, "different `shared` options"),
         (
-            {"a": None, "b": None, "c": _ISOLATED},
+            {"a": None, "b": None, "c": _NODE_OWNED},
             "different `shared` options",
         ),
         (
             {
-                "a": {**_ISOLATED, "writer_id": "x"},
-                "b": {**_ISOLATED, "writer_id": "x"},
-                "c": _ISOLATED,
+                "a": {**_NODE_OWNED, "writer_id": "x"},
+                "b": {**_NODE_OWNED, "writer_id": "x"},
+                "c": _NODE_OWNED,
             },
             "duplicate `shared.writer_id`",
         ),
@@ -482,9 +482,9 @@ def test_shared_config_round_trip(tmp_path):
 
     shared_path = str(tmp_path / "shared")
     nodes = [
-        _node("a", shared_path, _ISOLATED),
-        _node("b", shared_path, _ISOLATED),
-        _node("c", str(tmp_path / "ext"), {"external": True}),
+        _node("a", shared_path, _NODE_OWNED),
+        _node("b", shared_path, _NODE_OWNED),
+        _node("c", str(tmp_path / "ext"), {"owner": "pipeline"}),
     ]
     pl = models.Pipeline(
         name="pl",
@@ -510,9 +510,9 @@ def test_reset_grouped(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_reset_isolated(tmp_path):
+def test_reset_node_owned(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, _ISOLATED))
+    pl = _pipeline(_writers(path, _NODE_OWNED))
     pl.execute()
 
     # Without override: each writer deletes its own rows
@@ -530,10 +530,10 @@ def test_reset_isolated(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_reset_external(tmp_path):
+def test_reset_pipeline_owned(tmp_path):
     path = str(tmp_path / "shared")
-    pl1 = _pipeline(_writers(path, {"external": True}, names=("a",)), name="pl1")
-    pl2 = _pipeline(_writers(path, {"external": True}, names=("b",)), name="pl2")
+    pl1 = _pipeline(_writers(path, {"owner": "pipeline"}, names=("a",)), name="pl1")
+    pl2 = _pipeline(_writers(path, {"owner": "pipeline"}, names=("b",)), name="pl2")
     pl1.execute()
     pl2.execute()
 
@@ -558,7 +558,7 @@ def test_refresh_parameters(tmp_path):
 
 
 def test_validate_run_parameters(tmp_path):
-    pl = _pipeline(_writers(str(tmp_path / "shared"), _ISOLATED))
+    pl = _pipeline(_writers(str(tmp_path / "shared"), _NODE_OWNED))
 
     assert pl.validate_run_parameters(None, None) == ("incremental", None)
     assert pl.validate_run_parameters("FULL", "drop") == ("full", "DROP")

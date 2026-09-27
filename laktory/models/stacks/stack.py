@@ -500,14 +500,14 @@ class StackResources(BaseModel):
             missing = [
                 f"{pl.name}.{s.parent_pipeline_node.name}"
                 for pl, s in items
-                if s.shared is None or not s.shared.external
+                if s.shared is None or not s.shared.uses_writer_column
             ]
             if missing:
                 raise ValueError(
                     f"Pipelines {pl_names} all write to '{target}', but the sinks of "
-                    f"nodes {missing} don't declare `shared.external: true`. Declare it on "
-                    "every sink writing to this target, so that a pipeline only deletes "
-                    "its own rows on a full refresh."
+                    f"nodes {missing} don't declare `shared.owner` `pipeline` or `node`. "
+                    "Declare it on every sink writing to this target, so that a full "
+                    "refresh only deletes the rows of its writer."
                 )
 
             writer_ids = {}

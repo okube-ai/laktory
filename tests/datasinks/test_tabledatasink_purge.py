@@ -182,11 +182,11 @@ def test_purge_shared_internal_table(tmp_path):
         assert spark.table(f"default.{table}").count() == 6
 
 
-def test_purge_shared_external_table(tmp_path):
-    table = "purge_shared_external"
+def test_purge_shared_pipeline_owned_table(tmp_path):
+    table = "purge_shared_pipeline"
     path = (tmp_path / "t").as_posix()
-    pl1 = _shared_pipeline("pl1", table, path, {"external": True}, ["a"])
-    pl2 = _shared_pipeline("pl2", table, path, {"external": True}, ["b"])
+    pl1 = _shared_pipeline("pl1", table, path, {"owner": "pipeline"}, ["a"])
+    pl2 = _shared_pipeline("pl2", table, path, {"owner": "pipeline"}, ["b"])
 
     spark = get_spark_session()
     pl1.execute(refresh="full")

@@ -335,7 +335,7 @@ class TableDataSink(BaseDataSink):
                 # removal of every current-version file.
                 if self.exists():
                     logger.info(f"Truncating table {self.full_name}")
-                    # Writers of a shared target may truncate it concurrently (e.g. isolated
+                    # Writers of a shared target may truncate it concurrently (e.g. node-owned
                     # writers of a `refresh="reset"` run): once another writer emptied it, a retry
                     # has nothing left to delete.
                     for attempt in range(3):

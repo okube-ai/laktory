@@ -384,18 +384,18 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
             if len(node_names) > 1:
                 options = {
-                    (False, False, "_laktory_writer")
+                    ("table", "_laktory_writer")
                     if s.shared is None
-                    else (s.shared.external, s.shared.isolated, s.shared.column)
+                    else (s.shared.owner, s.shared.column)
                     for s in sinks
                 }
                 if len(options) > 1:
                     raise ValueError(
                         f"Pipeline nodes {node_names} write to '{target}' with different "
                         "`shared` options. All writers of a target must use the same "
-                        "`external`, `isolated` and `column` values."
+                        "`owner` and `column` values."
                     )
-                if shared and shared[0].isolated:
+                if shared and shared[0].owner == "node":
                     writer_ids = [o.writer_id for o in shared]
                     duplicates = sorted(
                         {w for w in writer_ids if writer_ids.count(w) > 1}
@@ -403,13 +403,13 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                     if duplicates:
                         raise ValueError(
                             f"Sinks writing to '{target}' use duplicate "
-                            f"`shared.writer_id` {duplicates}. Isolated writers need a "
+                            f"`shared.writer_id` {duplicates}. Node-owned writers need a "
                             "unique identifier."
                         )
 
             if is_declarative and any(o.uses_writer_column for o in shared):
                 raise ValueError(
-                    f"`shared.external` and `shared.isolated` are not supported with "
+                    f"`shared.owner` `pipeline` and `node` are not supported with "
                     f"{type(self.orchestrator).__name__} (target '{target}'): the "
                     "declarative engine owns the table and refreshes it as a whole."
                 )
@@ -425,7 +425,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             raise ValueError(
                 "Grouping the writers of a same sink into single tasks creates a cycle "
                 "between execution tasks. Review the dependencies of these nodes, or declare "
-                "`shared.isolated: true` on their sinks to execute them independently."
+                "`shared.owner: node` on their sinks to execute them independently."
             )
 
         return self
@@ -669,7 +669,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     @property
     def grouped_targets(self) -> set[str]:
         """
-        Sink targets written by multiple nodes of the pipeline, not `shared.isolated`. Their
+        Sink targets written by multiple nodes of the pipeline, not owned by nodes. Their
         writers are executed in a single task, which purges the target once on
         a full refresh.
 
@@ -682,7 +682,9 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             target
             for target, sinks in self.sink_targets.items()
             if len({s.parent_pipeline_node.name for s in sinks}) > 1
-            and not any(s.shared is not None and s.shared.isolated for s in sinks)
+            and not any(
+                s.shared is not None and s.shared.owner == "node" for s in sinks
+            )
         }
 
     @property
@@ -724,7 +726,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                     f"Pipeline nodes {sorted(node_names)} write to the same sinks and must "
                     f"be executed in the same task, but define different "
                     f"`execution_task_name` {sorted(explicit)}. Declare "
-                    "`shared.isolated: true` on their sinks to execute them independently."
+                    "`shared.owner: node` on their sinks to execute them independently."
                 )
             if explicit:
                 task_name = explicit.pop()
@@ -937,19 +939,19 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             )
 
         if refresh == "full" and reset_mode and node_names:
-            isolated = [
+            node_owned = [
                 n
                 for n in node_names
                 if any(
-                    s.shared is not None and s.shared.isolated
+                    s.shared is not None and s.shared.owner == "node"
                     for s in self.nodes_dict[n].all_sinks
                 )
             ]
-            if isolated:
+            if node_owned:
                 raise ValueError(
                     f"`reset_mode` override '{reset_mode}' is not supported for "
-                    f"the `shared.isolated` sinks of nodes {isolated}, whose writers are "
-                    "executed independently. Run with `refresh='reset'` and the "
+                    f"the node-owned sinks (`shared.owner: node`) of nodes {node_owned}, "
+                    "whose writers are executed independently. Run with `refresh='reset'` and the "
                     "`reset_mode` override to reset their tables, then run with "
                     "`refresh='full'`."
                 )
@@ -1003,10 +1005,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
               to their `reset_mode`), then run: all the data is reprocessed.
             - `reset`: only reset the sinks of the selected nodes, without reading or writing
               data. The next run reprocesses all the data. Used to reset tables, e.g. before
-              a breaking schema change, including the tables of `shared.isolated` sinks.
+              a breaking schema change, including the tables of node-owned shared sinks.
         reset_mode:
             Override of the sinks `reset_mode` for this run (`DROP` or `TRUNCATE`), with
-            `refresh` `full` or `reset`. For `shared.external` and `shared.isolated` sinks,
+            `refresh` `full` or `reset`. For sinks with `shared.owner` `pipeline` or `node`,
             the whole table is reset, including the rows written by other writers.
         """
 

@@ -95,11 +95,11 @@ of the other writers: depending on its [shared sink](sharedsinks.md) options, th
 reset once for all the writers of a pipeline, or only the rows of the writer are deleted. The
 `reset_mode` override then applies as follows:
 
-- Grouped writers: the table is reset once, with the override.
-- `external` writers: the whole table is reset once, including the rows written by other
+- `owner: table` (grouped writers): the table is reset once, with the override.
+- `owner: pipeline`: the whole table is reset once, including the rows written by other
   pipelines, which then need a full refresh too.
-- `isolated` writers: a full refresh with the override is rejected, as their writers are
-  executed independently. Run with `refresh="reset"` and the override first, then with
+- `owner: node`: a full refresh with the override is rejected, as the writers are executed
+  independently. Run with `refresh="reset"` and the override first, then with
   `refresh="full"`.
 
 ## Declarative Orchestrators

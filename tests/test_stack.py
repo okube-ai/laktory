@@ -1501,19 +1501,27 @@ def _stack_with_shared(shared1, shared2, orchestrator2=None, writer_id2=None):
     )
 
 
-def test_stack_shared_sink_external():
-    _stack_with_shared({"external": True}, {"external": True})
+def test_stack_shared_sink_pipeline_owned():
+    _stack_with_shared({"owner": "pipeline"}, {"owner": "pipeline"})
 
 
-def test_stack_shared_sink_missing_external_raises():
-    with pytest.raises(ValueError, match="`shared.external: true`"):
-        _stack_with_shared({"external": True}, None)
+def test_stack_shared_sink_node_owned():
+    """Rows owned by a node are also owned by its pipeline"""
+    _stack_with_shared({"owner": "node"}, {"owner": "pipeline"})
+
+
+@pytest.mark.parametrize("shared2", [None, {"owner": "table"}])
+def test_stack_shared_sink_missing_owner_raises(shared2):
+    with pytest.raises(
+        ValueError, match="don't declare `shared.owner` `pipeline` or `node`"
+    ):
+        _stack_with_shared({"owner": "pipeline"}, shared2)
 
 
 def test_stack_shared_sink_declarative_raises():
     with pytest.raises(ValueError, match="declarative orchestrator"):
         _stack_with_shared(
-            {"external": True},
+            {"owner": "pipeline"},
             None,
             orchestrator2={"type": "SPARK_DECLARATIVE_PIPELINE"},
         )
@@ -1521,4 +1529,6 @@ def test_stack_shared_sink_declarative_raises():
 
 def test_stack_shared_sink_duplicate_writer_id_raises():
     with pytest.raises(ValueError, match="same `shared.writer_id`"):
-        _stack_with_shared({"external": True}, {"external": True}, writer_id2="pl1")
+        _stack_with_shared(
+            {"owner": "pipeline"}, {"owner": "pipeline"}, writer_id2="pl1"
+        )

@@ -569,7 +569,7 @@ def test_shared_sink_inferred_under_declarative_orchestrator(orchestrator_dict):
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
 @pytest.mark.parametrize(
     "shared",
-    [{"isolated": True}, {"external": True}],
+    [{"owner": "node"}, {"owner": "pipeline"}],
 )
 def test_shared_sink_writer_column_under_declarative_orchestrator(
     orchestrator_dict, shared

@@ -80,7 +80,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
         - DELETE_WHERE: Delete only the rows matching `reset_delete_where`.
 
-        Ignored by `shared.external` and `shared.isolated` sinks, which only delete their
+        Ignored by sinks with `shared.owner` `pipeline` or `node`, which only delete their
         own rows.
         """,
         validation_alias=AliasChoices("reset_mode", "reset_mode_"),
@@ -100,9 +100,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="""
         Options for a sink written by multiple writers. Nodes of a pipeline writing to the same
-        sink are grouped automatically; declare `isolated` to execute them independently, and
-        `external` when other pipelines also write to the sink. Defines how writers are
-        executed and what a full refresh deletes. See `DataSinkSharedOptions`.
+        sink are grouped automatically. `owner` defines what a writer owns - the whole table,
+        the rows of its pipeline or of its node - which is what a full refresh deletes and how
+        writers are executed. See `DataSinkSharedOptions`.
         """,
     )
 
@@ -116,23 +116,24 @@ class BaseDataSink(BaseModel, PipelineChild):
     def shared_is_options(cls, v):
         if isinstance(v, bool):
             raise ValueError(
-                "`shared` expects options, not a boolean. Use `shared: {external: true}` "
-                "(other pipelines write to the sink) and/or `shared: {isolated: true}` (the "
-                "node writes independently from the other nodes writing to the sink)."
+                "`shared` expects options, not a boolean. Use e.g. `shared: {owner: pipeline}` "
+                "(other pipelines also write to the sink) or `shared: {owner: node}` (each "
+                "node writes independently and owns its rows)."
             )
         return v
 
     @model_validator(mode="after")
     def validate_shared(self) -> Any:
-        if self.shared is None:
+        if self.shared is None or not self.shared.uses_writer_column:
             return self
         if self.mode not in [None, "APPEND"]:
             raise ValueError(
-                f"`shared` sinks only support `APPEND` mode, not '{self.mode}'."
+                f"`shared.owner` '{self.shared.owner}' only supports `APPEND` mode, not "
+                f"'{self.mode}'."
             )
-        if self.shared.uses_writer_column and not self._supports_shared:
+        if not self._supports_shared:
             raise ValueError(
-                f"`shared.external` / `shared.isolated` are not supported for "
+                f"`shared.owner` '{self.shared.owner}' is not supported for "
                 f"{type(self).__name__} with format '{getattr(self, 'format', None)}'. "
                 "They require a DELTA table or file sink."
             )
