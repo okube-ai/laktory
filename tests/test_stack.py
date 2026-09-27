@@ -705,6 +705,96 @@ def test_check_depends_on():
     assert not any("external" in m for m in warned)
 
 
+def test_workspace_files_creation_order(tmp_path, monkeypatch):
+    """Files of a new workspace folder wait for a first file to create it,
+    and folders are created one after the other, so concurrent uploads
+    never race on creating the same parent folder (#686)."""
+    monkeypatch.setattr(settings, "build_root", str(tmp_path / "build"))
+    monkeypatch.chdir(tmp_path)
+
+    treepath = tmp_path / "tree"
+    for d in ["a", "a/b", "a/c", "d/e/f", "d/e/g"]:
+        (treepath / d).mkdir(parents=True)
+        for i in range(2):
+            (treepath / d / f"f{i}.json").write_text("{}")
+    (treepath / "a" / "b" / "nb.py").write_text(
+        "# Databricks notebook source\nprint(1)\n"
+    )
+    (tmp_path / "f.json").write_text("{}")
+
+    stack = models.Stack(
+        name="wsf",
+        organization="o3",
+        resources=models.StackResources(
+            databricks_workspacetrees={
+                "tree": {
+                    "source": "./tree/",
+                    "path": "/app",
+                    "resource_options": {"depends_on": ["${resources.wsf-x}"]},
+                }
+            },
+            # Existing notebook: not created by the stack
+            databricks_notebooks={
+                "nb-lookup": {"lookup_existing": {"path": "/other/a/nb"}},
+            },
+            databricks_workspacefiles={
+                "wsf-x": {"source": "./f.json", "path": "/other/x.json"},
+                # Explicit dependency on a file of the same folder: making it
+                # the folder's first file would create a cycle.
+                "wsf-a": {
+                    "source": "./f.json",
+                    "path": "/other/y.json",
+                    "resource_options": {"depends_on": ["${resources.wsf-x}"]},
+                },
+            },
+        ),
+    )
+    ts = stack.to_terraform()
+    resources = ts.resources
+
+    by_path = {
+        r.path: n
+        for n, r in resources.items()
+        if r.terraform_resource_type
+        in ("databricks_workspace_file", "databricks_notebook")
+    }
+
+    def deps(path):
+        return resources[by_path[path]].resource_options.depends_on
+
+    def ref(path):
+        return f"${{resources.{by_path[path]}}}"
+
+    # Files of a folder depend on its first file; the tree's own dependency
+    # is kept
+    assert ref("/app/a/f0.json") in deps("/app/a/f1.json")
+    assert "${resources.wsf-x}" in deps("/app/a/f1.json")
+    # Sub-folders wait for their closest parent folder with files, siblings
+    # are chained (the notebook is the first file of `a/b`)
+    assert deps("/app/a/b/nb.py") == ["${resources.wsf-x}", ref("/app/a/f0.json")]
+    assert ref("/app/a/b/nb.py") in deps("/app/a/b/f0.json")
+    assert ref("/app/a/b/nb.py") in deps("/app/a/c/f0.json")
+    assert ref("/app/a/c/f0.json") not in deps("/app/d/e/f/f0.json")
+    assert ref("/app/d/e/f/f0.json") in deps("/app/d/e/g/f0.json")
+
+    # Folders without a parent folder with files are chained too
+    assert ref("/app/a/f0.json") in deps("/app/d/e/f/f0.json")
+
+    # A file depending on another file of its folder is not its first file.
+    # No dependency creating a cycle: the tree depends on `wsf-x`.
+    assert deps("/other/y.json") == ["${resources.wsf-x}"]
+    assert deps("/other/x.json") == []
+
+    # Lookups are ignored
+    assert resources["nb-lookup"].resource_options.depends_on == []
+
+    # Dependencies are rendered in the Terraform configuration
+    wsf = ts.model_dump()["resource"]["databricks_workspace_file"]
+    assert wsf[by_path["/app/a/b/f0.json"]]["depends_on"][-1] == (
+        f"databricks_notebook.{by_path['/app/a/b/nb.py']}"
+    )
+
+
 def test_terraform_plan(monkeypatch, stack):
     monkeypatch.setattr(settings, "cli_raise_external_exceptions", True)
     skip_terraform_plan()
