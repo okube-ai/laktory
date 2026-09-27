@@ -142,11 +142,7 @@ class PipelineNodeDataSource(BaseDataSource):
         if stream_to_batch or self.node.output_df is None or self.as_stream:
             if self.node.has_sinks:
                 logger.info(f"Reading pipeline node {self._id} from primary sink")
-                df = self.node.primary_sink.read(
-                    as_stream=self.as_stream,
-                    reader_kwargs=self.reader_kwargs,
-                    reader_methods=self.reader_methods,
-                )
+                df = self._read_primary_sink()
             else:
                 logger.info("Executing parent pipeline node")
                 self.node.execute()
@@ -157,6 +153,20 @@ class PipelineNodeDataSource(BaseDataSource):
             df = self.node.output_df
 
         return df
+
+    def _read_primary_sink(self) -> AnyFrame:
+        """
+        Read the upstream node output back from its primary sink. For a shared sink, only
+        the rows written by the node are kept, so that the node output is the same whether
+        it is read from memory or from the sink.
+        """
+        sink = self.node.primary_sink
+        df = sink.read(
+            as_stream=self.as_stream,
+            reader_kwargs=self.reader_kwargs,
+            reader_methods=self.reader_methods,
+        )
+        return sink.filter_writer_rows(df)
 
     def _read_spark_declarative_dataset(self) -> AnyFrame:
         """
@@ -198,11 +208,7 @@ class PipelineNodeDataSource(BaseDataSource):
         # Read from node sink
         elif self.node.primary_sink:
             logger.info(f"Reading pipeline node {self._id} from sink")
-            df = self.node.primary_sink.read(
-                as_stream=self.as_stream,
-                reader_kwargs=self.reader_kwargs,
-                reader_methods=self.reader_methods,
-            )
+            df = self._read_primary_sink()
 
         # Execute upstream node
         else:

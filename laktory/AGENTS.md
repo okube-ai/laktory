@@ -507,6 +507,10 @@ sinks:
   and distinct ids / predicates. Predicates must not overlap (not checked).
 - In a Stack, every pipeline writing to a shared table must declare `shared`, and none may use a
   declarative orchestrator.
+- Reading: `node_name: <writer>` returns that writer's rows only (no writer column), from memory
+  or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
+  writer, `node_name` reads the whole table. A writer's full refresh deletes rows: streaming
+  readers of the table need a full refresh too.
 - Reset / drop a shared table as a whole: `refresh=reset` + `reset_mode=DROP` (or `TRUNCATE`) on
   any selection of writer tasks (one is enough); the checkpoints of all its writers in the
   pipeline are reset too. `refresh=full` + override is rejected for tables with several node

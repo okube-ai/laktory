@@ -73,6 +73,21 @@ sinks:
   rows are not deleted by its full refresh.
 - The number of deleted rows is logged: check it to catch a wrong predicate.
 
+## Reading a Shared Sink
+
+| Source | Reads |
+|---|---|
+| `node_name: feed_a` | the output of `feed_a` only: its rows, without the writer column |
+| `table_name: prices` | the whole table: the rows of all the writers |
+
+`node_name` returns the same data whether the node output is read from memory (same run) or
+from the table (e.g. a separate job task).
+
+- With declarative orchestrators, rows carry no writer: `node_name` reads the whole table. Use
+  separate tables when a node needs the output of a single writer.
+- A full refresh of a writer deletes rows from the table, which fails streaming reads of the
+  table (as for any Delta table): run a full refresh of these readers too.
+
 ## Resetting a Shared Table
 
 | Goal | Run |

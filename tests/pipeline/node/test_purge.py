@@ -718,3 +718,58 @@ def test_validate_run_parameters(tmp_path):
     )
     with pytest.raises(ValueError, match="Run with `refresh='reset'`"):
         pl.validate_run_parameters("full", "DROP", node_names=["a"])
+
+
+@pytest.mark.parametrize(
+    "shared", [None, {n: {"where": f"feed = '{n}'"} for n in ["a", "b"]}]
+)
+def test_shared_node_source(tmp_path, shared):
+    """A node reading a writer of a shared sink gets the writer output only, whether it's
+    read from memory (same run) or from the sink (e.g. separate job task)."""
+    df0 = get_df0("POLARS").to_native()
+    source = str(tmp_path / "source.parquet")
+    df0.write_parquet(source)
+    path = str(tmp_path / "shared")
+
+    def _pl(c_path):
+        nodes = []
+        for name in ["a", "b"]:
+            sink = {"path": path, "format": "DELTA", "mode": "APPEND"}
+            if shared:
+                sink["shared"] = shared[name]
+            nodes += [
+                {
+                    "name": name,
+                    "sources": [{"path": source, "format": "PARQUET"}],
+                    "transformer": {
+                        "nodes": [{"expr": f"SELECT *, '{name}' AS feed FROM {{df}}"}]
+                    },
+                    "sinks": [sink],
+                }
+            ]
+        nodes += [
+            {
+                "name": "c",
+                "sources": [{"node_name": "a"}],
+                "sinks": [{"path": c_path, "format": "DELTA", "mode": "OVERWRITE"}],
+            }
+        ]
+        return models.Pipeline(name="pl", dataframe_backend="POLARS", nodes=nodes)
+
+    def _c_output(pl):
+        df = pl.nodes_dict["c"].output_df.collect().to_native()
+        return df.columns, dict(df.group_by("feed").len().iter_rows())
+
+    # Same run: from memory
+    pl = _pl(str(tmp_path / "c1"))
+    pl.execute()
+    from_memory = _c_output(pl)
+
+    # Node c alone (e.g. job task): from the shared sink
+    pl = _pl(str(tmp_path / "c2"))
+    pl.execute(selects=["c"])
+    from_sink = _c_output(pl)
+
+    assert from_memory == from_sink
+    assert "_laktory_writer" not in from_sink[0]
+    assert from_sink[1] == {"a": 3}

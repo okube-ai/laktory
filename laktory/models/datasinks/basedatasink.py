@@ -889,6 +889,39 @@ class BaseDataSink(BaseModel, PipelineChild):
         )
         return _df if is_nw else _df.to_native()
 
+    def filter_writer_rows(self, df: AnyFrame) -> AnyFrame:
+        """
+        Keep the rows written by the writer of a shared sink - matching its writer
+        identifier or `shared.where` - without the writer column: the output of the writer
+        read back from the shared target. Returns the DataFrame unchanged if the sink is not
+        shared.
+
+        Parameters
+        ----------
+        df:
+            DataFrame read from the sink
+
+        Returns
+        -------
+        :
+            DataFrame with the rows of the writer
+        """
+        if self.shared is None:
+            return df
+
+        is_nw = isinstance(df, (nw.DataFrame, nw.LazyFrame))
+        _df = df if is_nw else nw.from_native(df)
+        if self.shared.uses_writer_column:
+            self._check_writer_id()
+            column = self.shared.column
+            if column in _df.columns:
+                _df = _df.filter(nw.col(column) == self.shared.writer_id).drop(column)
+        else:
+            from laktory.narwhals_ext.functions import sql_expr
+
+            _df = _df.filter(sql_expr(self.shared.where))
+        return _df if is_nw else _df.to_native()
+
     @property
     def _existing_columns(self) -> list[str] | None:
         """

@@ -307,3 +307,20 @@ def test_purge_shared_where_table(tmp_path):
     assert "_laktory_writer" not in df.columns
     rows = df.groupBy("feed").count().collect()
     assert {r[0]: r[1] for r in rows} == {"a": 3, "b": 3}
+
+
+def test_shared_node_source_spark(tmp_path):
+    """A node reading a writer of a shared table from the table gets the writer rows only"""
+    from laktory import models
+
+    table = "purge_shared_node_source"
+    get_spark_session().sql(f"DROP TABLE IF EXISTS default.{table}")
+    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), None, ["a", "b"])
+    pl.execute()
+
+    source = models.PipelineNodeDataSource(node_name="a")
+    source._parent = pl.nodes_dict["b"]
+    pl.nodes_dict["a"]._output_df = None  # e.g. separate job task
+    df = source.read().to_native()
+    assert "_laktory_writer" not in df.columns
+    assert {r[0] for r in df.select("feed").distinct().collect()} == {"a"}
