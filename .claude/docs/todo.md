@@ -27,17 +27,17 @@ Currently opt-in (`settings.workspace_root: "user_root"` — see `docs/concepts/
 
 `${current_user.user_name}` shipped in #633 (`laktory/_current_user.py`, wired into `Stack._resolve_user_root`, documented in `docs/concepts/variables.md#current-user`). Not yet added: a "short name" form. The Databricks SDK's `User` object (`databricks.sdk.service.iam.User`) has no `short_name`/`alphanumeric` field — verified fields are `active, display_name, emails, entitlements, external_id, groups, id, name, roles, schemas, user_name`. Terraform's `databricks_current_user.alphanumeric` attribute is computed by the provider itself (Go code), not returned by the raw API. Before implementing, either (a) check the Databricks Terraform provider's source/docs to replicate that exact sanitization so it matches `${resources.x.alphanumeric}` if both appear in the same stack, or (b) derive Laktory's own convention (e.g. the part of `user_name` before `@`) and document it explicitly as not a claim of parity with Terraform's `alphanumeric`.
 
-## A6 — Shared sinks: predicate-based ownership (no writer column) — [#687](https://github.com/okube-ai/laktory/issues/687)
+## A7 — Discriminated unions for sinks, sources and nodes
 
-Let `shared.owner` `pipeline` / `node` use the sink's `reset_delete_where` instead of the `_laktory_writer` column to identify the writer's rows, for tables that already carry an ownership column (`client_id`, `source_system`) or that can't be dropped to backfill the writer column. Additive, can ship in 0.13.x: 0.13.0 rejects `reset_delete_where` on writer-column sinks precisely to keep this open (`BaseDataSink.validate_shared`).
+A validation error in a sink is buried among ~15-20 union errors (one per sink type -
+`PipelineViewDataSink`, `FileDataSink`, `UnityCatalogDataSink`, `HiveMetastoreDataSink` - plus the
+`${...}` variable placeholder string), with unrelated errors first (e.g. `pipeline_view_name:
+Field required`) and very long error paths. Pre-existing in 0.12.7, amplified by the 0.13.0 sink
+validators (shared sinks, `reset_mode`). Example: `mode: OVERWRITE` with `shared: true` yields 15
+errors before the real one ("Shared sinks only support `APPEND` mode").
 
-```yaml
-shared:
-  owner: pipeline
-reset_mode: DELETE_WHERE
-reset_delete_where: client_id = 'acme'
-```
-
-- When set: no writer column is added; a full refresh deletes the rows matching the predicate; `writer_id` / `column` are rejected; the Stack check accepts the sink (owner declared).
-- `owner: node`: each node's predicate; the duplicate `writer_id` check becomes a duplicate-predicate check (textual only).
-- Laktory can't verify that predicates match what each writer writes or that they don't overlap: document it, rely on the deleted-row count log. Optional: a post-write check that written rows match the predicate (`count(NOT predicate) == 0` on the written batch; not for streams).
+Fix: a callable Pydantic `Discriminator` choosing the model from the input before validation
+(`pipeline_view_name` -> view sink, `path` -> file sink, `catalog_name` / `table_name` -> table sink,
+`${...}` string -> variable), so only the selected model is validated and the error is a single
+line. Same for data sources and `PipelineNode | str`. Affects the parsing of every config: needs
+its own test pass (existing stacks, variables, `inject_vars`, MCP model docs).
