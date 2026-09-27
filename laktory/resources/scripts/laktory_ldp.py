@@ -46,7 +46,7 @@ def define_table(node, sink):
                 df = node.quarantine_df
             else:
                 df = node.output_df
-            return df.to_native()
+            return sink.with_writer_column(df).to_native()
 
     else:
 
@@ -69,7 +69,7 @@ def define_append_flow(node, sink):
             df = node.quarantine_df
         else:
             df = node.output_df
-        return df.to_native()
+        return sink.with_writer_column(df).to_native()
 
 
 # --------------------------------------------------------------------------- #

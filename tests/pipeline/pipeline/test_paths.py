@@ -4,7 +4,9 @@ from pathlib import Path
 
 from laktory import models
 
-_SINK = {"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}
+
+def _sink(name):
+    return {"format": "JSON", "mode": "OVERWRITE", "path": f"{name}.json"}
 
 
 def _get_pl(tmp_path):
@@ -12,9 +14,9 @@ def _get_pl(tmp_path):
         name="pl",
         root_path=str(tmp_path),
         nodes=[
-            models.PipelineNode(name="brz", sinks=[_SINK]),
+            models.PipelineNode(name="brz", sinks=[_sink("brz")]),
             models.PipelineNode(
-                name="slv", sources=[{"node_name": "brz"}], sinks=[_SINK]
+                name="slv", sources=[{"node_name": "brz"}], sinks=[_sink("slv")]
             ),
         ],
     )
@@ -69,7 +71,7 @@ def test_sink_checkpoint_path_after_inject_vars(tmp_path):
     pl = models.Pipeline(
         name="pl",
         root_path=str(tmp_path) + "_${vars.env}",
-        nodes=[models.PipelineNode(name="brz", sinks=[_SINK])],
+        nodes=[models.PipelineNode(name="brz", sinks=[_sink("brz")])],
     )
 
     pl2 = pl.inject_vars(vars={"env": "labs"})

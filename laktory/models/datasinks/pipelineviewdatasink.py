@@ -64,7 +64,7 @@ class PipelineViewDataSink(BaseDataSink):
         Delete sink data and checkpoints
 
         View is virtual and does not materialize data, so there is nothing to purge
-        regardless of `purge_mode`.
+        regardless of `reset_mode`.
         """
         return
 

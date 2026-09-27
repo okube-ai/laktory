@@ -184,7 +184,7 @@ def test_full_refresh(backend, tmp_path):
     )
 
     pl.execute()
-    pl.execute(full_refresh=True)  # should not raise
+    pl.execute(refresh="full")  # should not raise
     df = pl.nodes_dict["brz"].primary_sink.read()
     assert df.collect().shape[0] == 3
 

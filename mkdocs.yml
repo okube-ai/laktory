@@ -144,6 +144,8 @@ nav:
       - Data Sources and Sinks: concepts/sourcessinks.md
       - Data Transformer: concepts/transformer.md
       - Change Data Capture: concepts/cdc.md
+      - Refresh and Reset: concepts/refresh.md
+      - Shared Sinks: concepts/sharedsinks.md
       - Data Quality: concepts/dataquality.md
     - Narwhals API Extension:
       - Laktory Extension: concepts/extension_laktory.md
@@ -182,6 +184,7 @@ nav:
         - PipelineViewDataSink: api/models/datasinks/pipelineview.md
         - UnityCatalogDataSink: api/models/datasinks/unitycatalog.md
         - DataSinkMergeCDCOptions: api/models/datasinks/mergecdcoptions.md
+        - DataSinkSharedOptions: api/models/datasinks/sharedoptions.md
         - TableDataSinkMetadata: api/models/datasinks/tablemetadata.md
       - DataSources:
         - BaseDataSource: api/models/datasources/basedatasource.md

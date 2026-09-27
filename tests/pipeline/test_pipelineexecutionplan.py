@@ -4,7 +4,9 @@ import pytest
 
 from laktory import models
 
-_SINK = {"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}
+
+def _sink(name):
+    return {"format": "JSON", "mode": "OVERWRITE", "path": f"{name}.json"}
 
 
 @pytest.fixture
@@ -12,47 +14,51 @@ def pl():
     return models.Pipeline(
         name="test",
         nodes=[
-            models.PipelineNode(name="brz_a", tags=["brz", "a"], sinks=[_SINK]),
+            models.PipelineNode(
+                name="brz_a", tags=["brz", "a"], sinks=[_sink("brz_a")]
+            ),
             models.PipelineNode(
                 name="slv_a1",
                 execution_task_name="slv_a",
                 sources=[{"node_name": "brz_a"}],
                 tags=["slv", "a"],
-                sinks=[_SINK],
+                sinks=[_sink("slv_a1")],
             ),
             models.PipelineNode(
                 name="slv_a2",
                 execution_task_name="slv_a",
                 sources=[{"node_name": "brz_a"}],
                 tags=["slv", "a"],
-                sinks=[_SINK],
+                sinks=[_sink("slv_a2")],
             ),
             models.PipelineNode(
                 name="gld_a",
                 sources=[{"node_name": "slv_a1"}],
                 tags=["gld", "a"],
-                sinks=[_SINK],
+                sinks=[_sink("gld_a")],
             ),
-            models.PipelineNode(name="brz_b", tags=["brz", "b"], sinks=[_SINK]),
+            models.PipelineNode(
+                name="brz_b", tags=["brz", "b"], sinks=[_sink("brz_b")]
+            ),
             models.PipelineNode(
                 name="slv_b1",
                 execution_task_name="slv_b",
                 sources=[{"node_name": "slv_b2"}],
                 tags=["slv", "b"],
-                sinks=[_SINK],
+                sinks=[_sink("slv_b1")],
             ),
             models.PipelineNode(
                 name="slv_b2",
                 execution_task_name="slv_b",
                 sources=[{"node_name": "brz_b"}],
                 tags=["slv", "b"],
-                sinks=[_SINK],
+                sinks=[_sink("slv_b2")],
             ),
             models.PipelineNode(
                 name="gld_b",
                 sources=[{"node_name": "slv_b1"}],
                 tags=["gld", "b"],
-                sinks=[_SINK],
+                sinks=[_sink("gld_b")],
             ),
         ],
     )
@@ -63,10 +69,10 @@ def pl_with_views():
     return models.Pipeline(
         name="test",
         nodes=[
-            models.PipelineNode(name="brz", sinks=[_SINK]),
+            models.PipelineNode(name="brz", sinks=[_sink("brz")]),
             models.PipelineNode(name="slv", sources=[{"node_name": "brz"}]),
             models.PipelineNode(
-                name="gld1", sources=[{"node_name": "slv"}], sinks=[_SINK]
+                name="gld1", sources=[{"node_name": "slv"}], sinks=[_sink("gld1")]
             ),
             models.PipelineNode(name="gld2", sources=[{"node_name": "slv"}]),
         ],

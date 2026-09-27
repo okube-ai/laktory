@@ -19,13 +19,13 @@ def test_purge_drop_unchanged(tmp_path):
     _create_table(schema, table, tmp_path / "drop")
 
     sink = HiveMetastoreDataSink(schema_name=schema, table_name=table)
-    assert sink.purge_mode == "DROP"
+    assert sink.reset_mode == "DROP"
 
     sink.purge()
     assert not sink.exists()
 
 
-def test_purge_mode_override_rejects_delete_where(tmp_path):
+def test_reset_mode_override_rejects_delete_where(tmp_path):
     schema, table = "default", "purge_override_reject"
     _create_table(schema, table, tmp_path / "override_reject")
 
@@ -34,12 +34,12 @@ def test_purge_mode_override_rejects_delete_where(tmp_path):
         sink.purge(mode="DELETE_WHERE")
 
 
-def test_purge_mode_override_drop(tmp_path):
+def test_reset_mode_override_drop(tmp_path):
     schema, table = "default", "purge_override_drop"
     _create_table(schema, table, tmp_path / "override_drop")
 
     sink = HiveMetastoreDataSink(
-        schema_name=schema, table_name=table, purge_mode="TRUNCATE"
+        schema_name=schema, table_name=table, reset_mode="TRUNCATE"
     )
     sink.purge(mode="DROP")
     assert not sink.exists()
@@ -50,7 +50,7 @@ def test_purge_truncate_table(tmp_path):
     _create_table(schema, table, tmp_path / "truncate")
 
     sink = HiveMetastoreDataSink(
-        schema_name=schema, table_name=table, purge_mode="TRUNCATE"
+        schema_name=schema, table_name=table, reset_mode="TRUNCATE"
     )
     sink.purge()
 
@@ -72,25 +72,25 @@ def test_purge_truncate_view_raises(tmp_path):
         schema_name=schema,
         table_name=view,
         table_type="VIEW",
-        purge_mode="TRUNCATE",
+        reset_mode="TRUNCATE",
     )
     with pytest.raises(ValueError):
         sink.purge()
 
 
-def test_purge_delete_where(tmp_path, caplog, monkeypatch):
-    import laktory.models.datasinks.tabledatasink as tds_module
+def test_reset_delete_where(tmp_path, caplog, monkeypatch):
+    import laktory.models.datasinks.basedatasink as bds_module
 
-    monkeypatch.setattr(tds_module.logger, "propagate", True)
+    monkeypatch.setattr(bds_module.logger, "propagate", True)
 
-    schema, table = "default", "purge_delete_where"
+    schema, table = "default", "reset_delete_where"
     _create_table(schema, table, tmp_path / "delete_where")
 
     sink = HiveMetastoreDataSink(
         schema_name=schema,
         table_name=table,
-        purge_mode="DELETE_WHERE",
-        purge_delete_where="client_id = 'acme'",
+        reset_mode="DELETE_WHERE",
+        reset_delete_where="client_id = 'acme'",
     )
     with caplog.at_level("INFO"):
         sink.purge()
@@ -100,26 +100,26 @@ def test_purge_delete_where(tmp_path, caplog, monkeypatch):
     rows = spark.table(sink.full_name).collect()
     assert len(rows) == 1
     assert rows[0]["client_id"] == "other"
-    assert "Deleting 2 rows" in caplog.text
+    assert "Deleted 2 rows" in caplog.text
 
 
-def test_purge_delete_where_missing_predicate():
+def test_reset_delete_where_missing_predicate():
     with pytest.raises(ValueError):
         HiveMetastoreDataSink(
             schema_name="default",
-            table_name="purge_delete_where_missing",
-            purge_mode="DELETE_WHERE",
+            table_name="reset_delete_where_missing",
+            reset_mode="DELETE_WHERE",
         )
 
 
-def test_purge_delete_where_requires_delta():
+def test_reset_delete_where_requires_delta():
     with pytest.raises(ValueError):
         HiveMetastoreDataSink(
             schema_name="default",
-            table_name="purge_delete_where_format",
+            table_name="reset_delete_where_format",
             format="PARQUET",
-            purge_mode="DELETE_WHERE",
-            purge_delete_where="client_id = 'acme'",
+            reset_mode="DELETE_WHERE",
+            reset_delete_where="client_id = 'acme'",
         )
 
 
@@ -133,12 +133,12 @@ def test_purge_checkpoint_purged_in_all_modes(mode, tmp_path):
 
     kwargs = {}
     if mode == "DELETE_WHERE":
-        kwargs["purge_delete_where"] = "client_id = 'acme'"
+        kwargs["reset_delete_where"] = "client_id = 'acme'"
 
     sink = HiveMetastoreDataSink(
         schema_name=schema,
         table_name=table,
-        purge_mode=mode,
+        reset_mode=mode,
         checkpoint_path_=checkpoint_path,
         **kwargs,
     )
@@ -147,48 +147,82 @@ def test_purge_checkpoint_purged_in_all_modes(mode, tmp_path):
     assert not checkpoint_path.exists()
 
 
-def test_purge_none(tmp_path):
-    schema, table = "default", "purge_none"
-    _create_table(schema, table, tmp_path / "none")
-
-    sink = HiveMetastoreDataSink(
-        schema_name=schema, table_name=table, purge_mode="NONE"
-    )
-    sink.purge()
-
-    spark = get_spark_session()
-    assert spark.table(sink.full_name).count() == 3
-
-
-def test_purge_shared_table(tmp_path):
+def _shared_pipeline(name, table, path, shared, node_names, sink_kwargs=None):
     from laktory import models
     from laktory._testing import get_df0
 
     sink = {
         "schema_name": "default",
-        "table_name": "purge_shared",
+        "table_name": table,
         "mode": "APPEND",
-        "format": "PARQUET",
-        "writer_kwargs": {"path": (tmp_path / "shared").as_posix()},
+        "format": "DELTA",
+        "writer_kwargs": {"path": path},
+        "shared": shared,
     }
-    pl = models.Pipeline(
-        name="pl",
+    return models.Pipeline(
+        name=name,
         dataframe_backend="PYSPARK",
         nodes=[
             models.PipelineNode(
-                name="a", sources=[{"df": get_df0("PYSPARK")}], sinks=[sink]
-            ),
-            models.PipelineNode(
-                name="b",
-                depends_on=["a"],
-                purge_mode="NONE",
+                name=n,
                 sources=[{"df": get_df0("PYSPARK")}],
-                sinks=[sink],
-            ),
+                transformer={
+                    "nodes": [{"expr": f"SELECT *, '{n}' AS feed FROM {{df}}"}]
+                },
+                sinks=[sink | (sink_kwargs or {}).get(n, {})],
+            )
+            for n in node_names
         ],
     )
 
+
+def test_purge_shared_internal_table(tmp_path):
+    table = "purge_shared_internal"
+    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), None, ["a", "b"])
+    assert [t.name for t in pl.get_execution_plan().tasks] == [f"shared-{table}"]
+
     spark = get_spark_session()
     for _ in range(2):
-        pl.execute(full_refresh=True)
-        assert spark.table("default.purge_shared").count() == 6
+        pl.execute(refresh="full")
+        assert spark.table(f"default.{table}").count() == 6
+
+
+def test_purge_shared_grouped_delete_where(tmp_path):
+    table = "purge_shared_delete_where"
+    path = (tmp_path / "t").as_posix()
+    reset = {"reset_mode": "DELETE_WHERE", "reset_delete_where": "feed = 'a'"}
+    pl = _shared_pipeline("pl", table, path, None, ["a", "b"], {"a": reset, "b": reset})
+
+    # Predicate applied once, before the writers run
+    spark = get_spark_session()
+    pl.execute()
+    pl.execute(refresh="full")
+    rows = spark.table(f"default.{table}").groupBy("feed").count().collect()
+    assert {r[0]: r[1] for r in rows} == {"a": 3, "b": 6}
+
+
+def test_purge_shared_grouped_different_delete_where_rejected(tmp_path):
+    sink_kwargs = {
+        n: {"reset_mode": "DELETE_WHERE", "reset_delete_where": f"feed = '{n}'"}
+        for n in ["a", "b"]
+    }
+    with pytest.raises(ValueError, match="different `reset_mode`"):
+        _shared_pipeline(
+            "pl", "purge_shared_dw", tmp_path.as_posix(), None, ["a", "b"], sink_kwargs
+        )
+
+
+def test_purge_shared_pipeline_owned_table(tmp_path):
+    table = "purge_shared_pipeline"
+    path = (tmp_path / "t").as_posix()
+    pl1 = _shared_pipeline("pl1", table, path, {"owner": "pipeline"}, ["a"])
+    pl2 = _shared_pipeline("pl2", table, path, {"owner": "pipeline"}, ["b"])
+
+    spark = get_spark_session()
+    pl1.execute(refresh="full")
+    pl2.execute(refresh="full")
+    pl2.execute(refresh="full")
+    df = spark.table(f"default.{table}")
+    assert df.columns[0] == "_laktory_writer"
+    rows = df.groupBy("_laktory_writer").count().collect()
+    assert {r[0]: r[1] for r in rows} == {"pl1": 3, "pl2": 3}

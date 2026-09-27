@@ -157,6 +157,10 @@ It is generally used as a component of a [pipeline](pipeline.md) node.
 
 Data sinks also support the merge of a [Change Data Capture (CDC)](cdc.md).
 
+On a full refresh, sinks are reset according to their `reset_mode` (see
+[Refresh and Reset](refresh.md)). A sink written by multiple nodes or pipelines is a shared sink
+(see [Shared Sinks](sharedsinks.md)).
+
 #### File Data Sink
 ??? "API Documentation"
     [`laktory.models.FileDataSink`][laktory.models.FileDataSink]<br>
@@ -228,103 +232,6 @@ sink = lk.models.TableDataSink(
 )
 sink.write(df)
 ``` 
-
-##### Purge Modes
-
-When a pipeline node is run with `full_refresh=True`, each of its sinks is purged before being
-rewritten. `purge_mode` controls how that purge is done:
-
-- `purge_mode="DROP"` (default): drops the table entirely. It's recreated (schema and all) the
-  next time the sink is written to.
-- `purge_mode="TRUNCATE"`: empties the table - removes all rows, via an unconditional
-  `DELETE FROM` since Delta does not support the `TRUNCATE TABLE` SQL statement - but keeps the
-  table, its schema, and its location intact.
-- `purge_mode="DELETE_WHERE"`: deletes only the rows matching a `purge_delete_where` SQL
-  predicate, leaving every other row untouched. This is a good fit when a table is written to by
-  multiple, independently deployed pipelines (e.g. one pipeline per client appending into a
-  shared, cross-tenant table) - scoping the predicate to the rows a given pipeline owns lets it
-  reprocess its own data on `full_refresh` without touching what other pipelines wrote.
-- `purge_mode="NONE"`: leaves the data untouched. The sink checkpoint is still deleted, so the
-  node reprocesses and re-appends its data. See [Shared sinks](#shared-sinks) below.
-
-```py
-import laktory as lk
-
-sink = lk.models.UnityCatalogDataSink(
-    schema_name="finance",
-    table_name="brz_stock_prices",
-    purge_mode="DELETE_WHERE",
-    purge_delete_where="client_id = 'acme'",
-)
-```
-
-`purge_delete_where` requires DELTA format and must be set directly on the sink that owns the
-predicate - it is not inherited from a parent pipeline node, pipeline, or global setting, since a
-deletion predicate is inherently specific to one sink. `purge_mode="DELETE_WHERE"` follows the
-same rule: it can only be set directly on a sink, and raises a validation error if set on a
-`PipelineNode`, `Pipeline`, or globally (`settings.purge_mode` / `LAKTORY_PURGE_MODE`). `DROP` and
-`TRUNCATE`, on the other hand, can be set at the sink, pipeline node, or pipeline level, or
-globally via the `LAKTORY_PURGE_MODE` environment variable / `settings.purge_mode` (see
-[Laktory Settings](laktorysettings.md)).
-
-Because a wrong or stale `purge_delete_where` predicate could otherwise silently delete the wrong
-rows, Laktory logs the number of rows matched by the predicate immediately before deleting them.
-
-`TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
-supports `purge_mode="DROP"` and `purge_mode="NONE"`.
-
-##### Shared sinks
-
-Multiple nodes of a pipeline can write to the same table or path, for example several `APPEND`
-feeds pooled into one table. With the default `DROP`, a `full_refresh` would make each node drop
-the data just written by the others. Instead, let a single node drive the purge, set
-`purge_mode: NONE` on the other nodes, and execute them after it using `depends_on`:
-
-```yaml
-nodes:
-  - name: feed_a
-    sinks:
-      - table_name: pooled
-        mode: APPEND
-  - name: feed_b
-    depends_on: [feed_a]
-    purge_mode: NONE
-    sinks:
-      - table_name: pooled
-        mode: APPEND
-```
-
-On `full_refresh`, `feed_a` drops `pooled` and `feed_b` only resets its checkpoint, so both
-reprocess their data into the new table. Laktory raises a warning when a pipeline is validated with
-more than one node writing to the same sink with `DROP` or `TRUNCATE`, and an error if such a
-node is executed with `full_refresh`. Nodes using `DELETE_WHERE` each delete their own rows and
-don't need `NONE`.
-
-Writers of a shared sink may run in parallel - concurrent Delta appends don't conflict - but on
-`full_refresh`, the purging node could then delete rows already written by the others. Laktory
-raises a validation warning for any writer that isn't executed after the purging node. Parallel
-writers also conflict when they change the table schema (e.g. appending different columns with
-schema merging); declaring the full table `schema` on the sinks avoids it.
-
-Executing a `NONE` node alone with `full_refresh` doesn't purge the shared data, so its rows are
-appended again. Use `DELETE_WHERE` (with a column identifying each node's rows) to refresh a
-single writer in isolation.
-
-With Lakeflow / Spark Declarative Pipeline orchestrators, the shared table is declared once as a
-streaming table and each node appends to it through its own append flow, named
-`{table_name}__{node_name}`. The declarative engine runs the flows in parallel and handles
-`full_refresh` itself - clearing the table once and resetting every flow - so neither
-`purge_mode: NONE` nor `depends_on` is needed. The following rules apply:
-
-- All sinks must be streaming, non-CDC (`MERGE`) table sinks.
-- Table properties (`comment`, `table_properties`, `format`) can be declared on any of the sinks,
-  but must not conflict.
-- With Lakeflow Declarative Pipelines, expectations are applied to the whole table (append flows
-  don't support them), so all nodes writing to it must declare the same expectations.
-
-A flow checkpoint is identified by its name. Adding a second node to an existing single-writer
-streaming table (or renaming a node) changes the flow name of the existing writer, which then
-reprocesses its source from scratch - run a full refresh of that table once after the change.
 
 #### Pipeline View Data Sink
 ??? "API Documentation"

@@ -158,6 +158,11 @@ Here is an example of a pipeline declaration:
     ```
 
 ## Execution
+A run processes data on top of what the sinks already contain (`refresh="incremental"`, the
+default), or first resets them to reprocess everything (`refresh="full"`). See
+[Refresh and Reset](refresh.md) for the run modes, how sinks are reset and how to reset tables
+without reprocessing data.
+
 ### Local
 You can execute the pipeline in a local or remote Spark session using the `pipeline.execute()` command. If Polars 
 is the DataFrame engine, the pipeline can run in a simple Python environment without external dependencies. In all

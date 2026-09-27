@@ -43,22 +43,21 @@ class Settings(BaseSettings):
     register_nw_extensions: bool = Field(True, alias="LAKTORY_REGISTER_NW_EXTENSIONS")
 
     # Pipeline
-    purge_mode: str = Field("DROP", alias="LAKTORY_PURGE_MODE")
+    reset_mode: str = Field("DROP", alias="LAKTORY_RESET_MODE")
 
-    @field_validator("purge_mode")
+    @field_validator("reset_mode")
     @classmethod
-    def validate_purge_mode(cls, v: str) -> str:
+    def validate_reset_mode(cls, v: str) -> str:
         if v and v.upper() == "DELETE_WHERE":
             raise ValueError(
-                "`purge_mode` 'DELETE_WHERE' can only be set directly on a data sink, not as "
+                "`reset_mode` 'DELETE_WHERE' can only be set directly on a data sink, not as "
                 "a global default. A deletion predicate is inherently specific to a single "
                 "sink."
             )
-        if v and v.upper() == "NONE":
+        if v and v.upper() not in ["DROP", "TRUNCATE"]:
             raise ValueError(
-                "`purge_mode` 'NONE' can only be set on a data sink, pipeline node or "
-                "pipeline, not as a global default. It designates the writers of a shared "
-                "sink that don't drive its purge."
+                f"`reset_mode` '{v}' is not supported as a global default. Use 'DROP' or "
+                "'TRUNCATE'."
             )
         return v
 

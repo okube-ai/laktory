@@ -46,6 +46,8 @@ class PipelineTask(BaseModel):
         full_refresh: bool = False,
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
+        reset_mode: str | None = None,
+        reset_only: bool = False,
     ) -> None:
         """
         Execute the pipeline task.
@@ -61,9 +63,25 @@ class PipelineTask(BaseModel):
             Named DataFrames to be passed to pipeline nodes transformer.
         update_tables_metadata:
             Update tables metadata
+        reset_mode:
+            Optional override for sinks `reset_mode` when `full_refresh` or
+            `reset_only` is `True`.
+        reset_only:
+            If `True`, the sinks of the task nodes are only reset, without reading or
+            writing data.
         """
 
         logger.info(f"Executing pipeline task '{self.name}'")
+
+        # Targets written by multiple nodes of this task are purged once, by the first
+        # writer, before any of them writes.
+        purged_targets = set()
+        grouped = sorted({t for n in self.nodes for t in n.grouped_sink_targets})
+        if grouped:
+            logger.info(
+                f"Nodes {self.node_names} write to the same targets {grouped} and are "
+                "executed together."
+            )
 
         # Execute nodes
         for node_name in self.node_names:
@@ -71,12 +89,20 @@ class PipelineTask(BaseModel):
             if named_dfs is None:
                 named_dfs = {}
 
+            if reset_only:
+                node.purge(mode=reset_mode, purged_targets=set(purged_targets))
+                purged_targets |= node.grouped_sink_targets
+                continue
+
             node.execute(
                 write_sinks=write_sinks,
                 full_refresh=full_refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
+                reset_mode=reset_mode,
+                purged_targets=set(purged_targets),
             )
+            purged_targets |= node.grouped_sink_targets
 
     @property
     def upstream_task_names(self) -> list[str]:

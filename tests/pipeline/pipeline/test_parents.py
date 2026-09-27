@@ -5,7 +5,9 @@ import pytest
 from laktory import models
 from laktory._testing import get_df0
 
-_SINK = {"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}
+
+def _sink(name):
+    return {"format": "JSON", "mode": "OVERWRITE", "path": f"{name}.json"}
 
 
 def _get_pl():
@@ -22,12 +24,12 @@ def _get_pl():
                         {"expr": "select id, x1, y1 from {df}"},
                     ]
                 },
-                sinks=[_SINK],
+                sinks=[_sink("brz")],
             ),
             models.PipelineNode(
                 name="slv",
                 sources=[{"node_name": "brz"}],
-                sinks=[_SINK],
+                sinks=[_sink("slv")],
             ),
         ],
     )
@@ -81,7 +83,7 @@ def test_parents_after_inject_vars():
                 name="brz",
                 sources=[{"path": "brz.json", "format": "JSON"}],
                 transformer={"nodes": [{"expr": "select * from {df}"}]},
-                sinks=[_SINK],
+                sinks=[_sink("brz")],
             ),
         ],
     )

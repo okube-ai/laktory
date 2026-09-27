@@ -39,14 +39,14 @@ def define_table(node, sink):
     @table_or_view(**sink.sdp_table_or_view_kwargs)
     def get_df():
         node.execute()
-        return node.output_df.to_native()
+        return sink.with_writer_column(node.output_df).to_native()
 
 
 def define_append_flow(node, sink):
     @dp.append_flow(target=sink.sdp_table_or_view_name, name=sink.sdp_append_flow_name)
     def get_df():
         node.execute()
-        return node.output_df.to_native()
+        return sink.with_writer_column(node.output_df).to_native()
 
 
 # --------------------------------------------------------------------------- #

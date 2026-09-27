@@ -26,3 +26,18 @@ Currently opt-in (`settings.workspace_root: "user_root"` — see `docs/concepts/
 ## A5 — `${current_user.x}`: add a short-name/`alphanumeric` form
 
 `${current_user.user_name}` shipped in #633 (`laktory/_current_user.py`, wired into `Stack._resolve_user_root`, documented in `docs/concepts/variables.md#current-user`). Not yet added: a "short name" form. The Databricks SDK's `User` object (`databricks.sdk.service.iam.User`) has no `short_name`/`alphanumeric` field — verified fields are `active, display_name, emails, entitlements, external_id, groups, id, name, roles, schemas, user_name`. Terraform's `databricks_current_user.alphanumeric` attribute is computed by the provider itself (Go code), not returned by the raw API. Before implementing, either (a) check the Databricks Terraform provider's source/docs to replicate that exact sanitization so it matches `${resources.x.alphanumeric}` if both appear in the same stack, or (b) derive Laktory's own convention (e.g. the part of `user_name` before `@`) and document it explicitly as not a claim of parity with Terraform's `alphanumeric`.
+
+## A6 — Shared sinks: predicate-based ownership (no writer column) — [#687](https://github.com/okube-ai/laktory/issues/687)
+
+Let `shared.owner` `pipeline` / `node` use the sink's `reset_delete_where` instead of the `_laktory_writer` column to identify the writer's rows, for tables that already carry an ownership column (`client_id`, `source_system`) or that can't be dropped to backfill the writer column. Additive, can ship in 0.13.x: 0.13.0 rejects `reset_delete_where` on writer-column sinks precisely to keep this open (`BaseDataSink.validate_shared`).
+
+```yaml
+shared:
+  owner: pipeline
+reset_mode: DELETE_WHERE
+reset_delete_where: client_id = 'acme'
+```
+
+- When set: no writer column is added; a full refresh deletes the rows matching the predicate; `writer_id` / `column` are rejected; the Stack check accepts the sink (owner declared).
+- `owner: node`: each node's predicate; the duplicate `writer_id` check becomes a duplicate-predicate check (textual only).
+- Laktory can't verify that predicates match what each writer writes or that they don't overlap: document it, rely on the deleted-row count log. Optional: a post-write check that written rows match the predicate (`count(NOT predicate) == 0` on the written batch; not for streams).

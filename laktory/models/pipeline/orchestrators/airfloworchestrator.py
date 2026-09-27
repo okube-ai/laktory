@@ -58,7 +58,7 @@ class AirflowOrchestrator(PipelineChild):
     )
     print(o)
     '''
-    dataframe_backend_=None dataframe_api_=None purge_mode_=None type='AIRFLOW' description='A Laktory pipeline' schedule=CronSchedule(variables={}, cron='0 0 * * *', timezone='utc') start_date=datetime.datetime(2026, 3, 3, 0, 0, tzinfo=datetime.timezone.utc) end_date=None template_searchpath=None user_defined_macros=None user_defined_filters=None default_args=None max_active_tasks=None max_active_runs=1 max_consecutive_failed_dag_runs=None dagrun_timeout=None catchup=None doc_md=None access_control=None is_paused_upon_creation=None jinja_environment_kwargs=None render_template_as_native_obj=None tags=None owner_links=None auto_register=None fail_fast=None dag_display_name=None disable_bundle_versioning=None dataframe_backend=<DataFrameBackends.PYSPARK: 'PYSPARK'> dataframe_api='NARWHALS' purge_mode='DROP'
+    dataframe_backend_=None dataframe_api_=None reset_mode_=None type='AIRFLOW' description='A Laktory pipeline' schedule=CronSchedule(variables={}, cron='0 0 * * *', timezone='utc') start_date=datetime.datetime(2026, 3, 3, 0, 0, tzinfo=datetime.timezone.utc) end_date=None template_searchpath=None user_defined_macros=None user_defined_filters=None default_args=None max_active_tasks=None max_active_runs=1 max_consecutive_failed_dag_runs=None dagrun_timeout=None catchup=None doc_md=None access_control=None is_paused_upon_creation=None jinja_environment_kwargs=None render_template_as_native_obj=None tags=None owner_links=None auto_register=None fail_fast=None dag_display_name=None disable_bundle_versioning=None dataframe_backend=<DataFrameBackends.PYSPARK: 'PYSPARK'> dataframe_api='NARWHALS' reset_mode='DROP'
     '''
     ```
 
@@ -215,12 +215,16 @@ class AirflowOrchestrator(PipelineChild):
                 params = ctx.get("params") or {}
 
                 # Let conf override params override hard defaults
-                full_refresh = conf.get(
-                    "full_refresh", params.get("full_refresh", False)
+                refresh, reset_mode = pl.validate_run_parameters(
+                    conf.get("refresh", params.get("refresh")),
+                    conf.get("reset_mode", params.get("reset_mode")),
+                    node_names=pl_task.node_names,
                 )
 
                 pl_task.execute(
-                    full_refresh=bool(full_refresh),
+                    full_refresh=refresh == "full",
+                    reset_mode=reset_mode,
+                    reset_only=refresh == "reset",
                 )
 
             return airflow_task
@@ -228,7 +232,8 @@ class AirflowOrchestrator(PipelineChild):
         kwargs = {
             "dag_id": pl.name,
             "params": {
-                "full_refresh": False,
+                "refresh": "incremental",
+                "reset_mode": "",
             },
         }
         for fname in self.model_fields_set:

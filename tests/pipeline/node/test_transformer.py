@@ -83,7 +83,7 @@ def test_upstream_node_names():
     slv = models.PipelineNode(
         name="slv",
         sources=[{"node_name": "brz"}],
-        sinks=[{"format": "JSON", "mode": "OVERWRITE", "path": "file.json"}],
+        sinks=[{"format": "JSON", "mode": "OVERWRITE", "path": "slv.json"}],
     )
     pl = models.Pipeline(name="pl", nodes=[brz, slv])
     assert pl.nodes_dict["brz"].upstream_node_names == []
