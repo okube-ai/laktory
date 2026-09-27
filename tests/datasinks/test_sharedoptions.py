@@ -96,6 +96,24 @@ def test_writer_column_ignores_reset_mode():
     _sink(shared={"owner": "pipeline"}, reset_mode="TRUNCATE")
 
 
+@pytest.mark.parametrize("owner", ["pipeline", "node"])
+def test_writer_column_rejects_reset_delete_where(owner):
+    with pytest.raises(ValidationError, match="`reset_delete_where` is not supported"):
+        _sink(
+            shared={"owner": owner},
+            reset_mode="DELETE_WHERE",
+            reset_delete_where="client_id = 'acme'",
+        )
+
+
+def test_owner_table_accepts_reset_delete_where():
+    _sink(
+        shared={"owner": "table"},
+        reset_mode="DELETE_WHERE",
+        reset_delete_where="client_id = 'acme'",
+    )
+
+
 def test_standalone_write_requires_writer_id():
     import polars as pl
 

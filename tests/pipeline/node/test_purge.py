@@ -349,6 +349,17 @@ def test_shared_grouped_selection(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
+def test_shared_grouped_different_reset_rejected(tmp_path):
+    # The table is reset once, by the first writer: all writers must agree
+    nodes = _writers(
+        str(tmp_path / "shared"), None, node_kwargs={"a": {"reset_mode": "TRUNCATE"}}
+    )
+    with pytest.raises(
+        ValueError, match="different `reset_mode` / `reset_delete_where`"
+    ):
+        _pipeline(nodes)
+
+
 def test_shared_grouped_removed_node(tmp_path):
     path = str(tmp_path / "shared")
     _pipeline(_writers(path, None)).execute()

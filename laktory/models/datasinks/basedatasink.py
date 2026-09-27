@@ -92,7 +92,9 @@ class BaseDataSink(BaseModel, PipelineChild):
         SQL WHERE-clause predicate used to select the rows to delete when `reset_mode` resolves
         to 'DELETE_WHERE'. Should be set directly on the sink that owns the predicate - unlike
         `reset_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
-        since a deletion predicate is inherently specific to a single sink.
+        since a deletion predicate is inherently specific to a single sink. Not supported
+        with `shared.owner` `pipeline` or `node`, whose writer column identifies the rows to
+        delete.
         """,
     )
 
@@ -130,6 +132,12 @@ class BaseDataSink(BaseModel, PipelineChild):
             raise ValueError(
                 f"`shared.owner` '{self.shared.owner}' only supports `APPEND` mode, not "
                 f"'{self.mode}'."
+            )
+        if self.reset_delete_where is not None:
+            raise ValueError(
+                f"`reset_delete_where` is not supported with `shared.owner` "
+                f"'{self.shared.owner}': a full refresh deletes the rows of the writer, "
+                f"identified by the `{self.shared.column}` column."
             )
         if not self._supports_shared:
             raise ValueError(

@@ -53,7 +53,9 @@ among the sink, its pipeline node, its pipeline and the settings.
 predicate - it is not inherited from a parent pipeline node, pipeline, or global setting, since a
 deletion predicate is inherently specific to one sink. `reset_mode="DELETE_WHERE"` follows the
 same rule: it can only be set directly on a sink, and raises a validation error if set on a
-`PipelineNode`, `Pipeline`, or globally.
+`PipelineNode`, `Pipeline`, or globally. It's not supported on [shared sinks](sharedsinks.md) with
+`owner` `pipeline` or `node`, whose writer column identifies the rows to delete. Grouped writers
+of a table must use the same `reset_mode` and `reset_delete_where`, as the table is reset once.
 
 Laktory logs the number of rows deleted by `reset_delete_where`: check it in the run logs to catch
 a wrong or stale predicate.

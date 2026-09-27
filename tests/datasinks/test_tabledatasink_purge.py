@@ -147,7 +147,7 @@ def test_purge_checkpoint_purged_in_all_modes(mode, tmp_path):
     assert not checkpoint_path.exists()
 
 
-def _shared_pipeline(name, table, path, shared, node_names):
+def _shared_pipeline(name, table, path, shared, node_names, sink_kwargs=None):
     from laktory import models
     from laktory._testing import get_df0
 
@@ -164,7 +164,12 @@ def _shared_pipeline(name, table, path, shared, node_names):
         dataframe_backend="PYSPARK",
         nodes=[
             models.PipelineNode(
-                name=n, sources=[{"df": get_df0("PYSPARK")}], sinks=[sink]
+                name=n,
+                sources=[{"df": get_df0("PYSPARK")}],
+                transformer={
+                    "nodes": [{"expr": f"SELECT *, '{n}' AS feed FROM {{df}}"}]
+                },
+                sinks=[sink | (sink_kwargs or {}).get(n, {})],
             )
             for n in node_names
         ],
@@ -180,6 +185,31 @@ def test_purge_shared_internal_table(tmp_path):
     for _ in range(2):
         pl.execute(refresh="full")
         assert spark.table(f"default.{table}").count() == 6
+
+
+def test_purge_shared_grouped_delete_where(tmp_path):
+    table = "purge_shared_delete_where"
+    path = (tmp_path / "t").as_posix()
+    reset = {"reset_mode": "DELETE_WHERE", "reset_delete_where": "feed = 'a'"}
+    pl = _shared_pipeline("pl", table, path, None, ["a", "b"], {"a": reset, "b": reset})
+
+    # Predicate applied once, before the writers run
+    spark = get_spark_session()
+    pl.execute()
+    pl.execute(refresh="full")
+    rows = spark.table(f"default.{table}").groupBy("feed").count().collect()
+    assert {r[0]: r[1] for r in rows} == {"a": 3, "b": 6}
+
+
+def test_purge_shared_grouped_different_delete_where_rejected(tmp_path):
+    sink_kwargs = {
+        n: {"reset_mode": "DELETE_WHERE", "reset_delete_where": f"feed = '{n}'"}
+        for n in ["a", "b"]
+    }
+    with pytest.raises(ValueError, match="different `reset_mode`"):
+        _shared_pipeline(
+            "pl", "purge_shared_dw", tmp_path.as_posix(), None, ["a", "b"], sink_kwargs
+        )
 
 
 def test_purge_shared_pipeline_owned_table(tmp_path):

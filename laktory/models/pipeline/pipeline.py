@@ -395,6 +395,18 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                         "`shared` options. All writers of a target must use the same "
                         "`owner` and `column` values."
                     )
+                resets = {
+                    (s.reset_mode, s.reset_delete_where)
+                    for s in sinks
+                    if s.shared is None or not s.shared.uses_writer_column
+                }
+                if len(resets) > 1:
+                    raise ValueError(
+                        f"Pipeline nodes {node_names} write to '{target}' with different "
+                        "`reset_mode` / `reset_delete_where` values. Their writers are "
+                        "grouped and the table is reset once on a full refresh: all writers "
+                        "must use the same values."
+                    )
                 if shared and shared[0].owner == "node":
                     writer_ids = [o.writer_id for o in shared]
                     duplicates = sorted(

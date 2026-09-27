@@ -63,7 +63,7 @@ Each written row carries the writer identifier in a `_laktory_writer` column (fi
 configurable with `column`): `{pipeline_name}` with `owner: pipeline`,
 `{pipeline_name}.{node_name}` with `owner: node` (overridable with `writer_id`). On a full
 refresh, only the rows of the writer are deleted, so the data of the other writers is untouched
-and the configured `reset_mode` is ignored.
+and the configured `reset_mode` is ignored (`reset_delete_where` is rejected).
 
 Keep the identifiers stable:
 
@@ -90,7 +90,8 @@ independently.
 
 Laktory validates shared sinks:
 
-- writers of a same target in a pipeline must use the same `shared` options;
+- writers of a same target in a pipeline must use the same `shared` options and, when grouped,
+  the same `reset_mode` / `reset_delete_where`, as the table is reset once;
 - pipelines of a same Stack writing to the same target must all declare `owner` `pipeline` or
   `node`;
 - node-owned writers of a target must have distinct writer identifiers.
