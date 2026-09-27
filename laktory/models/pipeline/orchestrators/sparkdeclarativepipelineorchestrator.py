@@ -212,7 +212,15 @@ class SparkDeclarativePipelineOrchestrator(PipelineChild):
         of the local Spark session. They are static configurations that can't be set
         through the pipeline spec.
         """
-        conf = spark.sparkContext.getConf()
+        try:
+            conf = spark.sparkContext.getConf()
+        except (NotImplementedError, AttributeError):
+            # Spark Connect session: no local configuration to forward
+            logger.debug(
+                "Spark session configuration not available (e.g. Spark Connect): jars "
+                "and Delta configuration are not forwarded to `spark-pipelines`."
+            )
+            return []
         args = []
 
         # Jars go on the driver classpath, ahead of Spark's own jars. Dependencies

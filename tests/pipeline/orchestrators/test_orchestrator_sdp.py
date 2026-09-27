@@ -216,6 +216,36 @@ def test_spec_dict(monkeypatch, tmp_path):
     assert "laktory.config_filepath" in spec["configuration"]
 
 
+def test_launch_args(monkeypatch, tmp_path):
+    from types import SimpleNamespace
+
+    from pyspark.errors import PySparkNotImplementedError
+
+    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
+    orchestrator = _get_pl(tmp_path).orchestrator
+
+    # Classic session: Delta configuration forwarded
+    conf = {
+        "spark.sql.extensions": "io.delta.sql.DeltaSparkSessionExtension",
+        "spark.sql.catalog.spark_catalog": "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+    }
+    spark = SimpleNamespace(sparkContext=SimpleNamespace(getConf=lambda: conf))
+    args = orchestrator._get_launch_args(spark)
+    assert "spark.sql.sources.default=delta" in args
+    assert "spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension" in args
+
+    # Spark Connect session: no `sparkContext`, nothing forwarded
+    class _ConnectSession:
+        @property
+        def sparkContext(self):
+            raise PySparkNotImplementedError(
+                errorClass="NOT_IMPLEMENTED",
+                messageParameters={"feature": "sparkContext()"},
+            )
+
+    assert orchestrator._get_launch_args(_ConnectSession()) == []
+
+
 def test_storage_default(monkeypatch, tmp_path):
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
     pl = _get_pl(tmp_path)
