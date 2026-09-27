@@ -1,6 +1,4 @@
 import importlib
-import os
-import shutil
 import warnings
 from pathlib import Path
 from typing import Any
@@ -25,6 +23,7 @@ from laktory.models.dataframe.dataframetransformer import DataFrameTransformer
 from laktory.models.dataquality.expectation import DataQualityExpectation
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.datasinks import TableDataSink
+from laktory.models.datasinks.basedatasink import purge_checkpoint
 from laktory.models.datasources import BaseDataSource
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import PipelineNodeDataSource
@@ -723,69 +722,11 @@ class PipelineNode(BaseModel, PipelineChild):
                 else:
                     s.purge(mode=mode)
 
-        if self.expectations_checkpoint_path:
-            # Try with simple paths (supported by local file system or Unity Catalog
-            # Volumes)
-            if os.path.exists(self.expectations_checkpoint_path):
-                logger.info(
-                    f"Deleting expectations checkpoint at {self.expectations_checkpoint_path}",
-                )
-                shutil.rmtree(self.expectations_checkpoint_path)
-                return
-
-            # Try with DBFS
-            # If spark is not used, dbfs is most likely not used
-            if self.dataframe_backend != DataFrameBackends.PYSPARK:
-                return
-
-            # The legacy DBFS API does not support Unity Catalog Volumes paths,
-            # regardless of whether the path exists. If it wasn't found above by
-            # `os.path.exists`, it genuinely doesn't exist (Volumes are FUSE-mounted
-            # like a regular filesystem) - routing it through `dbfs.*` would raise a
-            # `PermissionDenied`, not a `ResourceDoesNotExist`, so skip it entirely.
-            _posix_path = self.expectations_checkpoint_path.as_posix()
-            if _posix_path.startswith(("/Volumes/", "dbfs:/Volumes/")):
-                logger.info(
-                    f"Expectation checkpoint at {_posix_path} does not exist. Skipping.",
-                )
-                return
-
-            # Check if a workspace client can be instantiated
-            try:
-                from databricks.sdk import WorkspaceClient
-                from databricks.sdk.errors import ResourceDoesNotExist
-
-                w = WorkspaceClient()
-
-            except (
-                ModuleNotFoundError,  # SDK not installed
-                ImportError,  # SDK with different version / API
-                ValueError,  # client not configure (would never happen in a notebook)
-            ):
-                return
-
-            # Format path for DBFS
-            _path = self.expectations_checkpoint_path.as_posix()
-            if not _path.startswith("/") and not _path.startswith("dbfs:"):
-                _path = "/" + _path
-            if _path.startswith("/dbfs/"):
-                _path = _path.replace("/dbfs/", "dbfs:/")
-            if not _path.startswith("dbfs:"):
-                _path = "dbfs:" + _path
-
-            # Check Status
-            try:
-                w.dbfs.get_status(_path)
-            except ResourceDoesNotExist:
-                logger.info(
-                    f"Expectation checkpoint at {_path} does not exist. Skipping.",
-                )
-                return
-
-            logger.info(
-                f"Deleting expectation checkpoint at {_path}.",
-            )
-            w.dbfs.delete(_path, recursive=True)
+        purge_checkpoint(
+            self.expectations_checkpoint_path,
+            self.dataframe_backend,
+            label="expectations checkpoint",
+        )
 
     def execute(
         self,

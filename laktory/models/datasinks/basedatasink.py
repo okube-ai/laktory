@@ -28,6 +28,60 @@ from laktory.typing import AnyFrame
 logger = get_logger(__name__)
 
 
+def purge_checkpoint(path, dataframe_backend, label: str = "checkpoint") -> None:
+    """
+    Delete a streaming checkpoint from the local file system, DBFS or Unity Catalog
+    Volumes.
+    """
+    if not path:
+        return
+
+    # Local file system or FUSE-mounted Unity Catalog Volumes
+    if os.path.exists(path):
+        logger.info(f"Deleting {label} at {path}")
+        shutil.rmtree(path)
+        return
+
+    # If spark is not used, dbfs is most likely not used
+    if dataframe_backend != DataFrameBackends.PYSPARK:
+        return
+
+    _path = Path(path).as_posix()
+    is_volume = _path.startswith(("/Volumes/", "dbfs:/Volumes/"))
+
+    try:
+        from databricks.sdk import WorkspaceClient
+
+        w = WorkspaceClient()
+    except (
+        ModuleNotFoundError,  # SDK not installed
+        ImportError,  # SDK with different version / API
+        ValueError,  # client not configure (would never happen in a notebook)
+    ):
+        if is_volume:
+            logger.warning(
+                f"{label.capitalize()} at {_path} is not visible on the local file "
+                "system and no Databricks workspace client is available. Skipping."
+            )
+        return
+
+    # Format path for DBFS
+    if not _path.startswith("/") and not _path.startswith("dbfs:"):
+        _path = "/" + _path
+    if _path.startswith("/dbfs/"):
+        _path = _path.replace("/dbfs/", "dbfs:/")
+    if not _path.startswith("dbfs:"):
+        _path = "dbfs:" + _path
+
+    # The SDK routes Volumes paths to the Files API and others to the DBFS API
+    if not w.dbfs.exists(_path):
+        logger.info(f"{label.capitalize()} at {_path} does not exist. Skipping.")
+        return
+
+    logger.info(f"Deleting {label} at {_path}.")
+    w.dbfs.delete(_path, recursive=True)
+
+
 SUPPORTED_BACKENDS = [DataFrameBackends.POLARS, DataFrameBackends.PYSPARK]
 LAKTORY_MODES = ["MERGE"]
 SPARK_MODES = [
@@ -848,66 +902,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         return None
 
     def _purge_checkpoint(self):
-        if self.checkpoint_path:
-            # Try with simple paths (supported by local file system or Unity Catalog
-            # Volumes)
-            if os.path.exists(self.checkpoint_path):
-                logger.info(
-                    f"Deleting checkpoint at {self.checkpoint_path}",
-                )
-                shutil.rmtree(self.checkpoint_path)
-                return
-
-            # Try with DBFS
-            # If spark is not used, dbfs is most likely not used
-            if self.dataframe_backend != DataFrameBackends.PYSPARK:
-                return
-
-            # The legacy DBFS API does not support Unity Catalog Volumes paths,
-            # regardless of whether the path exists. If it wasn't found above by
-            # `os.path.exists`, it genuinely doesn't exist (Volumes are FUSE-mounted
-            # like a regular filesystem) - routing it through `dbfs.*` would raise a
-            # `PermissionDenied`, not a `ResourceDoesNotExist`, so skip it entirely.
-            _posix_path = self.checkpoint_path.as_posix()
-            if _posix_path.startswith(("/Volumes/", "dbfs:/Volumes/")):
-                return
-
-            # Check if a workspace client can be instantiated
-            try:
-                from databricks.sdk import WorkspaceClient
-                from databricks.sdk.errors import ResourceDoesNotExist
-
-                w = WorkspaceClient()
-
-            except (
-                ModuleNotFoundError,  # SDK not installed
-                ImportError,  # SDK with different version / API
-                ValueError,  # client not configure (would never happen in a notebook)
-            ):
-                return
-
-            # Format path for DBFS
-            _path = self.checkpoint_path.as_posix()
-            if not _path.startswith("/") and not _path.startswith("dbfs:"):
-                _path = "/" + _path
-            if _path.startswith("/dbfs/"):
-                _path = _path.replace("/dbfs/", "dbfs:/")
-            if not _path.startswith("dbfs:"):
-                _path = "dbfs:" + _path
-
-            # Check Status
-            try:
-                w.dbfs.get_status(_path)
-            except ResourceDoesNotExist:
-                logger.info(
-                    f"Checkpoint at {_path} does not exist. Skipping.",
-                )
-                return
-
-            logger.info(
-                f"Deleting checkpoint at {_path}.",
-            )
-            w.dbfs.delete(_path, recursive=True)
+        purge_checkpoint(self.checkpoint_path, self.dataframe_backend)
 
     def purge(self, mode: Literal["DROP", "TRUNCATE"] | None = None):
         """
