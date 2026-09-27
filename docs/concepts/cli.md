@@ -38,6 +38,20 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 #### run
 `laktory run` execute remote job or declarative pipeline and monitor failures until completion. Local execution (without an orchestrator) of a pipeline is not yet supported.
 
+```cmd
+laktory run --env dev --databricks-job job-pl-stocks
+laktory run --env dev --databricks-job job-pl-stocks --refresh full --tasks node-slv_prices
+laktory run --env dev --databricks-job job-pl-stocks --refresh reset --reset-mode DROP
+laktory run --env dev --databricks-pipeline pl-stocks --refresh full
+```
+
+| Option | Description |
+|---|---|
+| `--refresh` | `incremental`, `full` or `reset` (see [Refresh and Reset](refresh.md)). Defaults to the job / pipeline default. `reset` is not supported by declarative pipelines. |
+| `--reset-mode` | `DROP` or `TRUNCATE` override, with `--refresh full` or `reset` (jobs only) |
+| `--tasks` | comma-separated keys of the job tasks to run, e.g. `node-slv_prices` (jobs only) |
+| `--action` | what to do if the job / pipeline is already running: `WAIT`, `CANCEL` or `FAIL` |
+
 #### destroy
 `laktory destroy` destroy all resources declared in your stack. Similar to `terraform destroy`
 

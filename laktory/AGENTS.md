@@ -850,7 +850,8 @@ What a run does is selected with `refresh`:
 | `reset` | only reset the sinks of the selected nodes; no data read or written |
 
 - Python: `pl.execute(refresh="full")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
-  different parameters*); `AIRFLOW`: `refresh` DAG param. `full_refresh` was replaced in 0.13.0:
+  different parameters*) or `laktory run --databricks-job <job> --refresh full [--reset-mode DROP]
+  [--tasks node-a,node-b]`; `AIRFLOW`: `refresh` DAG param. `full_refresh` was replaced in 0.13.0:
   `pl.execute(full_refresh=...)` is rejected, and job / Airflow tasks receiving
   `full_refresh=true` fail (redeploy jobs deployed before 0.13.0) - never generate it.
 - How a sink is reset is set by `reset_mode`: `DROP` (default; recreated on next write),

@@ -15,6 +15,7 @@ Set it wherever a pipeline runs:
 | Where | How |
 |---|---|
 | Python | `pl.execute(refresh="full")` |
+| CLI | `laktory run --databricks-job <job> --refresh full` |
 | `LAKEFLOW_JOB` | `refresh` job parameter (*Run now with different parameters*) |
 | `AIRFLOW` | `refresh` DAG param |
 
@@ -63,6 +64,7 @@ schema change:
 | Where | How |
 |---|---|
 | Python | `pl.execute(refresh="full", reset_mode="DROP")` |
+| CLI | `laktory run --databricks-job <job> --refresh full --reset-mode DROP` |
 | `LAKEFLOW_JOB` | `reset_mode` job parameter |
 | `AIRFLOW` | `reset_mode` DAG param |
 
@@ -75,6 +77,8 @@ can run the pipeline but not drop tables - run with `refresh=reset`, then normal
 
 - Lakeflow Job: *Run now with different parameters* with `refresh=reset` and `reset_mode=DROP`
   (optionally on a selection of tasks), then *Run now*.
+- CLI: `laktory run --databricks-job <job> --refresh reset --reset-mode DROP` (optionally with
+  `--tasks`), then `laktory run --databricks-job <job>`.
 - Python: `pl.execute(refresh="reset", reset_mode="DROP")`, then `pl.execute()`.
 
 ## Shared Sinks

@@ -35,6 +35,8 @@ class DatabricksJobRunner(DispatcherRunner):
         timeout: int = 20 * 60,
         raise_exception: bool = False,
         current_run_action: Literal["WAIT", "CANCEL", "FAIL"] = "WAIT",
+        job_parameters: dict[str, str] | None = None,
+        only: list[str] | None = None,
     ):
         """
         Run remote job and monitor failures.
@@ -54,6 +56,11 @@ class DatabricksJobRunner(DispatcherRunner):
                 - WAIT: wait for the current run to complete
                 - CANCEL: cancel the current run
                 - FAIL: raise an exception
+        job_parameters:
+            Job parameters of the run, e.g. `{"refresh": "full"}` for a Laktory pipeline
+            job. Defaults to the job parameters defaults.
+        only:
+            Keys of the tasks to run. Defaults to all the tasks.
 
         Returns
         -------
@@ -89,9 +96,15 @@ class DatabricksJobRunner(DispatcherRunner):
 
         # Start update
         t0 = time.time()
-        logger.info(f"Job {self.name} run started...")
+        logger.info(
+            f"Job {self.name} run started with parameters {job_parameters or {}}"
+            + (f" and tasks {only}" if only else "")
+            + "..."
+        )
         self._run_start = self.wc.jobs.run_now(
             job_id=self.id,
+            job_parameters=job_parameters,
+            only=only,
         )
 
         pstates = {}
