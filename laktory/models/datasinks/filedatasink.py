@@ -312,6 +312,32 @@ class FileDataSink(BaseDataSink):
         return pl.scan_delta(self.path).collect_schema().names()
 
     @property
+    def _supported_reset_modes(self) -> list[str]:
+        # Only formats natively supporting a truncate
+        if self.format.upper() == "DELTA":
+            return ["DROP", "TRUNCATE"]
+        return ["DROP"]
+
+    @property
+    def _reset_mode_label(self) -> str:
+        return f"FileDataSink '{self.path}' with format '{self.format}'"
+
+    def _truncate(self) -> None:
+        """
+        Delete all the rows of a DELTA sink with a transactional delete, keeping the table
+        identity (read by downstream streams), history and properties.
+        """
+        logger.info(f"Truncating {self.format} data at {self.path}")
+        if self.dataframe_backend == DataFrameBackends.PYSPARK:
+            from laktory import get_spark_session
+
+            get_spark_session().sql(f"DELETE FROM delta.`{self.path}`")
+        else:
+            from deltalake import DeltaTable
+
+            DeltaTable(self.path).delete()
+
+    @property
     def _supports_shared(self) -> bool:
         return self.format.upper() == "DELTA"
 
@@ -340,20 +366,17 @@ class FileDataSink(BaseDataSink):
             Optional override for `reset_mode` (`DROP` or `TRUNCATE`), taking precedence
             over the resolved `self.reset_mode` value for this call only.
         """
-        reset_mode = mode or self.reset_mode
         deletes_writer_rows = self._deletes_writer_rows(mode)
-        if not deletes_writer_rows and reset_mode != "DROP":
-            raise NotImplementedError(
-                f"`reset_mode` '{reset_mode}' is not supported for FileDataSink. "
-                "Only 'DROP' is currently supported for file-based sinks. Use a table sink "
-                "(UnityCatalogDataSink/HiveMetastoreDataSink) if you need TRUNCATE."
-            )
+        reset_mode = None if deletes_writer_rows else self._get_purge_mode(mode)
 
         # Remove Data
         if deletes_writer_rows:
             if self.exists():
                 self._check_writer_column()
                 self._purge_shared_data()
+        elif reset_mode == "TRUNCATE":
+            if self.exists():
+                self._truncate()
         elif self.exists():
             is_dir = os.path.isdir(self.path)
             if is_dir:

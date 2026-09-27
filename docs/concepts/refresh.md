@@ -29,6 +29,13 @@ running incrementally: redeploy the job and update the trigger.
 | `DROP` (default) | drops the table; it's recreated on the next write |
 | `TRUNCATE` | deletes all rows, keeping the table, its schema, location and grants |
 
+`TRUNCATE` is supported by:
+
+| Sink | How |
+|---|---|
+| table (not views) | `DELETE FROM <table>` |
+| DELTA file | `DELETE FROM delta.<path>`: also keeps the table identity (downstream streams keep reading it), history and properties |
+
 ```yaml
 name: pl-stocks
 reset_mode: TRUNCATE        # pipeline default
@@ -42,7 +49,9 @@ nodes:
 - A sink uses the first value set on the sink, its node, its pipeline, or the settings
   (`settings.reset_mode` / `LAKTORY_RESET_MODE`, see
   [Laktory Settings](laktorysettings.md#reset-mode)).
-- `TRUNCATE` is only supported by table sinks: file sinks are always dropped.
+- On other sinks (views, PARQUET / CSV / JSON / ... files, declarative pipelines), `TRUNCATE` set on the
+  sink is rejected; inherited or passed as a run override, the sink falls back to `DROP`
+  (logged), so a stack-wide `TRUNCATE` default doesn't break them.
 - To reset only part of a table, declare the rows the sink owns with `shared.where` (see
   [Shared Sinks](sharedsinks.md#identifying-the-rows-of-a-writer)).
 
@@ -86,5 +95,5 @@ See [Resetting a Shared Table](sharedsinks.md#resetting-a-shared-table).
 ## Declarative Orchestrators
 
 With Lakeflow / Spark Declarative Pipelines, the engine performs the full refresh itself: it
-clears the tables and resets their flows. `reset_mode` must stay `DROP` and `refresh="reset"` is
-not supported.
+clears the tables and resets their flows. `reset_mode` set on their sinks must be `DROP`
+(inherited values are ignored), and `refresh="reset"` is not supported.

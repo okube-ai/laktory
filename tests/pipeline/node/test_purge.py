@@ -202,14 +202,23 @@ def test_reset_mode_sink_override(tmp_path):
     assert node.sinks[0].reset_mode == "DROP"
 
 
+def _table_and_file_sinks(tmp_path):
+    return [
+        {"schema_name": "default", "table_name": "reset_mode_default"},
+        {"format": "CSV", "path": str(tmp_path / "sink/")},
+    ]
+
+
 def test_reset_mode_pipeline_level_default(tmp_path):
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
+        sinks=_table_and_file_sinks(tmp_path),
     )
     models.Pipeline(name="pl", nodes=[node], reset_mode="TRUNCATE")
-    assert node.sinks[0].reset_mode == "TRUNCATE"
+    # Inherited value not supported by the file sink: DROP
+    assert [s.reset_mode for s in node.sinks] == ["TRUNCATE", "DROP"]
+    assert node.sinks[1]._resolve_reset_mode_source() == ("TRUNCATE", "Pipeline 'pl'")
 
 
 def test_reset_mode_global_settings_default(tmp_path, monkeypatch):
@@ -220,9 +229,36 @@ def test_reset_mode_global_settings_default(tmp_path, monkeypatch):
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
+        sinks=_table_and_file_sinks(tmp_path),
     )
-    assert node.sinks[0].reset_mode == "TRUNCATE"
+    assert [s.reset_mode for s in node.sinks] == ["TRUNCATE", "DROP"]
+    assert node.sinks[1]._resolve_reset_mode_source() == (
+        "TRUNCATE",
+        "`settings.reset_mode`",
+    )
+
+
+def test_reset_mode_inherited_round_trip(tmp_path):
+    """Job tasks reload the pipeline from its config file, where the effective sink values
+    are serialized: an inherited value not supported by a sink must not become an explicit
+    (rejected) one."""
+    import json
+
+    pl = models.Pipeline(
+        name="pl",
+        reset_mode="TRUNCATE",
+        nodes=[
+            {
+                "name": "node0",
+                "sources": [{"format": "PARQUET", "path": str(tmp_path / "src/")}],
+                "sinks": _table_and_file_sinks(tmp_path),
+            }
+        ],
+        orchestrator={"type": "LAKEFLOW_JOB", "serverless_environment_version": "3"},
+    )
+    content = pl.orchestrator.config_file.content_dict
+    pl2 = models.Pipeline.model_validate_json(json.dumps(content))
+    assert [s.reset_mode for s in pl2.nodes[0].sinks] == ["TRUNCATE", "DROP"]
 
 
 def test_reset_mode_delete_where_rejected_on_node(tmp_path):

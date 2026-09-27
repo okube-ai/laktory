@@ -854,8 +854,10 @@ What a run does is selected with `refresh`:
   `pl.execute(full_refresh=...)` is rejected, and job / Airflow tasks receiving
   `full_refresh=true` fail (redeploy jobs deployed before 0.13.0) - never generate it.
 - How a sink is reset is set by `reset_mode`: `DROP` (default; recreated on next write),
-  `TRUNCATE` (keeps table, schema, grants). `TRUNCATE` is not supported by `FileDataSink` or
-  declarative orchestrators. To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
+  `TRUNCATE` (keeps table, schema, grants; also DELTA files - same table id). Only sinks natively
+  supporting a truncate: not supported by other file formats, views or declarative
+  orchestrators: rejected if set on the sink, falls back to `DROP` if inherited (node, pipeline,
+  settings) or passed as a run override. To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
   `shared: {where: ...}` instead.
 - Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `full`
   or `reset` (rejected on `incremental`): `pl.execute(refresh="full", reset_mode="DROP")`, or the

@@ -68,14 +68,19 @@ def test_purge_truncate_view_raises(tmp_path):
         f"CREATE OR REPLACE VIEW {schema}.{view} AS SELECT * FROM {schema}.{table}"
     )
 
-    sink = HiveMetastoreDataSink(
-        schema_name=schema,
-        table_name=view,
-        table_type="VIEW",
-        reset_mode="TRUNCATE",
-    )
-    with pytest.raises(ValueError):
-        sink.purge()
+    # Set on the sink: rejected
+    with pytest.raises(ValueError, match="not supported by view"):
+        HiveMetastoreDataSink(
+            schema_name=schema,
+            table_name=view,
+            table_type="VIEW",
+            reset_mode="TRUNCATE",
+        )
+
+    # Override: falls back to DROP
+    sink = HiveMetastoreDataSink(schema_name=schema, table_name=view, table_type="VIEW")
+    sink.purge(mode="TRUNCATE")
+    assert not sink.exists()
 
 
 def test_reset_shared_where(tmp_path, caplog, monkeypatch):

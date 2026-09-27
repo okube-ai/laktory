@@ -293,33 +293,82 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def reset_mode_incompatible_with_declarative_orchestrator(self) -> Any:
-        if self.reset_mode != "DROP":
-            from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
-                LakeflowDeclarativePipelineOrchestrator,
-            )
-            from laktory.models.pipeline.orchestrators.sparkdeclarativepipelineorchestrator import (
-                SparkDeclarativePipelineOrchestrator,
-            )
+    def validate_reset_mode(self) -> Any:
+        # Only a value set on the sink itself is an explicit request that can be rejected.
+        # Inherited values (node, pipeline, settings) the sink can't use fall back to `DROP`.
+        mode = self.reset_mode_
+        if mode is None or mode in self._supported_reset_modes:
+            return self
 
-            orchestrator = (
-                self.parent_pipeline.orchestrator if self.parent_pipeline else None
+        if self._is_declarative:
+            raise ValueError(
+                f"`reset_mode` '{mode}' has no effect when using the "
+                f"{type(self.parent_pipeline.orchestrator).__name__} - the full refresh is "
+                "handled entirely by the Databricks/Spark Declarative Pipelines engine, "
+                "which never calls Laktory's `purge()`. Remove `reset_mode` from this sink, "
+                "or use the LAKEFLOW_JOB orchestrator."
             )
-            if isinstance(
-                orchestrator,
-                (
-                    LakeflowDeclarativePipelineOrchestrator,
-                    SparkDeclarativePipelineOrchestrator,
-                ),
-            ):
+        raise ValueError(
+            f"`reset_mode` '{mode}' is not supported by {self._reset_mode_label}: use "
+            f"{self._supported_reset_modes}."
+        )
+
+    @computed_field(description="reset_mode")
+    @property
+    def reset_mode(self) -> Literal["DROP", "TRUNCATE"]:
+        """
+        Effective `reset_mode`: the value set on the sink or inherited from its node,
+        pipeline or settings, or `DROP` if the sink doesn't support the inherited value.
+        """
+        mode = self._resolve_reset_mode()
+        if mode not in self._supported_reset_modes:
+            return "DROP"
+        return mode
+
+    @property
+    def _is_declarative(self) -> bool:
+        """`True` if the sink is written by a declarative pipeline engine"""
+        pl = self.parent_pipeline
+        return pl is not None and (pl.is_orchestrator_ldp or pl.is_orchestrator_sdp)
+
+    @property
+    def _supported_reset_modes(self) -> list[str]:
+        """`reset_mode` values the sink supports"""
+        if self._is_declarative:
+            return ["DROP"]
+        return ["DROP", "TRUNCATE"]
+
+    @property
+    def _reset_mode_label(self) -> str:
+        return type(self).__name__
+
+    def _get_purge_mode(self, mode: str | None = None) -> str:
+        """
+        `reset_mode` used to purge the sink: the run override `mode` if set, otherwise the
+        resolved `reset_mode`. A value the sink doesn't support falls back to `DROP`.
+        """
+        if mode is not None:
+            if mode not in ["DROP", "TRUNCATE"]:
                 raise ValueError(
-                    f"`reset_mode` '{self.reset_mode}' has no effect when using the "
-                    f"{type(orchestrator).__name__} - the full refresh is handled entirely by "
-                    "the Databricks/Spark Declarative Pipelines engine, which never calls "
-                    "Laktory's `purge()`. Remove `reset_mode` from this "
-                    "sink, or use the LAKEFLOW_JOB orchestrator."
+                    f"`reset_mode` override '{mode}' is not supported. Use 'DROP' or "
+                    "'TRUNCATE'."
                 )
-        return self
+            if mode not in self._supported_reset_modes:
+                logger.warning(
+                    f"`reset_mode` override '{mode}' is not supported by "
+                    f"{self._reset_mode_label}: using 'DROP'."
+                )
+                return "DROP"
+            return mode
+
+        mode, source = self._resolve_reset_mode_source()
+        if mode not in self._supported_reset_modes:
+            logger.info(
+                f"`reset_mode` '{mode}' (from {source}) is not supported by "
+                f"{self._reset_mode_label}: using 'DROP'."
+            )
+            return "DROP"
+        return mode
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #

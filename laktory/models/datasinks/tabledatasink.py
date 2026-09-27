@@ -261,6 +261,17 @@ class TableDataSink(BaseDataSink):
         return self.full_name
 
     @property
+    def _supported_reset_modes(self) -> list[str]:
+        if self.table_type != "TABLE":
+            # Views can't be truncated
+            return ["DROP"]
+        return super()._supported_reset_modes
+
+    @property
+    def _reset_mode_label(self) -> str:
+        return f"{self.table_type.lower()} '{self.full_name}'"
+
+    @property
     def _existing_columns(self) -> list[str] | None:
         if self.dataframe_backend != DataFrameBackends.PYSPARK or not self.exists():
             return None
@@ -290,9 +301,10 @@ class TableDataSink(BaseDataSink):
 
             spark = get_spark_session()
 
-            reset_mode = mode or self.reset_mode
+            deletes_writer_rows = self._deletes_writer_rows(mode)
+            reset_mode = None if deletes_writer_rows else self._get_purge_mode(mode)
 
-            if self._deletes_writer_rows(mode):
+            if deletes_writer_rows:
                 if self.exists():
                     self._check_writer_column()
                     self._delete_where_spark(
@@ -316,11 +328,6 @@ class TableDataSink(BaseDataSink):
                             os.remove(path)
 
             elif reset_mode == "TRUNCATE":
-                if self.table_type != "TABLE":
-                    raise ValueError(
-                        f"`reset_mode` 'TRUNCATE' is not supported for table_type "
-                        f"'{self.table_type}'. Views cannot be truncated."
-                    )
                 # Delta does not implement Spark's `SupportsTruncate`/`TRUNCATE TABLE` DDL
                 # (verified: raises "Table does not support truncates"). `DELETE FROM` with
                 # no predicate is Delta's supported equivalent - an efficient, metadata-only
