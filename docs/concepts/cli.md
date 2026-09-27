@@ -40,15 +40,15 @@ The CLI also offers a `quickstart` command for quickly setting up a working exam
 
 ```cmd
 laktory run --env dev --databricks-job job-pl-stocks
-laktory run --env dev --databricks-job job-pl-stocks --refresh full --tasks node-slv_prices
-laktory run --env dev --databricks-job job-pl-stocks --refresh reset --reset-mode DROP
-laktory run --env dev --databricks-pipeline pl-stocks --refresh full
+laktory run --env dev --databricks-job job-pl-stocks --refresh FULL --tasks node-slv_prices
+laktory run --env dev --databricks-job job-pl-stocks --refresh RESET --reset-mode DROP
+laktory run --env dev --databricks-pipeline pl-stocks --refresh FULL
 ```
 
 | Option | Description |
 |---|---|
-| `--refresh` | `incremental`, `full` or `reset` (see [Refresh and Reset](refresh.md)). Defaults to the job / pipeline default. `reset` is not supported by declarative pipelines. |
-| `--reset-mode` | `DROP` or `TRUNCATE` override, with `--refresh full` or `reset` (jobs only) |
+| `--refresh` | `INCREMENTAL`, `FULL` or `RESET` (see [Refresh and Reset](refresh.md)). Defaults to the job / pipeline default. `RESET` is not supported by declarative pipelines. |
+| `--reset-mode` | `DROP` or `TRUNCATE` override, with `--refresh FULL` or `RESET` (jobs only) |
 | `--tasks` | comma-separated keys of the job tasks to run, e.g. `node-slv_prices` (jobs only) |
 | `--action` | what to do if the job / pipeline is already running: `WAIT`, `CANCEL` or `FAIL` |
 

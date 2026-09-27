@@ -518,7 +518,7 @@ def test_shared_node_owned_override_rejected(tmp_path):
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, _NODE_OWNED))
     pl.execute()
-    with pytest.raises(ValueError, match="Run with `refresh='reset'`"):
+    with pytest.raises(ValueError, match="Run with `refresh='RESET'`"):
         pl.execute(refresh="full", reset_mode="DROP")
 
 
@@ -715,14 +715,15 @@ def test_refresh_parameters(tmp_path):
 def test_validate_run_parameters(tmp_path):
     pl = _pipeline(_writers(str(tmp_path / "shared"), _NODE_OWNED))
 
-    assert pl.validate_run_parameters(None, None) == ("incremental", None)
-    assert pl.validate_run_parameters("FULL", "drop") == ("full", "DROP")
-    assert pl.validate_run_parameters("reset", "") == ("reset", None)
+    assert pl.validate_run_parameters(None, None) == ("INCREMENTAL", None)
+    # Case-insensitive
+    assert pl.validate_run_parameters("full", "drop") == ("FULL", "DROP")
+    assert pl.validate_run_parameters("reset", "") == ("RESET", None)
     assert pl.validate_run_parameters("reset", "DROP", node_names=["a"]) == (
-        "reset",
+        "RESET",
         "DROP",
     )
-    with pytest.raises(ValueError, match="Run with `refresh='reset'`"):
+    with pytest.raises(ValueError, match="Run with `refresh='RESET'`"):
         pl.validate_run_parameters("full", "DROP", node_names=["a"])
 
 

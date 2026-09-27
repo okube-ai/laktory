@@ -848,7 +848,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         Parameters
         ----------
         refresh:
-            `incremental`, `full` or `reset` (case-insensitive). Defaults to `incremental`.
+            `INCREMENTAL`, `FULL` or `RESET` (case-insensitive). Defaults to `INCREMENTAL`.
         reset_mode:
             Optional `reset_mode` override (`DROP` or `TRUNCATE`, case-insensitive).
         node_names:
@@ -860,11 +860,11 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         :
             Normalized `refresh` and `reset_mode`
         """
-        refresh = (refresh or "incremental").lower()
-        if refresh not in ["incremental", "full", "reset"]:
+        refresh = (refresh or "INCREMENTAL").upper()
+        if refresh not in ["INCREMENTAL", "FULL", "RESET"]:
             raise ValueError(
-                f"`refresh` '{refresh}' is not supported. Use 'incremental', 'full' or "
-                "'reset'."
+                f"`refresh` '{refresh}' is not supported. Use 'INCREMENTAL', 'FULL' or "
+                "'RESET'."
             )
 
         if reset_mode:
@@ -874,22 +874,22 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                     f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
                     "'TRUNCATE'."
                 )
-            if refresh == "incremental":
+            if refresh == "INCREMENTAL":
                 raise ValueError(
-                    f"`reset_mode` '{reset_mode}' requires `refresh` 'full' or 'reset'."
+                    f"`reset_mode` '{reset_mode}' requires `refresh` 'FULL' or 'RESET'."
                 )
         else:
             reset_mode = None
 
-        if refresh == "reset" and (
+        if refresh == "RESET" and (
             self.is_orchestrator_ldp or self.is_orchestrator_sdp
         ):
             raise NotImplementedError(
-                "`refresh='reset'` is not supported with declarative orchestrators, whose "
-                "tables are managed by the declarative engine. Use `refresh='full'` instead."
+                "`refresh='RESET'` is not supported with declarative orchestrators, whose "
+                "tables are managed by the declarative engine. Use `refresh='FULL'` instead."
             )
 
-        if refresh == "full" and reset_mode and node_names:
+        if refresh == "FULL" and reset_mode and node_names:
             nodes = [
                 n
                 for n in node_names
@@ -898,9 +898,9 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             if nodes:
                 raise ValueError(
                     f"`reset_mode` override '{reset_mode}' is not supported with "
-                    f"`refresh='full'` for nodes {nodes}, which write to shared tables: it "
+                    f"`refresh='FULL'` for nodes {nodes}, which write to shared tables: it "
                     "would also delete the rows of the other writers. Run with "
-                    "`refresh='reset'` and the `reset_mode` override to reset the whole "
+                    "`refresh='RESET'` and the `reset_mode` override to reset the whole "
                     "table, then run normally."
                 )
 
@@ -913,7 +913,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         update_tables_metadata: bool = True,
         selects: list[str] | None = None,
         use_orchestrator: bool = False,
-        refresh: Literal["incremental", "full", "reset"] = "incremental",
+        refresh: Literal["INCREMENTAL", "FULL", "RESET"] = "INCREMENTAL",
         reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
     ) -> None:
         """
@@ -946,27 +946,27 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         refresh:
             What the run does:
 
-            - `incremental` (default): run without resetting anything first. Sinks are
+            - `INCREMENTAL` (default): run without resetting anything first. Sinks are
               written according to their `mode` (e.g. `OVERWRITE` replaces the data,
               `APPEND` adds rows) and streaming sources resume from their checkpoint.
-            - `full`: reset the sinks of the selected nodes (data and checkpoints, according
+            - `FULL`: reset the sinks of the selected nodes (data and checkpoints, according
               to their `reset_mode`), then run: all the data is reprocessed.
-            - `reset`: only reset the sinks of the selected nodes, without reading or writing
+            - `RESET`: only reset the sinks of the selected nodes, without reading or writing
               data. The next run reprocesses all the data. Used to reset tables, e.g. before
               a breaking schema change, including the tables of shared sinks.
         reset_mode:
             Override of the sinks `reset_mode` for this run (`DROP` or `TRUNCATE`), with
-            `refresh` `full` or `reset`. For shared sinks (`shared`), the whole table is
+            `refresh` `FULL` or `RESET`. For shared sinks (`shared`), the whole table is
             reset, including the rows written by other writers: only supported with
-            `refresh='reset'`.
+            `refresh='RESET'`.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
 
         refresh, reset_mode = self.validate_run_parameters(refresh, reset_mode)
 
-        full_refresh = refresh == "full"
-        reset_only = refresh == "reset"
+        full_refresh = refresh == "FULL"
+        reset_only = refresh == "RESET"
 
         if use_orchestrator:
             if self.orchestrator is None:

@@ -92,16 +92,16 @@ from the table (e.g. a separate job task).
 
 | Goal | Run |
 |---|---|
-| Reprocess one writer | `refresh=full` on its task (or node): deletes its rows, `reset_mode` doesn't apply |
-| Drop or empty the whole table | `refresh=reset` with `reset_mode=DROP` or `TRUNCATE`, on any of its writers' tasks, then a normal run |
+| Reprocess one writer | `refresh=FULL` on its task (or node): deletes its rows, `reset_mode` doesn't apply |
+| Drop or empty the whole table | `refresh=RESET` with `reset_mode=DROP` or `TRUNCATE`, on any of its writers' tasks, then a normal run |
 
 When the whole table is reset:
 
 - The checkpoints of all its writers in the pipeline are reset too, whether or not they're part
   of the run: they reprocess all their data on their next run.
 - Other pipelines writing to the table need a full refresh.
-- `refresh=full` with the override is rejected: a full refresh never deletes the rows of the
-  other writers. Reset the table with `refresh=reset`, then run normally.
+- `refresh=FULL` with the override is rejected: a full refresh never deletes the rows of the
+  other writers. Reset the table with `refresh=RESET`, then run normally.
 
 ## Keeping Ownership Consistent
 
@@ -109,7 +109,7 @@ When the whole table is reset:
 |---|---|
 | Renaming a writer (node or pipeline) | pin `writer_id` first: rows of the old identifier are no longer deleted by a full refresh |
 | Removing a writer | delete its rows (`DELETE FROM ... WHERE _laktory_writer = '...'`) or reset the whole table |
-| Table written before being shared (no writer column) | writes fail until the table is dropped once (`refresh=reset`, `reset_mode=DROP`) |
+| Table written before being shared (no writer column) | writes fail until the table is dropped once (`refresh=RESET`, `reset_mode=DROP`) |
 | Switching between writer column and `where` | drop the table once |
 | Parallel writers adding different columns | declare the full `schema`, or order the writers with `depends_on` |
 

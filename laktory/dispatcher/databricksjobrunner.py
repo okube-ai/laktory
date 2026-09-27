@@ -57,7 +57,7 @@ class DatabricksJobRunner(DispatcherRunner):
                 - CANCEL: cancel the current run
                 - FAIL: raise an exception
         job_parameters:
-            Job parameters of the run, e.g. `{"refresh": "full"}` for a Laktory pipeline
+            Job parameters of the run, e.g. `{"refresh": "FULL"}` for a Laktory pipeline
             job. Defaults to the job parameters defaults.
         only:
             Keys of the tasks to run. Defaults to all the tasks.

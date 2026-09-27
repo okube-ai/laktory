@@ -229,9 +229,9 @@ class AirflowOrchestrator(PipelineChild):
                 )
 
                 pl_task.execute(
-                    full_refresh=refresh == "full",
+                    full_refresh=refresh == "FULL",
                     reset_mode=reset_mode,
-                    reset_only=refresh == "reset",
+                    reset_only=refresh == "RESET",
                 )
 
             return airflow_task
@@ -239,7 +239,7 @@ class AirflowOrchestrator(PipelineChild):
         kwargs = {
             "dag_id": pl.name,
             "params": {
-                "refresh": "incremental",
+                "refresh": "INCREMENTAL",
                 "reset_mode": "",
             },
         }

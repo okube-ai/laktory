@@ -461,7 +461,7 @@ def test_run_job_options():
     assert result.exit_code == 0, result.output
     kind, kwargs = _Dispatcher.calls[0]
     assert kind == "job"
-    assert kwargs["job_parameters"] == {"refresh": "reset", "reset_mode": "DROP"}
+    assert kwargs["job_parameters"] == {"refresh": "RESET", "reset_mode": "DROP"}
     assert kwargs["only"] == ["node-a", "node-b"]
 
 

@@ -945,7 +945,7 @@ class BaseDataSink(BaseModel, PipelineChild):
             f"'{self.purge_target}' is shared (several nodes write to it, or `shared` "
             f"options), but it has no `{self.shared.column}` column identifying the writer "
             "of each row: it was written before being shared. Drop it once, e.g. by running "
-            "the pipeline with `refresh='reset'` and `reset_mode='DROP'`, then run normally."
+            "the pipeline with `refresh='RESET'` and `reset_mode='DROP'`, then run normally."
         )
 
     def _check_writer_id(self):

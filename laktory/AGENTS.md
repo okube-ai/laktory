@@ -511,9 +511,9 @@ sinks:
   or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
   writer, `node_name` reads the whole table. A writer's full refresh deletes rows: streaming
   readers of the table need a full refresh too.
-- Reset / drop a shared table as a whole: `refresh=reset` + `reset_mode=DROP` (or `TRUNCATE`) on
+- Reset / drop a shared table as a whole: `refresh=RESET` + `reset_mode=DROP` (or `TRUNCATE`) on
   any selection of writer tasks (one is enough); the checkpoints of all its writers in the
-  pipeline are reset too. `refresh=full` + override is rejected on shared sinks (a full
+  pipeline are reset too. `refresh=FULL` + override is rejected on shared sinks (a full
   refresh never deletes the other writers' rows).
 - `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: no `shared` options, no writer
   column (one streaming table, one append flow per node named `{table}__{node}`); all sinks
@@ -521,7 +521,7 @@ sinks:
 - Keep writer ids stable: rows of a renamed/removed writer or of a decommissioned pipeline are
   never deleted by a full refresh (clean up with `DELETE FROM <table> WHERE _laktory_writer =
   '<id>'`, or reset the table). A table written before being shared has no writer column: writes
-  and refreshes fail until it is dropped once (`refresh=reset`, `reset_mode=DROP`).
+  and refreshes fail until it is dropped once (`refresh=RESET`, `reset_mode=DROP`).
 - Full guide: https://www.laktory.ai/concepts/sharedsinks/
 
 ### Data Pipeline — Pipeline with Lakeflow Job orchestrator
@@ -849,12 +849,12 @@ What a run does is selected with `refresh`:
 
 | `refresh` | Effect |
 |---|---|
-| `incremental` (default) | no reset: sinks are written according to their `mode`, streams resume from their checkpoint |
-| `full` | reset the sinks of the selected nodes (data and checkpoints), then reprocess everything |
-| `reset` | only reset the sinks of the selected nodes; no data read or written |
+| `INCREMENTAL` (default) | no reset: sinks are written according to their `mode`, streams resume from their checkpoint |
+| `FULL` | reset the sinks of the selected nodes (data and checkpoints), then reprocess everything |
+| `RESET` | only reset the sinks of the selected nodes; no data read or written |
 
-- Python: `pl.execute(refresh="full")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
-  different parameters*) or `laktory run --databricks-job <job> --refresh full [--reset-mode DROP]
+- Python: `pl.execute(refresh="FULL")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
+  different parameters*) or `laktory run --databricks-job <job> --refresh FULL [--reset-mode DROP]
   [--tasks node-a,node-b]`; `AIRFLOW`: `refresh` DAG param. `full_refresh` was replaced in 0.13.0:
   `pl.execute(full_refresh=...)` is rejected, and job / Airflow tasks receiving
   `full_refresh=true` fail (redeploy jobs deployed before 0.13.0) - never generate it.
@@ -864,12 +864,12 @@ What a run does is selected with `refresh`:
   orchestrators: rejected if set on the sink, falls back to `DROP` if inherited (node, pipeline,
   settings) or passed as a run override. To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
   `shared: {where: ...}` instead.
-- Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `full`
-  or `reset` (rejected on `incremental`): `pl.execute(refresh="full", reset_mode="DROP")`, or the
+- Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `FULL`
+  or `RESET` (rejected on `INCREMENTAL`): `pl.execute(refresh="FULL", reset_mode="DROP")`, or the
   `reset_mode` job parameter / DAG param. Rejected on a full refresh of shared sinks: run
-  `refresh="reset"` with the override first, then a normal run.
+  `refresh="RESET"` with the override first, then a normal run.
 - Resetting a table without table grants (e.g. before a breaking schema change): run the job with
-  `refresh=reset` and `reset_mode=DROP` (optionally on a subset of tasks), then a normal run.
+  `refresh=RESET` and `reset_mode=DROP` (optionally on a subset of tasks), then a normal run.
 - The deleted-row count of shared-sink deletes (writer column or `shared.where`) is logged:
   check it to catch a wrong predicate.
 - Full guide: https://www.laktory.ai/concepts/refresh/
@@ -898,7 +898,7 @@ pl = pl.inject_vars(vars={"catalog": "dev"})  # DAB: use bundle_vars instead
 pl.execute(write_sinks=False)  # run every node first
 # pl.execute(write_sinks=False, selects=["brz_stock_prices"])  # then narrow to the failing node
 df = pl.nodes_dict["brz_stock_prices"].output_df.to_native()
-# pl.execute(refresh="full")  # reset the sinks, then reprocess (writes to the real targets)
+# pl.execute(refresh="FULL")  # reset the sinks, then reprocess (writes to the real targets)
 ```
 
 - `write_sinks=False` only reads + transforms, nothing is written; `True` writes to the real target from the injected variables — not a dry run

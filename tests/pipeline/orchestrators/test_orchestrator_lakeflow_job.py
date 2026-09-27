@@ -366,7 +366,7 @@ def test_no_terraform_depends_on_cycle():
 def test_job_parameters():
     pl = _get_pl()
     params = {p.name: p.default for p in pl.orchestrator.parameter}
-    assert params == {"refresh": "incremental", "reset_mode": ""}
+    assert params == {"refresh": "INCREMENTAL", "reset_mode": ""}
 
 
 def test_shared_sink_writers_tasks():

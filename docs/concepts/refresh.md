@@ -6,20 +6,22 @@ does, `reset_mode` how sinks are reset.
 
 | `refresh` | What the run does |
 |---|---|
-| `incremental` (default) | writes the sinks according to their `mode` (`APPEND` adds rows, `OVERWRITE` replaces them); streaming sources resume from their checkpoint |
-| `full` | resets the sinks of the selected nodes, then runs: all the data is reprocessed |
-| `reset` | only resets the sinks of the selected nodes, without reading or writing data |
+| `INCREMENTAL` (default) | writes the sinks according to their `mode` (`APPEND` adds rows, `OVERWRITE` replaces them); streaming sources resume from their checkpoint |
+| `FULL` | resets the sinks of the selected nodes, then runs: all the data is reprocessed |
+| `RESET` | only resets the sinks of the selected nodes, without reading or writing data |
 
 Set it wherever a pipeline runs:
 
 | Where | How |
 |---|---|
-| Python | `pl.execute(refresh="full")` |
-| CLI | `laktory run --databricks-job <job> --refresh full` |
+| Python | `pl.execute(refresh="FULL")` |
+| CLI | `laktory run --databricks-job <job> --refresh FULL` |
 | `LAKEFLOW_JOB` | `refresh` job parameter (*Run now with different parameters*) |
 | `AIRFLOW` | `refresh` DAG param |
 
-`refresh="full"` replaces `full_refresh=True`. A job or Airflow run still passing
+Run parameters (`refresh`, `reset_mode`) are case-insensitive: `refresh=full` works too.
+
+`refresh="FULL"` replaces `full_refresh=True`. A job or Airflow run still passing
 `full_refresh=true` (e.g. a job deployed before 0.13.0, or an existing trigger) fails instead of
 running incrementally: redeploy the job and update the trigger.
 
@@ -63,23 +65,23 @@ schema change:
 
 | Where | How |
 |---|---|
-| Python | `pl.execute(refresh="full", reset_mode="DROP")` |
-| CLI | `laktory run --databricks-job <job> --refresh full --reset-mode DROP` |
+| Python | `pl.execute(refresh="FULL", reset_mode="DROP")` |
+| CLI | `laktory run --databricks-job <job> --refresh FULL --reset-mode DROP` |
 | `LAKEFLOW_JOB` | `reset_mode` job parameter |
 | `AIRFLOW` | `reset_mode` DAG param |
 
-The override requires `refresh` `full` or `reset`.
+The override requires `refresh` `FULL` or `RESET`.
 
 ## Resetting a Table
 
 To reset a table before a breaking schema change or after a data corruption - e.g. by someone who
-can run the pipeline but not drop tables - run with `refresh=reset`, then normally:
+can run the pipeline but not drop tables - run with `refresh=RESET`, then normally:
 
-- Lakeflow Job: *Run now with different parameters* with `refresh=reset` and `reset_mode=DROP`
+- Lakeflow Job: *Run now with different parameters* with `refresh=RESET` and `reset_mode=DROP`
   (optionally on a selection of tasks), then *Run now*.
-- CLI: `laktory run --databricks-job <job> --refresh reset --reset-mode DROP` (optionally with
+- CLI: `laktory run --databricks-job <job> --refresh RESET --reset-mode DROP` (optionally with
   `--tasks`), then `laktory run --databricks-job <job>`.
-- Python: `pl.execute(refresh="reset", reset_mode="DROP")`, then `pl.execute()`.
+- Python: `pl.execute(refresh="RESET", reset_mode="DROP")`, then `pl.execute()`.
 
 ## Shared Sinks
 
@@ -89,10 +91,10 @@ overridden:
 
 | Run | Regular sink | Shared sink |
 |---|---|---|
-| `full` | reset (`reset_mode`), reprocess | delete the writer's rows, reprocess |
-| `reset` | reset (`reset_mode`) | delete the writer's rows |
-| `reset` + override | reset (override) | reset the whole table (override), from any writer's task |
-| `full` + override | reset (override), reprocess | rejected: a full refresh never deletes the rows of the other writers |
+| `FULL` | reset (`reset_mode`), reprocess | delete the writer's rows, reprocess |
+| `RESET` | reset (`reset_mode`) | delete the writer's rows |
+| `RESET` + override | reset (override) | reset the whole table (override), from any writer's task |
+| `FULL` + override | reset (override), reprocess | rejected: a full refresh never deletes the rows of the other writers |
 
 See [Resetting a Shared Table](sharedsinks.md#resetting-a-shared-table).
 
@@ -100,4 +102,4 @@ See [Resetting a Shared Table](sharedsinks.md#resetting-a-shared-table).
 
 With Lakeflow / Spark Declarative Pipelines, the engine performs the full refresh itself: it
 clears the tables and resets their flows. `reset_mode` set on their sinks must be `DROP`
-(inherited values are ignored), and `refresh="reset"` is not supported.
+(inherited values are ignored), and `refresh="RESET"` is not supported.

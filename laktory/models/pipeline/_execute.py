@@ -23,7 +23,7 @@ def check_legacy_full_refresh(full_refresh) -> None:
     if full_refresh:
         raise ValueError(
             "`full_refresh` was replaced by `refresh` in Laktory 0.13.0 and is not "
-            "supported anymore: run with `refresh='full'` instead. For a job deployed "
+            "supported anymore: run with `refresh='FULL'` instead. For a job deployed "
             "before 0.13.0, redeploy it to get the `refresh` job parameter."
         )
 
@@ -63,7 +63,7 @@ def _execute():
             "What the run does: incremental (no reset, sinks written according to their "
             "mode), full (reset, then reprocess all the data) or reset (reset only)"
         ),
-        default="incremental",
+        default="INCREMENTAL",
         required=False,
     )
     parser.add_argument(
@@ -88,7 +88,7 @@ def _execute():
     filepath = args.filepath
     selects = args.selects
     check_legacy_full_refresh(args.full_refresh)
-    refresh = args.refresh or "incremental"
+    refresh = args.refresh or "INCREMENTAL"
     reset_mode = args.reset_mode or None
     selects_str = ""
     if selects:
