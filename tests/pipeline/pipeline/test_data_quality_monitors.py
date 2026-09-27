@@ -97,28 +97,53 @@ def test_dqm_auto_built_from_sink():
     assert dqm.data_profiling_config.output_schema_id == "laktory.unit_tests"
 
 
-def test_update_data_profiling_configs_skips_when_explicitly_unmanaged():
-    """managed=False: method is a no-op even when sinks have configs."""
+def test_update_data_profiling_configs(monkeypatch):
+    """Monitors are created or updated for sinks with a config, deleted otherwise."""
+    from laktory.models.resources.databricks import DataQualityMonitor
+
+    calls = []
+
+    class _SDK:
+        def __init__(self, monitor):
+            self.monitor = monitor
+
+        def create_or_update(self):
+            calls.append(("create_or_update", self.monitor.object_id))
+
+        def delete(self):
+            calls.append(("delete", self.monitor.object_id))
+
+    monkeypatch.setattr(
+        DataQualityMonitor, "sdk", lambda self, workspace_client=None: _SDK(self)
+    )
+
     pl = models.Pipeline(
         name="pl",
         nodes=[
             models.PipelineNode(
                 name="n",
-                sources=[{"table_name": "laktory.unit_tests.sin"}],
+                sources=[{"table_name": "laktory.unit_tests.src"}],
                 sinks=[
                     models.UnityCatalogDataSink(
-                        table_name="laktory.unit_tests.sin",
+                        table_name="laktory.unit_tests.with_config",
                         databricks_data_profiling_config={
                             "output_schema_id": "laktory.unit_tests",
                             "snapshot": {},
                         },
-                    )
+                    ),
+                    models.UnityCatalogDataSink(
+                        table_name="laktory.unit_tests.without_config"
+                    ),
                 ],
             )
         ],
     )
-    # Should not raise or attempt any SDK calls (no workspace_client provided)
     pl.update_data_profiling_configs()
+
+    assert calls == [
+        ("create_or_update", "laktory.unit_tests.with_config"),
+        ("delete", "laktory.unit_tests.without_config"),
+    ]
 
 
 @pytest.mark.databricks_connect
