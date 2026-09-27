@@ -48,16 +48,9 @@ class Settings(BaseSettings):
     @field_validator("reset_mode")
     @classmethod
     def validate_reset_mode(cls, v: str) -> str:
-        if v and v.upper() == "DELETE_WHERE":
-            raise ValueError(
-                "`reset_mode` 'DELETE_WHERE' can only be set directly on a data sink, not as "
-                "a global default. A deletion predicate is inherently specific to a single "
-                "sink."
-            )
         if v and v.upper() not in ["DROP", "TRUNCATE"]:
             raise ValueError(
-                f"`reset_mode` '{v}' is not supported as a global default. Use 'DROP' or "
-                "'TRUNCATE'."
+                f"`reset_mode` '{v}' is not supported. Use 'DROP' or 'TRUNCATE'."
             )
         return v
 

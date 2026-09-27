@@ -325,64 +325,126 @@ def _feed_counts(sink_path):
     return dict(_read(sink_path).group_by("feed").len().sort("feed").iter_rows())
 
 
-_NODE_OWNED = {"owner": "node"}
+_NODE_OWNED = True
 
 
-def test_shared_grouped(tmp_path):
+def test_shared_default_node_owned(tmp_path):
+    """Several nodes writing to the same target own their rows by default"""
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, None))
 
-    # Writers grouped in a single task, no writer column
-    tasks = pl.get_execution_plan().tasks
-    assert [(t.name, sorted(t.node_names)) for t in tasks] == [
-        ("shared-shared", ["a", "b", "c"])
+    # One task per writer, no coordination
+    assert [t.name for t in pl.get_execution_plan().tasks] == [
+        "node-a",
+        "node-b",
+        "node-c",
     ]
+    assert [n.sinks[0].shared.writer_id for n in pl.nodes] == ["pl.a", "pl.b", "pl.c"]
 
     pl.execute()
-    assert "_laktory_writer" not in _read(path).columns
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+    df = _read(path)
+    assert df.columns[0] == "_laktory_writer"
+    assert dict(
+        df.select("feed", "_laktory_writer").unique().sort("feed").iter_rows()
+    ) == {"a": "pl.a", "b": "pl.b", "c": "pl.c"}
 
-    # Table reset once, all writers reprocess
+    # Incremental run of one writer
+    pl.execute(selects=["b"])
+    assert _feed_counts(path) == {"a": 3, "b": 6, "c": 3}
+
+    # Full refresh of any selection only replaces the rows of the selected writers
+    pl.execute(selects=["b"], refresh="full")
+    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
     pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_shared_grouped_order(tmp_path):
-    path = str(tmp_path / "shared")
-    nodes = _writers(path, None, node_kwargs={"a": {"depends_on": ["c"]}})
-    pl = _pipeline(nodes)
-    assert pl.get_execution_plan().tasks[0].node_names[-1] == "a"
+def test_shared_default_node_owned_quarantine(tmp_path):
+    """Nodes sending their quarantined rows to the same table keep their own tasks, even when
+    they are not adjacent, and each one owns its quarantined rows."""
+    df0 = get_df0("POLARS")
+    quarantine = str(tmp_path / "quarantine")
 
+    def _node(name, depends_on=None, quarantined=True):
+        sinks = [{"path": str(tmp_path / name), "format": "DELTA", "mode": "OVERWRITE"}]
+        expectations = []
+        if quarantined:
+            expectations = [
+                {"name": "none", "expr": "feed = 'none'", "action": "QUARANTINE"}
+            ]
+            sinks += [
+                {
+                    "path": quarantine,
+                    "format": "DELTA",
+                    "mode": "APPEND",
+                    "is_quarantine": True,
+                }
+            ]
+        return models.PipelineNode(
+            name=name,
+            sources=[{"df": df0}],
+            depends_on=depends_on or [],
+            transformer={
+                "nodes": [{"expr": f"SELECT *, '{name}' AS feed FROM {{df}}"}]
+            },
+            expectations=expectations,
+            sinks=sinks,
+        )
 
-def test_shared_grouped_selection(tmp_path):
-    path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
+    pl = _pipeline(
+        [
+            _node("a"),
+            _node("x", depends_on=["a"], quarantined=False),
+            _node("c", depends_on=["x"]),
+        ]
+    )
+    plan = pl.get_execution_plan()
+    assert [t.name for t in plan.tasks] == ["node-a", "node-x", "node-c"]
+    assert plan.tasks_dict["node-c"].upstream_task_names == ["node-x"]
+
     pl.execute()
+    pl.execute(refresh="full")
+    pl.execute(selects=["c"], refresh="full")
+    assert _feed_counts(quarantine) == {"a": 3, "c": 3}
 
-    # Selecting one writer selects the whole group: table reset, no rows lost
-    assert sorted(pl.get_execution_plan(selects=["b"]).node_names) == ["a", "b", "c"]
-    pl.execute(selects=["b"], refresh="full")
+
+def test_shared_default_node_owned_execution_task_names(tmp_path):
+    # Writers keep their own execution task names
+    nodes = _writers(
+        str(tmp_path / "shared"),
+        None,
+        names=("a", "b"),
+        node_kwargs={
+            "a": {"execution_task_name": "t1"},
+            "b": {"execution_task_name": "t2"},
+        },
+    )
+    tasks = _pipeline(nodes).get_execution_plan().tasks
+    assert [t.name for t in tasks] == ["t1", "t2"]
+
+
+def test_shared_default_ignores_reset_mode(tmp_path):
+    # Each node deletes its own rows: `reset_mode` doesn't apply and may differ
+    path = str(tmp_path / "shared")
+    nodes = _writers(path, None, node_kwargs={"a": {"reset_mode": "TRUNCATE"}})
+    pl = _pipeline(nodes)
+    pl.execute()
+    pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_shared_grouped_different_reset_rejected(tmp_path):
-    # The table is reset once, by the first writer: all writers must agree
-    nodes = _writers(
-        str(tmp_path / "shared"), None, node_kwargs={"a": {"reset_mode": "TRUNCATE"}}
-    )
-    with pytest.raises(
-        ValueError, match="different `reset_mode` / `reset_delete_where`"
-    ):
-        _pipeline(nodes)
-
-
-def test_shared_grouped_removed_node(tmp_path):
+def test_shared_removed_node(tmp_path):
     path = str(tmp_path / "shared")
     _pipeline(_writers(path, None)).execute()
 
-    # Node c removed and pipeline "redeployed": full refresh leaves no leftovers
+    # Node c removed: its rows are not deleted by a full refresh of the other writers
     pl = _pipeline(_writers(path, None, names=("a", "b")))
     pl.execute(refresh="full")
+    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+
+    # Cleaned up by a reset of the whole table
+    pl.execute(refresh="reset", reset_mode="DROP")
+    pl.execute()
     assert _feed_counts(path) == {"a": 3, "b": 3}
 
 
@@ -424,29 +486,42 @@ def test_shared_node_owned_override_rejected(tmp_path):
         pl.execute(refresh="full", reset_mode="DROP")
 
 
-def test_shared_pipeline_owned(tmp_path):
+def test_shared_several_pipelines(tmp_path):
     path = str(tmp_path / "shared")
-    pipeline_owned = {"owner": "pipeline"}
 
     # Two pipelines writing to the same target
-    pl1 = _pipeline(_writers(path, pipeline_owned, names=("a",)), name="pl1")
-    pl2 = _pipeline(
-        _writers(path, {"owner": "pipeline"}, names=("b", "c")),
-        name="pl2",
-    )
+    pl1 = _pipeline(_writers(path, True, names=("a",)), name="pl1")
+    pl2 = _pipeline(_writers(path, True, names=("b",)), name="pl2")
     pl1.execute()
     pl2.execute()
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
-    assert sorted(_read(path)["_laktory_writer"].unique()) == ["pl1", "pl2"]
+    assert _feed_counts(path) == {"a": 3, "b": 3}
+    assert sorted(_read(path)["_laktory_writer"].unique()) == ["pl1.a", "pl2.b"]
 
-    # Full refresh of pl2 deletes its rows once, pl1 rows untouched
+    # Full refresh of pl2 deletes its rows only
     pl2.execute(refresh="full")
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+    assert _feed_counts(path) == {"a": 3, "b": 3}
 
     # Override drops the whole table, pl1 rows lost until pl1 is refreshed
     pl2.execute(refresh="full", reset_mode="DROP")
-    assert _feed_counts(path) == {"b": 3, "c": 3}
+    assert _feed_counts(path) == {"b": 3}
     pl1.execute(refresh="full")
+    assert _feed_counts(path) == {"a": 3, "b": 3}
+
+
+def test_shared_where(tmp_path):
+    """Rows owned by a SQL predicate instead of a writer column"""
+    path = str(tmp_path / "shared")
+    shared = {n: {"where": f"feed = '{n}'"} for n in ["a", "b", "c"]}
+    pl = _pipeline(_writers(path, shared))
+
+    pl.execute()
+    assert "_laktory_writer" not in _read(path).columns
+    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+
+    # Full refresh of a writer deletes the rows matching its predicate only
+    pl.execute(selects=["b"])
+    assert _feed_counts(path) == {"a": 3, "b": 6, "c": 3}
+    pl.execute(selects=["b"], refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
@@ -459,18 +534,15 @@ def test_shared_reset_mode_override_invalid(tmp_path):
 @pytest.mark.parametrize(
     "shared,match",
     [
-        ({"a": _NODE_OWNED, "b": _NODE_OWNED}, "different `shared` options"),
+        ({"a": {"where": "feed = 'a'"}}, "identify their rows differently"),
+        ({"a": {"column": "writer"}}, "different `shared.column`"),
         (
-            {"a": None, "b": None, "c": _NODE_OWNED},
-            "different `shared` options",
+            {n: {"where": "feed = 'x'"} for n in ["a", "b", "c"]},
+            "same `shared.where`",
         ),
         (
-            {
-                "a": {**_NODE_OWNED, "writer_id": "x"},
-                "b": {**_NODE_OWNED, "writer_id": "x"},
-                "c": _NODE_OWNED,
-            },
-            "duplicate `shared.writer_id`",
+            {"a": {"writer_id": "x"}, "b": {"writer_id": "x"}},
+            "same `shared.writer_id`",
         ),
     ],
 )
@@ -479,17 +551,26 @@ def test_shared_pipeline_validation(tmp_path, shared, match):
         _pipeline(_writers(str(tmp_path / "shared"), shared))
 
 
-def test_shared_grouped_task_name_conflict(tmp_path):
-    nodes = _writers(
-        str(tmp_path / "shared"),
-        None,
-        names=("a", "b"),
-        node_kwargs={
-            "a": {"execution_task_name": "t1"},
-            "b": {"execution_task_name": "t2"},
-        },
-    )
-    with pytest.raises(ValueError, match="different `execution_task_name`"):
+@pytest.mark.parametrize(
+    "sink,match",
+    [
+        ({"mode": "OVERWRITE"}, "mode 'OVERWRITE'"),
+        ({"format": "PARQUET"}, "format 'PARQUET'"),
+    ],
+)
+def test_shared_multiple_writers_requirements(tmp_path, sink, match):
+    """Several writers require DELTA sinks in APPEND mode"""
+    df0 = get_df0("POLARS")
+    path = str(tmp_path / "shared")
+    nodes = [
+        models.PipelineNode(
+            name=name,
+            sources=[{"df": df0}],
+            sinks=[{"path": path, "format": "DELTA", "mode": "APPEND"} | sink],
+        )
+        for name in ["a", "b"]
+    ]
+    with pytest.raises(ValueError, match=match):
         _pipeline(nodes)
 
 
@@ -511,7 +592,7 @@ def test_shared_config_round_trip(tmp_path):
     nodes = [
         _node("a", shared_path, _NODE_OWNED),
         _node("b", shared_path, _NODE_OWNED),
-        _node("c", str(tmp_path / "ext"), {"owner": "pipeline"}),
+        _node("c", str(tmp_path / "ext"), {"where": "feed = 'c'"}),
     ]
     pl = models.Pipeline(
         name="pl",
@@ -522,15 +603,20 @@ def test_shared_config_round_trip(tmp_path):
     content = pl.orchestrator.config_file.content_dict
     pl2 = models.Pipeline.model_validate_json(json.dumps(content))
     assert pl2.nodes_dict["a"].sinks[0].shared.writer_id == "pl.a"
-    assert pl2.nodes_dict["c"].sinks[0].shared.writer_id == "pl"
+    assert pl2.nodes_dict["c"].sinks[0].shared.where == "feed = 'c'"
 
 
-def test_reset_grouped(tmp_path):
+def test_reset_default_node_owned(tmp_path):
     path = str(tmp_path / "shared")
     pl = _pipeline(_writers(path, None))
     pl.execute()
 
-    pl.execute(refresh="reset")
+    # Each writer deletes its own rows
+    pl.execute(refresh="reset", selects=["a"])
+    assert _feed_counts(path) == {"b": 3, "c": 3}
+
+    # Whole table dropped by a single writer, e.g. from a job run of one task
+    pl.execute(refresh="reset", reset_mode="DROP", selects=["a"])
     assert not Path(path).exists()
 
     pl.execute()
@@ -557,10 +643,10 @@ def test_reset_node_owned(tmp_path):
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
 
-def test_reset_pipeline_owned(tmp_path):
+def test_reset_several_pipelines(tmp_path):
     path = str(tmp_path / "shared")
-    pl1 = _pipeline(_writers(path, {"owner": "pipeline"}, names=("a",)), name="pl1")
-    pl2 = _pipeline(_writers(path, {"owner": "pipeline"}, names=("b",)), name="pl2")
+    pl1 = _pipeline(_writers(path, True, names=("a",)), name="pl1")
+    pl2 = _pipeline(_writers(path, True, names=("b",)), name="pl2")
     pl1.execute()
     pl2.execute()
 

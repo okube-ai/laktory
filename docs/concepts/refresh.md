@@ -32,36 +32,28 @@ orchestrator: use `refresh="full"` instead.
 - `reset_mode="TRUNCATE"`: empties the table - removes all rows, via an unconditional
   `DELETE FROM` since Delta does not support the `TRUNCATE TABLE` SQL statement - but keeps the
   table, its schema, its location and its grants intact.
-- `reset_mode="DELETE_WHERE"`: deletes only the rows matching a `reset_delete_where` SQL
-  predicate, leaving every other row untouched. For tables written by multiple pipelines, prefer
-  [shared sinks](sharedsinks.md), which track row ownership automatically.
+
+It can be set at the sink, pipeline node, or pipeline level, or globally via
+the `LAKTORY_RESET_MODE` environment variable / `settings.reset_mode` (see
+[Laktory Settings](laktorysettings.md#reset-mode)). The value used for a sink is the first one set
+among the sink, its pipeline node, its pipeline and the settings.
+
+`TRUNCATE` is only supported for table sinks today; a `FileDataSink` only supports
+`reset_mode="DROP"`.
+
+To reset only part of a table - the rows written by a sink, when other writers (other nodes,
+other pipelines, backfills, manual loads) also write to it - declare the rows owned by the sink
+with `shared.where` (see [shared sinks](sharedsinks.md)): a full refresh then only deletes the
+rows matching it, and `reset_mode` doesn't apply.
 
 ```yaml
 sinks:
 - schema_name: finance
   table_name: brz_stock_prices
-  reset_mode: DELETE_WHERE
-  reset_delete_where: client_id = 'acme'
+  mode: APPEND
+  shared:
+    where: client_id = 'acme'
 ```
-
-`DROP` and `TRUNCATE` can be set at the sink, pipeline node, or pipeline level, or globally via
-the `LAKTORY_RESET_MODE` environment variable / `settings.reset_mode` (see
-[Laktory Settings](laktorysettings.md#reset-mode)). The value used for a sink is the first one set
-among the sink, its pipeline node, its pipeline and the settings.
-
-`reset_delete_where` requires DELTA format and must be set directly on the sink that owns the
-predicate - it is not inherited from a parent pipeline node, pipeline, or global setting, since a
-deletion predicate is inherently specific to one sink. `reset_mode="DELETE_WHERE"` follows the
-same rule: it can only be set directly on a sink, and raises a validation error if set on a
-`PipelineNode`, `Pipeline`, or globally. It's not supported on [shared sinks](sharedsinks.md) with
-`owner` `pipeline` or `node`, whose writer column identifies the rows to delete. Grouped writers
-of a table must use the same `reset_mode` and `reset_delete_where`, as the table is reset once.
-
-Laktory logs the number of rows deleted by `reset_delete_where`: check it in the run logs to catch
-a wrong or stale predicate.
-
-`TRUNCATE`/`DELETE_WHERE` are only supported for table sinks today; a `FileDataSink` only
-supports `reset_mode="DROP"`.
 
 ## Overriding the Reset Mode
 
@@ -93,16 +85,17 @@ writer's own rows for shared sinks).
 ## Shared Sinks
 
 When a sink is written by multiple nodes or pipelines, a full refresh must not delete the data
-of the other writers: depending on its [shared sink](sharedsinks.md) options, the table is
-reset once for all the writers of a pipeline, or only the rows of the writer are deleted. The
-`reset_mode` override then applies as follows:
+of the other writers: each writer owns its rows - writer column or `shared.where` predicate (see
+[shared sinks](sharedsinks.md)) - and a full refresh only deletes the rows of the writer. The `reset_mode` override resets the whole table
+instead:
 
-- `owner: table` (grouped writers): the table is reset once, with the override.
-- `owner: pipeline`: the whole table is reset once, including the rows written by other
-  pipelines, which then need a full refresh too.
-- `owner: node`: a full refresh with the override is rejected, as the writers are executed
-  independently. Run with `refresh="reset"` and the override first, then with
-  `refresh="full"`.
+- `refresh="reset"` with the override: the table is reset as a whole, whichever writers are
+  selected - a single writer task is enough - and the checkpoints of all its writers in the
+  pipeline are reset. Other pipelines writing to the table need a full refresh.
+- `refresh="full"` with the override: rejected for tables written by several nodes, as each
+  writer would reset the table after the others wrote to it. Accepted for a table written by a
+  single node of the pipeline (e.g. shared with other pipelines). Reset first, then run
+  normally.
 
 ## Declarative Orchestrators
 

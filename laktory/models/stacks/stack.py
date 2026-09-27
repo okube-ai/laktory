@@ -308,7 +308,6 @@ class LaktorySettings(BaseModel):
             "How data sinks are reset on a full refresh or reset run (`DROP`/`TRUNCATE`), for "
             "the sinks, nodes and pipelines that don't set one. Default: `DROP` (from "
             "`LAKTORY_RESET_MODE`). "
-            "`DELETE_WHERE` is not available here - it can only be set directly on a sink. "
             "See [Laktory Settings](../../../concepts/laktorysettings.md#reset-mode)."
         ),
     )
@@ -502,26 +501,23 @@ class StackResources(BaseModel):
             missing = [
                 f"{pl.name}.{s.parent_pipeline_node.name}"
                 for pl, s in items
-                if s.shared is None or not s.shared.uses_writer_column
+                if s.shared is None
             ]
             if missing:
                 raise ValueError(
                     f"Pipelines {pl_names} all write to '{target}', but the sinks of "
-                    f"nodes {missing} don't declare `shared.owner` `pipeline` or `node`. "
-                    "Declare it on every sink writing to this target, so that a full "
-                    "refresh only deletes the rows of its writer."
+                    f"nodes {missing} don't declare `shared` options (e.g. "
+                    "`shared: true`). Declare them on every sink writing to this target, "
+                    "so that a full refresh only deletes the rows of its writer."
                 )
 
-            writer_ids = {}
-            for pl, s in items:
-                writer_ids.setdefault(s.shared.writer_id, set()).add(pl.name)
-            duplicates = sorted(w for w, pls in writer_ids.items() if len(pls) > 1)
-            if duplicates:
-                raise ValueError(
-                    f"Pipelines {pl_names} write to '{target}' with the same "
-                    f"`shared.writer_id` {duplicates}. Each pipeline needs a unique "
-                    "identifier."
-                )
+            from laktory.models.pipeline.pipeline import Pipeline
+
+            Pipeline._validate_shared_writers(
+                target,
+                [s for _, s in items],
+                [f"{pl.name}.{s.parent_pipeline_node.name}" for pl, s in items],
+            )
 
         return self
 

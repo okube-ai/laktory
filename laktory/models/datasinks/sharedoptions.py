@@ -1,8 +1,9 @@
-from typing import Literal
+from typing import Any
 
 from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
+from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipelinechild import PipelineChild
@@ -13,20 +14,18 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
     Options for a sink shared by multiple writers: other nodes of the same pipeline and/or
     other pipelines.
 
-    `owner` defines what a writer owns, which is what a full refresh deletes:
+    Each writer owns its rows, and a full refresh of a writer only deletes and reprocesses
+    its own rows, leaving the data of the other writers untouched. Each writer can therefore
+    be executed and refreshed independently, in any order, possibly in parallel. The rows of
+    a writer are identified either by:
 
-    - `table` (default, same as no `shared` options): the pipeline owns the whole table. Nodes
-      of the pipeline writing to the same sink are grouped in a single execution task and, on
-      a full refresh, the table is reset once (according to `reset_mode`) before all writers
-      reprocess their data.
-    - `pipeline`: the pipeline owns its rows, other pipelines also write to the sink. Rows
-      carry the pipeline identifier (`{pipeline_name}`) and, on a full refresh, only the rows
-      written by this pipeline are deleted and reprocessed. Nodes of the pipeline writing to
-      the sink are grouped in a single task.
-    - `node`: each node owns its rows. Each writer runs in its own task (possibly in
-      parallel), rows carry the writer identifier (`{pipeline_name}.{node_name}`) and, on a
-      full refresh, a writer only deletes and reprocesses its own rows. Other pipelines may
-      also write to the sink.
+    - a writer column (default): each written row carries the identifier of its writer in
+      `column`, `{pipeline_name}.{node_name}` by default;
+    - a SQL predicate (`where`), e.g. `client_id = 23`, matching the rows written by the
+      writer: no column is added.
+
+    Applied automatically, with a writer column, when several nodes of a pipeline write to the
+    same sink. `shared: true` is equivalent to `shared: {}`.
 
     Examples
     --------
@@ -37,31 +36,28 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
         schema_name="finance",
         table_name="pooled_prices",
         mode="APPEND",
-        shared={"owner": "pipeline", "writer_id": "client_a"},
+        shared={"writer_id": "client_a"},
     )
-    print(sink.shared.uses_writer_column)
-    # > True
     print(sink.shared.writer_id)
     # > client_a
+
+    sink = lk.models.UnityCatalogDataSink(
+        schema_name="finance",
+        table_name="pooled_prices",
+        mode="APPEND",
+        shared={"where": "client_id = 23"},
+    )
+    print(sink.shared.uses_writer_column)
+    # > False
     ```
     """
 
-    owner: Literal["table", "pipeline", "node"] = Field(
-        ...,
-        description="""
-        What a writer owns, and therefore what a full refresh deletes: the whole `table`
-        (default when `shared` is not set), the rows of the `pipeline`, or the rows of the
-        `node`. With `node`, each writer runs in its own task; rows of a removed or renamed
-        node are no longer deleted on a full refresh.
-        """,
-    )
     writer_id_: str | None = Field(
         None,
         description="""
-        Identifier stored in `column` for each written row, when `owner` is `pipeline` or
-        `node`. Defaults to `{pipeline_name}` or `{pipeline_name}.{node_name}` respectively.
-        Must be stable across runs: rows written with a previous identifier are no longer
-        deleted on a full refresh.
+        Identifier stored in `column` for each written row. Defaults to
+        `{pipeline_name}.{node_name}`. Must be stable across runs: rows written with a
+        previous identifier are no longer deleted on a full refresh.
         """,
         validation_alias=AliasChoices("writer_id", "writer_id_"),
         exclude=True,
@@ -70,11 +66,31 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
         "_laktory_writer",
         description="Name of the column storing the writer identifier.",
     )
+    where: str | None = Field(
+        None,
+        description="""
+        SQL predicate matching the rows owned by the writer, e.g. `client_id = 23`, used
+        instead of a writer column: a full refresh deletes the rows matching it. The
+        predicates of the writers of a sink must not overlap, and each writer must only
+        write rows matching its predicate.
+        """,
+    )
+
+    @model_validator(mode="after")
+    def where_excludes_writer_column(self) -> Any:
+        if self.where is not None and (
+            self.writer_id_ is not None or self.column != "_laktory_writer"
+        ):
+            raise ValueError(
+                "`shared.where` identifies the rows of the writer without a writer column: "
+                "`writer_id` and `column` can't be set with it."
+            )
+        return self
 
     @property
     def uses_writer_column(self) -> bool:
-        """`True` if written rows carry the writer identifier."""
-        return self.owner in ["pipeline", "node"]
+        """`True` if written rows carry the writer identifier in `column`."""
+        return self.where is None
 
     @computed_field(description="writer_id")
     @property
@@ -84,10 +100,8 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
         if not self.uses_writer_column:
             return None
 
-        parents = [self.parent_pipeline]
-        if self.owner == "node":
-            parents += [self.parent_pipeline_node]
+        parents = [self.parent_pipeline, self.parent_pipeline_node]
         names = [p.name for p in parents if p is not None and p.name]
-        if not names:
+        if len(names) < 2:
             return None
         return ".".join(names)

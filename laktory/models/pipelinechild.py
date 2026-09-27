@@ -83,9 +83,7 @@ class PipelineChild(BaseChild):
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
 
-        `DELETE_WHERE` is also available, but only directly on a data sink (see
-        `BaseDataSink.reset_mode`) - a deletion predicate is inherently specific to a single
-        sink, so it can't be a pipeline node, pipeline, or global default.
+        To reset only part of a table, declare the rows owned by its sink with `shared.where`.
         """,
         validation_alias=AliasChoices("reset_mode", "reset_mode_"),
         exclude=True,

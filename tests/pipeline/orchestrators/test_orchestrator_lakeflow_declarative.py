@@ -365,13 +365,6 @@ def test_ldp_view_node_raises():
     "sink_kwargs",
     [
         pytest.param({"reset_mode": "TRUNCATE"}, id="truncate"),
-        pytest.param(
-            {
-                "reset_mode": "DELETE_WHERE",
-                "reset_delete_where": "id = 1",
-            },
-            id="delete_where",
-        ),
     ],
 )
 def test_reset_mode_non_drop_raises_under_declarative_orchestrator(
@@ -569,7 +562,7 @@ def test_shared_sink_inferred_under_declarative_orchestrator(orchestrator_dict):
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
 @pytest.mark.parametrize(
     "shared",
-    [{"owner": "node"}, {"owner": "pipeline"}],
+    [True, {"where": "feed = 'a'"}],
 )
 def test_shared_sink_writer_column_under_declarative_orchestrator(
     orchestrator_dict, shared
@@ -704,7 +697,7 @@ def test_sdp_script_shared_sink(tmp_path, monkeypatch):
 
 
 def test_duplicate_sink_target_ok_under_lakeflow_job():
-    """Two nodes writing to the same output table are grouped under LAKEFLOW_JOB"""
+    """Two nodes can write to the same output table under LAKEFLOW_JOB"""
     models.Pipeline.model_validate(
         {
             "name": "pl-job",

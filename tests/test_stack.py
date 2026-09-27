@@ -1591,27 +1591,44 @@ def _stack_with_shared(shared1, shared2, orchestrator2=None, writer_id2=None):
     )
 
 
-def test_stack_shared_sink_pipeline_owned():
-    _stack_with_shared({"owner": "pipeline"}, {"owner": "pipeline"})
+def test_stack_shared_sink():
+    stack = _stack_with_shared({}, {})
+    writer_ids = [
+        pl.nodes[0].sinks[0].shared.writer_id
+        for pl in stack.resources.pipelines.values()
+    ]
+    assert writer_ids == ["pl1.n", "pl2.n"]
 
 
-def test_stack_shared_sink_node_owned():
-    """Rows owned by a node are also owned by its pipeline"""
-    _stack_with_shared({"owner": "node"}, {"owner": "pipeline"})
+def test_stack_shared_sink_where():
+    _stack_with_shared({"where": "client_id = 1"}, {"where": "client_id = 2"})
 
 
-@pytest.mark.parametrize("shared2", [None, {"owner": "table"}])
-def test_stack_shared_sink_missing_owner_raises(shared2):
-    with pytest.raises(
-        ValueError, match="don't declare `shared.owner` `pipeline` or `node`"
-    ):
-        _stack_with_shared({"owner": "pipeline"}, shared2)
+def test_stack_shared_sink_missing_shared_raises():
+    with pytest.raises(ValueError, match="don't declare `shared` options"):
+        _stack_with_shared({}, None)
+
+
+@pytest.mark.parametrize(
+    "shared1,shared2,match",
+    [
+        ({}, {"where": "client_id = 2"}, "identify their rows differently"),
+        (
+            {"where": "client_id = 1"},
+            {"where": "client_id = 1"},
+            "same `shared.where`",
+        ),
+    ],
+)
+def test_stack_shared_sink_ownership_raises(shared1, shared2, match):
+    with pytest.raises(ValueError, match=match):
+        _stack_with_shared(shared1, shared2)
 
 
 def test_stack_shared_sink_declarative_raises():
     with pytest.raises(ValueError, match="declarative orchestrator"):
         _stack_with_shared(
-            {"owner": "pipeline"},
+            {},
             None,
             orchestrator2={"type": "SPARK_DECLARATIVE_PIPELINE"},
         )
@@ -1619,6 +1636,4 @@ def test_stack_shared_sink_declarative_raises():
 
 def test_stack_shared_sink_duplicate_writer_id_raises():
     with pytest.raises(ValueError, match="same `shared.writer_id`"):
-        _stack_with_shared(
-            {"owner": "pipeline"}, {"owner": "pipeline"}, writer_id2="pl1"
-        )
+        _stack_with_shared({}, {}, writer_id2="pl1.n")

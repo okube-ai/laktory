@@ -98,14 +98,9 @@ def test_unknown_format():
     assert sink.format == "LANCE"
 
 
-@pytest.mark.parametrize("mode", ["TRUNCATE", "DELETE_WHERE"])
-def test_purge_unsupported_modes_rejected(mode, tmp_path):
-    kwargs = {}
-    if mode == "DELETE_WHERE":
-        kwargs["reset_delete_where"] = "id = 1"
-
+def test_purge_truncate_rejected(tmp_path):
     sink = FileDataSink(
-        path=str(tmp_path / "sink"), reset_mode=mode, format="DELTA", **kwargs
+        path=str(tmp_path / "sink"), reset_mode="TRUNCATE", format="DELTA"
     )
     with pytest.raises(NotImplementedError):
         sink.purge()

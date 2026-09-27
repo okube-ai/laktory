@@ -125,79 +125,55 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    reset_mode_: Literal["DROP", "TRUNCATE", "DELETE_WHERE"] = Field(
+    reset_mode_: Literal["DROP", "TRUNCATE"] = Field(
         None,
         description="""
         Strategy used to reset this sink's data on a full refresh or a reset run.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
-        - DELETE_WHERE: Delete only the rows matching `reset_delete_where`.
 
-        Ignored by sinks with `shared.owner` `pipeline` or `node`, which only delete their
-        own rows.
+        Ignored by shared sinks (`shared`, applied automatically when several nodes write to
+        the sink), which only delete the rows of their writer. To reset only part of a table,
+        declare the rows owned by the sink with `shared.where`.
         """,
         validation_alias=AliasChoices("reset_mode", "reset_mode_"),
         exclude=True,
-    )
-    reset_delete_where: str | None = Field(
-        None,
-        description="""
-        SQL WHERE-clause predicate used to select the rows to delete when `reset_mode` resolves
-        to 'DELETE_WHERE'. Should be set directly on the sink that owns the predicate - unlike
-        `reset_mode`, this value is not inherited from a parent pipeline node/pipeline/settings,
-        since a deletion predicate is inherently specific to a single sink. Not supported
-        with `shared.owner` `pipeline` or `node`, whose writer column identifies the rows to
-        delete.
-        """,
     )
 
     shared: DataSinkSharedOptions | None = Field(
         None,
         description="""
-        Options for a sink written by multiple writers. Nodes of a pipeline writing to the same
-        sink are grouped automatically. `owner` defines what a writer owns - the whole table,
-        the rows of its pipeline or of its node - which is what a full refresh deletes and how
-        writers are executed. See `DataSinkSharedOptions`.
+        Options for a sink written by multiple writers: each writer owns its rows, identified
+        by a writer column or a SQL predicate, and a full refresh of a writer only deletes its
+        own rows. Applied automatically when several nodes of a pipeline write to the same
+        sink. `true` for the default options. See `DataSinkSharedOptions`.
         """,
     )
-
-    @computed_field(description="reset_mode")
-    @property
-    def reset_mode(self) -> Literal["DROP", "TRUNCATE", "DELETE_WHERE"]:
-        return self._resolve_reset_mode()
 
     @field_validator("shared", mode="before")
     @classmethod
     def shared_is_options(cls, v):
-        if isinstance(v, bool):
-            raise ValueError(
-                "`shared` expects options, not a boolean. Use e.g. `shared: {owner: pipeline}` "
-                "(other pipelines also write to the sink) or `shared: {owner: node}` (each "
-                "node writes independently and owns its rows)."
-            )
+        # `shared: true` is a shorthand for default options
+        if v is True:
+            return {}
+        if v is False:
+            return None
         return v
 
     @model_validator(mode="after")
     def validate_shared(self) -> Any:
-        if self.shared is None or not self.shared.uses_writer_column:
+        if self.shared is None:
             return self
         if self.mode not in [None, "APPEND"]:
             raise ValueError(
-                f"`shared.owner` '{self.shared.owner}' only supports `APPEND` mode, not "
-                f"'{self.mode}'."
-            )
-        if self.reset_delete_where is not None:
-            raise ValueError(
-                f"`reset_delete_where` is not supported with `shared.owner` "
-                f"'{self.shared.owner}': a full refresh deletes the rows of the writer, "
-                f"identified by the `{self.shared.column}` column."
+                f"Shared sinks (`shared`) only support `APPEND` mode, not '{self.mode}'."
             )
         if not self._supports_shared:
             raise ValueError(
-                f"`shared.owner` '{self.shared.owner}' is not supported for "
-                f"{type(self).__name__} with format '{getattr(self, 'format', None)}'. "
-                "They require a DELTA table or file sink."
+                f"Shared sinks (`shared`) are not supported for {type(self).__name__} with "
+                f"format '{getattr(self, 'format', None)}'. They require a DELTA table or "
+                "file sink."
             )
         return self
 
@@ -317,14 +293,6 @@ class BaseDataSink(BaseModel, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def reset_delete_where_is_set(self) -> Any:
-        if self.reset_mode == "DELETE_WHERE" and not self.reset_delete_where:
-            raise ValueError(
-                "`reset_delete_where` must be set when `reset_mode` is 'DELETE_WHERE'."
-            )
-        return self
-
-    @model_validator(mode="after")
     def reset_mode_incompatible_with_declarative_orchestrator(self) -> Any:
         if self.reset_mode != "DROP":
             from laktory.models.pipeline.orchestrators.lakeflowdeclarativepipelineorchestrator import (
@@ -348,7 +316,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                     f"`reset_mode` '{self.reset_mode}' has no effect when using the "
                     f"{type(orchestrator).__name__} - the full refresh is handled entirely by "
                     "the Databricks/Spark Declarative Pipelines engine, which never calls "
-                    "Laktory's `purge()`. Remove `reset_mode`/`reset_delete_where` from this "
+                    "Laktory's `purge()`. Remove `reset_mode` from this "
                     "sink, or use the LAKEFLOW_JOB orchestrator."
                 )
         return self
@@ -609,6 +577,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         if not isinstance(df, (nw.DataFrame, nw.LazyFrame)):
             df = nw.from_native(df)
         self._update_backend_from_df(df)
+        if self.shared is not None:
+            self._check_writer_column()
         df = self.with_writer_column(df)
 
         # Custom Writer
@@ -831,7 +801,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         `True` if a purge only deletes the rows of this writer. With a `reset_mode`
         override, the whole target is purged instead.
         """
-        if self.shared is None or not self.shared.uses_writer_column:
+        if self.shared is None:
             return False
         if mode is None:
             return True
@@ -845,7 +815,7 @@ class BaseDataSink(BaseModel, PipelineChild):
         """
         Add the writer identifier column to a DataFrame written by a shared sink, as the
         first column so that its statistics are collected. Returns the DataFrame unchanged
-        if the sink is not shared.
+        if the sink is not shared or identifies its rows with `shared.where`.
 
         Parameters
         ----------
@@ -870,6 +840,31 @@ class BaseDataSink(BaseModel, PipelineChild):
         )
         return _df if is_nw else _df.to_native()
 
+    @property
+    def _existing_columns(self) -> list[str] | None:
+        """
+        Columns of the existing target. `None` if it doesn't exist or if its columns can't be
+        read.
+        """
+        return None
+
+    def _check_writer_column(self) -> None:
+        """
+        Raise an error if the target of a shared sink exists without the writer column: it
+        was written before being shared, and its rows can't be attributed to a writer.
+        """
+        if not self.shared.uses_writer_column:
+            return
+        columns = self._existing_columns
+        if columns is None or self.shared.column in columns:
+            return
+        raise ValueError(
+            f"'{self.purge_target}' is shared (several nodes write to it, or `shared` "
+            f"options), but it has no `{self.shared.column}` column identifying the writer "
+            "of each row: it was written before being shared. Drop it once, e.g. by running "
+            "the pipeline with `refresh='reset'` and `reset_mode='DROP'`, then run normally."
+        )
+
     def _check_writer_id(self):
         if self.shared.writer_id is None:
             raise ValueError(
@@ -888,6 +883,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         logger.info(f"Deleted {count} rows from {target} where {predicate}")
 
     def _shared_delete_predicate(self, quote: str = "`") -> str:
+        if not self.shared.uses_writer_column:
+            return f"({self.shared.where})"
         self._check_writer_id()
         writer_id = self.shared.writer_id.replace("'", "''")
         return f"{quote}{self.shared.column}{quote} = '{writer_id}'"
@@ -911,11 +908,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         Parameters
         ----------
         mode:
-            Optional override for `reset_mode`, taking precedence over the resolved
-            `self.reset_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
-            `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
-            generically here, especially when purging multiple sinks/tables at once via
-            `PipelineNode.purge()`.
+            Optional override for `reset_mode` (`DROP` or `TRUNCATE`), taking precedence
+            over the resolved `self.reset_mode` value for this call only.
         """
         raise NotImplementedError()
 

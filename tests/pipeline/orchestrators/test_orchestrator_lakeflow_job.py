@@ -369,7 +369,8 @@ def test_job_parameters():
     assert params == {"refresh": "incremental", "reset_mode": ""}
 
 
-def test_shared_sink_writers_grouped_in_one_task():
+def test_shared_sink_writers_tasks():
+    """Writers of a shared sink own their rows and keep their own tasks"""
     shared_sink = {
         "format": "DELTA",
         "mode": "APPEND",
@@ -400,8 +401,18 @@ def test_shared_sink_writers_grouped_in_one_task():
         },
     )
     tasks = {t.task_key: t for t in pl.orchestrator.task}
-    assert sorted(tasks) == ["node-brz", "shared-pooled"]
-    assert tasks["shared-pooled"].python_wheel_task.named_parameters["selects"] == (
-        "feed_a,feed_b"
-    )
-    assert [d.task_key for d in tasks["shared-pooled"].depends_on] == ["node-brz"]
+    assert sorted(tasks) == ["node-brz", "node-feed_a", "node-feed_b"]
+
+    def depends_on(key):
+        return sorted(d.task_key for d in tasks[key].depends_on or [])
+
+    assert depends_on("node-feed_a") == ["node-brz"]
+    assert depends_on("node-feed_b") == ["node-brz", "node-feed_a"]
+    assert tasks["node-feed_b"].python_wheel_task.named_parameters == {
+        "filepath": "/Workspace/.laktory/pipelines/pl-job.json",
+        "selects": "feed_b",
+    }
+    assert [n.sinks[0].shared.writer_id for n in pl.nodes[1:]] == [
+        "pl-job.feed_a",
+        "pl-job.feed_b",
+    ]
