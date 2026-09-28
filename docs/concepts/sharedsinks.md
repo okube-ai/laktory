@@ -72,6 +72,8 @@ sinks:
     where: client_id = 23    # full refresh: DELETE FROM all_orders WHERE client_id = 23
 ```
 
+- The predicate is written in the SQL of the backend: Spark SQL, or Polars / deltalake SQL
+  with the Polars backend (e.g. `IN`, `BETWEEN`, `LIKE`).
 - A predicate also works for a single writer, when other processes (backfills, manual loads)
   write to the same table.
 - All the writers of a table must use the same kind: writer column or `where`.
