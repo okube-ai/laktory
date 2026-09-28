@@ -1,6 +1,16 @@
 # Release History
 
-## [0.13.0] - Unreleased
+## [0.13.1] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.13.0] - 2026-09-28
 ### Added
 * Added shared sinks, written by multiple nodes of a pipeline and/or by multiple pipelines. Each writer owns its rows and a full refresh of a writer only deletes and reprocesses its own rows, so writers run and refresh independently, from any selection of job tasks. Every sink writing to a shared table declares `shared` (`shared: true` for the default options). Rows are identified by a `{pipeline}.{node}` writer column or, without adding a column, by a SQL predicate (`shared.where`, e.g. `client_id = 23`). A node reading a writer (`node_name`) gets the writer rows only, whether read from memory or from the table. Delta commits of concurrent writers conflicting with each other are retried. With Lakeflow / Spark Declarative Pipelines, nodes writing to the same table use append flows. [[#675](https://github.com/okube-ai/laktory/issues/675)], [[#676](https://github.com/okube-ai/laktory/issues/676)], [[#677](https://github.com/okube-ai/laktory/issues/677)]
 * Added a `refresh` run parameter (`INCREMENTAL`, `FULL`, `RESET`) - `RESET` resets tables without reprocessing data, e.g. from a job run without table grants - and `reset_mode` (`DROP`, `TRUNCATE` - table sinks and DELTA file sinks) to control how sinks are reset. `reset_mode` is set per sink and can be overridden for a run (`pl.execute(refresh=..., reset_mode=...)`, `node.execute(...)`, `refresh` / `reset_mode` job parameters), an override falling back to `DROP` on sinks that can't be truncated. [[#669](https://github.com/okube-ai/laktory/issues/669)]
