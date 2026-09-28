@@ -94,8 +94,30 @@ from the table (e.g. a separate job task).
 - With declarative orchestrators, rows carry no writer: reading a writer with `node_name` (or
   `{nodes.x}` in a transformer) fails validation, since it would return the rows of all the
   writers. Read the table with `table_name`, or write the node to its own table.
-- A full refresh of a writer deletes rows from the table, which fails streaming reads of the
-  table (as for any Delta table): run a full refresh of these readers too.
+
+### Streaming Readers
+
+A full refresh of a writer deletes its rows, and a streaming read of a Delta table fails on
+deleted rows (`DELTA_SOURCE_IGNORE_DELETE`), including a `node_name` read of another writer.
+Choose per streaming reader:
+
+| Reader | Full refresh of another writer | Full refresh of the writer it reads |
+|---|---|---|
+| default | fails: run a full refresh of the reader | fails: run a full refresh of the reader |
+| `skipChangeCommits` | no effect: the deletes are skipped and the other writer's rows filtered out | the writer's rows are read again: run a full refresh of the reader, otherwise they are duplicated |
+
+```yaml
+- name: gld_feed_a
+  sources:
+  - node_name: feed_a
+    as_stream: true
+    reader_kwargs:
+      skipChangeCommits: true
+```
+
+With `skipChangeCommits`, a node reading a single writer (`node_name`) keeps running when the
+other writers are refreshed. A reader of the whole table (`table_name`) gets duplicates after a
+full refresh of any writer: keep the default there.
 
 ## Resetting a Shared Table
 

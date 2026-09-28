@@ -58,3 +58,16 @@ Since 0.13.0 the docs and run parameters say "reset" (`refresh="RESET"`, `reset_
 public methods are still `BaseDataSink.purge(mode=...)`, `PipelineNode.purge(mode=...)` and
 internals such as `purge_target` / `_get_purge_mode`. Rename to `reset()` (keeping `purge()` as a
 deprecated alias for a release) when convenient - low value, wide rename.
+
+## A10 — Streaming readers of shared sinks: automatic handling
+
+A writer's full refresh deletes rows from a shared table, failing its streaming readers
+(`DELTA_SOURCE_IGNORE_DELETE`). 0.13.0 documents the choice (`docs/concepts/sharedsinks.md`,
+"Streaming Readers"): full refresh of the reader, or `skipChangeCommits` on a `node_name` reader
+(immune to other writers' refreshes, duplicates after its own writer's refresh). Verified locally
+(Spark, delta-spark 4.2).
+
+Candidate improvement: set `skipChangeCommits` automatically on `node_name` stream reads of a
+shared sink, and cascade a full refresh of a writer to its downstream streaming readers in the same
+run (`refresh=FULL` on `feed_a` also resets the checkpoints / sinks of `gld_feed_a`). Needs a
+design for job task selections (the reader may not be part of the run).

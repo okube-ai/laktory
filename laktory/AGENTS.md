@@ -515,7 +515,10 @@ sinks:
   or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
   writer column, so reading a writer of an append-flow table with `node_name` / `{nodes.x}` fails
   validation (use `table_name`, or a separate table). A writer's full refresh deletes rows: streaming
-  readers of the table need a full refresh too.
+  readers of the table fail (`DELTA_SOURCE_IGNORE_DELETE`) until fully refreshed. With
+  `reader_kwargs: {skipChangeCommits: true}` on a `node_name` reader, refreshes of the other
+  writers have no effect, but a refresh of the writer it reads duplicates its rows downstream
+  unless the reader is fully refreshed too.
 - Reset / drop a shared table as a whole: `refresh=RESET` + `reset_mode=DROP` (or `TRUNCATE`) on
   any selection of writer tasks (one is enough); the checkpoints of all its writers in the
   pipeline are reset too. `refresh=FULL` + override is rejected on shared sinks (a full
