@@ -28,6 +28,8 @@ from laktory.models.datasources import BaseDataSource
 from laktory.models.datasources import DataSourcesUnion
 from laktory.models.datasources import PipelineNodeDataSource
 from laktory.models.datasources import TableDataSource
+from laktory.models.pipeline._execute import check_legacy_full_refresh
+from laktory.models.pipeline._execute import normalize_run_parameters
 from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
 
@@ -734,11 +736,12 @@ class PipelineNode(BaseModel, PipelineChild):
         self,
         apply_transformer: bool = True,
         write_sinks: bool = True,
-        full_refresh: bool = False,
+        refresh: Literal["INCREMENTAL", "FULL", "RESET"] = "INCREMENTAL",
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
-    ) -> AnyFrame:
+        full_refresh: bool | None = None,
+    ) -> AnyFrame | None:
         """
         Execute pipeline node by:
 
@@ -753,25 +756,42 @@ class PipelineNode(BaseModel, PipelineChild):
             Flag to apply transformer in the execution
         write_sinks:
             Flag to include writing sink in the execution
-        full_refresh:
-            If `True` dataframe will be completely re-processed by deleting
-            existing data and checkpoint before processing.
+        refresh:
+            What the run does: `INCREMENTAL` (default), `FULL` (reset the sinks, then
+            reprocess all the data) or `RESET` (only reset the sinks, without reading or
+            writing data). See `Pipeline.execute()`.
         named_dfs:
             Named DataFrame passed to transformer nodes
         update_tables_metadata:
             Update tables metadata
         reset_mode:
-            Optional override for sinks `reset_mode` when `full_refresh` is `True`.
+            Optional override for sinks `reset_mode` with `refresh` `FULL` or `RESET`.
+        full_refresh:
+            Replaced by `refresh` in 0.13.0: `True` raises an error (use
+            `refresh='FULL'`), `False` logs a warning and runs incrementally.
 
         Returns
         -------
         :
-            output Spark DataFrame
+            output DataFrame, `None` with `refresh='RESET'`
         """
         logger.info(f"Executing pipeline node {self.name}")
 
-        # Install dependencies
+        # Run parameters
+        check_legacy_full_refresh(full_refresh)
         pl = self.parent_pipeline
+        if pl is not None:
+            refresh, reset_mode = pl.validate_run_parameters(
+                refresh, reset_mode, node_names=[self.name]
+            )
+        else:
+            refresh, reset_mode = normalize_run_parameters(refresh, reset_mode)
+
+        if refresh == "RESET":
+            self.purge(mode=reset_mode)
+            return None
+
+        # Install dependencies
         if pl and not pl._imports_imported:
             for package_name in pl._imports:
                 try:
@@ -787,10 +807,10 @@ class PipelineNode(BaseModel, PipelineChild):
                 "Declarative pipeline orchestrator selected. Sinks writing will be skipped."
             )
             write_sinks = False
-            full_refresh = False
+            refresh = "INCREMENTAL"
 
         # Refresh
-        if full_refresh:
+        if refresh == "FULL":
             self.purge(mode=reset_mode)
 
         # Read all declared sources into named_dfs with "sources." prefix

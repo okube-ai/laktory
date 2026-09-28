@@ -11,7 +11,9 @@ order, in parallel, alone or together.
 
 ## Declaring a Shared Sink
 
-**Several nodes of a pipeline:** detected automatically, nothing to declare.
+Declare `shared` on every sink writing to the table (`shared: true` for the default options).
+
+**Several nodes of a pipeline:**
 
 ```yaml
 nodes:
@@ -19,14 +21,18 @@ nodes:
   sinks:
   - table_name: prices
     mode: APPEND
+    shared: true
 - name: feed_b
   sinks:
   - table_name: prices
     mode: APPEND
+    shared: true
 ```
 
-**Several pipelines:** declare `shared` on every sink writing to the table, since a pipeline
-can't know about the others.
+Nodes of a pipeline writing to the same table without `shared` fail validation: declaring it
+makes the writer column added to the table explicit.
+
+**Several pipelines:**
 
 ```yaml
 # pl-client-acme.yaml, pl-client-globex.yaml, ...
@@ -66,6 +72,8 @@ sinks:
     where: client_id = 23    # full refresh: DELETE FROM all_orders WHERE client_id = 23
 ```
 
+- The predicate is written in the SQL of the backend: Spark SQL, or Polars / deltalake SQL
+  with the Polars backend (e.g. `IN`, `BETWEEN`, `LIKE`).
 - A predicate also works for a single writer, when other processes (backfills, manual loads)
   write to the same table.
 - All the writers of a table must use the same kind: writer column or `where`.
@@ -83,10 +91,33 @@ sinks:
 `node_name` returns the same data whether the node output is read from memory (same run) or
 from the table (e.g. a separate job task).
 
-- With declarative orchestrators, rows carry no writer: `node_name` reads the whole table. Use
-  separate tables when a node needs the output of a single writer.
-- A full refresh of a writer deletes rows from the table, which fails streaming reads of the
-  table (as for any Delta table): run a full refresh of these readers too.
+- With declarative orchestrators, rows carry no writer: reading a writer with `node_name` (or
+  `{nodes.x}` in a transformer) fails validation, since it would return the rows of all the
+  writers. Read the table with `table_name`, or write the node to its own table.
+
+### Streaming Readers
+
+A full refresh of a writer deletes its rows, and a streaming read of a Delta table fails on
+deleted rows (`DELTA_SOURCE_IGNORE_DELETE`), including a `node_name` read of another writer.
+Choose per streaming reader:
+
+| Reader | Full refresh of another writer | Full refresh of the writer it reads |
+|---|---|---|
+| default | fails: run a full refresh of the reader | fails: run a full refresh of the reader |
+| `skipChangeCommits` | no effect: the deletes are skipped and the other writer's rows filtered out | the writer's rows are read again: run a full refresh of the reader, otherwise they are duplicated |
+
+```yaml
+- name: gld_feed_a
+  sources:
+  - node_name: feed_a
+    as_stream: true
+    reader_kwargs:
+      skipChangeCommits: true
+```
+
+With `skipChangeCommits`, a node reading a single writer (`node_name`) keeps running when the
+other writers are refreshed. A reader of the whole table (`table_name`) gets duplicates after a
+full refresh of any writer: keep the default there.
 
 ## Resetting a Shared Table
 
@@ -99,7 +130,8 @@ When the whole table is reset:
 
 - The checkpoints of all its writers in the pipeline are reset too, whether or not they're part
   of the run: they reprocess all their data on their next run.
-- Other pipelines writing to the table need a full refresh.
+- Other pipelines writing to the table need a full refresh: resuming from their checkpoints,
+  they would skip the data they already wrote, and the table would silently miss their rows.
 - `refresh=FULL` with the override is rejected: a full refresh never deletes the rows of the
   other writers. Reset the table with `refresh=RESET`, then run normally.
 
@@ -113,21 +145,59 @@ When the whole table is reset:
 | Switching between writer column and `where` | drop the table once |
 | Parallel writers adding different columns | declare the full `schema`, or order the writers with `depends_on` |
 
+## Concurrent Writers
+
+Writers of a shared table running at the same time can conflict: a writer deleting its rows (full
+refresh) while another one appends fails its Delta commit (`ConcurrentAppendException` with Spark,
+`CommitFailedError` with Polars). A failed commit writes nothing: Laktory retries it, up to 5
+times with an increasing delay, and logs each retry.
+
+To avoid most conflicts:
+
+- Databricks: use row-level concurrency (tables with deletion vectors) or liquid clustering, see
+  [Isolation levels and write conflicts](https://docs.databricks.com/aws/en/optimizations/isolation-level).
+- Open-source Delta (Spark): partition the table by the writer column, so that a delete only
+  reads the files of its writer:
+
+```yaml
+sinks:
+- table_name: prices
+  mode: APPEND
+  shared: true
+  writer_methods:
+  - name: partitionBy
+    args: [_laktory_writer]
+```
+
 ## Validation
 
+- Every sink of a table written by several nodes of a pipeline declares `shared`.
 - Shared sinks are DELTA sinks in `APPEND` mode.
 - Writers of a table use the same kind of ownership, the same `column`, and distinct writer
   identifiers or predicates.
-- In a Stack, every pipeline writing to a table written by several pipelines declares `shared`.
+
+Pipelines writing to the same table are validated together when they are deployed together, in a
+Stack or a Databricks Asset Bundle:
+
+| Situation | Result |
+|---|---|
+| A declarative pipeline writes to the table | error: the engine owns the table |
+| Sinks declaring `shared` identify their rows inconsistently (kind, `column`, identifiers) | error |
+| Some sinks don't declare `shared` | warning: their full refresh or overwrite deletes the rows of the other writers |
+
+Sharing a table across pipelines is otherwise the responsibility of the user: pipelines deployed
+separately (other stacks, bundles or repos) can't be validated together, and a table is
+identified by its name or path as written in each pipeline.
 
 ## Declarative Orchestrators
 
 With Lakeflow / Spark Declarative Pipelines, the engine owns the tables: `shared` is not
 supported and a table written by a declarative pipeline can't be shared with other pipelines.
 
-Several nodes can still write to the same table: it's declared once as a streaming table, and
-each node appends to it through its own append flow, `{table_name}__{node_name}`. On a full
-refresh, the engine clears the table once and resets every flow.
+Several nodes can still write to the same table, without declaring `shared`: it's declared once as
+a streaming table, and each node appends to it through its own append flow,
+`{table_name}__{node_name}`. On a full refresh, the engine clears the table once and resets every
+flow.
 
 - All sinks must be streaming, non-CDC (`MERGE`) table sinks.
 - Table properties (`comment`, `table_properties`, `format`) can be set on any of the sinks, but

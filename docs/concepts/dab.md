@@ -99,6 +99,9 @@ variables:
     default: ./laktory/pipelines/
 ```
 
+Pipelines of the bundle writing to the same table are validated together, as in a Stack (see
+[Shared Sinks](sharedsinks.md#validation)).
+
 
 ## Orchestrators
 

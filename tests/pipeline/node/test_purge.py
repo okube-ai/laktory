@@ -186,72 +186,84 @@ def test_purge_never_executed(tmp_path):
     node.purge()  # should not raise
 
 
-def test_reset_mode_sink_override(tmp_path):
-    node = models.PipelineNode(
-        name="node0",
-        reset_mode="TRUNCATE",
-        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-        sinks=[
-            {
-                "format": "PARQUET",
-                "path": str(tmp_path / "sink/"),
-                "reset_mode": "DROP",
-            }
-        ],
-    )
-    assert node.sinks[0].reset_mode == "DROP"
-
-
-def _table_and_file_sinks(tmp_path):
-    return [
-        {"schema_name": "default", "table_name": "reset_mode_default"},
-        {"format": "CSV", "path": str(tmp_path / "sink/")},
-    ]
-
-
-def test_reset_mode_pipeline_level_default(tmp_path):
+@pytest.mark.parametrize(
+    "sink,expected",
+    [
+        ({"format": "DELTA"}, "DROP"),
+        ({"format": "DELTA", "reset_mode": "TRUNCATE"}, "TRUNCATE"),
+        ({"format": "PARQUET", "reset_mode": "DROP"}, "DROP"),
+        (
+            {"schema_name": "default", "table_name": "t", "reset_mode": "TRUNCATE"},
+            "TRUNCATE",
+        ),
+    ],
+)
+def test_reset_mode(tmp_path, sink, expected):
+    if "table_name" not in sink:
+        sink = {"path": str(tmp_path / "sink/")} | sink
     node = models.PipelineNode(
         name="node0",
         sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-        sinks=_table_and_file_sinks(tmp_path),
+        sinks=[sink],
     )
-    models.Pipeline(name="pl", nodes=[node], reset_mode="TRUNCATE")
-    # Inherited value not supported by the file sink: DROP
-    assert [s.reset_mode for s in node.sinks] == ["TRUNCATE", "DROP"]
-    assert node.sinks[1]._resolve_reset_mode_source() == ("TRUNCATE", "Pipeline 'pl'")
+    assert node.sinks[0].reset_mode == expected
 
 
-def test_reset_mode_global_settings_default(tmp_path, monkeypatch):
-    from laktory._settings import settings
-
-    monkeypatch.setattr(settings, "reset_mode", "TRUNCATE")
-
-    node = models.PipelineNode(
-        name="node0",
-        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-        sinks=_table_and_file_sinks(tmp_path),
-    )
-    assert [s.reset_mode for s in node.sinks] == ["TRUNCATE", "DROP"]
-    assert node.sinks[1]._resolve_reset_mode_source() == (
-        "TRUNCATE",
-        "`settings.reset_mode`",
-    )
+@pytest.mark.parametrize("reset_mode", ["DELETE_WHERE", "NONE"])
+def test_reset_mode_invalid(tmp_path, reset_mode):
+    with pytest.raises(ValueError):
+        models.FileDataSink(
+            path=str(tmp_path / "sink/"), format="DELTA", reset_mode=reset_mode
+        )
 
 
-def test_reset_mode_inherited_round_trip(tmp_path):
-    """Job tasks reload the pipeline from its config file, where the effective sink values
-    are serialized: an inherited value not supported by a sink must not become an explicit
-    (rejected) one."""
+def test_reset_mode_truncate_rejected_on_unsupported_sink(tmp_path):
+    with pytest.raises(ValueError, match="is not supported by FileDataSink"):
+        models.FileDataSink(
+            path=str(tmp_path / "sink/"), format="PARQUET", reset_mode="TRUNCATE"
+        )
+
+
+@pytest.mark.parametrize(
+    "cls,kwargs",
+    [
+        ("Pipeline", {"name": "pl"}),
+        ("PipelineNode", {"name": "n"}),
+        ("UnityCatalogDataSource", {"table_name": "x"}),
+        ("DataQualityExpectation", {"name": "e", "expr": "x > 1"}),
+        ("DataSinkSharedOptions", {}),
+        ("DataFrameTransformer", {"nodes": []}),
+    ],
+)
+def test_reset_mode_only_on_sinks(cls, kwargs):
+    """`reset_mode` is a property of the sink's table: not defined on pipelines, nodes or
+    other pipeline children"""
+    from pydantic import ValidationError
+
+    model = getattr(models, cls)
+    with pytest.raises(ValidationError, match="reset_mode"):
+        model(**kwargs, reset_mode="TRUNCATE")
+    assert "reset_mode" not in model(**kwargs).model_dump()
+
+
+def test_reset_mode_round_trip(tmp_path):
+    """Job tasks reload the pipeline from its config file"""
     import json
 
     pl = models.Pipeline(
         name="pl",
-        reset_mode="TRUNCATE",
         nodes=[
             {
                 "name": "node0",
                 "sources": [{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-                "sinks": _table_and_file_sinks(tmp_path),
+                "sinks": [
+                    {
+                        "schema_name": "default",
+                        "table_name": "t",
+                        "reset_mode": "TRUNCATE",
+                    },
+                    {"format": "CSV", "path": str(tmp_path / "sink/")},
+                ],
             }
         ],
         orchestrator={"type": "LAKEFLOW_JOB", "serverless_environment_version": "3"},
@@ -259,41 +271,6 @@ def test_reset_mode_inherited_round_trip(tmp_path):
     content = pl.orchestrator.config_file.content_dict
     pl2 = models.Pipeline.model_validate_json(json.dumps(content))
     assert [s.reset_mode for s in pl2.nodes[0].sinks] == ["TRUNCATE", "DROP"]
-
-
-def test_reset_mode_delete_where_rejected_on_node(tmp_path):
-    with pytest.raises(ValueError):
-        models.PipelineNode(
-            name="node0",
-            reset_mode="DELETE_WHERE",
-            sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-            sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
-        )
-
-
-def test_reset_mode_delete_where_rejected_on_pipeline(tmp_path):
-    node = models.PipelineNode(
-        name="node0",
-        sources=[{"format": "PARQUET", "path": str(tmp_path / "src/")}],
-        sinks=[{"format": "PARQUET", "path": str(tmp_path / "sink/")}],
-    )
-    with pytest.raises(ValueError):
-        models.Pipeline(name="pl", nodes=[node], reset_mode="DELETE_WHERE")
-
-
-def test_reset_mode_delete_where_rejected_globally(monkeypatch):
-    from laktory._settings import settings
-
-    with pytest.raises(ValueError):
-        monkeypatch.setattr(settings, "reset_mode", "DELETE_WHERE")
-
-
-@pytest.mark.parametrize("reset_mode", ["NONE", "UNKNOWN"])
-def test_reset_mode_invalid_rejected_globally(reset_mode, monkeypatch):
-    from laktory._settings import settings
-
-    with pytest.raises(ValueError):
-        monkeypatch.setattr(settings, "reset_mode", reset_mode)
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
@@ -329,7 +306,8 @@ def _writers(sink_path, shared, names=("a", "b", "c"), feeds=None, node_kwargs=N
     for name in names:
         sink = {"path": sink_path, "format": "DELTA", "mode": "APPEND"}
         per_node = isinstance(shared, dict) and set(shared) <= set(names)
-        _shared = shared.get(name) if per_node else shared
+        # Nodes missing from a per-node mapping use the default options
+        _shared = shared.get(name, True) if per_node else shared
         if _shared is not None:
             sink["shared"] = _shared
         feed = feeds.get(name, name)
@@ -364,38 +342,25 @@ def _feed_counts(sink_path):
 _NODE_OWNED = True
 
 
-def test_shared_default_node_owned(tmp_path):
-    """Several nodes writing to the same target own their rows by default"""
+def test_shared_required(tmp_path):
+    """Several nodes writing to the same target must declare `shared` on every sink"""
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
 
-    # One task per writer, no coordination
-    assert [t.name for t in pl.get_execution_plan().tasks] == [
-        "node-a",
-        "node-b",
-        "node-c",
-    ]
-    assert [n.sinks[0].shared.writer_id for n in pl.nodes] == ["pl.a", "pl.b", "pl.c"]
+    with pytest.raises(
+        ValueError, match=r"sinks of nodes \['a', 'b', 'c'\] don't declare"
+    ):
+        _pipeline(_writers(path, None))
 
-    pl.execute()
-    df = _read(path)
-    assert df.columns[0] == "_laktory_writer"
-    assert dict(
-        df.select("feed", "_laktory_writer").unique().sort("feed").iter_rows()
-    ) == {"a": "pl.a", "b": "pl.b", "c": "pl.c"}
+    # Declared on some sinks only
+    shared = {"a": True, "b": None, "c": None}
+    with pytest.raises(ValueError, match=r"sinks of nodes \['b', 'c'\] don't declare"):
+        _pipeline(_writers(path, shared))
 
-    # Incremental run of one writer
-    pl.execute(selects=["b"])
-    assert _feed_counts(path) == {"a": 3, "b": 6, "c": 3}
-
-    # Full refresh of any selection only replaces the rows of the selected writers
-    pl.execute(selects=["b"], refresh="full")
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
-    pl.execute(refresh="full")
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+    # A single writer doesn't need it
+    _pipeline(_writers(path, None, names=("a",)))
 
 
-def test_shared_default_node_owned_quarantine(tmp_path):
+def test_shared_node_owned_quarantine(tmp_path):
     """Nodes sending their quarantined rows to the same table keep their own tasks, even when
     they are not adjacent, and each one owns its quarantined rows."""
     df0 = get_df0("POLARS")
@@ -414,6 +379,7 @@ def test_shared_default_node_owned_quarantine(tmp_path):
                     "format": "DELTA",
                     "mode": "APPEND",
                     "is_quarantine": True,
+                    "shared": True,
                 }
             ]
         return models.PipelineNode(
@@ -444,11 +410,11 @@ def test_shared_default_node_owned_quarantine(tmp_path):
     assert _feed_counts(quarantine) == {"a": 3, "c": 3}
 
 
-def test_shared_default_node_owned_execution_task_names(tmp_path):
+def test_shared_node_owned_execution_task_names(tmp_path):
     # Writers keep their own execution task names
     nodes = _writers(
         str(tmp_path / "shared"),
-        None,
+        _NODE_OWNED,
         names=("a", "b"),
         node_kwargs={
             "a": {"execution_task_name": "t1"},
@@ -459,10 +425,11 @@ def test_shared_default_node_owned_execution_task_names(tmp_path):
     assert [t.name for t in tasks] == ["t1", "t2"]
 
 
-def test_shared_default_ignores_reset_mode(tmp_path):
+def test_shared_ignores_reset_mode(tmp_path):
     # Each node deletes its own rows: `reset_mode` doesn't apply and may differ
     path = str(tmp_path / "shared")
-    nodes = _writers(path, None, node_kwargs={"a": {"reset_mode": "TRUNCATE"}})
+    nodes = _writers(path, _NODE_OWNED)
+    nodes[0].sinks[0].reset_mode = "TRUNCATE"
     pl = _pipeline(nodes)
     pl.execute()
     pl.execute(refresh="full")
@@ -471,10 +438,10 @@ def test_shared_default_ignores_reset_mode(tmp_path):
 
 def test_shared_removed_node(tmp_path):
     path = str(tmp_path / "shared")
-    _pipeline(_writers(path, None)).execute()
+    _pipeline(_writers(path, _NODE_OWNED)).execute()
 
     # Node c removed: its rows are not deleted by a full refresh of the other writers
-    pl = _pipeline(_writers(path, None, names=("a", "b")))
+    pl = _pipeline(_writers(path, _NODE_OWNED, names=("a", "b")))
     pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
@@ -568,7 +535,7 @@ def test_shared_where(tmp_path):
 
 
 def test_shared_reset_mode_override_invalid(tmp_path):
-    pl = _pipeline(_writers(str(tmp_path / "shared"), None))
+    pl = _pipeline(_writers(str(tmp_path / "shared"), _NODE_OWNED))
     with pytest.raises(ValueError, match="not supported"):
         pl.execute(refresh="full", reset_mode="DELETE_WHERE")
 
@@ -593,15 +560,10 @@ def test_shared_pipeline_validation(tmp_path, shared, match):
         _pipeline(_writers(str(tmp_path / "shared"), shared))
 
 
-@pytest.mark.parametrize(
-    "sink,match",
-    [
-        ({"mode": "OVERWRITE"}, "mode 'OVERWRITE'"),
-        ({"format": "PARQUET"}, "format 'PARQUET'"),
-    ],
-)
-def test_shared_multiple_writers_requirements(tmp_path, sink, match):
-    """Several writers require DELTA sinks in APPEND mode"""
+@pytest.mark.parametrize("sink", [{"mode": "OVERWRITE"}, {"format": "PARQUET"}])
+def test_shared_multiple_writers_requirements(tmp_path, sink):
+    """Several writers of a target require shared DELTA sinks in APPEND mode (sink-level
+    validation of `shared`: tests/datasinks/test_sharedoptions.py)"""
     df0 = get_df0("POLARS")
     path = str(tmp_path / "shared")
     nodes = [
@@ -612,13 +574,13 @@ def test_shared_multiple_writers_requirements(tmp_path, sink, match):
         )
         for name in ["a", "b"]
     ]
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(ValueError, match="DELTA table or file sinks in `APPEND` mode"):
         _pipeline(nodes)
 
 
 def test_shared_config_round_trip(tmp_path):
-    """Job tasks reload the pipeline from its config file, where inherited values such as
-    `reset_mode` are serialized explicitly."""
+    """Job tasks reload the pipeline from its config file, where computed values such as
+    `shared.writer_id` are serialized explicitly."""
     import json
 
     def _node(name, path, shared):
@@ -639,7 +601,6 @@ def test_shared_config_round_trip(tmp_path):
     pl = models.Pipeline(
         name="pl",
         nodes=nodes,
-        reset_mode="TRUNCATE",
         orchestrator={"type": "LAKEFLOW_JOB", "serverless_environment_version": "3"},
     )
     content = pl.orchestrator.config_file.content_dict
@@ -648,9 +609,9 @@ def test_shared_config_round_trip(tmp_path):
     assert pl2.nodes_dict["c"].sinks[0].shared.where == "feed = 'c'"
 
 
-def test_reset_default_node_owned(tmp_path):
+def test_reset_single_writer(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
+    pl = _pipeline(_writers(path, _NODE_OWNED))
     pl.execute()
 
     # Each writer deletes its own rows
@@ -701,15 +662,28 @@ def test_reset_several_pipelines(tmp_path):
 
 def test_refresh_parameters(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
+    pl = _pipeline(_writers(path, _NODE_OWNED))
     pl.execute()
 
     with pytest.raises(ValueError, match="requires `refresh`"):
         pl.execute(reset_mode="DROP")
     with pytest.raises(ValueError, match="is not supported"):
         pl.execute(refresh="partial")
-    with pytest.raises(TypeError):
+    # Replaced by `refresh` in 0.13.0: guided error instead of running incrementally
+    with pytest.raises(ValueError, match="run with `refresh='FULL'` instead"):
         pl.execute(full_refresh=True)
+
+
+def test_legacy_full_refresh_false(tmp_path, caplog, monkeypatch):
+    from laktory.models.pipeline import _execute as execute_module
+
+    monkeypatch.setattr(execute_module.logger, "propagate", True)
+    path = str(tmp_path / "t")
+    pl = _pipeline(_writers(path, None, names=("a",)))
+    with caplog.at_level("WARNING"):
+        pl.execute(full_refresh=False)
+    assert "`full_refresh` was replaced by `refresh`" in caplog.text
+    assert _feed_counts(path) == {"a": 3}
 
 
 def test_validate_run_parameters(tmp_path):
@@ -728,7 +702,15 @@ def test_validate_run_parameters(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "shared", [None, {n: {"where": f"feed = '{n}'"} for n in ["a", "b"]}]
+    "shared",
+    [
+        {n: True for n in ["a", "b"]},
+        {n: {"where": f"feed = '{n}'"} for n in ["a", "b"]},
+        # Predicates beyond comparisons: backend SQL
+        {n: {"where": f"feed IN ('{n}', 'x')"} for n in ["a", "b"]},
+        {n: {"where": f"feed LIKE '{n}%'"} for n in ["a", "b"]},
+        {n: {"where": f"feed BETWEEN '{n}' AND '{n}'"} for n in ["a", "b"]},
+    ],
 )
 def test_shared_node_source(tmp_path, shared):
     """A node reading a writer of a shared sink gets the writer output only, whether it's
@@ -742,8 +724,7 @@ def test_shared_node_source(tmp_path, shared):
         nodes = []
         for name in ["a", "b"]:
             sink = {"path": path, "format": "DELTA", "mode": "APPEND"}
-            if shared:
-                sink["shared"] = shared[name]
+            sink["shared"] = shared[name]
             nodes += [
                 {
                     "name": name,
@@ -780,3 +761,78 @@ def test_shared_node_source(tmp_path, shared):
     assert from_memory == from_sink
     assert "_laktory_writer" not in from_sink[0]
     assert from_sink[1] == {"a": 3}
+
+
+def test_retry_on_concurrent_commit(monkeypatch):
+    from laktory.models.datasinks import basedatasink
+
+    monkeypatch.setattr(basedatasink.time, "sleep", lambda s: None)
+    calls = []
+
+    def _fails_twice():
+        calls.append(1)
+        if len(calls) < 3:
+            raise RuntimeError("Commit failed: a concurrent transaction deleted data")
+        return "ok"
+
+    assert basedatasink.retry_on_concurrent_commit(_fails_twice, label="t") == "ok"
+    assert len(calls) == 3
+
+    # Other errors are raised immediately
+    calls.clear()
+
+    def _other_error():
+        calls.append(1)
+        raise ValueError("column not found")
+
+    with pytest.raises(ValueError, match="column not found"):
+        basedatasink.retry_on_concurrent_commit(_other_error, label="t")
+    assert len(calls) == 1
+
+    # Attempts exhausted
+    calls.clear()
+
+    def _always_concurrent():
+        calls.append(1)
+        raise RuntimeError("ConcurrentAppendException")
+
+    with pytest.raises(RuntimeError):
+        basedatasink.retry_on_concurrent_commit(
+            _always_concurrent, label="t", attempts=3
+        )
+    assert len(calls) == 3
+
+
+def test_shared_concurrent_writers(tmp_path, monkeypatch):
+    """A writer refreshing (deleting its rows) while another one appends to the same shared
+    target: concurrent commits are retried instead of failing the run"""
+    import threading
+
+    from laktory.models.datasinks import basedatasink
+
+    monkeypatch.setattr(basedatasink.time, "sleep", lambda s: None)
+    path = str(tmp_path / "shared")
+    pl = _pipeline(_writers(path, _NODE_OWNED, names=("a", "b")))
+    pl.execute()
+
+    n = 10
+    errors = []
+
+    def _loop(fn):
+        for _ in range(n):
+            try:
+                fn()
+            except Exception as e:
+                errors.append(e)
+
+    threads = [
+        threading.Thread(
+            target=_loop, args=(lambda: pl.execute(selects=["a"], refresh="full"),)
+        ),
+        threading.Thread(target=_loop, args=(lambda: pl.execute(selects=["b"]),)),
+    ]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+
+    assert errors == []
+    assert _feed_counts(path) == {"a": 3, "b": 3 * (n + 1)}

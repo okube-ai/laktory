@@ -203,7 +203,6 @@ Stack
 | `sinks` | `list[...]` | `[]` | Data sinks. Set `is_quarantine: true` to store expectation-failed rows |
 | `transformer` | `DataFrameTransformer` | `null` | Chain of SQL / method transformations |
 | `execution_task_name` | `str` | `null` | Groups nodes into one task in Databricks Jobs / Airflow |
-| `reset_mode` | `DROP \| TRUNCATE` | inherited | How this node's sinks are reset on a full refresh; overrides `Pipeline.reset_mode` |
 | `dataframe_api` | `NARWHALS \| NATIVE` | `NARWHALS` | API used in transformer nodes. `NATIVE` exposes backend-specific API. Ignored for `expectations` - those are always checked via Narwhals regardless of this setting |
 | `depends_on` | `list[str]` | `[]` | Node names to wait for even when no data flows between them |
 | `expectations` | `list[...]` | `[]` | Data quality checks: warn, drop, quarantine, or fail |
@@ -273,7 +272,7 @@ Inherits common fields from `BaseDataSource`.
 | `is_quarantine` | `bool` | `false` | Stores rows that fail `expectations` |
 | `checkpoint_path` | `str` | `null` | Checkpoint directory for streaming writes |
 | `metadata` | `TableDataSinkMetadata` | `null` | Table/column-level comments, tags, and Delta properties |
-| `reset_mode` | `DROP \| TRUNCATE` | inherited, `DROP` | How the sink is reset on a full refresh. Inherited sink → node → pipeline → `settings.reset_mode` / `LAKTORY_RESET_MODE`. Partial reset: `shared.where` |
+| `reset_mode` | `DROP \| TRUNCATE` | `DROP` | How the sink is reset on a full refresh or reset run. Set per sink only (not on nodes, pipelines or settings). Partial reset: `shared.where` |
 | `shared` | `DataSinkSharedOptions` \| `bool` | `null` | Options for a sink written by several nodes / pipelines (`true` for defaults): `writer_id`, `column`, `where`. See [Shared sinks](#data-pipeline--shared-sinks) |
 
 ---
@@ -480,10 +479,10 @@ A table written by several nodes and/or several pipelines. Each writer owns its 
 refresh of a writer only deletes and reprocesses its own rows: writers run and refresh
 independently (own task, any selection of tasks, in parallel), no coordination needed.
 
-| Case | Configuration |
-|---|---|
-| several nodes of one pipeline write to the table | none (detected, same as `shared: true`) |
-| several pipelines write to the table | `shared: true` on every sink writing to it |
+Declare `shared` (`shared: true` for the defaults) on every sink writing to the table, whether
+the writers are nodes of one pipeline or several pipelines: two nodes of a pipeline writing to the
+same table without `shared` fail validation. Declarative orchestrators are the exception (see
+below).
 
 Rows are identified by a writer column (`_laktory_writer`, first column,
 `{pipeline}.{node}`) or, without adding a column, by a SQL predicate:
@@ -505,23 +504,38 @@ sinks:
   error: use separate tables). `reset_mode` is ignored on full refresh.
 - All writers of a table use the same kind of ownership (column or `where`), the same `column`,
   and distinct ids / predicates. Predicates must not overlap (not checked).
-- In a Stack, every pipeline writing to a shared table must declare `shared`, and none may use a
-  declarative orchestrator.
+- Validation within a pipeline: every sink writing to a target written by several nodes declares
+  `shared` (error otherwise).
+- Validation across pipelines deployed together (Stack or DAB, `laktory.dab.build_resources`):
+  error if a declarative pipeline writes to the table, or if `shared` sinks identify their rows
+  inconsistently; warning if some sinks don't declare `shared`. Pipelines deployed separately
+  are not validated: sharing across pipelines is the user's responsibility. After resetting a
+  table shared across pipelines, run a full refresh of every other writing pipeline.
 - Reading: `node_name: <writer>` returns that writer's rows only (no writer column), from memory
   or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
-  writer, `node_name` reads the whole table. A writer's full refresh deletes rows: streaming
-  readers of the table need a full refresh too.
+  writer column, so reading a writer of an append-flow table with `node_name` / `{nodes.x}` fails
+  validation (use `table_name`, or a separate table). A writer's full refresh deletes rows: streaming
+  readers of the table fail (`DELTA_SOURCE_IGNORE_DELETE`) until fully refreshed. With
+  `reader_kwargs: {skipChangeCommits: true}` on a `node_name` reader, refreshes of the other
+  writers have no effect, but a refresh of the writer it reads duplicates its rows downstream
+  unless the reader is fully refreshed too.
 - Reset / drop a shared table as a whole: `refresh=RESET` + `reset_mode=DROP` (or `TRUNCATE`) on
   any selection of writer tasks (one is enough); the checkpoints of all its writers in the
   pipeline are reset too. `refresh=FULL` + override is rejected on shared sinks (a full
   refresh never deletes the other writers' rows).
-- `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: no `shared` options, no writer
+- `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: several nodes of a pipeline
+  write to the same table without declaring anything; `shared` options rejected, no writer
   column (one streaming table, one append flow per node named `{table}__{node}`); all sinks
   streaming, non-`MERGE`, with the same expectations.
+- Concurrent writers: a writer's delete (full refresh) conflicting with another writer's append
+  fails the Delta commit; Laktory retries it (5 attempts, exponential backoff, logged). Fewer
+  conflicts: Databricks row-level concurrency (deletion vectors) / liquid clustering, or OSS
+  Delta partitioned by the writer column (`writer_methods: [{name: partitionBy, args:
+  [_laktory_writer]}]`).
 - Keep writer ids stable: rows of a renamed/removed writer or of a decommissioned pipeline are
   never deleted by a full refresh (clean up with `DELETE FROM <table> WHERE _laktory_writer =
-  '<id>'`, or reset the table). A table written before being shared has no writer column: writes
-  and refreshes fail until it is dropped once (`refresh=RESET`, `reset_mode=DROP`).
+  '<id>'`, or reset the table). A table written before being shared has no writer column (e.g. several nodes
+  writing to it before 0.13.0): writes and refreshes fail until it is dropped once (`refresh=RESET`, `reset_mode=DROP`).
 - Full guide: https://www.laktory.ai/concepts/sharedsinks/
 
 ### Data Pipeline — Pipeline with Lakeflow Job orchestrator
@@ -856,13 +870,14 @@ What a run does is selected with `refresh`:
 - Python: `pl.execute(refresh="FULL")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
   different parameters*) or `laktory run --databricks-job <job> --refresh FULL [--reset-mode DROP]
   [--tasks node-a,node-b]`; `AIRFLOW`: `refresh` DAG param. `full_refresh` was replaced in 0.13.0:
-  `pl.execute(full_refresh=...)` is rejected, and job / Airflow tasks receiving
-  `full_refresh=true` fail (redeploy jobs deployed before 0.13.0) - never generate it.
+  `pl.execute(full_refresh=True)` and job / Airflow tasks receiving `full_refresh=true` fail
+  with a message pointing to `refresh` (redeploy jobs deployed before 0.13.0), `false` only
+  warns - never generate it.
 - How a sink is reset is set by `reset_mode`: `DROP` (default; recreated on next write),
   `TRUNCATE` (keeps table, schema, grants; also DELTA files - same table id). Only sinks natively
   supporting a truncate: not supported by other file formats, views or declarative
-  orchestrators: rejected if set on the sink, falls back to `DROP` if inherited (node, pipeline,
-  settings) or passed as a run override. To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
+  orchestrators: rejected if set on the sink, falls back to `DROP` if passed as a run override.
+  Set per sink only: for many sinks, use a variable (`reset_mode: ${vars.reset_mode}`). To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
   `shared: {where: ...}` instead.
 - Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `FULL`
   or `RESET` (rejected on `INCREMENTAL`): `pl.execute(refresh="FULL", reset_mode="DROP")`, or the

@@ -1,6 +1,8 @@
 import hashlib
 import os
+import random
 import shutil
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -26,6 +28,55 @@ from laktory.models.readerwritermethod import ReaderWriterMethod
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
+
+
+def is_concurrent_commit_error(e: Exception) -> bool:
+    """
+    `True` if a Delta commit failed because of a concurrent transaction: Spark
+    `DELTA_CONCURRENT_*` exceptions (e.g. `ConcurrentAppendException`) and deltalake
+    `CommitFailedError` ("a concurrent transaction ...").
+    """
+    return "concurrent" in str(e).lower()
+
+
+def retry_on_concurrent_commit(
+    fn, label: str, attempts: int = 5, wait: float = 1.0
+) -> Any:
+    """
+    Call `fn`, retrying when its Delta commit fails because of a concurrent transaction.
+    The writers of a shared sink run independently: a writer deleting its rows (full
+    refresh, reset) may conflict with another writer appending to the same table (Spark
+    `ConcurrentAppendException` on the delete, deltalake `CommitFailedError` on the
+    append). A failed commit writes nothing, so the operation can be retried.
+
+    Parameters
+    ----------
+    fn:
+        Operation to execute
+    label:
+        Target description, for logs
+    attempts:
+        Maximum number of attempts
+    wait:
+        Base delay (seconds) before the first retry, doubled for each retry, with jitter
+
+    Returns
+    -------
+    :
+        Output of `fn`
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            return fn()
+        except Exception as e:
+            if attempt == attempts or not is_concurrent_commit_error(e):
+                raise
+            delay = wait * 2 ** (attempt - 1) * (1 + random.random())
+            logger.info(
+                f"Concurrent update of {label}, retrying in {delay:.1f}s "
+                f"(attempt {attempt + 1}/{attempts})"
+            )
+            time.sleep(delay)
 
 
 def purge_checkpoint(path, dataframe_backend, label: str = "checkpoint") -> None:
@@ -125,20 +176,19 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    reset_mode_: Literal["DROP", "TRUNCATE"] = Field(
-        None,
+    reset_mode: Literal["DROP", "TRUNCATE"] = Field(
+        "DROP",
         description="""
         Strategy used to reset this sink's data on a full refresh or a reset run.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
-        - TRUNCATE: Remove all rows but keep the table/schema/location intact.
+        - TRUNCATE: Remove all rows but keep the table/schema/location intact. Only supported
+          by tables (not views) and DELTA file sinks, not with declarative orchestrators.
 
-        Ignored by shared sinks (`shared`, applied automatically when several nodes write to
-        the sink), which only delete the rows of their writer. To reset only part of a table,
-        declare the rows owned by the sink with `shared.where`.
+        Ignored by shared sinks (`shared`), which only delete the rows of their writer. To
+        reset only part of a table, declare the rows owned by the sink with `shared.where`.
+        Can be overridden for a single run (`reset_mode` run parameter).
         """,
-        validation_alias=AliasChoices("reset_mode", "reset_mode_"),
-        exclude=True,
     )
 
     shared: DataSinkSharedOptions | None = Field(
@@ -146,8 +196,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         description="""
         Options for a sink written by multiple writers: each writer owns its rows, identified
         by a writer column or a SQL predicate, and a full refresh of a writer only deletes its
-        own rows. Applied automatically when several nodes of a pipeline write to the same
-        sink. `true` for the default options. See `DataSinkSharedOptions`.
+        own rows. Required on every sink of a target written by several nodes or pipelines.
+        `true` for the default options. See `DataSinkSharedOptions`.
         """,
     )
 
@@ -294,10 +344,8 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_reset_mode(self) -> Any:
-        # Only a value set on the sink itself is an explicit request that can be rejected.
-        # Inherited values (node, pipeline, settings) the sink can't use fall back to `DROP`.
-        mode = self.reset_mode_
-        if mode is None or mode in self._supported_reset_modes:
+        mode = self.reset_mode
+        if mode in self._supported_reset_modes:
             return self
 
         if self._is_declarative:
@@ -312,18 +360,6 @@ class BaseDataSink(BaseModel, PipelineChild):
             f"`reset_mode` '{mode}' is not supported by {self._reset_mode_label}: use "
             f"{self._supported_reset_modes}."
         )
-
-    @computed_field(description="reset_mode")
-    @property
-    def reset_mode(self) -> Literal["DROP", "TRUNCATE"]:
-        """
-        Effective `reset_mode`: the value set on the sink or inherited from its node,
-        pipeline or settings, or `DROP` if the sink doesn't support the inherited value.
-        """
-        mode = self._resolve_reset_mode()
-        if mode not in self._supported_reset_modes:
-            return "DROP"
-        return mode
 
     @property
     def _is_declarative(self) -> bool:
@@ -344,8 +380,8 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _get_purge_mode(self, mode: str | None = None) -> str:
         """
-        `reset_mode` used to purge the sink: the run override `mode` if set, otherwise the
-        resolved `reset_mode`. A value the sink doesn't support falls back to `DROP`.
+        `reset_mode` used to purge the sink: the run override `mode` if set, otherwise
+        `reset_mode`. An override the sink doesn't support falls back to `DROP`.
         """
         if mode is not None:
             if mode not in ["DROP", "TRUNCATE"]:
@@ -361,14 +397,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                 return "DROP"
             return mode
 
-        mode, source = self._resolve_reset_mode_source()
-        if mode not in self._supported_reset_modes:
-            logger.info(
-                f"`reset_mode` '{mode}' (from {source}) is not supported by "
-                f"{self._reset_mode_label}: using 'DROP'."
-            )
-            return "DROP"
-        return mode
+        return self.reset_mode
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -918,10 +947,28 @@ class BaseDataSink(BaseModel, PipelineChild):
             if column in _df.columns:
                 _df = _df.filter(nw.col(column) == self.shared.writer_id).drop(column)
         else:
-            from laktory.narwhals_ext.functions import sql_expr
-
-            _df = _df.filter(sql_expr(self.shared.where))
+            _df = nw.from_native(self._filter_where_native(_df))
         return _df if is_nw else _df.to_native()
+
+    def _filter_where_native(self, df: nw.DataFrame | nw.LazyFrame) -> Any:
+        """
+        Filter a DataFrame with `shared.where` using the SQL of its backend, as the delete
+        of the rows of the writer does (Spark SQL / deltalake), so that any predicate valid
+        for the delete is also valid for the read.
+        """
+        where = self.shared.where
+        backend = DataFrameBackends.from_df(df)
+        native = df.to_native()
+        if backend == DataFrameBackends.PYSPARK:
+            return native.filter(where)
+        if backend == DataFrameBackends.POLARS:
+            import polars as pl
+
+            return native.filter(pl.sql_expr(where))
+
+        from laktory.narwhals_ext.functions import sql_expr
+
+        return df.filter(sql_expr(where)).to_native()
 
     @property
     def _existing_columns(self) -> list[str] | None:
@@ -942,10 +989,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         if columns is None or self.shared.column in columns:
             return
         raise ValueError(
-            f"'{self.purge_target}' is shared (several nodes write to it, or `shared` "
-            f"options), but it has no `{self.shared.column}` column identifying the writer "
-            "of each row: it was written before being shared. Drop it once, e.g. by running "
-            "the pipeline with `refresh='RESET'` and `reset_mode='DROP'`, then run normally."
+            f"'{self.purge_target}' is shared (`shared` options), but it has no "
+            f"`{self.shared.column}` column identifying the writer of each row: it was "
+            "written before being shared. Drop it once, e.g. by running the pipeline with "
+            "`refresh='RESET'` and `reset_mode='DROP'`, then run normally."
         )
 
     def _check_writer_id(self):
@@ -959,8 +1006,13 @@ class BaseDataSink(BaseModel, PipelineChild):
         """Delete rows of a Delta target with Spark and log the number of deleted rows."""
         from laktory import get_spark_session
 
-        rows = (
-            get_spark_session().sql(f"DELETE FROM {target} WHERE {predicate}").collect()
+        rows = retry_on_concurrent_commit(
+            lambda: (
+                get_spark_session()
+                .sql(f"DELETE FROM {target} WHERE {predicate}")
+                .collect()
+            ),
+            label=target,
         )
         count = rows[0][0] if rows else None
         logger.info(f"Deleted {count} rows from {target} where {predicate}")

@@ -1,5 +1,7 @@
 """Tests for PipelineNode.execute() - batch, streaming, and chaining."""
 
+from pathlib import Path
+
 import narwhals as nw
 import pytest
 
@@ -46,9 +48,49 @@ def test_full_refresh(backend, tmp_path):
         sinks=[{"path": sink_path, "format": "PARQUET", "mode": mode}],
     )
     node.execute()
-    node.execute(full_refresh=True)  # should not raise
+    node.execute(refresh="FULL")  # should not raise
     df1 = node.primary_sink.read()
     assert df1.collect().shape[0] == 3
+
+
+def test_refresh_reset(tmp_path):
+    """`refresh='RESET'` only resets the sinks, without reading or writing data"""
+    df0 = get_df0("POLARS")
+    sink_path = str(tmp_path / "sink")
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"df": df0}],
+        sinks=[{"path": sink_path, "format": "DELTA", "mode": "APPEND"}],
+    )
+    node.execute()
+    assert node.primary_sink.read().collect().shape[0] == 3
+
+    node._output_df = None
+    assert node.execute(refresh="reset") is None
+    assert not Path(sink_path).exists()
+    assert node.output_df is None
+
+    # Override: TRUNCATE keeps the table
+    node.execute()
+    node.execute(refresh="RESET", reset_mode="TRUNCATE")
+    assert Path(sink_path).exists()
+    assert node.primary_sink.read().collect().shape[0] == 0
+
+
+def test_refresh_parameters_validated(tmp_path):
+    node = models.PipelineNode(
+        name="node0",
+        sources=[{"df": get_df0("POLARS")}],
+        sinks=[{"path": str(tmp_path / "sink"), "format": "DELTA", "mode": "APPEND"}],
+    )
+    with pytest.raises(ValueError, match="is not supported"):
+        node.execute(refresh="partial")
+    with pytest.raises(ValueError, match="requires `refresh`"):
+        node.execute(reset_mode="DROP")
+
+    # Replaced by `refresh` in 0.13.0
+    with pytest.raises(ValueError, match="run with `refresh='FULL'` instead"):
+        node.execute(full_refresh=True)
 
 
 def test_streaming_execute(tmp_path):

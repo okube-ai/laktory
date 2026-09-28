@@ -43,11 +43,10 @@ class PipelineTask(BaseModel):
     def execute(
         self,
         write_sinks=True,
-        full_refresh: bool = False,
+        refresh: str = "INCREMENTAL",
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         reset_mode: str | None = None,
-        reset_only: bool = False,
     ) -> None:
         """
         Execute the pipeline task.
@@ -56,19 +55,15 @@ class PipelineTask(BaseModel):
         ----------
         write_sinks:
             If `False` writing of node sinks will be skipped
-        full_refresh:
-            If `True` all nodes will be completely re-processed by deleting
-            existing data and checkpoints before processing.
+        refresh:
+            What the run does: `INCREMENTAL`, `FULL` or `RESET`. See
+            `Pipeline.execute()`.
         named_dfs:
             Named DataFrames to be passed to pipeline nodes transformer.
         update_tables_metadata:
             Update tables metadata
         reset_mode:
-            Optional override for sinks `reset_mode` when `full_refresh` or
-            `reset_only` is `True`.
-        reset_only:
-            If `True`, the sinks of the task nodes are only reset, without reading or
-            writing data.
+            Optional override for sinks `reset_mode` with `refresh` `FULL` or `RESET`.
         """
 
         logger.info(f"Executing pipeline task '{self.name}'")
@@ -79,13 +74,9 @@ class PipelineTask(BaseModel):
             if named_dfs is None:
                 named_dfs = {}
 
-            if reset_only:
-                node.purge(mode=reset_mode)
-                continue
-
             node.execute(
                 write_sinks=write_sinks,
-                full_refresh=full_refresh,
+                refresh=refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
                 reset_mode=reset_mode,

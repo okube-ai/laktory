@@ -10,20 +10,26 @@ does, `reset_mode` how sinks are reset.
 | `FULL` | resets the sinks of the selected nodes, then runs: all the data is reprocessed |
 | `RESET` | only resets the sinks of the selected nodes, without reading or writing data |
 
+`RESET` resets both the data and the checkpoints of the sinks. It differs from the Databricks
+pipelines `reset_checkpoint_selection` option, which only resets the checkpoints of streaming
+flows and keeps the data.
+
 Set it wherever a pipeline runs:
 
 | Where | How |
 |---|---|
-| Python | `pl.execute(refresh="FULL")` |
+| Python | `pl.execute(refresh="FULL")`, or `node.execute(refresh="FULL")` for a single node |
 | CLI | `laktory run --databricks-job <job> --refresh FULL` |
 | `LAKEFLOW_JOB` | `refresh` job parameter (*Run now with different parameters*) |
 | `AIRFLOW` | `refresh` DAG param |
 
 Run parameters (`refresh`, `reset_mode`) are case-insensitive: `refresh=full` works too.
 
-`refresh="FULL"` replaces `full_refresh=True`. A job or Airflow run still passing
-`full_refresh=true` (e.g. a job deployed before 0.13.0, or an existing trigger) fails instead of
-running incrementally: redeploy the job and update the trigger.
+`refresh="FULL"` replaces `full_refresh=True`. A run still passing `full_refresh=true` fails
+instead of running incrementally: `pl.execute(full_refresh=True)`,
+`node.execute(full_refresh=True)`, or a job or Airflow run (e.g. a job deployed before 0.13.0, or
+an existing trigger) - redeploy the job and update the trigger. `full_refresh=false` logs a
+warning and runs incrementally.
 
 ## Reset Modes
 
@@ -39,22 +45,22 @@ running incrementally: redeploy the job and update the trigger.
 | table (not views) | `DELETE FROM <table>` |
 | DELTA file | `DELETE FROM delta.<path>`: also keeps the table identity (downstream streams keep reading it), history and properties |
 
+`reset_mode` is set on each sink, since it depends on the table (grants, downstream consumers,
+schema changes):
+
 ```yaml
 name: pl-stocks
-reset_mode: TRUNCATE        # pipeline default
 nodes:
-- name: slv_prices
+- name: gld_prices
   sinks:
-  - table_name: slv_prices
-    reset_mode: DROP        # this sink only
+  - table_name: gld_prices
+    reset_mode: TRUNCATE    # keep the table and its grants
 ```
 
-- A sink uses the first value set on the sink, its node, its pipeline, or the settings
-  (`settings.reset_mode` / `LAKTORY_RESET_MODE`, see
-  [Laktory Settings](laktorysettings.md#reset-mode)).
-- On other sinks (views, PARQUET / CSV / JSON / ... files, declarative pipelines), `TRUNCATE` set on the
-  sink is rejected; inherited or passed as a run override, the sink falls back to `DROP`
-  (logged), so a stack-wide `TRUNCATE` default doesn't break them.
+- On other sinks (views, PARQUET / CSV / JSON / ... files, declarative pipelines), `TRUNCATE` is
+  rejected; passed as a run override, the sink falls back to `DROP` (logged).
+- To use the same value for many sinks, use a [variable](variables.md) (e.g.
+  `reset_mode: ${vars.reset_mode}`).
 - To reset only part of a table, declare the rows the sink owns with `shared.where` (see
   [Shared Sinks](sharedsinks.md#identifying-the-rows-of-a-writer)).
 
@@ -101,5 +107,4 @@ See [Resetting a Shared Table](sharedsinks.md#resetting-a-shared-table).
 ## Declarative Orchestrators
 
 With Lakeflow / Spark Declarative Pipelines, the engine performs the full refresh itself: it
-clears the tables and resets their flows. `reset_mode` set on their sinks must be `DROP`
-(inherited values are ignored), and `refresh="RESET"` is not supported.
+clears the tables and resets their flows. `reset_mode` set on their sinks must be `DROP`, and `refresh="RESET"` is not supported.

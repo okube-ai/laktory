@@ -75,44 +75,6 @@ class PipelineChild(BaseChild):
         # Value from settings
         return settings.dataframe_api.upper()
 
-    reset_mode_: Literal["DROP", "TRUNCATE"] = Field(
-        None,
-        description="""
-        Strategy used to reset a sink's data on a full refresh or a reset run.
-
-        - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
-        - TRUNCATE: Remove all rows but keep the table/schema/location intact.
-
-        To reset only part of a table, declare the rows owned by its sink with `shared.where`.
-        """,
-        validation_alias=AliasChoices("reset_mode", "reset_mode_"),
-        exclude=True,
-    )
-
-    def _resolve_reset_mode_source(self) -> tuple[str, str]:
-        """Resolved `reset_mode` and where it is set (for messages)."""
-        # Direct value
-        if self.reset_mode_ is not None:
-            name = getattr(self, "name", None)
-            source = type(self).__name__ + (f" '{name}'" if name else "")
-            return self.reset_mode_, source
-
-        # Value from parent
-        parent = self._parent
-        if parent is not None and hasattr(parent, "_resolve_reset_mode_source"):
-            return parent._resolve_reset_mode_source()
-
-        # Value from settings
-        return settings.reset_mode.upper(), "`settings.reset_mode`"
-
-    def _resolve_reset_mode(self) -> str:
-        return self._resolve_reset_mode_source()[0]
-
-    @computed_field(description="reset_mode")
-    @property
-    def reset_mode(self) -> Literal["DROP", "TRUNCATE"]:
-        return self._resolve_reset_mode()
-
     @property
     def parent_pipeline(self):
         from laktory.models.pipeline.pipeline import Pipeline

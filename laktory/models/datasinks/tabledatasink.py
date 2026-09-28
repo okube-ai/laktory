@@ -1,7 +1,6 @@
 import os
 import re
 import shutil
-import time
 from pathlib import Path
 from typing import Any
 from typing import Literal
@@ -12,6 +11,7 @@ from pydantic import model_validator
 from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks.basedatasink import BaseDataSink
+from laktory.models.datasinks.basedatasink import retry_on_concurrent_commit
 from laktory.models.datasinks.tabledatasinkmetadata import TableDataSinkMetadata
 from laktory.models.datasources.tabledatasource import TableDataSource
 
@@ -337,17 +337,10 @@ class TableDataSink(BaseDataSink):
                     # Writers of a shared target may truncate it concurrently (e.g. node-owned
                     # writers of a `refresh="RESET"` run): once another writer emptied it, a retry
                     # has nothing left to delete.
-                    for attempt in range(3):
-                        try:
-                            spark.sql(f"DELETE FROM {self.full_name}")
-                            break
-                        except Exception as e:
-                            if attempt == 2 or "concurrent" not in str(e).lower():
-                                raise
-                            logger.info(
-                                f"Concurrent update of {self.full_name}, retrying"
-                            )
-                            time.sleep(2)
+                    retry_on_concurrent_commit(
+                        lambda: spark.sql(f"DELETE FROM {self.full_name}"),
+                        label=self.full_name,
+                    )
 
             else:
                 raise ValueError(f"`reset_mode` '{reset_mode}' is not supported.")

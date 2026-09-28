@@ -814,22 +814,6 @@ def test_stack_settings(monkeypatch):
     assert settings.runtime_root == custom_root
 
 
-def test_stack_settings_reset_mode(monkeypatch):
-    assert settings.reset_mode != "TRUNCATE"
-
-    monkeypatch.setattr(settings, "reset_mode", settings.reset_mode)
-    _ = models.Stack(name="one_stack", settings={"reset_mode": "TRUNCATE"})
-
-    assert settings.reset_mode == "TRUNCATE"
-
-
-def test_stack_settings_reset_mode_delete_where_rejected(monkeypatch):
-    monkeypatch.setattr(settings, "reset_mode", settings.reset_mode)
-
-    with pytest.raises(ValueError):
-        models.Stack(name="one_stack", settings={"reset_mode": "DELETE_WHERE"})
-
-
 def test_stack_settings_vars_construction(monkeypatch):
     """#617: settings.workspace_root using ${vars.x} stays an unresolved
     template right after Stack construction - same as any other templated
@@ -1604,9 +1588,58 @@ def test_stack_shared_sink_where():
     _stack_with_shared({"where": "client_id = 1"}, {"where": "client_id = 2"})
 
 
-def test_stack_shared_sink_missing_shared_raises():
-    with pytest.raises(ValueError, match="don't declare `shared` options"):
-        _stack_with_shared({}, None)
+@pytest.mark.parametrize(
+    "shared1,match",
+    [
+        # Some declare `shared`: most likely a forgotten declaration
+        ({}, r"sinks of nodes \['pl2.n'\] don't declare `shared` while others do"),
+        # None declare `shared`: may be deliberate (e.g. a backfill pipeline)
+        (None, "without declaring `shared`"),
+    ],
+)
+def test_stack_shared_sink_missing_shared_warns(caplog, monkeypatch, shared1, match):
+    """Sharing a table across pipelines without `shared` is the responsibility of the user:
+    a warning, not an error"""
+    import re
+
+    from laktory.models.pipeline import pipeline as pipeline_module
+
+    monkeypatch.setattr(pipeline_module.logger, "propagate", True)
+
+    with caplog.at_level("WARNING"):
+        _stack_with_shared(shared1, None)
+    assert re.search(match, caplog.text)
+
+
+def test_stack_shared_sink_missing_shared_still_validates_declared():
+    """Writers declaring `shared` are validated together even if others don't"""
+
+    def _pl(name, shared):
+        sink = {"schema_name": "default", "table_name": "pooled", "mode": "APPEND"}
+        if shared is not None:
+            sink["shared"] = shared
+        return {
+            "name": name,
+            "nodes": [
+                {
+                    "name": "n",
+                    "sources": [{"format": "JSON", "path": f"/{name}/"}],
+                    "sinks": [sink],
+                }
+            ],
+        }
+
+    with pytest.raises(ValueError, match="same `shared.where`"):
+        models.Stack(
+            name="stack",
+            resources={
+                "pipelines": {
+                    "pl1": _pl("pl1", {"where": "client_id = 1"}),
+                    "pl2": _pl("pl2", {"where": "client_id = 1"}),
+                    "pl3": _pl("pl3", None),
+                }
+            },
+        )
 
 
 @pytest.mark.parametrize(

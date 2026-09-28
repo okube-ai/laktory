@@ -19,6 +19,8 @@ from laktory.models import UnityCatalogDataSink
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline._execute import _execute  # noqa: F401
+from laktory.models.pipeline._execute import check_legacy_full_refresh
+from laktory.models.pipeline._execute import normalize_run_parameters
 from laktory.models.pipeline._update_data_profiling_configs import (
     _update_data_profiling_configs,  # noqa: F401
 )
@@ -375,9 +377,44 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         return self
 
     @model_validator(mode="after")
-    def validate_shared_sinks(self) -> Any:
-        from laktory.models.datasinks.sharedoptions import DataSinkSharedOptions
+    def validate_declarative_append_flow_reads(self) -> Any:
+        from laktory.models.datasources import PipelineNodeDataSource
 
+        if not (self.is_orchestrator_ldp or self.is_orchestrator_sdp):
+            return self
+
+        tables = self.sdp_append_flow_sinks
+        if not tables:
+            return self
+
+        # Rows written by append flows carry no writer: reading a writer by `node_name`
+        # would return the rows of all the writers of the table, unlike with other
+        # orchestrators, where it returns the writer's rows only.
+        for node in self.nodes:
+            for source in node.data_sources:
+                if not isinstance(source, PipelineNodeDataSource):
+                    continue
+                upstream = self.nodes_dict.get(source.node_name)
+                if upstream is None or upstream.primary_sink is None:
+                    continue
+                table = getattr(upstream.primary_sink, "sdp_table_or_view_name", None)
+                if table not in tables:
+                    continue
+                writers = [s.parent_pipeline_node.name for s in tables[table]]
+                raise ValueError(
+                    f"Node '{node.name}' reads node '{source.node_name}', which writes to "
+                    f"'{table}' with nodes {writers}. With "
+                    f"{type(self.orchestrator).__name__}, rows written by append flows "
+                    "don't identify their writer: reading the node would return the rows "
+                    f"of all the writers. Read the table with `table_name` to get the "
+                    f"rows of all the writers, or write node '{source.node_name}' to its "
+                    "own table."
+                )
+
+        return self
+
+    @model_validator(mode="after")
+    def validate_shared_sinks(self) -> Any:
         is_declarative = self.is_orchestrator_ldp or self.is_orchestrator_sdp
 
         for target, sinks in self.sink_targets.items():
@@ -398,23 +435,22 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 continue
 
             # Several writers: each node owns its rows, so that a writer can be executed and
-            # refreshed independently of the others.
-            for s in sinks:
-                node_name = s.parent_pipeline_node.name
-                if s.mode not in [None, "APPEND"] or not s._supports_shared:
-                    raise ValueError(
-                        f"Pipeline nodes {node_names} write to '{target}'. Each node owns its "
-                        "rows, which requires DELTA table or file sinks in `APPEND` mode, but "
-                        f"the sink of node '{node_name}' is a {type(s).__name__} with mode "
-                        f"'{s.mode}' and format '{getattr(s, 'format', None)}'. Write to "
-                        "separate targets instead."
-                    )
-
-            # Node ownership, applied automatically with a writer column
-            for s in sinks:
-                if s.shared is None:
-                    s._setattr("shared", DataSinkSharedOptions())
-                    s._assign_parent_to_children()
+            # refreshed independently of the others. Declared explicitly, as it adds a writer
+            # column to the target (unless `shared.where` is used).
+            missing = list(
+                dict.fromkeys(
+                    s.parent_pipeline_node.name for s in sinks if s.shared is None
+                )
+            )
+            if missing:
+                raise ValueError(
+                    f"Pipeline nodes {node_names} write to '{target}', but the sinks of "
+                    f"nodes {missing} don't declare `shared` options. Declare them on every "
+                    "sink writing to this target (e.g. `shared: true`), so that each node "
+                    "owns its rows and a full refresh only deletes the rows of its node. "
+                    "Shared sinks must be DELTA table or file sinks in `APPEND` mode: "
+                    "otherwise, write to separate targets."
+                )
 
             self._validate_shared_writers(target, sinks, node_names)
 
@@ -431,9 +467,8 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         if len(kinds) > 1:
             raise ValueError(
                 f"Writers {writer_names} of '{target}' identify their rows differently: some "
-                "with a writer column (default, including sinks without `shared`), others "
-                "with `shared.where`. Use the same for all of them, as a predicate could "
-                "match the rows of the other writers."
+                "with a writer column (default), others with `shared.where`. Use the same "
+                "for all of them, as a predicate could match the rows of the other writers."
             )
 
         if kinds == {True}:
@@ -459,6 +494,76 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 f"Writers {writer_names} of '{target}' use the same {label} "
                 f"{duplicates}. Each writer needs its own."
             )
+
+    @staticmethod
+    def validate_shared_sinks_across_pipelines(pipelines: list["Pipeline"]) -> None:
+        """
+        Validate the sinks of targets written by several pipelines deployed together. Used
+        by Stacks and Databricks Asset Bundles (`laktory.dab.build_resources`).
+
+        Raises an error if a pipeline uses a declarative orchestrator (the engine owns the
+        table) or if the sinks declaring `shared` identify their rows inconsistently. Logs a
+        warning if some sinks don't declare `shared`: sharing a table across pipelines may
+        be deliberate without row ownership (e.g. a backfill pipeline), so it's the
+        responsibility of the user. Pipelines deployed separately can't be validated.
+
+        Parameters
+        ----------
+        pipelines:
+            Pipelines deployed together
+        """
+        groups = {}
+        for pl in pipelines:
+            for node in pl.nodes:
+                for s in node.all_sinks:
+                    if s.purge_target is not None:
+                        groups.setdefault(s.purge_target, []).append((pl, s))
+
+        for target, items in groups.items():
+            pl_names = list(dict.fromkeys(pl.name for pl, _ in items))
+            if len(pl_names) < 2:
+                continue
+
+            declarative = [
+                pl.name
+                for pl, _ in items
+                if pl.is_orchestrator_ldp or pl.is_orchestrator_sdp
+            ]
+            if declarative:
+                raise ValueError(
+                    f"Pipelines {pl_names} all write to '{target}', but pipelines "
+                    f"{list(dict.fromkeys(declarative))} use a declarative orchestrator. A "
+                    "table written by a Lakeflow / Spark Declarative Pipeline is owned by "
+                    "that pipeline and can't be shared with other pipelines."
+                )
+
+            declared = [(pl, s) for pl, s in items if s.shared is not None]
+            missing = [
+                f"{pl.name}.{s.parent_pipeline_node.name}"
+                for pl, s in items
+                if s.shared is None
+            ]
+            if missing and declared:
+                logger.warning(
+                    f"Pipelines {pl_names} all write to '{target}', but the sinks of nodes "
+                    f"{missing} don't declare `shared` while others do: a full refresh or "
+                    "an overwrite of these sinks deletes the rows of the other writers. "
+                    "Declare `shared` on every sink writing to this target."
+                )
+            elif missing:
+                logger.warning(
+                    f"Pipelines {pl_names} all write to '{target}' without declaring "
+                    "`shared`: a full refresh or an overwrite of any of them deletes the "
+                    "rows of the others. If each pipeline should own its rows, declare "
+                    "`shared` (e.g. `shared: true`) on every sink writing to this target."
+                )
+
+            if len(declared) > 1:
+                Pipeline._validate_shared_writers(
+                    target,
+                    [s for _, s in declared],
+                    [f"{pl.name}.{s.parent_pipeline_node.name}" for pl, s in declared],
+                )
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -860,26 +965,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         :
             Normalized `refresh` and `reset_mode`
         """
-        refresh = (refresh or "INCREMENTAL").upper()
-        if refresh not in ["INCREMENTAL", "FULL", "RESET"]:
-            raise ValueError(
-                f"`refresh` '{refresh}' is not supported. Use 'INCREMENTAL', 'FULL' or "
-                "'RESET'."
-            )
-
-        if reset_mode:
-            reset_mode = reset_mode.upper()
-            if reset_mode not in ["DROP", "TRUNCATE"]:
-                raise ValueError(
-                    f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
-                    "'TRUNCATE'."
-                )
-            if refresh == "INCREMENTAL":
-                raise ValueError(
-                    f"`reset_mode` '{reset_mode}' requires `refresh` 'FULL' or 'RESET'."
-                )
-        else:
-            reset_mode = None
+        refresh, reset_mode = normalize_run_parameters(refresh, reset_mode)
 
         if refresh == "RESET" and (
             self.is_orchestrator_ldp or self.is_orchestrator_sdp
@@ -915,6 +1001,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         use_orchestrator: bool = False,
         refresh: Literal["INCREMENTAL", "FULL", "RESET"] = "INCREMENTAL",
         reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
+        full_refresh: bool | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -959,14 +1046,15 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             `refresh` `FULL` or `RESET`. For shared sinks (`shared`), the whole table is
             reset, including the rows written by other writers: only supported with
             `refresh='RESET'`.
+        full_refresh:
+            Replaced by `refresh` in 0.13.0: `True` raises an error (use
+            `refresh='FULL'`), `False` logs a warning and runs incrementally.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
 
+        check_legacy_full_refresh(full_refresh)
         refresh, reset_mode = self.validate_run_parameters(refresh, reset_mode)
-
-        full_refresh = refresh == "FULL"
-        reset_only = refresh == "RESET"
 
         if use_orchestrator:
             if self.orchestrator is None:
@@ -982,7 +1070,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
             if not is_sdp_execute():
                 self.orchestrator.execute(
-                    full_refresh=full_refresh,
+                    full_refresh=refresh == "FULL",
                     selects=selects,
                 )
                 return
@@ -1000,11 +1088,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         for task in plan.tasks:
             task.execute(
                 write_sinks=write_sinks,
-                full_refresh=full_refresh,
+                refresh=refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
                 reset_mode=reset_mode,
-                reset_only=reset_only,
             )
 
     def update_tables_metadata(self):

@@ -145,6 +145,7 @@ def build_resources(bundle):
 
     resources = Resources()
 
+    pipelines = []
     for laktory_pipelines_dir in pipelines_dirs:
         dirpath = Path(laktory_pipelines_dir)
         if not dirpath.is_absolute():
@@ -166,22 +167,26 @@ def build_resources(bundle):
 
             # Inject bundle variables. Pipeline-level variables take priority
             # because inject_vars() applies them on top of the provided vars dict.
-            pl = pl.inject_vars(vars=bundle_vars)
+            pipelines += [pl.inject_vars(vars=bundle_vars)]
 
-            orchestrator = pl.orchestrator
-            if not orchestrator:
-                logger.warning(f"Pipeline '{pl.name}' has no orchestrator. Skipping.")
-                continue
+    # Tables written by several pipelines (shared sinks), validated before anything is built
+    Pipeline.validate_shared_sinks_across_pipelines(pipelines)
 
-            # Write pipeline config JSON for DABs to sync to the workspace
-            config_file = getattr(orchestrator, "config_file", None)
-            if config_file:
-                config_file.build()
+    for pl in pipelines:
+        orchestrator = pl.orchestrator
+        if not orchestrator:
+            logger.warning(f"Pipeline '{pl.name}' has no orchestrator. Skipping.")
+            continue
 
-            # to_dab_resource() returns the dab resource, and also copies supporting
-            # files (e.g. DLT notebook) to build_root and sets notebook paths.
-            dab_resource = orchestrator.to_dab_resource()
-            resources.add_resource(orchestrator.resource_name, dab_resource)
-            logger.info(f"Added DABs resource '{orchestrator.resource_name}'")
+        # Write pipeline config JSON for DABs to sync to the workspace
+        config_file = getattr(orchestrator, "config_file", None)
+        if config_file:
+            config_file.build()
+
+        # to_dab_resource() returns the dab resource, and also copies supporting
+        # files (e.g. DLT notebook) to build_root and sets notebook paths.
+        dab_resource = orchestrator.to_dab_resource()
+        resources.add_resource(orchestrator.resource_name, dab_resource)
+        logger.info(f"Added DABs resource '{orchestrator.resource_name}'")
 
     return resources
