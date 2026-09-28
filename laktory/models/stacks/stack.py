@@ -302,15 +302,6 @@ class LaktorySettings(BaseModel):
         to third parties like Databricks Declarative Bundles.
         """,
     )
-    reset_mode: Literal["DROP", "TRUNCATE"] = Field(
-        None,
-        description=(
-            "How data sinks are reset on a full refresh or reset run (`DROP`/`TRUNCATE`), for "
-            "the sinks, nodes and pipelines that don't set one. Default: `DROP` (from "
-            "`LAKTORY_RESET_MODE`). "
-            "See [Laktory Settings](../../../concepts/laktorysettings.md#reset-mode)."
-        ),
-    )
 
     @model_validator(mode="after")
     def apply_settings(self) -> Any:
@@ -345,9 +336,6 @@ class LaktorySettings(BaseModel):
 
         if self.build_root:
             settings.build_root = self.build_root
-
-        if self.reset_mode:
-            settings.reset_mode = self.reset_mode
 
         return self
 

@@ -92,7 +92,6 @@ class PipelineConfigWorkspaceFile(WorkspaceFile, PipelineChild):
         return super().terraform_excludes + [
             "dataframe_backend",
             "dataframe_api",
-            "reset_mode",
         ]
 
     @property

@@ -203,7 +203,6 @@ Stack
 | `sinks` | `list[...]` | `[]` | Data sinks. Set `is_quarantine: true` to store expectation-failed rows |
 | `transformer` | `DataFrameTransformer` | `null` | Chain of SQL / method transformations |
 | `execution_task_name` | `str` | `null` | Groups nodes into one task in Databricks Jobs / Airflow |
-| `reset_mode` | `DROP \| TRUNCATE` | inherited | How this node's sinks are reset on a full refresh; overrides `Pipeline.reset_mode` |
 | `dataframe_api` | `NARWHALS \| NATIVE` | `NARWHALS` | API used in transformer nodes. `NATIVE` exposes backend-specific API. Ignored for `expectations` - those are always checked via Narwhals regardless of this setting |
 | `depends_on` | `list[str]` | `[]` | Node names to wait for even when no data flows between them |
 | `expectations` | `list[...]` | `[]` | Data quality checks: warn, drop, quarantine, or fail |
@@ -273,7 +272,7 @@ Inherits common fields from `BaseDataSource`.
 | `is_quarantine` | `bool` | `false` | Stores rows that fail `expectations` |
 | `checkpoint_path` | `str` | `null` | Checkpoint directory for streaming writes |
 | `metadata` | `TableDataSinkMetadata` | `null` | Table/column-level comments, tags, and Delta properties |
-| `reset_mode` | `DROP \| TRUNCATE` | inherited, `DROP` | How the sink is reset on a full refresh. Inherited sink → node → pipeline → `settings.reset_mode` / `LAKTORY_RESET_MODE`. Partial reset: `shared.where` |
+| `reset_mode` | `DROP \| TRUNCATE` | `DROP` | How the sink is reset on a full refresh or reset run. Set per sink only (not on nodes, pipelines or settings). Partial reset: `shared.where` |
 | `shared` | `DataSinkSharedOptions` \| `bool` | `null` | Options for a sink written by several nodes / pipelines (`true` for defaults): `writer_id`, `column`, `where`. See [Shared sinks](#data-pipeline--shared-sinks) |
 
 ---
@@ -867,8 +866,8 @@ What a run does is selected with `refresh`:
 - How a sink is reset is set by `reset_mode`: `DROP` (default; recreated on next write),
   `TRUNCATE` (keeps table, schema, grants; also DELTA files - same table id). Only sinks natively
   supporting a truncate: not supported by other file formats, views or declarative
-  orchestrators: rejected if set on the sink, falls back to `DROP` if inherited (node, pipeline,
-  settings) or passed as a run override. To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
+  orchestrators: rejected if set on the sink, falls back to `DROP` if passed as a run override.
+  Set per sink only: for many sinks, use a variable (`reset_mode: ${vars.reset_mode}`). To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
   `shared: {where: ...}` instead.
 - Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `FULL`
   or `RESET` (rejected on `INCREMENTAL`): `pl.execute(refresh="FULL", reset_mode="DROP")`, or the

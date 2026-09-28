@@ -125,20 +125,19 @@ class BaseDataSink(BaseModel, PipelineChild):
         None,
         description="Merge options to handle input DataFrames that are Change Data Capture (CDC). Only used when `MERGE` mode is selected.",
     )  # TODO: Review parameter name
-    reset_mode_: Literal["DROP", "TRUNCATE"] = Field(
-        None,
+    reset_mode: Literal["DROP", "TRUNCATE"] = Field(
+        "DROP",
         description="""
         Strategy used to reset this sink's data on a full refresh or a reset run.
 
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
-        - TRUNCATE: Remove all rows but keep the table/schema/location intact.
+        - TRUNCATE: Remove all rows but keep the table/schema/location intact. Only supported
+          by tables (not views) and DELTA file sinks, not with declarative orchestrators.
 
-        Ignored by shared sinks (`shared`, applied automatically when several nodes write to
-        the sink), which only delete the rows of their writer. To reset only part of a table,
-        declare the rows owned by the sink with `shared.where`.
+        Ignored by shared sinks (`shared`), which only delete the rows of their writer. To
+        reset only part of a table, declare the rows owned by the sink with `shared.where`.
+        Can be overridden for a single run (`reset_mode` run parameter).
         """,
-        validation_alias=AliasChoices("reset_mode", "reset_mode_"),
-        exclude=True,
     )
 
     shared: DataSinkSharedOptions | None = Field(
@@ -294,10 +293,8 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     @model_validator(mode="after")
     def validate_reset_mode(self) -> Any:
-        # Only a value set on the sink itself is an explicit request that can be rejected.
-        # Inherited values (node, pipeline, settings) the sink can't use fall back to `DROP`.
-        mode = self.reset_mode_
-        if mode is None or mode in self._supported_reset_modes:
+        mode = self.reset_mode
+        if mode in self._supported_reset_modes:
             return self
 
         if self._is_declarative:
@@ -312,18 +309,6 @@ class BaseDataSink(BaseModel, PipelineChild):
             f"`reset_mode` '{mode}' is not supported by {self._reset_mode_label}: use "
             f"{self._supported_reset_modes}."
         )
-
-    @computed_field(description="reset_mode")
-    @property
-    def reset_mode(self) -> Literal["DROP", "TRUNCATE"]:
-        """
-        Effective `reset_mode`: the value set on the sink or inherited from its node,
-        pipeline or settings, or `DROP` if the sink doesn't support the inherited value.
-        """
-        mode = self._resolve_reset_mode()
-        if mode not in self._supported_reset_modes:
-            return "DROP"
-        return mode
 
     @property
     def _is_declarative(self) -> bool:
@@ -344,8 +329,8 @@ class BaseDataSink(BaseModel, PipelineChild):
 
     def _get_purge_mode(self, mode: str | None = None) -> str:
         """
-        `reset_mode` used to purge the sink: the run override `mode` if set, otherwise the
-        resolved `reset_mode`. A value the sink doesn't support falls back to `DROP`.
+        `reset_mode` used to purge the sink: the run override `mode` if set, otherwise
+        `reset_mode`. An override the sink doesn't support falls back to `DROP`.
         """
         if mode is not None:
             if mode not in ["DROP", "TRUNCATE"]:
@@ -361,14 +346,7 @@ class BaseDataSink(BaseModel, PipelineChild):
                 return "DROP"
             return mode
 
-        mode, source = self._resolve_reset_mode_source()
-        if mode not in self._supported_reset_modes:
-            logger.info(
-                f"`reset_mode` '{mode}' (from {source}) is not supported by "
-                f"{self._reset_mode_label}: using 'DROP'."
-            )
-            return "DROP"
-        return mode
+        return self.reset_mode
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #

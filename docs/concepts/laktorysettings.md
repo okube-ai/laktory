@@ -7,10 +7,9 @@
 | [`build_root`](#build-root) | Laktory cache directory | Local directory for generated build artifacts |
 | [`dataframe_backend`](#dataframe-backend-and-api) | `PYSPARK` | DataFrame backend (`POLARS` / `PYSPARK`) |
 | [`dataframe_api`](#dataframe-backend-and-api) | `NARWHALS` | DataFrame API (`NARWHALS` / `NATIVE`) |
-| [`reset_mode`](#reset-mode) | `DROP` | How sinks are reset on a full refresh or reset run (`DROP` / `TRUNCATE`), for sinks, nodes and pipelines that don't set one |
 
-A value set in the Stack `settings` overrides internal laktory settings. For `dataframe_backend`, `dataframe_api` and
-`reset_mode`, values set on a pipeline, pipeline node or sink always take precedence.
+A value set in the Stack `settings` overrides internal laktory settings. For `dataframe_backend` and
+`dataframe_api`, values set on a pipeline or pipeline node always take precedence.
 
 Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)):
 
@@ -70,17 +69,3 @@ Override it when file generation is delegated to a third party that expects thos
 ## DataFrame Backend and API
 
 `dataframe_backend` (`POLARS` / `PYSPARK`) and `dataframe_api` (`NARWHALS` / `NATIVE`) set stack-wide defaults for how pipelines process data, overridable per [`Pipeline`](pipeline.md) or `PipelineNode`. Unlike the three root settings above, they aren't path/location configuration, so their full explanation lives with the rest of the DataFrame documentation: see [Data Pipeline](pipeline.md) for backend selection and [Data Transformer](transformer.md) for the NARWHALS/NATIVE API choice.
-
-## Reset Mode
-
-`reset_mode` (`DROP` / `TRUNCATE`, default `DROP`) is how a data sink is reset on a full refresh or
-a reset run. The value used for a sink is the first one set among: the sink, its
-[`PipelineNode`](pipeline.md), its [`Pipeline`](pipeline.md), and this setting:
-
-```yaml title="stack.yaml"
-settings:
-  reset_mode: TRUNCATE
-```
-
-It can also be set via the `LAKTORY_RESET_MODE` environment variable (`DROP` or `TRUNCATE`).
-See [Refresh and Reset - Reset Modes](refresh.md#reset-modes) for the full explanation.

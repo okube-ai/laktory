@@ -2,7 +2,6 @@ from typing import Literal
 
 from pydantic import ConfigDict
 from pydantic import Field
-from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 from laktory._cache import cache_dir
@@ -41,18 +40,6 @@ class Settings(BaseSettings):
 
     # Narwhals extensions
     register_nw_extensions: bool = Field(True, alias="LAKTORY_REGISTER_NW_EXTENSIONS")
-
-    # Pipeline
-    reset_mode: str = Field("DROP", alias="LAKTORY_RESET_MODE")
-
-    @field_validator("reset_mode")
-    @classmethod
-    def validate_reset_mode(cls, v: str) -> str:
-        if v and v.upper() not in ["DROP", "TRUNCATE"]:
-            raise ValueError(
-                f"`reset_mode` '{v}' is not supported. Use 'DROP' or 'TRUNCATE'."
-            )
-        return v
 
     # Logging
     log_level: str = Field("INFO", alias="LAKTORY_LOG_LEVEL")

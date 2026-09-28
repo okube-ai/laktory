@@ -141,7 +141,6 @@ class LakeflowDeclarativePipelineOrchestrator(Pipeline, PipelineChild):
         excludes["type"] = True
         excludes["dataframe_backend"] = True
         excludes["dataframe_api"] = True
-        excludes["reset_mode"] = True
         return excludes
 
     @property
