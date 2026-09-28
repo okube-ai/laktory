@@ -475,7 +475,7 @@ def test_distinct_sink_targets_ok_under_declarative_orchestrator(orchestrator_di
     )
 
 
-def _get_shared_pl(orchestrator_dict, sinks=None, expectations=None):
+def _get_shared_pl(orchestrator_dict, sinks=None, expectations=None, extra_nodes=None):
     """Two streaming nodes appending to `shared`, one batch node writing `other`"""
     sinks = sinks or {}
     expectations = expectations or {}
@@ -496,6 +496,7 @@ def _get_shared_pl(orchestrator_dict, sinks=None, expectations=None):
             "sinks": [{"table_name": "other"}],
         }
     ]
+    nodes += extra_nodes or []
     return models.Pipeline.model_validate(
         {"name": "pl-declarative", "orchestrator": orchestrator_dict, "nodes": nodes}
     )
@@ -517,6 +518,51 @@ def test_shared_streaming_sink_under_declarative_orchestrator(
 
     # Declarative pipelines purge shared tables once: no shared sink purge warnings
     assert not [w for w in recwarn if "write to" in str(w.message)]
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+@pytest.mark.parametrize(
+    "reader",
+    [
+        {"sources": [{"node_name": "n1", "as_stream": True}]},
+        {
+            "sources": [{"format": "JSON", "path": "/n4/"}],
+            "transformer": {
+                "nodes": [
+                    {"expr": "SELECT * FROM {df} UNION ALL SELECT * FROM {nodes.n1}"}
+                ]
+            },
+        },
+    ],
+    ids=["node_name", "transformer"],
+)
+def test_append_flow_writer_read_raises_under_declarative_orchestrator(
+    orchestrator_dict, reader
+):
+    """Reading a writer of an append-flow table would return the rows of all its writers"""
+    reader = {"name": "n4", "sinks": [{"table_name": "n4"}]} | reader
+    with pytest.raises(
+        (ValueError, ValidationError), match="Node 'n4' reads node 'n1'"
+    ):
+        _get_shared_pl(orchestrator_dict, extra_nodes=[reader])
+
+
+@pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)
+def test_append_flow_table_read_under_declarative_orchestrator(orchestrator_dict):
+    """The table of an append flow can be read as a whole, and other nodes as usual"""
+    readers = [
+        {
+            "name": "n4",
+            "sources": [{"table_name": "shared", "as_stream": True}],
+            "sinks": [{"table_name": "n4"}],
+        },
+        {
+            "name": "n5",
+            "sources": [{"node_name": "n3"}],
+            "sinks": [{"table_name": "n5"}],
+        },
+    ]
+    _get_shared_pl(orchestrator_dict, extra_nodes=readers)
 
 
 @pytest.mark.parametrize("orchestrator_dict", _ORCHESTRATORS)

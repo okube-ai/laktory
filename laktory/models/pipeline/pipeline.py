@@ -377,6 +377,43 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         return self
 
     @model_validator(mode="after")
+    def validate_declarative_append_flow_reads(self) -> Any:
+        from laktory.models.datasources import PipelineNodeDataSource
+
+        if not (self.is_orchestrator_ldp or self.is_orchestrator_sdp):
+            return self
+
+        tables = self.sdp_append_flow_sinks
+        if not tables:
+            return self
+
+        # Rows written by append flows carry no writer: reading a writer by `node_name`
+        # would return the rows of all the writers of the table, unlike with other
+        # orchestrators, where it returns the writer's rows only.
+        for node in self.nodes:
+            for source in node.data_sources:
+                if not isinstance(source, PipelineNodeDataSource):
+                    continue
+                upstream = self.nodes_dict.get(source.node_name)
+                if upstream is None or upstream.primary_sink is None:
+                    continue
+                table = getattr(upstream.primary_sink, "sdp_table_or_view_name", None)
+                if table not in tables:
+                    continue
+                writers = [s.parent_pipeline_node.name for s in tables[table]]
+                raise ValueError(
+                    f"Node '{node.name}' reads node '{source.node_name}', which writes to "
+                    f"'{table}' with nodes {writers}. With "
+                    f"{type(self.orchestrator).__name__}, rows written by append flows "
+                    "don't identify their writer: reading the node would return the rows "
+                    f"of all the writers. Read the table with `table_name` to get the "
+                    f"rows of all the writers, or write node '{source.node_name}' to its "
+                    "own table."
+                )
+
+        return self
+
+    @model_validator(mode="after")
     def validate_shared_sinks(self) -> Any:
         is_declarative = self.is_orchestrator_ldp or self.is_orchestrator_sdp
 

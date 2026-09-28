@@ -513,7 +513,8 @@ sinks:
   table shared across pipelines, run a full refresh of every other writing pipeline.
 - Reading: `node_name: <writer>` returns that writer's rows only (no writer column), from memory
   or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
-  writer, `node_name` reads the whole table. A writer's full refresh deletes rows: streaming
+  writer column, so reading a writer of an append-flow table with `node_name` / `{nodes.x}` fails
+  validation (use `table_name`, or a separate table). A writer's full refresh deletes rows: streaming
   readers of the table need a full refresh too.
 - Reset / drop a shared table as a whole: `refresh=RESET` + `reset_mode=DROP` (or `TRUNCATE`) on
   any selection of writer tasks (one is enough); the checkpoints of all its writers in the

@@ -91,8 +91,9 @@ sinks:
 `node_name` returns the same data whether the node output is read from memory (same run) or
 from the table (e.g. a separate job task).
 
-- With declarative orchestrators, rows carry no writer: `node_name` reads the whole table. Use
-  separate tables when a node needs the output of a single writer.
+- With declarative orchestrators, rows carry no writer: reading a writer with `node_name` (or
+  `{nodes.x}` in a transformer) fails validation, since it would return the rows of all the
+  writers. Read the table with `table_name`, or write the node to its own table.
 - A full refresh of a writer deletes rows from the table, which fails streaming reads of the
   table (as for any Delta table): run a full refresh of these readers too.
 
