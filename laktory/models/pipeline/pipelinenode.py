@@ -392,23 +392,7 @@ class PipelineNode(BaseModel, PipelineChild):
     def execution_task_name(self) -> str:
         if self.execution_task_name_:
             return self.execution_task_name_
-        pl = self.parent_pipeline
-        if pl is not None:
-            task_name = pl.grouped_task_names.get(self.name)
-            if task_name:
-                return task_name
         return f"node-{self.name}"
-
-    @property
-    def grouped_sink_targets(self) -> set[str]:
-        """Targets of the sinks written together with other nodes in a single task."""
-        pl = self.parent_pipeline
-        if pl is None:
-            return set()
-        grouped_targets = pl.grouped_targets
-        return {
-            s.purge_target for s in self.all_sinks if s.purge_target in grouped_targets
-        }
 
     @property
     def is_orchestrator_ldp(self) -> bool:
@@ -699,7 +683,6 @@ class PipelineNode(BaseModel, PipelineChild):
     def purge(
         self,
         mode: Literal["DROP", "TRUNCATE"] | None = None,
-        purged_targets: set[str] | None = None,
     ):
         """
         Delete sinks data and checkpoints.
@@ -708,25 +691,44 @@ class PipelineNode(BaseModel, PipelineChild):
         ----------
         mode:
             Optional override for sinks `reset_mode`.
-        purged_targets:
-            Targets already purged by another writer of the same execution task. Only the
-            checkpoints of the sinks writing to these targets are deleted.
         """
         logger.info(f"Purging pipeline node {self.name}")
 
-        purged_targets = purged_targets or set()
         if self.has_sinks:
             for s in self.sinks:
-                if s.purge_target in purged_targets:
-                    s._purge_checkpoint()
-                else:
-                    s.purge(mode=mode)
+                s.purge(mode=mode)
+                if mode is not None and s.shared is not None:
+                    self._purge_other_writers_checkpoints(s)
 
         purge_checkpoint(
             self.expectations_checkpoint_path,
             self.dataframe_backend,
             label="expectations checkpoint",
         )
+
+    def _purge_other_writers_checkpoints(self, sink) -> None:
+        """
+        Reset the checkpoints of the other writers of a shared sink in the pipeline, after
+        the whole target was reset (`reset_mode` override): resuming from their checkpoint
+        would skip the data they already wrote, which is gone. They reprocess their source
+        on their next run, whether or not they are part of this run.
+        """
+        pl = self.parent_pipeline
+        if pl is None:
+            return
+        others = [
+            o
+            for o in pl.sink_targets.get(sink.purge_target, [])
+            if o.parent_pipeline_node is not self
+        ]
+        for o in others:
+            o._purge_checkpoint()
+        if others:
+            names = sorted({o.parent_pipeline_node.name for o in others})
+            logger.info(
+                f"Reset the checkpoints of nodes {names} also writing to "
+                f"'{sink.purge_target}'."
+            )
 
     def execute(
         self,
@@ -736,7 +738,6 @@ class PipelineNode(BaseModel, PipelineChild):
         named_dfs: dict[str, AnyFrame] = None,
         update_tables_metadata: bool = True,
         reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
-        purged_targets: set[str] | None = None,
     ) -> AnyFrame:
         """
         Execute pipeline node by:
@@ -761,8 +762,6 @@ class PipelineNode(BaseModel, PipelineChild):
             Update tables metadata
         reset_mode:
             Optional override for sinks `reset_mode` when `full_refresh` is `True`.
-        purged_targets:
-            Targets already purged by another writer of the same execution task.
 
         Returns
         -------
@@ -792,7 +791,7 @@ class PipelineNode(BaseModel, PipelineChild):
 
         # Refresh
         if full_refresh:
-            self.purge(mode=reset_mode, purged_targets=purged_targets)
+            self.purge(mode=reset_mode)
 
         # Read all declared sources into named_dfs with "sources." prefix
         if named_dfs is None:

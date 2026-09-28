@@ -82,9 +82,5 @@ settings:
   reset_mode: TRUNCATE
 ```
 
-It can also be set via the `LAKTORY_RESET_MODE` environment variable. `DELETE_WHERE` cannot be
-set here (or on a `Pipeline`/`PipelineNode`) - it's only valid set directly on a sink, since its
-deletion predicate is inherently sink-specific; doing so anywhere else raises a validation error.
-See
-[Refresh and Reset - Reset Modes](refresh.md#reset-modes) for the full explanation and
-the sink-level `reset_delete_where` field it pairs with.
+It can also be set via the `LAKTORY_RESET_MODE` environment variable (`DROP` or `TRUNCATE`).
+See [Refresh and Reset - Reset Modes](refresh.md#reset-modes) for the full explanation.

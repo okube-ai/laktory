@@ -158,8 +158,8 @@ Here is an example of a pipeline declaration:
     ```
 
 ## Execution
-A run processes data on top of what the sinks already contain (`refresh="incremental"`, the
-default), or first resets them to reprocess everything (`refresh="full"`). See
+A run processes data on top of what the sinks already contain (`refresh="INCREMENTAL"`, the
+default), or first resets them to reprocess everything (`refresh="FULL"`). See
 [Refresh and Reset](refresh.md) for the run modes, how sinks are reset and how to reset tables
 without reprocessing data.
 

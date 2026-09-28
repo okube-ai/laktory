@@ -29,6 +29,26 @@ Requires credentials. See [Live Test Credentials](#live-test-credentials) below.
 set -a && source secrets/.env.dev && set +a && uv run pytest -m "databricks_connect" tests/
 ```
 
+### Live end-to-end tests (`e2e-test` skill)
+
+Some behaviors can't be verified by pytest: code running on Databricks (Lakeflow Job tasks,
+Lakeflow Declarative Pipelines), job parameters and task subsets, repairs, Unity Catalog tables,
+deployed resources. For these, use the `e2e-test` Claude Code skill
+(`.claude/skills/e2e-test/`), e.g. "test this live" or "deploy an e2e stack for this feature".
+
+| What | Value |
+|---|---|
+| Location | `scratch/e2e/<slug>/` (git-ignored); `README.md` is the test record (checks, results, findings) |
+| Auth | Databricks CLI profile `laktory-dev-cli` |
+| Data | tables `laktory.unit_tests.e2e_<prefix>_*`, files under `dbfs:/laktory/e2e/<slug>/` |
+| Deploy | `uv run laktory deploy --env dev --yes` from the stack folder (working tree wheel) |
+| Run | `uv run laktory run --env dev --databricks-job <job> [--refresh ...] [--tasks ...]` |
+
+Lifecycle: design the checks with expected values and get approval, scaffold from
+`.claude/skills/e2e-test/template/`, validate / preview, deploy, run and check, record results
+in the README, then tear down after confirmation (destroy, DBFS folder, leftover `e2e_<prefix>_*`
+tables, workspace folder). Examples: `scratch/e2e/shared-jobs/`, `scratch/e2e/reset-tasks/`.
+
 ### Specific file or test
 
 ```bash

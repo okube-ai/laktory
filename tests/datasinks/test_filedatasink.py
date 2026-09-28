@@ -98,14 +98,48 @@ def test_unknown_format():
     assert sink.format == "LANCE"
 
 
-@pytest.mark.parametrize("mode", ["TRUNCATE", "DELETE_WHERE"])
-def test_purge_unsupported_modes_rejected(mode, tmp_path):
-    kwargs = {}
-    if mode == "DELETE_WHERE":
-        kwargs["reset_delete_where"] = "id = 1"
+def test_purge_truncate_rejected(tmp_path):
+    # Set on the sink: rejected for formats that can't be truncated
+    for fmt in ["CSV", "PARQUET"]:
+        with pytest.raises(ValueError, match="is not supported by FileDataSink"):
+            FileDataSink(path=str(tmp_path / "sink"), reset_mode="TRUNCATE", format=fmt)
 
-    sink = FileDataSink(
-        path=str(tmp_path / "sink"), reset_mode=mode, format="DELTA", **kwargs
-    )
-    with pytest.raises(NotImplementedError):
-        sink.purge()
+
+def test_purge_truncate_override_falls_back_to_drop(tmp_path):
+    path = tmp_path / "sink"
+    path.mkdir()
+    (path / "data.csv").write_text("")
+    sink = FileDataSink(path=str(path), format="CSV")
+    sink.purge(mode="TRUNCATE")
+    assert not path.exists()
+
+
+@pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
+def test_purge_truncate(backend, tmp_path):
+    """The rows are deleted, the table and its schema are kept"""
+    fmt = "DELTA"
+    df0 = get_df0(backend)
+    path = (tmp_path / "sink").as_posix()
+    mode = "OVERWRITE"
+
+    sink = FileDataSink(format=fmt, path=path, mode=mode, reset_mode="TRUNCATE")
+    sink.write(df0)
+    columns = sink.as_source().read().columns
+
+    sink.purge()
+
+    df = sink.as_source().read()
+    assert df.columns == columns
+    if backend == "PYSPARK":
+        assert df.to_native().count() == 0
+    else:
+        assert nw.from_native(df).lazy().collect().shape[0] == 0
+
+    # Same table: truncated through a new version, history kept
+    from deltalake import DeltaTable
+
+    assert DeltaTable(path).version() == 1
+
+    # Written again after the truncate
+    sink.write(df0)
+    assert_dfs_equal(sink.as_source().read(), df0)

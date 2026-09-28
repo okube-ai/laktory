@@ -321,6 +321,8 @@ def test_run_job(monkeypatch):
         timeout=1200,
         raise_exception=True,
         current_run_action="WAIT",
+        job_parameters=None,
+        only=None,
     )
 
 
@@ -367,7 +369,8 @@ def test_run_full_refresh(monkeypatch):
                 stack_filepath,
                 "--databricks-pipeline",
                 "pl-stock-prices-ut-stack",
-                "--full-refresh",
+                "--refresh",
+                "full",
             ],
         )
     assert result.exit_code == 0
@@ -405,3 +408,126 @@ def test_run_both_targets(monkeypatch):
             ],
         )
     assert result.exit_code != 0
+
+
+# --------------------------------------------------------------------------- #
+# run                                                                          #
+# --------------------------------------------------------------------------- #
+
+
+class _Dispatcher:
+    """Stand-in for the Dispatcher, recording the runs"""
+
+    calls = []
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def get_resource_ids(self):
+        pass
+
+    def run_databricks_job(self, **kwargs):
+        _Dispatcher.calls.append(("job", kwargs))
+
+    def run_databricks_pipeline(self, **kwargs):
+        _Dispatcher.calls.append(("pipeline", kwargs))
+
+
+def _run(*args):
+    _Dispatcher.calls = []
+    with (
+        patch("laktory.cli._run.CLIController"),
+        patch("laktory.cli._run.Dispatcher", _Dispatcher),
+    ):
+        return runner.invoke(app, ["run", *args])
+
+
+def test_run_job_options():
+    result = _run("--databricks-job", "job")
+    assert result.exit_code == 0, result.output
+    assert _Dispatcher.calls[0][1]["job_parameters"] is None
+    assert _Dispatcher.calls[0][1]["only"] is None
+
+    result = _run(
+        "--databricks-job",
+        "job",
+        "--refresh",
+        "Reset",
+        "--reset-mode",
+        "drop",
+        "--tasks",
+        "node-a, node-b",
+    )
+    assert result.exit_code == 0, result.output
+    kind, kwargs = _Dispatcher.calls[0]
+    assert kind == "job"
+    assert kwargs["job_parameters"] == {"refresh": "RESET", "reset_mode": "DROP"}
+    assert kwargs["only"] == ["node-a", "node-b"]
+
+
+def test_run_pipeline_options():
+    result = _run("--databricks-pipeline", "pl", "--refresh", "full")
+    assert result.exit_code == 0, result.output
+    assert _Dispatcher.calls[0] == (
+        "pipeline",
+        {
+            "pipeline_name": "pl",
+            "timeout": 1200,
+            "raise_exception": True,
+            "current_run_action": "WAIT",
+            "full_refresh": True,
+        },
+    )
+
+
+def test_run_invalid_options():
+    cases = [
+        (["--databricks-job", "job", "--refresh", "partial"], "is not supported"),
+        (["--databricks-job", "job", "--reset-mode", "DROP"], "requires `--refresh"),
+        (
+            ["--databricks-job", "job", "--refresh", "full", "--reset-mode", "X"],
+            "is not supported",
+        ),
+        (["--databricks-pipeline", "pl", "--refresh", "reset"], "not supported with"),
+        (["--databricks-pipeline", "pl", "--tasks", "a"], "not supported with"),
+    ]
+    for args, match in cases:
+        result = _run(*args)
+        assert result.exit_code != 0
+        assert match in str(result.exception)
+        assert _Dispatcher.calls == []
+
+
+def test_run_full_refresh_flag_removed():
+    result = _run("--databricks-pipeline", "pl", "--full-refresh")
+    assert result.exit_code != 0
+    assert "No such option" in result.output
+
+
+def test_job_runner_parameters():
+    from types import SimpleNamespace
+
+    from laktory.dispatcher.databricksjobrunner import DatabricksJobRunner
+
+    calls = {}
+
+    class _Jobs:
+        def list_runs(self, **kwargs):
+            return []
+
+        def run_now(self, **kwargs):
+            calls.update(kwargs)
+            return SimpleNamespace(run_id=1)
+
+        def get_run(self, run_id):
+            return SimpleNamespace(run_page_url="url")
+
+    job = DatabricksJobRunner(
+        name="job", id="1", dispatcher=SimpleNamespace(wc=SimpleNamespace(jobs=_Jobs()))
+    )
+    job.run(wait=False, job_parameters={"refresh": "full"}, only=["node-a"])
+    assert calls == {
+        "job_id": "1",
+        "job_parameters": {"refresh": "full"},
+        "only": ["node-a"],
+    }

@@ -83,26 +83,30 @@ class PipelineChild(BaseChild):
         - DROP: Drop the table (or delete the file/data) entirely, then recreate it on next write.
         - TRUNCATE: Remove all rows but keep the table/schema/location intact.
 
-        `DELETE_WHERE` is also available, but only directly on a data sink (see
-        `BaseDataSink.reset_mode`) - a deletion predicate is inherently specific to a single
-        sink, so it can't be a pipeline node, pipeline, or global default.
+        To reset only part of a table, declare the rows owned by its sink with `shared.where`.
         """,
         validation_alias=AliasChoices("reset_mode", "reset_mode_"),
         exclude=True,
     )
 
-    def _resolve_reset_mode(self) -> str:
+    def _resolve_reset_mode_source(self) -> tuple[str, str]:
+        """Resolved `reset_mode` and where it is set (for messages)."""
         # Direct value
         if self.reset_mode_ is not None:
-            return self.reset_mode_
+            name = getattr(self, "name", None)
+            source = type(self).__name__ + (f" '{name}'" if name else "")
+            return self.reset_mode_, source
 
         # Value from parent
         parent = self._parent
-        if parent is not None:
-            return parent.reset_mode
+        if parent is not None and hasattr(parent, "_resolve_reset_mode_source"):
+            return parent._resolve_reset_mode_source()
 
         # Value from settings
-        return settings.reset_mode.upper()
+        return settings.reset_mode.upper(), "`settings.reset_mode`"
+
+    def _resolve_reset_mode(self) -> str:
+        return self._resolve_reset_mode_source()[0]
 
     @computed_field(description="reset_mode")
     @property

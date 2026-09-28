@@ -73,16 +73,6 @@ class PipelineTask(BaseModel):
 
         logger.info(f"Executing pipeline task '{self.name}'")
 
-        # Targets written by multiple nodes of this task are purged once, by the first
-        # writer, before any of them writes.
-        purged_targets = set()
-        grouped = sorted({t for n in self.nodes for t in n.grouped_sink_targets})
-        if grouped:
-            logger.info(
-                f"Nodes {self.node_names} write to the same targets {grouped} and are "
-                "executed together."
-            )
-
         # Execute nodes
         for node_name in self.node_names:
             node = self.pipeline.nodes_dict[node_name]
@@ -90,8 +80,7 @@ class PipelineTask(BaseModel):
                 named_dfs = {}
 
             if reset_only:
-                node.purge(mode=reset_mode, purged_targets=set(purged_targets))
-                purged_targets |= node.grouped_sink_targets
+                node.purge(mode=reset_mode)
                 continue
 
             node.execute(
@@ -100,9 +89,7 @@ class PipelineTask(BaseModel):
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
                 reset_mode=reset_mode,
-                purged_targets=set(purged_targets),
             )
-            purged_targets |= node.grouped_sink_targets
 
     @property
     def upstream_task_names(self) -> list[str]:

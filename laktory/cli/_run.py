@@ -24,10 +24,31 @@ def run(
     raise_exception: Annotated[
         bool, typer.Option("--raise", "-r", help="Raise exception on failure")
     ] = True,
-    full_refresh: Annotated[
-        bool,
-        typer.Option("--full-refresh", help="Full tables refresh (pipeline only)"),
-    ] = False,
+    refresh: Annotated[
+        str,
+        typer.Option(
+            "--refresh",
+            help="What the run does: 'INCREMENTAL', 'FULL' (reset, then reprocess all the "
+            "data) or 'RESET' (reset only, jobs only). Defaults to the job / pipeline "
+            "default (incremental).",
+        ),
+    ] = None,
+    reset_mode: Annotated[
+        str,
+        typer.Option(
+            "--reset-mode",
+            help="Override of the sinks reset mode ('DROP' or 'TRUNCATE'), with "
+            "--refresh FULL or RESET (jobs only).",
+        ),
+    ] = None,
+    tasks: Annotated[
+        str,
+        typer.Option(
+            "--tasks",
+            help="Comma-separated keys of the job tasks to run. Defaults to all the "
+            "tasks (jobs only).",
+        ),
+    ] = None,
     current_run_action: Annotated[
         str,
         typer.Option(
@@ -69,8 +90,15 @@ def run(
         Raise exception on failure
     current_run_action:
         Action to take for currently running job or pipline.
-    full_refresh:
-        Full tables refresh (pipline only)
+    refresh:
+        What the run does: `INCREMENTAL`, `FULL` (reset, then reprocess all the data)
+        or `RESET` (reset only, jobs only). Defaults to the job / pipeline default.
+    reset_mode:
+        Override of the sinks reset mode (`DROP` or `TRUNCATE`), with `refresh` `FULL`
+        or `RESET` (jobs only).
+    tasks:
+        Comma-separated keys of the job tasks to run (jobs only). Defaults to all the
+        tasks.
     environment:
         Name of the environment.
     filepath:
@@ -86,8 +114,10 @@ def run(
     Examples
     --------
     ```cmd
-    laktory run --env dev --databricks-pipeline pl-stock-prices --full-refresh --action CANCEL
+    laktory run --env dev --databricks-pipeline pl-stock-prices --refresh FULL --action CANCEL
     laktory run --env dev --databricks-job my-job --var profile=MY_PROFILE
+    laktory run --env dev --databricks-job my-job --refresh FULL --tasks node-slv_prices
+    laktory run --env dev --databricks-job my-job --refresh RESET --reset-mode DROP
     ```
 
     References
@@ -101,6 +131,11 @@ def run(
     if not (databricks_job or databricks_pipeline):
         raise ValueError("One of `job` or `dlt` should be set.")
 
+    # Run parameters
+    refresh, reset_mode, task_keys = _validate_run_options(
+        refresh, reset_mode, tasks, is_job=databricks_job is not None
+    )
+
     # Set Dispatcher
     controller = CLIController(
         env=environment,
@@ -112,11 +147,18 @@ def run(
     dispatcher.get_resource_ids()
 
     if databricks_job:
+        job_parameters = {}
+        if refresh:
+            job_parameters["refresh"] = refresh
+        if reset_mode:
+            job_parameters["reset_mode"] = reset_mode
         dispatcher.run_databricks_job(
             job_name=databricks_job,
             timeout=timeout,
             raise_exception=raise_exception,
             current_run_action=current_run_action,
+            job_parameters=job_parameters or None,
+            only=task_keys,
         )
 
     if databricks_pipeline:
@@ -125,5 +167,46 @@ def run(
             timeout=timeout,
             raise_exception=raise_exception,
             current_run_action=current_run_action,
-            full_refresh=full_refresh,
+            full_refresh=refresh == "FULL",
         )
+
+
+def _validate_run_options(
+    refresh: str | None, reset_mode: str | None, tasks: str | None, is_job: bool
+) -> tuple[str | None, str | None, list[str] | None]:
+    """Validate and normalize the run options before starting anything."""
+    if refresh:
+        refresh = refresh.upper()
+        if refresh not in ["INCREMENTAL", "FULL", "RESET"]:
+            raise ValueError(
+                f"`--refresh` '{refresh}' is not supported. Use 'INCREMENTAL', 'FULL' or "
+                "'RESET'."
+            )
+
+    if reset_mode:
+        reset_mode = reset_mode.upper()
+        if reset_mode not in ["DROP", "TRUNCATE"]:
+            raise ValueError(
+                f"`--reset-mode` '{reset_mode}' is not supported. Use 'DROP' or 'TRUNCATE'."
+            )
+        if refresh not in ["FULL", "RESET"]:
+            raise ValueError("`--reset-mode` requires `--refresh FULL` or `RESET`.")
+
+    task_keys = [t.strip() for t in (tasks or "").split(",") if t.strip()] or None
+
+    if not is_job:
+        # Declarative pipelines: the engine resets the tables
+        unsupported = []
+        if refresh == "RESET":
+            unsupported += ["`--refresh RESET`"]
+        if reset_mode:
+            unsupported += ["`--reset-mode`"]
+        if task_keys:
+            unsupported += ["`--tasks`"]
+        if unsupported:
+            raise ValueError(
+                f"{', '.join(unsupported)} not supported with `--databricks-pipeline`: "
+                "declarative pipelines are refreshed by their engine. Use `--refresh FULL`."
+            )
+
+    return refresh, reset_mode, task_keys

@@ -64,14 +64,6 @@ class TableDataSink(BaseDataSink):
         return self
 
     @model_validator(mode="after")
-    def validate_format_reset_delete_where(self) -> Any:
-        if self.reset_mode == "DELETE_WHERE" and self.format != "DELTA":
-            raise ValueError(
-                f"`reset_mode` 'DELETE_WHERE' requires DELTA format, got '{self.format}'."
-            )
-        return self
-
-    @model_validator(mode="after")
     def validate_table_full_name(self) -> Any:
         name = self.table_name
         if name is None:
@@ -269,6 +261,25 @@ class TableDataSink(BaseDataSink):
         return self.full_name
 
     @property
+    def _supported_reset_modes(self) -> list[str]:
+        if self.table_type != "TABLE":
+            # Views can't be truncated
+            return ["DROP"]
+        return super()._supported_reset_modes
+
+    @property
+    def _reset_mode_label(self) -> str:
+        return f"{self.table_type.lower()} '{self.full_name}'"
+
+    @property
+    def _existing_columns(self) -> list[str] | None:
+        if self.dataframe_backend != DataFrameBackends.PYSPARK or not self.exists():
+            return None
+        from laktory import get_spark_session
+
+        return get_spark_session().table(self.full_name).columns
+
+    @property
     def _supports_shared(self) -> bool:
         return (
             self.table_type == "TABLE" and (self.format or "DELTA").upper() == "DELTA"
@@ -281,28 +292,21 @@ class TableDataSink(BaseDataSink):
         Parameters
         ----------
         mode:
-            Optional override for `reset_mode`, taking precedence over the resolved
-            `self.reset_mode` value for this call only. Limited to `DROP`/`TRUNCATE` -
-            `DELETE_WHERE` requires a sink-specific predicate that can't be supplied
-            generically here, especially when purging multiple sinks/tables at once via
-            `PipelineNode.purge()`.
+            Optional override for `reset_mode` (`DROP` or `TRUNCATE`), taking precedence
+            over the resolved `self.reset_mode` value for this call only.
         """
-        if mode == "DELETE_WHERE":
-            raise ValueError(
-                "`DELETE_WHERE` is not supported as a `purge()` override - it requires a "
-                "sink-specific `reset_delete_where` predicate. Set `reset_mode`/"
-                "`reset_delete_where` directly on the sink instead."
-            )
 
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
 
             spark = get_spark_session()
 
-            reset_mode = mode or self.reset_mode
+            deletes_writer_rows = self._deletes_writer_rows(mode)
+            reset_mode = None if deletes_writer_rows else self._get_purge_mode(mode)
 
-            if self._deletes_writer_rows(mode):
+            if deletes_writer_rows:
                 if self.exists():
+                    self._check_writer_column()
                     self._delete_where_spark(
                         self.full_name, self._shared_delete_predicate()
                     )
@@ -324,11 +328,6 @@ class TableDataSink(BaseDataSink):
                             os.remove(path)
 
             elif reset_mode == "TRUNCATE":
-                if self.table_type != "TABLE":
-                    raise ValueError(
-                        f"`reset_mode` 'TRUNCATE' is not supported for table_type "
-                        f"'{self.table_type}'. Views cannot be truncated."
-                    )
                 # Delta does not implement Spark's `SupportsTruncate`/`TRUNCATE TABLE` DDL
                 # (verified: raises "Table does not support truncates"). `DELETE FROM` with
                 # no predicate is Delta's supported equivalent - an efficient, metadata-only
@@ -336,7 +335,7 @@ class TableDataSink(BaseDataSink):
                 if self.exists():
                     logger.info(f"Truncating table {self.full_name}")
                     # Writers of a shared target may truncate it concurrently (e.g. node-owned
-                    # writers of a `refresh="reset"` run): once another writer emptied it, a retry
+                    # writers of a `refresh="RESET"` run): once another writer emptied it, a retry
                     # has nothing left to delete.
                     for attempt in range(3):
                         try:
@@ -349,13 +348,6 @@ class TableDataSink(BaseDataSink):
                                 f"Concurrent update of {self.full_name}, retrying"
                             )
                             time.sleep(2)
-
-            elif reset_mode == "DELETE_WHERE":
-                if not self.reset_delete_where:
-                    raise ValueError(
-                        "`reset_delete_where` must be set when `reset_mode` is 'DELETE_WHERE'."
-                    )
-                self._delete_where_spark(self.full_name, self.reset_delete_where)
 
             else:
                 raise ValueError(f"`reset_mode` '{reset_mode}' is not supported.")

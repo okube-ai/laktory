@@ -202,7 +202,7 @@ Stack
 | `sources` | `list[...]` | `[]` | Data sources. First entry is the primary (`{df}`); assign `name` to reference as `{sources.name}` |
 | `sinks` | `list[...]` | `[]` | Data sinks. Set `is_quarantine: true` to store expectation-failed rows |
 | `transformer` | `DataFrameTransformer` | `null` | Chain of SQL / method transformations |
-| `execution_task_name` | `str` | `null` | Groups nodes into one task in Databricks Jobs / Airflow. Nodes writing to the same sink are grouped automatically (task `shared-{table}`) |
+| `execution_task_name` | `str` | `null` | Groups nodes into one task in Databricks Jobs / Airflow |
 | `reset_mode` | `DROP \| TRUNCATE` | inherited | How this node's sinks are reset on a full refresh; overrides `Pipeline.reset_mode` |
 | `dataframe_api` | `NARWHALS \| NATIVE` | `NARWHALS` | API used in transformer nodes. `NATIVE` exposes backend-specific API. Ignored for `expectations` - those are always checked via Narwhals regardless of this setting |
 | `depends_on` | `list[str]` | `[]` | Node names to wait for even when no data flows between them |
@@ -273,9 +273,8 @@ Inherits common fields from `BaseDataSource`.
 | `is_quarantine` | `bool` | `false` | Stores rows that fail `expectations` |
 | `checkpoint_path` | `str` | `null` | Checkpoint directory for streaming writes |
 | `metadata` | `TableDataSinkMetadata` | `null` | Table/column-level comments, tags, and Delta properties |
-| `reset_mode` | `DROP \| TRUNCATE \| DELETE_WHERE` | inherited, `DROP` | How the sink is reset on a full refresh. Inherited sink → node → pipeline → `settings.reset_mode` / `LAKTORY_RESET_MODE`; `DELETE_WHERE` only on the sink |
-| `reset_delete_where` | `str` | `null` | SQL predicate of the rows to delete when `reset_mode: DELETE_WHERE` (DELTA only, sink only, not inherited) |
-| `shared` | `DataSinkSharedOptions` | `null` | Options for a sink written by several nodes / pipelines: `owner` (`table` \| `pipeline` \| `node`), `writer_id`, `column`. See [Shared sinks](#data-pipeline--shared-sinks) |
+| `reset_mode` | `DROP \| TRUNCATE` | inherited, `DROP` | How the sink is reset on a full refresh. Inherited sink → node → pipeline → `settings.reset_mode` / `LAKTORY_RESET_MODE`. Partial reset: `shared.where` |
+| `shared` | `DataSinkSharedOptions` \| `bool` | `null` | Options for a sink written by several nodes / pipelines (`true` for defaults): `writer_id`, `column`, `where`. See [Shared sinks](#data-pipeline--shared-sinks) |
 
 ---
 
@@ -477,45 +476,52 @@ transformer:
 
 ### Data Pipeline — Shared sinks
 
-A table written by several nodes and/or several pipelines. `shared.owner` defines what a
-writer owns, which is what a full refresh deletes and how writers are executed:
+A table written by several nodes and/or several pipelines. Each writer owns its rows and a full
+refresh of a writer only deletes and reprocesses its own rows: writers run and refresh
+independently (own task, any selection of tasks, in parallel), no coordination needed.
 
-| `owner` | Use when | Executed as | Full refresh deletes |
-|---|---|---|---|
-| `table` (default, no `shared` needed) | several nodes of one pipeline write to the table | one task `shared-{table}` running all writers (order with `depends_on`) | the whole table, once (`reset_mode`) |
-| `pipeline` | other pipelines also write to the table | one task (grouped if several nodes of the pipeline write to it) | this pipeline's rows |
-| `node` | writers must run independently / in parallel | one task per writer | the node's rows |
+| Case | Configuration |
+|---|---|
+| several nodes of one pipeline write to the table | none (detected, same as `shared: true`) |
+| several pipelines write to the table | `shared: true` on every sink writing to it |
+
+Rows are identified by a writer column (`_laktory_writer`, first column,
+`{pipeline}.{node}`) or, without adding a column, by a SQL predicate:
 
 ```yaml
-# pl-client-acme.yaml - pl-client-globex.yaml is identical except its name
-name: pl-client-acme
-nodes:
-- name: slv_orders
-  sources:
-  - table_name: brz_orders
-  sinks:
-  - schema_name: shared
-    table_name: slv_all_orders
-    mode: APPEND
-    shared:
-      owner: pipeline      # rows tagged `pl-client-acme` in `_laktory_writer`
+# pl-client-23.yaml - one pipeline per client, all appending to the same table
+sinks:
+- schema_name: shared
+  table_name: slv_all_orders
+  mode: APPEND
+  shared: true                  # rows tagged `pl-client-23.slv_orders`
+  # shared: {where: client_id = 23}   # alternative: no column, rows matching the predicate
 ```
 
-- `owner` `pipeline` / `node` require `mode: APPEND` and a DELTA table or file sink. They add a
-  `_laktory_writer` column (first column; `{pipeline}` or `{pipeline}.{node}`, override with
-  `writer_id`, rename with `column`), ignore `reset_mode` and reject `reset_delete_where`.
-- Writers of a table in one pipeline must use the same `shared` options; grouped writers must
-  also use the same `reset_mode` / `reset_delete_where` (the table is reset once).
-- In a Stack, every pipeline writing to a shared table must declare `owner` `pipeline` or
-  `node`, and none may use a declarative orchestrator.
-- `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: only `owner: table` (one
-  streaming table, one append flow per node named `{table}__{node}`); all sinks streaming,
-  non-`MERGE`, with the same expectations.
-- Keep writer ids stable: rows of a renamed/removed node-owned writer or of a decommissioned
-  pipeline are never deleted by a full refresh (clean up with
-  `DELETE FROM <table> WHERE _laktory_writer = '<id>'`). Rows written before switching a table to
-  `pipeline` / `node` have no writer id: drop the table once when converting.
-- Selecting one grouped writer (`selects`, job task subset) runs the whole group.
+- `shared` options: `writer_id` (default `{pipeline}.{node}`), `column` (default
+  `_laktory_writer`), `where` (predicate instead of the column; excludes `writer_id` /
+  `column`). `shared: true` = default options.
+- Shared sinks require `mode: APPEND` and a DELTA table or file sink (otherwise validation
+  error: use separate tables). `reset_mode` is ignored on full refresh.
+- All writers of a table use the same kind of ownership (column or `where`), the same `column`,
+  and distinct ids / predicates. Predicates must not overlap (not checked).
+- In a Stack, every pipeline writing to a shared table must declare `shared`, and none may use a
+  declarative orchestrator.
+- Reading: `node_name: <writer>` returns that writer's rows only (no writer column), from memory
+  or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
+  writer, `node_name` reads the whole table. A writer's full refresh deletes rows: streaming
+  readers of the table need a full refresh too.
+- Reset / drop a shared table as a whole: `refresh=RESET` + `reset_mode=DROP` (or `TRUNCATE`) on
+  any selection of writer tasks (one is enough); the checkpoints of all its writers in the
+  pipeline are reset too. `refresh=FULL` + override is rejected on shared sinks (a full
+  refresh never deletes the other writers' rows).
+- `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: no `shared` options, no writer
+  column (one streaming table, one append flow per node named `{table}__{node}`); all sinks
+  streaming, non-`MERGE`, with the same expectations.
+- Keep writer ids stable: rows of a renamed/removed writer or of a decommissioned pipeline are
+  never deleted by a full refresh (clean up with `DELETE FROM <table> WHERE _laktory_writer =
+  '<id>'`, or reset the table). A table written before being shared has no writer column: writes
+  and refreshes fail until it is dropped once (`refresh=RESET`, `reset_mode=DROP`).
 - Full guide: https://www.laktory.ai/concepts/sharedsinks/
 
 ### Data Pipeline — Pipeline with Lakeflow Job orchestrator
@@ -843,25 +849,29 @@ What a run does is selected with `refresh`:
 
 | `refresh` | Effect |
 |---|---|
-| `incremental` (default) | no reset: sinks are written according to their `mode`, streams resume from their checkpoint |
-| `full` | reset the sinks of the selected nodes (data and checkpoints), then reprocess everything |
-| `reset` | only reset the sinks of the selected nodes; no data read or written |
+| `INCREMENTAL` (default) | no reset: sinks are written according to their `mode`, streams resume from their checkpoint |
+| `FULL` | reset the sinks of the selected nodes (data and checkpoints), then reprocess everything |
+| `RESET` | only reset the sinks of the selected nodes; no data read or written |
 
-- Python: `pl.execute(refresh="full")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
-  different parameters*); `AIRFLOW`: `refresh` DAG param. `full_refresh` was removed in 0.13.0 and
-  is rejected - never generate it.
+- Python: `pl.execute(refresh="FULL")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
+  different parameters*) or `laktory run --databricks-job <job> --refresh FULL [--reset-mode DROP]
+  [--tasks node-a,node-b]`; `AIRFLOW`: `refresh` DAG param. `full_refresh` was replaced in 0.13.0:
+  `pl.execute(full_refresh=...)` is rejected, and job / Airflow tasks receiving
+  `full_refresh=true` fail (redeploy jobs deployed before 0.13.0) - never generate it.
 - How a sink is reset is set by `reset_mode`: `DROP` (default; recreated on next write),
-  `TRUNCATE` (keeps table, schema, grants), `DELETE_WHERE` (only rows matching
-  `reset_delete_where`; table sinks, DELTA). `TRUNCATE` / `DELETE_WHERE` are not supported by
-  `FileDataSink` or declarative orchestrators.
-- Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `full`
-  or `reset` (rejected on `incremental`): `pl.execute(refresh="full", reset_mode="DROP")`, or the
-  `reset_mode` job parameter / DAG param. Rejected on a full refresh of `owner: node` sinks: run
-  `refresh="reset"` with the override first, then `refresh="full"`.
+  `TRUNCATE` (keeps table, schema, grants; also DELTA files - same table id). Only sinks natively
+  supporting a truncate: not supported by other file formats, views or declarative
+  orchestrators: rejected if set on the sink, falls back to `DROP` if inherited (node, pipeline,
+  settings) or passed as a run override. To reset only the rows of a sink (e.g. `client_id = 'acme'`), use
+  `shared: {where: ...}` instead.
+- Override for one run with `reset_mode` (`DROP` or `TRUNCATE`), together with `refresh` `FULL`
+  or `RESET` (rejected on `INCREMENTAL`): `pl.execute(refresh="FULL", reset_mode="DROP")`, or the
+  `reset_mode` job parameter / DAG param. Rejected on a full refresh of shared sinks: run
+  `refresh="RESET"` with the override first, then a normal run.
 - Resetting a table without table grants (e.g. before a breaking schema change): run the job with
-  `refresh=reset` and `reset_mode=DROP` (optionally on a subset of tasks), then a normal run.
-- The deleted-row count of `DELETE_WHERE` / shared-sink deletes is logged: check it to catch a
-  wrong predicate.
+  `refresh=RESET` and `reset_mode=DROP` (optionally on a subset of tasks), then a normal run.
+- The deleted-row count of shared-sink deletes (writer column or `shared.where`) is logged:
+  check it to catch a wrong predicate.
 - Full guide: https://www.laktory.ai/concepts/refresh/
 
 ---
@@ -876,17 +886,19 @@ Reserve deploy+run for verifying job/task orchestration and streaming/checkpoint
 from databricks.connect import DatabricksSession
 from laktory import models, register_spark_session
 
-spark = DatabricksSession.builder.profile("<profile>").getOrCreate()  # or .getOrCreate() for serverless
+spark = DatabricksSession.builder.profile(
+    "<profile>"
+).getOrCreate()  # or .getOrCreate() for serverless
 register_spark_session(spark)
 
 with open("laktory/pipelines/pl-stock-prices.yml") as fp:
     pl = models.Pipeline.model_validate_yaml(fp)
 pl = pl.inject_vars(vars={"catalog": "dev"})  # DAB: use bundle_vars instead
 
-pl.execute(write_sinks=False)                                 # run every node first
+pl.execute(write_sinks=False)  # run every node first
 # pl.execute(write_sinks=False, selects=["brz_stock_prices"])  # then narrow to the failing node
 df = pl.nodes_dict["brz_stock_prices"].output_df.to_native()
-# pl.execute(refresh="full")  # reset the sinks, then reprocess (writes to the real targets)
+# pl.execute(refresh="FULL")  # reset the sinks, then reprocess (writes to the real targets)
 ```
 
 - `write_sinks=False` only reads + transforms, nothing is written; `True` writes to the real target from the injected variables — not a dry run

@@ -117,7 +117,7 @@ def test_dag_attributes():
     assert dag.tags == {"stocks", "pipeline"}
     assert not dag.fail_fast
     assert {k: dag.params[k] for k in ["refresh", "reset_mode"]} == {
-        "refresh": "incremental",
+        "refresh": "INCREMENTAL",
         "reset_mode": "",
     }
 

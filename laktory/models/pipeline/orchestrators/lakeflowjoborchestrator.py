@@ -168,7 +168,7 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
         self.sort_tasks(self.task)
 
         self.parameter = [
-            JobParameter(name="refresh", default="incremental"),
+            JobParameter(name="refresh", default="INCREMENTAL"),
             JobParameter(name="reset_mode", default=""),
         ]
 
