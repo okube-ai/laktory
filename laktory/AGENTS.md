@@ -480,10 +480,10 @@ A table written by several nodes and/or several pipelines. Each writer owns its 
 refresh of a writer only deletes and reprocesses its own rows: writers run and refresh
 independently (own task, any selection of tasks, in parallel), no coordination needed.
 
-| Case | Configuration |
-|---|---|
-| several nodes of one pipeline write to the table | none (detected, same as `shared: true`) |
-| several pipelines write to the table | `shared: true` on every sink writing to it |
+Declare `shared` (`shared: true` for the defaults) on every sink writing to the table, whether
+the writers are nodes of one pipeline or several pipelines: two nodes of a pipeline writing to the
+same table without `shared` fail validation. Declarative orchestrators are the exception (see
+below).
 
 Rows are identified by a writer column (`_laktory_writer`, first column,
 `{pipeline}.{node}`) or, without adding a column, by a SQL predicate:
@@ -505,8 +505,9 @@ sinks:
   error: use separate tables). `reset_mode` is ignored on full refresh.
 - All writers of a table use the same kind of ownership (column or `where`), the same `column`,
   and distinct ids / predicates. Predicates must not overlap (not checked).
-- In a Stack, every pipeline writing to a shared table must declare `shared`, and none may use a
-  declarative orchestrator.
+- Validation: every sink writing to a target written by several nodes of a pipeline declares
+  `shared`. In a Stack, the same for every pipeline writing to a shared table, and none may use
+  a declarative orchestrator.
 - Reading: `node_name: <writer>` returns that writer's rows only (no writer column), from memory
   or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
   writer, `node_name` reads the whole table. A writer's full refresh deletes rows: streaming
@@ -515,13 +516,14 @@ sinks:
   any selection of writer tasks (one is enough); the checkpoints of all its writers in the
   pipeline are reset too. `refresh=FULL` + override is rejected on shared sinks (a full
   refresh never deletes the other writers' rows).
-- `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: no `shared` options, no writer
+- `LAKEFLOW_DECLARATIVE_PIPELINE` / `SPARK_DECLARATIVE_PIPELINE`: several nodes of a pipeline
+  write to the same table without declaring anything; `shared` options rejected, no writer
   column (one streaming table, one append flow per node named `{table}__{node}`); all sinks
   streaming, non-`MERGE`, with the same expectations.
 - Keep writer ids stable: rows of a renamed/removed writer or of a decommissioned pipeline are
   never deleted by a full refresh (clean up with `DELETE FROM <table> WHERE _laktory_writer =
-  '<id>'`, or reset the table). A table written before being shared has no writer column: writes
-  and refreshes fail until it is dropped once (`refresh=RESET`, `reset_mode=DROP`).
+  '<id>'`, or reset the table). A table written before being shared has no writer column (e.g. several nodes
+  writing to it before 0.13.0): writes and refreshes fail until it is dropped once (`refresh=RESET`, `reset_mode=DROP`).
 - Full guide: https://www.laktory.ai/concepts/sharedsinks/
 
 ### Data Pipeline — Pipeline with Lakeflow Job orchestrator

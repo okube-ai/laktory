@@ -11,7 +11,9 @@ order, in parallel, alone or together.
 
 ## Declaring a Shared Sink
 
-**Several nodes of a pipeline:** detected automatically, nothing to declare.
+Declare `shared` on every sink writing to the table (`shared: true` for the default options).
+
+**Several nodes of a pipeline:**
 
 ```yaml
 nodes:
@@ -19,14 +21,18 @@ nodes:
   sinks:
   - table_name: prices
     mode: APPEND
+    shared: true
 - name: feed_b
   sinks:
   - table_name: prices
     mode: APPEND
+    shared: true
 ```
 
-**Several pipelines:** declare `shared` on every sink writing to the table, since a pipeline
-can't know about the others.
+Nodes of a pipeline writing to the same table without `shared` fail validation: declaring it
+makes the writer column added to the table explicit.
+
+**Several pipelines:**
 
 ```yaml
 # pl-client-acme.yaml, pl-client-globex.yaml, ...
@@ -115,6 +121,7 @@ When the whole table is reset:
 
 ## Validation
 
+- Every sink of a table written by several nodes of a pipeline declares `shared`.
 - Shared sinks are DELTA sinks in `APPEND` mode.
 - Writers of a table use the same kind of ownership, the same `column`, and distinct writer
   identifiers or predicates.
@@ -125,9 +132,10 @@ When the whole table is reset:
 With Lakeflow / Spark Declarative Pipelines, the engine owns the tables: `shared` is not
 supported and a table written by a declarative pipeline can't be shared with other pipelines.
 
-Several nodes can still write to the same table: it's declared once as a streaming table, and
-each node appends to it through its own append flow, `{table_name}__{node_name}`. On a full
-refresh, the engine clears the table once and resets every flow.
+Several nodes can still write to the same table, without declaring `shared`: it's declared once as
+a streaming table, and each node appends to it through its own append flow,
+`{table_name}__{node_name}`. On a full refresh, the engine clears the table once and resets every
+flow.
 
 - All sinks must be streaming, non-CDC (`MERGE`) table sinks.
 - Table properties (`comment`, `table_properties`, `format`) can be set on any of the sinks, but

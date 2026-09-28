@@ -24,8 +24,8 @@ class DataSinkSharedOptions(BaseModel, PipelineChild):
     - a SQL predicate (`where`), e.g. `client_id = 23`, matching the rows written by the
       writer: no column is added.
 
-    Applied automatically, with a writer column, when several nodes of a pipeline write to the
-    same sink. `shared: true` is equivalent to `shared: {}`.
+    Required on every sink of a target written by several nodes of a pipeline or by several
+    pipelines. `shared: true` is equivalent to `shared: {}`.
 
     Examples
     --------

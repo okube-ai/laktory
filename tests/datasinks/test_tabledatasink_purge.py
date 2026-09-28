@@ -186,7 +186,7 @@ def _writer_counts(table):
 def test_purge_shared_multiple_writers_table(tmp_path):
     table = "purge_shared_writers"
     get_spark_session().sql(f"DROP TABLE IF EXISTS default.{table}")
-    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), None, ["a", "b"])
+    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), True, ["a", "b"])
 
     # Node-owned by default, one task per writer
     assert [t.name for t in pl.get_execution_plan().tasks] == ["node-a", "node-b"]
@@ -213,7 +213,7 @@ def test_purge_shared_legacy_table(tmp_path):
     _shared_pipeline("pl", table, path, None, ["a"]).execute()
     assert "_laktory_writer" not in spark.table(f"default.{table}").columns
 
-    pl = _shared_pipeline("pl", table, path, None, ["a", "b"])
+    pl = _shared_pipeline("pl", table, path, True, ["a", "b"])
     for refresh in ["incremental", "full"]:
         with pytest.raises(ValueError, match="has no `_laktory_writer` column"):
             pl.execute(refresh=refresh)
@@ -249,6 +249,7 @@ def test_purge_shared_streaming_dropped_table(tmp_path):
                     "table_name": table,
                     "mode": "APPEND",
                     "writer_kwargs": {"path": (tmp_path / "t").as_posix()},
+                    "shared": True,
                 }
             ],
         }
@@ -315,7 +316,7 @@ def test_shared_node_source_spark(tmp_path):
 
     table = "purge_shared_node_source"
     get_spark_session().sql(f"DROP TABLE IF EXISTS default.{table}")
-    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), None, ["a", "b"])
+    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), True, ["a", "b"])
     pl.execute()
 
     source = models.PipelineNodeDataSource(node_name="a")

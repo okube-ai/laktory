@@ -376,8 +376,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
     @model_validator(mode="after")
     def validate_shared_sinks(self) -> Any:
-        from laktory.models.datasinks.sharedoptions import DataSinkSharedOptions
-
         is_declarative = self.is_orchestrator_ldp or self.is_orchestrator_sdp
 
         for target, sinks in self.sink_targets.items():
@@ -398,23 +396,22 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 continue
 
             # Several writers: each node owns its rows, so that a writer can be executed and
-            # refreshed independently of the others.
-            for s in sinks:
-                node_name = s.parent_pipeline_node.name
-                if s.mode not in [None, "APPEND"] or not s._supports_shared:
-                    raise ValueError(
-                        f"Pipeline nodes {node_names} write to '{target}'. Each node owns its "
-                        "rows, which requires DELTA table or file sinks in `APPEND` mode, but "
-                        f"the sink of node '{node_name}' is a {type(s).__name__} with mode "
-                        f"'{s.mode}' and format '{getattr(s, 'format', None)}'. Write to "
-                        "separate targets instead."
-                    )
-
-            # Node ownership, applied automatically with a writer column
-            for s in sinks:
-                if s.shared is None:
-                    s._setattr("shared", DataSinkSharedOptions())
-                    s._assign_parent_to_children()
+            # refreshed independently of the others. Declared explicitly, as it adds a writer
+            # column to the target (unless `shared.where` is used).
+            missing = list(
+                dict.fromkeys(
+                    s.parent_pipeline_node.name for s in sinks if s.shared is None
+                )
+            )
+            if missing:
+                raise ValueError(
+                    f"Pipeline nodes {node_names} write to '{target}', but the sinks of "
+                    f"nodes {missing} don't declare `shared` options. Declare them on every "
+                    "sink writing to this target (e.g. `shared: true`), so that each node "
+                    "owns its rows and a full refresh only deletes the rows of its node. "
+                    "Shared sinks must be DELTA table or file sinks in `APPEND` mode: "
+                    "otherwise, write to separate targets."
+                )
 
             self._validate_shared_writers(target, sinks, node_names)
 
@@ -431,9 +428,8 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         if len(kinds) > 1:
             raise ValueError(
                 f"Writers {writer_names} of '{target}' identify their rows differently: some "
-                "with a writer column (default, including sinks without `shared`), others "
-                "with `shared.where`. Use the same for all of them, as a predicate could "
-                "match the rows of the other writers."
+                "with a writer column (default), others with `shared.where`. Use the same "
+                "for all of them, as a predicate could match the rows of the other writers."
             )
 
         if kinds == {True}:

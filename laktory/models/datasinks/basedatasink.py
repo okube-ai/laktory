@@ -146,8 +146,8 @@ class BaseDataSink(BaseModel, PipelineChild):
         description="""
         Options for a sink written by multiple writers: each writer owns its rows, identified
         by a writer column or a SQL predicate, and a full refresh of a writer only deletes its
-        own rows. Applied automatically when several nodes of a pipeline write to the same
-        sink. `true` for the default options. See `DataSinkSharedOptions`.
+        own rows. Required on every sink of a target written by several nodes or pipelines.
+        `true` for the default options. See `DataSinkSharedOptions`.
         """,
     )
 
@@ -942,10 +942,10 @@ class BaseDataSink(BaseModel, PipelineChild):
         if columns is None or self.shared.column in columns:
             return
         raise ValueError(
-            f"'{self.purge_target}' is shared (several nodes write to it, or `shared` "
-            f"options), but it has no `{self.shared.column}` column identifying the writer "
-            "of each row: it was written before being shared. Drop it once, e.g. by running "
-            "the pipeline with `refresh='RESET'` and `reset_mode='DROP'`, then run normally."
+            f"'{self.purge_target}' is shared (`shared` options), but it has no "
+            f"`{self.shared.column}` column identifying the writer of each row: it was "
+            "written before being shared. Drop it once, e.g. by running the pipeline with "
+            "`refresh='RESET'` and `reset_mode='DROP'`, then run normally."
         )
 
     def _check_writer_id(self):

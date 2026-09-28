@@ -329,7 +329,8 @@ def _writers(sink_path, shared, names=("a", "b", "c"), feeds=None, node_kwargs=N
     for name in names:
         sink = {"path": sink_path, "format": "DELTA", "mode": "APPEND"}
         per_node = isinstance(shared, dict) and set(shared) <= set(names)
-        _shared = shared.get(name) if per_node else shared
+        # Nodes missing from a per-node mapping use the default options
+        _shared = shared.get(name, True) if per_node else shared
         if _shared is not None:
             sink["shared"] = _shared
         feed = feeds.get(name, name)
@@ -364,38 +365,25 @@ def _feed_counts(sink_path):
 _NODE_OWNED = True
 
 
-def test_shared_default_node_owned(tmp_path):
-    """Several nodes writing to the same target own their rows by default"""
+def test_shared_required(tmp_path):
+    """Several nodes writing to the same target must declare `shared` on every sink"""
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
 
-    # One task per writer, no coordination
-    assert [t.name for t in pl.get_execution_plan().tasks] == [
-        "node-a",
-        "node-b",
-        "node-c",
-    ]
-    assert [n.sinks[0].shared.writer_id for n in pl.nodes] == ["pl.a", "pl.b", "pl.c"]
+    with pytest.raises(
+        ValueError, match=r"sinks of nodes \['a', 'b', 'c'\] don't declare"
+    ):
+        _pipeline(_writers(path, None))
 
-    pl.execute()
-    df = _read(path)
-    assert df.columns[0] == "_laktory_writer"
-    assert dict(
-        df.select("feed", "_laktory_writer").unique().sort("feed").iter_rows()
-    ) == {"a": "pl.a", "b": "pl.b", "c": "pl.c"}
+    # Declared on some sinks only
+    shared = {"a": True, "b": None, "c": None}
+    with pytest.raises(ValueError, match=r"sinks of nodes \['b', 'c'\] don't declare"):
+        _pipeline(_writers(path, shared))
 
-    # Incremental run of one writer
-    pl.execute(selects=["b"])
-    assert _feed_counts(path) == {"a": 3, "b": 6, "c": 3}
-
-    # Full refresh of any selection only replaces the rows of the selected writers
-    pl.execute(selects=["b"], refresh="full")
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
-    pl.execute(refresh="full")
-    assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
+    # A single writer doesn't need it
+    _pipeline(_writers(path, None, names=("a",)))
 
 
-def test_shared_default_node_owned_quarantine(tmp_path):
+def test_shared_node_owned_quarantine(tmp_path):
     """Nodes sending their quarantined rows to the same table keep their own tasks, even when
     they are not adjacent, and each one owns its quarantined rows."""
     df0 = get_df0("POLARS")
@@ -414,6 +402,7 @@ def test_shared_default_node_owned_quarantine(tmp_path):
                     "format": "DELTA",
                     "mode": "APPEND",
                     "is_quarantine": True,
+                    "shared": True,
                 }
             ]
         return models.PipelineNode(
@@ -444,11 +433,11 @@ def test_shared_default_node_owned_quarantine(tmp_path):
     assert _feed_counts(quarantine) == {"a": 3, "c": 3}
 
 
-def test_shared_default_node_owned_execution_task_names(tmp_path):
+def test_shared_node_owned_execution_task_names(tmp_path):
     # Writers keep their own execution task names
     nodes = _writers(
         str(tmp_path / "shared"),
-        None,
+        _NODE_OWNED,
         names=("a", "b"),
         node_kwargs={
             "a": {"execution_task_name": "t1"},
@@ -459,10 +448,10 @@ def test_shared_default_node_owned_execution_task_names(tmp_path):
     assert [t.name for t in tasks] == ["t1", "t2"]
 
 
-def test_shared_default_ignores_reset_mode(tmp_path):
+def test_shared_ignores_reset_mode(tmp_path):
     # Each node deletes its own rows: `reset_mode` doesn't apply and may differ
     path = str(tmp_path / "shared")
-    nodes = _writers(path, None, node_kwargs={"a": {"reset_mode": "TRUNCATE"}})
+    nodes = _writers(path, _NODE_OWNED, node_kwargs={"a": {"reset_mode": "TRUNCATE"}})
     pl = _pipeline(nodes)
     pl.execute()
     pl.execute(refresh="full")
@@ -471,10 +460,10 @@ def test_shared_default_ignores_reset_mode(tmp_path):
 
 def test_shared_removed_node(tmp_path):
     path = str(tmp_path / "shared")
-    _pipeline(_writers(path, None)).execute()
+    _pipeline(_writers(path, _NODE_OWNED)).execute()
 
     # Node c removed: its rows are not deleted by a full refresh of the other writers
-    pl = _pipeline(_writers(path, None, names=("a", "b")))
+    pl = _pipeline(_writers(path, _NODE_OWNED, names=("a", "b")))
     pl.execute(refresh="full")
     assert _feed_counts(path) == {"a": 3, "b": 3, "c": 3}
 
@@ -568,7 +557,7 @@ def test_shared_where(tmp_path):
 
 
 def test_shared_reset_mode_override_invalid(tmp_path):
-    pl = _pipeline(_writers(str(tmp_path / "shared"), None))
+    pl = _pipeline(_writers(str(tmp_path / "shared"), _NODE_OWNED))
     with pytest.raises(ValueError, match="not supported"):
         pl.execute(refresh="full", reset_mode="DELETE_WHERE")
 
@@ -593,15 +582,10 @@ def test_shared_pipeline_validation(tmp_path, shared, match):
         _pipeline(_writers(str(tmp_path / "shared"), shared))
 
 
-@pytest.mark.parametrize(
-    "sink,match",
-    [
-        ({"mode": "OVERWRITE"}, "mode 'OVERWRITE'"),
-        ({"format": "PARQUET"}, "format 'PARQUET'"),
-    ],
-)
-def test_shared_multiple_writers_requirements(tmp_path, sink, match):
-    """Several writers require DELTA sinks in APPEND mode"""
+@pytest.mark.parametrize("sink", [{"mode": "OVERWRITE"}, {"format": "PARQUET"}])
+def test_shared_multiple_writers_requirements(tmp_path, sink):
+    """Several writers of a target require shared DELTA sinks in APPEND mode (sink-level
+    validation of `shared`: tests/datasinks/test_sharedoptions.py)"""
     df0 = get_df0("POLARS")
     path = str(tmp_path / "shared")
     nodes = [
@@ -612,7 +596,7 @@ def test_shared_multiple_writers_requirements(tmp_path, sink, match):
         )
         for name in ["a", "b"]
     ]
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(ValueError, match="DELTA table or file sinks in `APPEND` mode"):
         _pipeline(nodes)
 
 
@@ -648,9 +632,9 @@ def test_shared_config_round_trip(tmp_path):
     assert pl2.nodes_dict["c"].sinks[0].shared.where == "feed = 'c'"
 
 
-def test_reset_default_node_owned(tmp_path):
+def test_reset_single_writer(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
+    pl = _pipeline(_writers(path, _NODE_OWNED))
     pl.execute()
 
     # Each writer deletes its own rows
@@ -701,7 +685,7 @@ def test_reset_several_pipelines(tmp_path):
 
 def test_refresh_parameters(tmp_path):
     path = str(tmp_path / "shared")
-    pl = _pipeline(_writers(path, None))
+    pl = _pipeline(_writers(path, _NODE_OWNED))
     pl.execute()
 
     with pytest.raises(ValueError, match="requires `refresh`"):
@@ -728,7 +712,11 @@ def test_validate_run_parameters(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "shared", [None, {n: {"where": f"feed = '{n}'"} for n in ["a", "b"]}]
+    "shared",
+    [
+        {n: True for n in ["a", "b"]},
+        {n: {"where": f"feed = '{n}'"} for n in ["a", "b"]},
+    ],
 )
 def test_shared_node_source(tmp_path, shared):
     """A node reading a writer of a shared sink gets the writer output only, whether it's
@@ -742,8 +730,7 @@ def test_shared_node_source(tmp_path, shared):
         nodes = []
         for name in ["a", "b"]:
             sink = {"path": path, "format": "DELTA", "mode": "APPEND"}
-            if shared:
-                sink["shared"] = shared[name]
+            sink["shared"] = shared[name]
             nodes += [
                 {
                     "name": name,

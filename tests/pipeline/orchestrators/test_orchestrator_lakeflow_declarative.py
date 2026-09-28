@@ -698,7 +698,7 @@ def test_sdp_script_shared_sink(tmp_path, monkeypatch):
 
 
 def test_duplicate_sink_target_ok_under_lakeflow_job():
-    """Two nodes can write to the same output table under LAKEFLOW_JOB"""
+    """Two nodes can write to the same output table under LAKEFLOW_JOB, as shared sinks"""
     models.Pipeline.model_validate(
         {
             "name": "pl-job",
@@ -710,12 +710,12 @@ def test_duplicate_sink_target_ok_under_lakeflow_job():
                 {
                     "name": "n1",
                     "sources": [{"format": "JSON", "path": "/src1/"}],
-                    "sinks": [{"table_name": "shared"}],
+                    "sinks": [{"table_name": "shared", "shared": True}],
                 },
                 {
                     "name": "n2",
                     "sources": [{"format": "JSON", "path": "/src2/"}],
-                    "sinks": [{"table_name": "shared"}],
+                    "sinks": [{"table_name": "shared", "shared": True}],
                 },
             ],
         }
