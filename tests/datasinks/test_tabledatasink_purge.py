@@ -343,3 +343,67 @@ def test_shared_node_source_spark(tmp_path, where):
     df = source.read().to_native()
     assert "_laktory_writer" not in df.columns
     assert {r[0] for r in df.select("feed").distinct().collect()} == {"a"}
+
+
+def test_retry_on_spark_concurrent_append(tmp_path):
+    """A writer's delete conflicting with another writer's append raises Spark's
+    `ConcurrentAppendException`, recognized and retried. The conflict is deterministic: the
+    delete predicate blocks (UDF) until the append is committed."""
+    import os
+    import threading
+    import time
+
+    from pyspark.sql.types import BooleanType
+
+    from laktory.models.datasinks import basedatasink
+
+    spark = get_spark_session()
+    path = (tmp_path / "t").as_posix()
+    started, go = str(tmp_path / "started"), str(tmp_path / "go")
+    columns = ["_laktory_writer", "x"]
+    spark.createDataFrame([("a", 1), ("b", 2)], columns).write.format("delta").save(
+        path
+    )
+
+    # Runs in the Python worker process: signals through files
+    def _wait(x):
+        open(started, "w").close()
+        for _ in range(600):
+            if os.path.exists(go):
+                break
+            time.sleep(0.05)
+        return True
+
+    spark.udf.register("laktory_test_wait", _wait, BooleanType())
+
+    def _append_while_deleting():
+        while not os.path.exists(started):
+            time.sleep(0.05)
+        spark.createDataFrame([("b", 3)], columns).write.format("delta").mode(
+            "append"
+        ).save(path)
+        open(go, "w").close()
+
+    errors = []
+
+    def _delete():
+        # First attempt blocked until the append is committed: conflict
+        predicate = "_laktory_writer = 'a'"
+        if not errors:
+            predicate += " AND laktory_test_wait(x)"
+        try:
+            spark.sql(f"DELETE FROM delta.`{path}` WHERE {predicate}").collect()
+        except Exception as e:
+            errors.append(e)
+            raise
+
+    appender = threading.Thread(target=_append_while_deleting)
+    appender.start()
+    basedatasink.retry_on_concurrent_commit(_delete, label=path, wait=0)
+    appender.join()
+
+    assert len(errors) == 1
+    assert "ConcurrentAppendException" in str(errors[0])
+    assert basedatasink.is_concurrent_commit_error(errors[0])
+    rows = spark.read.format("delta").load(path).collect()
+    assert sorted((r[0], r[1]) for r in rows) == [("b", 2), ("b", 3)]

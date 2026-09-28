@@ -523,6 +523,11 @@ sinks:
   write to the same table without declaring anything; `shared` options rejected, no writer
   column (one streaming table, one append flow per node named `{table}__{node}`); all sinks
   streaming, non-`MERGE`, with the same expectations.
+- Concurrent writers: a writer's delete (full refresh) conflicting with another writer's append
+  fails the Delta commit; Laktory retries it (5 attempts, exponential backoff, logged). Fewer
+  conflicts: Databricks row-level concurrency (deletion vectors) / liquid clustering, or OSS
+  Delta partitioned by the writer column (`writer_methods: [{name: partitionBy, args:
+  [_laktory_writer]}]`).
 - Keep writer ids stable: rows of a renamed/removed writer or of a decommissioned pipeline are
   never deleted by a full refresh (clean up with `DELETE FROM <table> WHERE _laktory_writer =
   '<id>'`, or reset the table). A table written before being shared has no writer column (e.g. several nodes

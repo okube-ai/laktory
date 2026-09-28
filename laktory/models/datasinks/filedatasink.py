@@ -11,6 +11,7 @@ from laktory._logger import get_logger
 from laktory.enums import DataFrameBackends
 from laktory.models.datasinks.basedatasink import POLARS_DELTA_MODES
 from laktory.models.datasinks.basedatasink import BaseDataSink
+from laktory.models.datasinks.basedatasink import retry_on_concurrent_commit
 from laktory.models.datasources.filedatasource import FileDataSource
 
 SUPPORTED_FORMATS = {
@@ -268,7 +269,14 @@ class FileDataSink(BaseDataSink):
         if self.format.lower() == "csv":
             df.write_csv(self.path, **self.writer_kwargs)
         elif self.format.lower() == "delta":
-            df.write_delta(self.path, mode=mode, **self.writer_kwargs)
+            if str(mode).lower() == "append":
+                # A concurrent delete by another writer of a shared sink fails the commit
+                retry_on_concurrent_commit(
+                    lambda: df.write_delta(self.path, mode=mode, **self.writer_kwargs),
+                    label=self.path,
+                )
+            else:
+                df.write_delta(self.path, mode=mode, **self.writer_kwargs)
         elif self.format.lower() == "excel":
             df.write_excel(self.path, **self.writer_kwargs)
         elif self.format.lower() == "ipc":
@@ -331,11 +339,16 @@ class FileDataSink(BaseDataSink):
         if self.dataframe_backend == DataFrameBackends.PYSPARK:
             from laktory import get_spark_session
 
-            get_spark_session().sql(f"DELETE FROM delta.`{self.path}`")
+            retry_on_concurrent_commit(
+                lambda: get_spark_session().sql(f"DELETE FROM delta.`{self.path}`"),
+                label=self.path,
+            )
         else:
             from deltalake import DeltaTable
 
-            DeltaTable(self.path).delete()
+            retry_on_concurrent_commit(
+                lambda: DeltaTable(self.path).delete(), label=self.path
+            )
 
     @property
     def _supports_shared(self) -> bool:
@@ -350,7 +363,9 @@ class FileDataSink(BaseDataSink):
             from deltalake import DeltaTable
 
             predicate = self._shared_delete_predicate(quote='"')
-            metrics = DeltaTable(self.path).delete(predicate)
+            metrics = retry_on_concurrent_commit(
+                lambda: DeltaTable(self.path).delete(predicate), label=self.path
+            )
             logger.info(
                 f"Deleted {metrics.get('num_deleted_rows')} rows from shared data "
                 f"{self.path} where {predicate}"

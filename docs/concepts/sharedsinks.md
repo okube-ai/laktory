@@ -122,6 +122,30 @@ When the whole table is reset:
 | Switching between writer column and `where` | drop the table once |
 | Parallel writers adding different columns | declare the full `schema`, or order the writers with `depends_on` |
 
+## Concurrent Writers
+
+Writers of a shared table running at the same time can conflict: a writer deleting its rows (full
+refresh) while another one appends fails its Delta commit (`ConcurrentAppendException` with Spark,
+`CommitFailedError` with Polars). A failed commit writes nothing: Laktory retries it, up to 5
+times with an increasing delay, and logs each retry.
+
+To avoid most conflicts:
+
+- Databricks: use row-level concurrency (tables with deletion vectors) or liquid clustering, see
+  [Isolation levels and write conflicts](https://docs.databricks.com/aws/en/optimizations/isolation-level).
+- Open-source Delta (Spark): partition the table by the writer column, so that a delete only
+  reads the files of its writer:
+
+```yaml
+sinks:
+- table_name: prices
+  mode: APPEND
+  shared: true
+  writer_methods:
+  - name: partitionBy
+    args: [_laktory_writer]
+```
+
 ## Validation
 
 - Every sink of a table written by several nodes of a pipeline declares `shared`.

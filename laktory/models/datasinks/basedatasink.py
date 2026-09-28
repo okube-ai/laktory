@@ -1,6 +1,8 @@
 import hashlib
 import os
+import random
 import shutil
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -26,6 +28,55 @@ from laktory.models.readerwritermethod import ReaderWriterMethod
 from laktory.typing import AnyFrame
 
 logger = get_logger(__name__)
+
+
+def is_concurrent_commit_error(e: Exception) -> bool:
+    """
+    `True` if a Delta commit failed because of a concurrent transaction: Spark
+    `DELTA_CONCURRENT_*` exceptions (e.g. `ConcurrentAppendException`) and deltalake
+    `CommitFailedError` ("a concurrent transaction ...").
+    """
+    return "concurrent" in str(e).lower()
+
+
+def retry_on_concurrent_commit(
+    fn, label: str, attempts: int = 5, wait: float = 1.0
+) -> Any:
+    """
+    Call `fn`, retrying when its Delta commit fails because of a concurrent transaction.
+    The writers of a shared sink run independently: a writer deleting its rows (full
+    refresh, reset) may conflict with another writer appending to the same table (Spark
+    `ConcurrentAppendException` on the delete, deltalake `CommitFailedError` on the
+    append). A failed commit writes nothing, so the operation can be retried.
+
+    Parameters
+    ----------
+    fn:
+        Operation to execute
+    label:
+        Target description, for logs
+    attempts:
+        Maximum number of attempts
+    wait:
+        Base delay (seconds) before the first retry, doubled for each retry, with jitter
+
+    Returns
+    -------
+    :
+        Output of `fn`
+    """
+    for attempt in range(1, attempts + 1):
+        try:
+            return fn()
+        except Exception as e:
+            if attempt == attempts or not is_concurrent_commit_error(e):
+                raise
+            delay = wait * 2 ** (attempt - 1) * (1 + random.random())
+            logger.info(
+                f"Concurrent update of {label}, retrying in {delay:.1f}s "
+                f"(attempt {attempt + 1}/{attempts})"
+            )
+            time.sleep(delay)
 
 
 def purge_checkpoint(path, dataframe_backend, label: str = "checkpoint") -> None:
@@ -955,8 +1006,13 @@ class BaseDataSink(BaseModel, PipelineChild):
         """Delete rows of a Delta target with Spark and log the number of deleted rows."""
         from laktory import get_spark_session
 
-        rows = (
-            get_spark_session().sql(f"DELETE FROM {target} WHERE {predicate}").collect()
+        rows = retry_on_concurrent_commit(
+            lambda: (
+                get_spark_session()
+                .sql(f"DELETE FROM {target} WHERE {predicate}")
+                .collect()
+            ),
+            label=target,
         )
         count = rows[0][0] if rows else None
         logger.info(f"Deleted {count} rows from {target} where {predicate}")

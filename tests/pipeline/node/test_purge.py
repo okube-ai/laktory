@@ -761,3 +761,78 @@ def test_shared_node_source(tmp_path, shared):
     assert from_memory == from_sink
     assert "_laktory_writer" not in from_sink[0]
     assert from_sink[1] == {"a": 3}
+
+
+def test_retry_on_concurrent_commit(monkeypatch):
+    from laktory.models.datasinks import basedatasink
+
+    monkeypatch.setattr(basedatasink.time, "sleep", lambda s: None)
+    calls = []
+
+    def _fails_twice():
+        calls.append(1)
+        if len(calls) < 3:
+            raise RuntimeError("Commit failed: a concurrent transaction deleted data")
+        return "ok"
+
+    assert basedatasink.retry_on_concurrent_commit(_fails_twice, label="t") == "ok"
+    assert len(calls) == 3
+
+    # Other errors are raised immediately
+    calls.clear()
+
+    def _other_error():
+        calls.append(1)
+        raise ValueError("column not found")
+
+    with pytest.raises(ValueError, match="column not found"):
+        basedatasink.retry_on_concurrent_commit(_other_error, label="t")
+    assert len(calls) == 1
+
+    # Attempts exhausted
+    calls.clear()
+
+    def _always_concurrent():
+        calls.append(1)
+        raise RuntimeError("ConcurrentAppendException")
+
+    with pytest.raises(RuntimeError):
+        basedatasink.retry_on_concurrent_commit(
+            _always_concurrent, label="t", attempts=3
+        )
+    assert len(calls) == 3
+
+
+def test_shared_concurrent_writers(tmp_path, monkeypatch):
+    """A writer refreshing (deleting its rows) while another one appends to the same shared
+    target: concurrent commits are retried instead of failing the run"""
+    import threading
+
+    from laktory.models.datasinks import basedatasink
+
+    monkeypatch.setattr(basedatasink.time, "sleep", lambda s: None)
+    path = str(tmp_path / "shared")
+    pl = _pipeline(_writers(path, _NODE_OWNED, names=("a", "b")))
+    pl.execute()
+
+    n = 10
+    errors = []
+
+    def _loop(fn):
+        for _ in range(n):
+            try:
+                fn()
+            except Exception as e:
+                errors.append(e)
+
+    threads = [
+        threading.Thread(
+            target=_loop, args=(lambda: pl.execute(selects=["a"], refresh="full"),)
+        ),
+        threading.Thread(target=_loop, args=(lambda: pl.execute(selects=["b"]),)),
+    ]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+
+    assert errors == []
+    assert _feed_counts(path) == {"a": 3, "b": 3 * (n + 1)}
