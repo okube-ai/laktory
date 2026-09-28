@@ -669,8 +669,21 @@ def test_refresh_parameters(tmp_path):
         pl.execute(reset_mode="DROP")
     with pytest.raises(ValueError, match="is not supported"):
         pl.execute(refresh="partial")
-    with pytest.raises(TypeError):
+    # Replaced by `refresh` in 0.13.0: guided error instead of running incrementally
+    with pytest.raises(ValueError, match="run with `refresh='FULL'` instead"):
         pl.execute(full_refresh=True)
+
+
+def test_legacy_full_refresh_false(tmp_path, caplog, monkeypatch):
+    from laktory.models.pipeline import _execute as execute_module
+
+    monkeypatch.setattr(execute_module.logger, "propagate", True)
+    path = str(tmp_path / "t")
+    pl = _pipeline(_writers(path, None, names=("a",)))
+    with caplog.at_level("WARNING"):
+        pl.execute(full_refresh=False)
+    assert "`full_refresh` was replaced by `refresh`" in caplog.text
+    assert _feed_counts(path) == {"a": 3}
 
 
 def test_validate_run_parameters(tmp_path):

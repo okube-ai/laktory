@@ -41,3 +41,12 @@ Fix: a callable Pydantic `Discriminator` choosing the model from the input befor
 `${...}` string -> variable), so only the selected model is validated and the error is a single
 line. Same for data sources and `PipelineNode | str`. Affects the parsing of every config: needs
 its own test pass (existing stacks, variables, `inject_vars`, MCP model docs).
+
+## A8 — Remove the legacy `full_refresh` argument
+
+`full_refresh` was replaced by `refresh` in 0.13.0. It is still accepted, only to fail with a
+guided error when `True` (warning when `False`), by `Pipeline.execute()`, the `_execute` job script
+(`--full_refresh`) and the Airflow orchestrator DAG params (`check_legacy_full_refresh` in
+`laktory/models/pipeline/_execute.py`). Remove them in a later minor release (e.g. 0.15.0), once
+jobs deployed before 0.13.0 are unlikely: `Pipeline.execute(full_refresh=...)` then raises a
+plain `TypeError`.

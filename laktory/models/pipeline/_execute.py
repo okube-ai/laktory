@@ -6,8 +6,9 @@ logger = get_logger(__name__)
 def check_legacy_full_refresh(full_refresh) -> None:
     """
     Fail on the `full_refresh` flag replaced by `refresh` in 0.13.0, still passed by jobs
-    deployed before 0.13.0 or runs triggered with the former parameters (UI, API, other jobs,
-    Airflow `conf`): ignoring it would silently run incrementally instead of fully refreshing.
+    deployed before 0.13.0, runs triggered with the former parameters (UI, API, other jobs,
+    Airflow `conf`) or `Pipeline.execute()` calls: ignoring it would silently run
+    incrementally instead of fully refreshing.
 
     Parameters
     ----------
@@ -29,8 +30,8 @@ def check_legacy_full_refresh(full_refresh) -> None:
 
     # `full_refresh=false` runs incrementally, as intended
     logger.warning(
-        "`full_refresh` was replaced by `refresh` in Laktory 0.13.0: redeploy jobs deployed "
-        "before 0.13.0 and update the triggers passing it."
+        "`full_refresh` was replaced by `refresh` in Laktory 0.13.0: use `refresh` instead, "
+        "redeploy jobs deployed before 0.13.0 and update the triggers passing it."
     )
 
 

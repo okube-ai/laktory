@@ -19,6 +19,7 @@ from laktory.models import UnityCatalogDataSink
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline._execute import _execute  # noqa: F401
+from laktory.models.pipeline._execute import check_legacy_full_refresh
 from laktory.models.pipeline._update_data_profiling_configs import (
     _update_data_profiling_configs,  # noqa: F401
 )
@@ -981,6 +982,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         use_orchestrator: bool = False,
         refresh: Literal["INCREMENTAL", "FULL", "RESET"] = "INCREMENTAL",
         reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
+        full_refresh: bool | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -1025,10 +1027,14 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
             `refresh` `FULL` or `RESET`. For shared sinks (`shared`), the whole table is
             reset, including the rows written by other writers: only supported with
             `refresh='RESET'`.
+        full_refresh:
+            Replaced by `refresh` in 0.13.0: `True` raises an error (use
+            `refresh='FULL'`), `False` logs a warning and runs incrementally.
         """
 
         logger.info(f"Executing pipeline '{self.name}'")
 
+        check_legacy_full_refresh(full_refresh)
         refresh, reset_mode = self.validate_run_parameters(refresh, reset_mode)
 
         full_refresh = refresh == "FULL"

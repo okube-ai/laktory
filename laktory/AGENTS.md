@@ -861,8 +861,9 @@ What a run does is selected with `refresh`:
 - Python: `pl.execute(refresh="FULL")`; `LAKEFLOW_JOB`: `refresh` job parameter (*Run now with
   different parameters*) or `laktory run --databricks-job <job> --refresh FULL [--reset-mode DROP]
   [--tasks node-a,node-b]`; `AIRFLOW`: `refresh` DAG param. `full_refresh` was replaced in 0.13.0:
-  `pl.execute(full_refresh=...)` is rejected, and job / Airflow tasks receiving
-  `full_refresh=true` fail (redeploy jobs deployed before 0.13.0) - never generate it.
+  `pl.execute(full_refresh=True)` and job / Airflow tasks receiving `full_refresh=true` fail
+  with a message pointing to `refresh` (redeploy jobs deployed before 0.13.0), `false` only
+  warns - never generate it.
 - How a sink is reset is set by `reset_mode`: `DROP` (default; recreated on next write),
   `TRUNCATE` (keeps table, schema, grants; also DELTA files - same table id). Only sinks natively
   supporting a truncate: not supported by other file formats, views or declarative

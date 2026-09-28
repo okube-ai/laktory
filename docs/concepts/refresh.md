@@ -21,9 +21,10 @@ Set it wherever a pipeline runs:
 
 Run parameters (`refresh`, `reset_mode`) are case-insensitive: `refresh=full` works too.
 
-`refresh="FULL"` replaces `full_refresh=True`. A job or Airflow run still passing
-`full_refresh=true` (e.g. a job deployed before 0.13.0, or an existing trigger) fails instead of
-running incrementally: redeploy the job and update the trigger.
+`refresh="FULL"` replaces `full_refresh=True`. A run still passing `full_refresh=true` fails
+instead of running incrementally: `pl.execute(full_refresh=True)`, or a job or Airflow run (e.g. a
+job deployed before 0.13.0, or an existing trigger) - redeploy the job and update the trigger.
+`full_refresh=false` logs a warning and runs incrementally.
 
 ## Reset Modes
 

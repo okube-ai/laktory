@@ -84,7 +84,7 @@ Check these files when working on related topics:
 | File | When to consult |
 |------|----------------|
 | `.claude/docs/architectural_patterns.md` | Model hierarchy, resource patterns, pipeline composition, variable injection, YAML tags, SDP orchestrator |
-| `.claude/docs/todo.md` | Open items: A2 AI-first solution, A3 SDP Lakeflow Job dual-mode path, A4 `workspace_root: user_root` default, A5 `${current_user}` short name, A7 discriminated unions for sinks/sources/nodes |
+| `.claude/docs/todo.md` | Open items: A2 AI-first solution, A3 SDP Lakeflow Job dual-mode path, A4 `workspace_root: user_root` default, A5 `${current_user}` short name, A7 discriminated unions for sinks/sources/nodes, A8 remove legacy `full_refresh` argument |
 | `.claude/docs/documentation_system.md` | Full reference for the MkDocs stack, griffe extension, doc stub automation, and VariableType fix - Claude owns this system |
 | `.claude/docs/testing.md` | Test setup, markers, fixtures, backend parametrization, live test credentials, and live end-to-end tests (`e2e-test` skill) |
 | `.claude/docs/placeholder_convention.md` | Variable / Expression / Reference naming convention; the `$` rule; where each applies |
