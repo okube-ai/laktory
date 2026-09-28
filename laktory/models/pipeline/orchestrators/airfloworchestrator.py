@@ -228,11 +228,7 @@ class AirflowOrchestrator(PipelineChild):
                     node_names=pl_task.node_names,
                 )
 
-                pl_task.execute(
-                    full_refresh=refresh == "FULL",
-                    reset_mode=reset_mode,
-                    reset_only=refresh == "RESET",
-                )
+                pl_task.execute(refresh=refresh, reset_mode=reset_mode)
 
             return airflow_task
 

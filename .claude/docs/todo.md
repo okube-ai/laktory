@@ -45,8 +45,16 @@ its own test pass (existing stacks, variables, `inject_vars`, MCP model docs).
 ## A8 — Remove the legacy `full_refresh` argument
 
 `full_refresh` was replaced by `refresh` in 0.13.0. It is still accepted, only to fail with a
-guided error when `True` (warning when `False`), by `Pipeline.execute()`, the `_execute` job script
+guided error when `True` (warning when `False`), by `Pipeline.execute()`, `PipelineNode.execute()`,
+the `_execute` job script
 (`--full_refresh`) and the Airflow orchestrator DAG params (`check_legacy_full_refresh` in
 `laktory/models/pipeline/_execute.py`). Remove them in a later minor release (e.g. 0.15.0), once
 jobs deployed before 0.13.0 are unlikely: `Pipeline.execute(full_refresh=...)` then raises a
 plain `TypeError`.
+
+## A9 — `purge()` vs "reset" naming
+
+Since 0.13.0 the docs and run parameters say "reset" (`refresh="RESET"`, `reset_mode`), but the
+public methods are still `BaseDataSink.purge(mode=...)`, `PipelineNode.purge(mode=...)` and
+internals such as `purge_target` / `_get_purge_mode`. Rename to `reset()` (keeping `purge()` as a
+deprecated alias for a release) when convenient - low value, wide rename.

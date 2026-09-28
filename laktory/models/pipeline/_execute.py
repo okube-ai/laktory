@@ -35,6 +35,48 @@ def check_legacy_full_refresh(full_refresh) -> None:
     )
 
 
+def normalize_run_parameters(
+    refresh: str | None, reset_mode: str | None
+) -> tuple[str, str | None]:
+    """
+    Validate and normalize the run parameters of a pipeline or pipeline node execution,
+    independently of the pipeline configuration.
+
+    Parameters
+    ----------
+    refresh:
+        `INCREMENTAL`, `FULL` or `RESET` (case-insensitive). Defaults to `INCREMENTAL`.
+    reset_mode:
+        Optional `reset_mode` override (`DROP` or `TRUNCATE`, case-insensitive).
+
+    Returns
+    -------
+    :
+        Normalized `refresh` and `reset_mode`
+    """
+    refresh = (refresh or "INCREMENTAL").upper()
+    if refresh not in ["INCREMENTAL", "FULL", "RESET"]:
+        raise ValueError(
+            f"`refresh` '{refresh}' is not supported. Use 'INCREMENTAL', 'FULL' or "
+            "'RESET'."
+        )
+
+    if not reset_mode:
+        return refresh, None
+
+    reset_mode = reset_mode.upper()
+    if reset_mode not in ["DROP", "TRUNCATE"]:
+        raise ValueError(
+            f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
+            "'TRUNCATE'."
+        )
+    if refresh == "INCREMENTAL":
+        raise ValueError(
+            f"`reset_mode` '{reset_mode}' requires `refresh` 'FULL' or 'RESET'."
+        )
+    return refresh, reset_mode
+
+
 def _execute():
     """Execute pipeline as a script"""
     # TODO: Refactor and integrate into dispatcher / executor / CLI

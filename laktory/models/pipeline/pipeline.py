@@ -20,6 +20,7 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.dataquality.check import DataQualityCheck
 from laktory.models.pipeline._execute import _execute  # noqa: F401
 from laktory.models.pipeline._execute import check_legacy_full_refresh
+from laktory.models.pipeline._execute import normalize_run_parameters
 from laktory.models.pipeline._update_data_profiling_configs import (
     _update_data_profiling_configs,  # noqa: F401
 )
@@ -927,26 +928,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         :
             Normalized `refresh` and `reset_mode`
         """
-        refresh = (refresh or "INCREMENTAL").upper()
-        if refresh not in ["INCREMENTAL", "FULL", "RESET"]:
-            raise ValueError(
-                f"`refresh` '{refresh}' is not supported. Use 'INCREMENTAL', 'FULL' or "
-                "'RESET'."
-            )
-
-        if reset_mode:
-            reset_mode = reset_mode.upper()
-            if reset_mode not in ["DROP", "TRUNCATE"]:
-                raise ValueError(
-                    f"`reset_mode` override '{reset_mode}' is not supported. Use 'DROP' or "
-                    "'TRUNCATE'."
-                )
-            if refresh == "INCREMENTAL":
-                raise ValueError(
-                    f"`reset_mode` '{reset_mode}' requires `refresh` 'FULL' or 'RESET'."
-                )
-        else:
-            reset_mode = None
+        refresh, reset_mode = normalize_run_parameters(refresh, reset_mode)
 
         if refresh == "RESET" and (
             self.is_orchestrator_ldp or self.is_orchestrator_sdp
@@ -1037,9 +1019,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         check_legacy_full_refresh(full_refresh)
         refresh, reset_mode = self.validate_run_parameters(refresh, reset_mode)
 
-        full_refresh = refresh == "FULL"
-        reset_only = refresh == "RESET"
-
         if use_orchestrator:
             if self.orchestrator is None:
                 raise NotImplementedError(
@@ -1054,7 +1033,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
             if not is_sdp_execute():
                 self.orchestrator.execute(
-                    full_refresh=full_refresh,
+                    full_refresh=refresh == "FULL",
                     selects=selects,
                 )
                 return
@@ -1072,11 +1051,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         for task in plan.tasks:
             task.execute(
                 write_sinks=write_sinks,
-                full_refresh=full_refresh,
+                refresh=refresh,
                 named_dfs=named_dfs,
                 update_tables_metadata=update_tables_metadata,
                 reset_mode=reset_mode,
-                reset_only=reset_only,
             )
 
     def update_tables_metadata(self):
