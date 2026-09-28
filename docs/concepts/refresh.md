@@ -10,6 +10,10 @@ does, `reset_mode` how sinks are reset.
 | `FULL` | resets the sinks of the selected nodes, then runs: all the data is reprocessed |
 | `RESET` | only resets the sinks of the selected nodes, without reading or writing data |
 
+`RESET` resets both the data and the checkpoints of the sinks. It differs from the Databricks
+pipelines `reset_checkpoint_selection` option, which only resets the checkpoints of streaming
+flows and keeps the data.
+
 Set it wherever a pipeline runs:
 
 | Where | How |
@@ -22,9 +26,10 @@ Set it wherever a pipeline runs:
 Run parameters (`refresh`, `reset_mode`) are case-insensitive: `refresh=full` works too.
 
 `refresh="FULL"` replaces `full_refresh=True`. A run still passing `full_refresh=true` fails
-instead of running incrementally: `pl.execute(full_refresh=True)` / `node.execute(full_refresh=True)`, or a job or Airflow run (e.g. a
-job deployed before 0.13.0, or an existing trigger) - redeploy the job and update the trigger.
-`full_refresh=false` logs a warning and runs incrementally.
+instead of running incrementally: `pl.execute(full_refresh=True)`,
+`node.execute(full_refresh=True)`, or a job or Airflow run (e.g. a job deployed before 0.13.0, or
+an existing trigger) - redeploy the job and update the trigger. `full_refresh=false` logs a
+warning and runs incrementally.
 
 ## Reset Modes
 

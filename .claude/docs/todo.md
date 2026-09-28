@@ -71,3 +71,13 @@ Candidate improvement: set `skipChangeCommits` automatically on `node_name` stre
 shared sink, and cascade a full refresh of a writer to its downstream streaming readers in the same
 run (`refresh=FULL` on `feed_a` also resets the checkpoints / sinks of `gld_feed_a`). Needs a
 design for job task selections (the reader may not be part of the run).
+
+## A11 — `REPLACE` reset mode
+
+`reset_mode` supports `DROP` and `TRUNCATE` (0.13.0). Databricks recommends `CREATE OR REPLACE
+TABLE` over dropping and recreating a table: it keeps the table identity, grants, tags, lineage
+and history while allowing a schema change. Candidate `reset_mode: REPLACE` for table sinks:
+reset by replacing the table on the first write (overwrite with `overwriteSchema`) instead of
+dropping it. Open points: streaming sinks (first micro-batch), declarative orchestrators (not
+applicable), DELTA file sinks (overwrite of the path). Possibly the future default for Unity
+Catalog tables.
