@@ -349,14 +349,84 @@ def test_load_resources_multiple_dirs(tmp_path, mock_bundle, monkeypatch):
     dir_b = tmp_path / "pipelines_b"
     dir_a.mkdir()
     dir_b.mkdir()
-    (dir_a / "pl-a.yaml").write_text(_PIPELINE_DLT_YAML.replace("pl-stocks", "pl-a"))
-    (dir_b / "pl-b.yaml").write_text(_PIPELINE_DLT_YAML.replace("pl-stocks", "pl-b"))
+    # Different tables: a table written by a declarative pipeline can't be shared
+    for d, name in [(dir_a, "a"), (dir_b, "b")]:
+        (d / f"pl-{name}.yaml").write_text(
+            _PIPELINE_DLT_YAML.replace("pl-stocks", f"pl-{name}").replace(
+                "table_name: brz_stocks", f"table_name: brz_stocks_{name}"
+            )
+        )
 
     monkeypatch.chdir(tmp_path)
     mock_bundle.variables["laktory_pipelines_dir"] = f"{dir_a},{dir_b}"
 
     resources = build_resources(mock_bundle)
     assert len(resources.pipelines) == 2
+
+
+_PIPELINE_SHARED_YAML = """\
+name: pl-{name}
+orchestrator:
+  type: LAKEFLOW_JOB
+  serverless_environment_version: "3"
+nodes:
+  - name: slv_orders
+    sources:
+    - table_name: samples.nyctaxi.trips
+    sinks:
+      - schema_name: sandbox
+        table_name: all_orders
+        mode: APPEND
+{shared}
+"""
+
+
+@pytest.mark.parametrize("shared_b", [True, False])
+def test_load_resources_shared_sinks(
+    tmp_path, mock_bundle, monkeypatch, caplog, shared_b
+):
+    """Pipelines of a bundle writing to the same table are validated together, as in a
+    Stack: a warning if some sinks don't declare `shared`"""
+    from laktory.dab import build_resources
+    from laktory.models.pipeline import pipeline as pipeline_module
+
+    monkeypatch.setattr(pipeline_module.logger, "propagate", True)
+
+    laktory_pipelines_dir = tmp_path / "laktory" / "pipelines"
+    laktory_pipelines_dir.mkdir(parents=True)
+    for name, shared in [("a", True), ("b", shared_b)]:
+        (laktory_pipelines_dir / f"pl-{name}.yaml").write_text(
+            _PIPELINE_SHARED_YAML.format(
+                name=name, shared="        shared: true" if shared else ""
+            )
+        )
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+
+    with caplog.at_level("WARNING"):
+        resources = build_resources(mock_bundle)
+    assert len(resources.jobs) == 2
+    warned = "sinks of nodes ['pl-b.slv_orders'] don't declare `shared`" in caplog.text
+    assert warned != shared_b
+
+
+def test_load_resources_shared_sinks_declarative(tmp_path, mock_bundle, monkeypatch):
+    """A table written by a declarative pipeline can't be written by other pipelines"""
+    from laktory.dab import build_resources
+
+    laktory_pipelines_dir = tmp_path / "laktory" / "pipelines"
+    laktory_pipelines_dir.mkdir(parents=True)
+    for name in ["a", "b"]:
+        (laktory_pipelines_dir / f"pl-{name}.yaml").write_text(
+            _PIPELINE_DLT_YAML.replace("pl-stocks", f"pl-{name}")
+        )
+    monkeypatch.chdir(tmp_path)
+    mock_bundle.variables["laktory_pipelines_dir"] = str(laktory_pipelines_dir)
+
+    with pytest.raises(ValueError, match="declarative orchestrator"):
+        build_resources(mock_bundle)
+    # Validated before anything is built
+    assert not (tmp_path / "laktory" / ".build" / "pipelines").exists()
 
 
 def test_load_resources_missing_dir_skipped(tmp_path, mock_bundle, monkeypatch):

@@ -105,7 +105,8 @@ When the whole table is reset:
 
 - The checkpoints of all its writers in the pipeline are reset too, whether or not they're part
   of the run: they reprocess all their data on their next run.
-- Other pipelines writing to the table need a full refresh.
+- Other pipelines writing to the table need a full refresh: resuming from their checkpoints,
+  they would skip the data they already wrote, and the table would silently miss their rows.
 - `refresh=FULL` with the override is rejected: a full refresh never deletes the rows of the
   other writers. Reset the table with `refresh=RESET`, then run normally.
 
@@ -125,7 +126,19 @@ When the whole table is reset:
 - Shared sinks are DELTA sinks in `APPEND` mode.
 - Writers of a table use the same kind of ownership, the same `column`, and distinct writer
   identifiers or predicates.
-- In a Stack, every pipeline writing to a table written by several pipelines declares `shared`.
+
+Pipelines writing to the same table are validated together when they are deployed together, in a
+Stack or a Databricks Asset Bundle:
+
+| Situation | Result |
+|---|---|
+| A declarative pipeline writes to the table | error: the engine owns the table |
+| Sinks declaring `shared` identify their rows inconsistently (kind, `column`, identifiers) | error |
+| Some sinks don't declare `shared` | warning: their full refresh or overwrite deletes the rows of the other writers |
+
+Sharing a table across pipelines is otherwise the responsibility of the user: pipelines deployed
+separately (other stacks, bundles or repos) can't be validated together, and a table is
+identified by its name or path as written in each pipeline.
 
 ## Declarative Orchestrators
 

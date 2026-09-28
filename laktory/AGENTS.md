@@ -505,9 +505,13 @@ sinks:
   error: use separate tables). `reset_mode` is ignored on full refresh.
 - All writers of a table use the same kind of ownership (column or `where`), the same `column`,
   and distinct ids / predicates. Predicates must not overlap (not checked).
-- Validation: every sink writing to a target written by several nodes of a pipeline declares
-  `shared`. In a Stack, the same for every pipeline writing to a shared table, and none may use
-  a declarative orchestrator.
+- Validation within a pipeline: every sink writing to a target written by several nodes declares
+  `shared` (error otherwise).
+- Validation across pipelines deployed together (Stack or DAB, `laktory.dab.build_resources`):
+  error if a declarative pipeline writes to the table, or if `shared` sinks identify their rows
+  inconsistently; warning if some sinks don't declare `shared`. Pipelines deployed separately
+  are not validated: sharing across pipelines is the user's responsibility. After resetting a
+  table shared across pipelines, run a full refresh of every other writing pipeline.
 - Reading: `node_name: <writer>` returns that writer's rows only (no writer column), from memory
   or from the table; `table_name` reads all the writers' rows. Declarative orchestrators: no
   writer, `node_name` reads the whole table. A writer's full refresh deletes rows: streaming

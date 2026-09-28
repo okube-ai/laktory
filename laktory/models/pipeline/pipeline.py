@@ -456,6 +456,76 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 f"{duplicates}. Each writer needs its own."
             )
 
+    @staticmethod
+    def validate_shared_sinks_across_pipelines(pipelines: list["Pipeline"]) -> None:
+        """
+        Validate the sinks of targets written by several pipelines deployed together. Used
+        by Stacks and Databricks Asset Bundles (`laktory.dab.build_resources`).
+
+        Raises an error if a pipeline uses a declarative orchestrator (the engine owns the
+        table) or if the sinks declaring `shared` identify their rows inconsistently. Logs a
+        warning if some sinks don't declare `shared`: sharing a table across pipelines may
+        be deliberate without row ownership (e.g. a backfill pipeline), so it's the
+        responsibility of the user. Pipelines deployed separately can't be validated.
+
+        Parameters
+        ----------
+        pipelines:
+            Pipelines deployed together
+        """
+        groups = {}
+        for pl in pipelines:
+            for node in pl.nodes:
+                for s in node.all_sinks:
+                    if s.purge_target is not None:
+                        groups.setdefault(s.purge_target, []).append((pl, s))
+
+        for target, items in groups.items():
+            pl_names = list(dict.fromkeys(pl.name for pl, _ in items))
+            if len(pl_names) < 2:
+                continue
+
+            declarative = [
+                pl.name
+                for pl, _ in items
+                if pl.is_orchestrator_ldp or pl.is_orchestrator_sdp
+            ]
+            if declarative:
+                raise ValueError(
+                    f"Pipelines {pl_names} all write to '{target}', but pipelines "
+                    f"{list(dict.fromkeys(declarative))} use a declarative orchestrator. A "
+                    "table written by a Lakeflow / Spark Declarative Pipeline is owned by "
+                    "that pipeline and can't be shared with other pipelines."
+                )
+
+            declared = [(pl, s) for pl, s in items if s.shared is not None]
+            missing = [
+                f"{pl.name}.{s.parent_pipeline_node.name}"
+                for pl, s in items
+                if s.shared is None
+            ]
+            if missing and declared:
+                logger.warning(
+                    f"Pipelines {pl_names} all write to '{target}', but the sinks of nodes "
+                    f"{missing} don't declare `shared` while others do: a full refresh or "
+                    "an overwrite of these sinks deletes the rows of the other writers. "
+                    "Declare `shared` on every sink writing to this target."
+                )
+            elif missing:
+                logger.warning(
+                    f"Pipelines {pl_names} all write to '{target}' without declaring "
+                    "`shared`: a full refresh or an overwrite of any of them deletes the "
+                    "rows of the others. If each pipeline should own its rows, declare "
+                    "`shared` (e.g. `shared: true`) on every sink writing to this target."
+                )
+
+            if len(declared) > 1:
+                Pipeline._validate_shared_writers(
+                    target,
+                    [s for _, s in declared],
+                    [f"{pl.name}.{s.parent_pipeline_node.name}" for pl, s in declared],
+                )
+
     # ----------------------------------------------------------------------- #
     # Children                                                                #
     # ----------------------------------------------------------------------- #

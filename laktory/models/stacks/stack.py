@@ -473,52 +473,9 @@ class StackResources(BaseModel):
 
     @model_validator(mode="after")
     def validate_shared_sinks(self) -> Any:
-        groups = {}
-        for pl in self.pipelines.values():
-            for node in pl.nodes:
-                for s in node.all_sinks:
-                    if s.purge_target is not None:
-                        groups.setdefault(s.purge_target, []).append((pl, s))
+        from laktory.models.pipeline.pipeline import Pipeline
 
-        for target, items in groups.items():
-            pl_names = list(dict.fromkeys(pl.name for pl, _ in items))
-            if len(pl_names) < 2:
-                continue
-
-            declarative = [
-                pl.name
-                for pl, _ in items
-                if pl.is_orchestrator_ldp or pl.is_orchestrator_sdp
-            ]
-            if declarative:
-                raise ValueError(
-                    f"Pipelines {pl_names} all write to '{target}', but pipelines "
-                    f"{list(dict.fromkeys(declarative))} use a declarative orchestrator. A "
-                    "table written by a Lakeflow / Spark Declarative Pipeline is owned by "
-                    "that pipeline and can't be shared with other pipelines."
-                )
-
-            missing = [
-                f"{pl.name}.{s.parent_pipeline_node.name}"
-                for pl, s in items
-                if s.shared is None
-            ]
-            if missing:
-                raise ValueError(
-                    f"Pipelines {pl_names} all write to '{target}', but the sinks of "
-                    f"nodes {missing} don't declare `shared` options (e.g. "
-                    "`shared: true`). Declare them on every sink writing to this target, "
-                    "so that a full refresh only deletes the rows of its writer."
-                )
-
-            from laktory.models.pipeline.pipeline import Pipeline
-
-            Pipeline._validate_shared_writers(
-                target,
-                [s for _, s in items],
-                [f"{pl.name}.{s.parent_pipeline_node.name}" for pl, s in items],
-            )
-
+        Pipeline.validate_shared_sinks_across_pipelines(list(self.pipelines.values()))
         return self
 
     def _get_all(self, providers_excluded=False, providers_only=False):
