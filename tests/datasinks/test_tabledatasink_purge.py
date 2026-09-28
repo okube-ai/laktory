@@ -310,13 +310,31 @@ def test_purge_shared_where_table(tmp_path):
     assert {r[0]: r[1] for r in rows} == {"a": 3, "b": 3}
 
 
-def test_shared_node_source_spark(tmp_path):
+@pytest.mark.parametrize(
+    "where",
+    [
+        None,
+        "feed = '{n}'",
+        # Predicates beyond comparisons: Spark SQL
+        "feed IN ('{n}', 'x')",
+        "feed LIKE '{n}%'",
+        "feed BETWEEN '{n}' AND '{n}'",
+    ],
+)
+def test_shared_node_source_spark(tmp_path, where):
     """A node reading a writer of a shared table from the table gets the writer rows only"""
     from laktory import models
 
     table = "purge_shared_node_source"
     get_spark_session().sql(f"DROP TABLE IF EXISTS default.{table}")
-    pl = _shared_pipeline("pl", table, (tmp_path / "t").as_posix(), True, ["a", "b"])
+    shared = True
+    sink_kwargs = None
+    if where:
+        shared = None
+        sink_kwargs = {n: {"shared": {"where": where.format(n=n)}} for n in ["a", "b"]}
+    pl = _shared_pipeline(
+        "pl", table, (tmp_path / "t").as_posix(), shared, ["a", "b"], sink_kwargs
+    )
     pl.execute()
 
     source = models.PipelineNodeDataSource(node_name="a")

@@ -716,6 +716,10 @@ def test_validate_run_parameters(tmp_path):
     [
         {n: True for n in ["a", "b"]},
         {n: {"where": f"feed = '{n}'"} for n in ["a", "b"]},
+        # Predicates beyond comparisons: backend SQL
+        {n: {"where": f"feed IN ('{n}', 'x')"} for n in ["a", "b"]},
+        {n: {"where": f"feed LIKE '{n}%'"} for n in ["a", "b"]},
+        {n: {"where": f"feed BETWEEN '{n}' AND '{n}'"} for n in ["a", "b"]},
     ],
 )
 def test_shared_node_source(tmp_path, shared):

@@ -918,10 +918,28 @@ class BaseDataSink(BaseModel, PipelineChild):
             if column in _df.columns:
                 _df = _df.filter(nw.col(column) == self.shared.writer_id).drop(column)
         else:
-            from laktory.narwhals_ext.functions import sql_expr
-
-            _df = _df.filter(sql_expr(self.shared.where))
+            _df = nw.from_native(self._filter_where_native(_df))
         return _df if is_nw else _df.to_native()
+
+    def _filter_where_native(self, df: nw.DataFrame | nw.LazyFrame) -> Any:
+        """
+        Filter a DataFrame with `shared.where` using the SQL of its backend, as the delete
+        of the rows of the writer does (Spark SQL / deltalake), so that any predicate valid
+        for the delete is also valid for the read.
+        """
+        where = self.shared.where
+        backend = DataFrameBackends.from_df(df)
+        native = df.to_native()
+        if backend == DataFrameBackends.PYSPARK:
+            return native.filter(where)
+        if backend == DataFrameBackends.POLARS:
+            import polars as pl
+
+            return native.filter(pl.sql_expr(where))
+
+        from laktory.narwhals_ext.functions import sql_expr
+
+        return df.filter(sql_expr(where)).to_native()
 
     @property
     def _existing_columns(self) -> list[str] | None:
