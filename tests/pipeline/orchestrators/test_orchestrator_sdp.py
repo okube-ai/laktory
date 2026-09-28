@@ -238,10 +238,9 @@ def test_launch_args(monkeypatch, tmp_path):
     class _ConnectSession:
         @property
         def sparkContext(self):
-            raise PySparkNotImplementedError(
-                errorClass="NOT_IMPLEMENTED",
-                messageParameters={"feature": "sparkContext()"},
-            )
+            # Message-only form: kwargs were renamed between PySpark 3
+            # (`error_class`) and 4 (`errorClass`)
+            raise PySparkNotImplementedError("sparkContext() is not implemented")
 
     assert orchestrator._get_launch_args(_ConnectSession()) == []
 
