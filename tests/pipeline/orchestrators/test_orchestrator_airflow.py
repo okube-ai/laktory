@@ -122,6 +122,21 @@ def test_dag_attributes():
     }
 
 
+def test_dag_params_pipeline_parameters():
+    import jinja2
+
+    pl = _get_pl()
+    pl.parameters = {
+        "client": models.PipelineParameter(),
+        "region": models.PipelineParameter(default="eu"),
+    }
+    dag = pl.to_airflow_dag(template_undefined=jinja2.DebugUndefined)
+    assert {k: dag.params[k] for k in ["client", "region"]} == {
+        "client": "",
+        "region": "eu",
+    }
+
+
 # --------------------------------------------------------------------------- #
 # End-to-end execution                                                        #
 # --------------------------------------------------------------------------- #

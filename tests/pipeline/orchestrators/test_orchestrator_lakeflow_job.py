@@ -369,6 +369,23 @@ def test_job_parameters():
     assert params == {"refresh": "INCREMENTAL", "reset_mode": ""}
 
 
+def test_job_parameters_pipeline_parameters():
+    pl = _get_pl()
+    pl = models.Pipeline.model_validate(
+        {
+            **pl.model_dump(exclude_unset=True),
+            "parameters": {"client": {}, "region": {"default": "eu"}},
+        }
+    )
+    params = {p.name: p.default for p in pl.orchestrator.parameter}
+    assert params == {
+        "refresh": "INCREMENTAL",
+        "reset_mode": "",
+        "client": "",
+        "region": "eu",
+    }
+
+
 def test_shared_sink_writers_tasks():
     """Writers of a shared sink own their rows and keep their own tasks"""
     shared_sink = {

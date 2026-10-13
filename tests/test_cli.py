@@ -465,6 +465,19 @@ def test_run_job_options():
     assert kwargs["only"] == ["node-a", "node-b"]
 
 
+def test_run_job_params():
+    result = _run("--databricks-job", "job", "--param", "client=acme", "--param", "x=")
+    assert result.exit_code == 0, result.output
+    assert _Dispatcher.calls[0][1]["job_parameters"] == {"client": "acme", "x": ""}
+
+    result = _run("--databricks-job", "job", "--refresh", "full", "--param", "client=a")
+    assert result.exit_code == 0, result.output
+    assert _Dispatcher.calls[0][1]["job_parameters"] == {
+        "refresh": "FULL",
+        "client": "a",
+    }
+
+
 def test_run_pipeline_options():
     result = _run("--databricks-pipeline", "pl", "--refresh", "full")
     assert result.exit_code == 0, result.output
@@ -490,6 +503,9 @@ def test_run_invalid_options():
         ),
         (["--databricks-pipeline", "pl", "--refresh", "reset"], "not supported with"),
         (["--databricks-pipeline", "pl", "--tasks", "a"], "not supported with"),
+        (["--databricks-pipeline", "pl", "--param", "a=1"], "not supported with"),
+        (["--databricks-job", "job", "--param", "client"], "not formatted as"),
+        (["--databricks-job", "job", "--param", "refresh=FULL"], "is reserved"),
     ]
     for args, match in cases:
         result = _run(*args)

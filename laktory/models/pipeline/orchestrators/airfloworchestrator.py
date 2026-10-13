@@ -228,7 +228,14 @@ class AirflowOrchestrator(PipelineChild):
                     node_names=pl_task.node_names,
                 )
 
-                pl_task.execute(refresh=refresh, reset_mode=reset_mode)
+                task = pl_task
+                if pl.parameters:
+                    _pl = pl.resolve_parameters(
+                        {k: conf.get(k, params.get(k)) for k in pl.parameters}
+                    )
+                    task = _pl.get_execution_plan().tasks_dict[pl_task.name]
+
+                task.execute(refresh=refresh, reset_mode=reset_mode)
 
             return airflow_task
 
@@ -237,6 +244,7 @@ class AirflowOrchestrator(PipelineChild):
             "params": {
                 "refresh": "INCREMENTAL",
                 "reset_mode": "",
+                **{k: p.default or "" for k, p in pl.parameters.items()},
             },
         }
         for fname in self.model_fields_set:

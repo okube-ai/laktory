@@ -10,6 +10,7 @@ from pydantic import AliasChoices
 from pydantic import Field
 from pydantic import computed_field
 from pydantic import field_serializer
+from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -40,6 +41,7 @@ from laktory.models.pipeline.orchestrators.sparkdeclarativepipelineorchestrator 
     SparkDeclarativePipelineOrchestrator,
 )
 from laktory.models.pipeline.pipelinenode import PipelineNode
+from laktory.models.pipeline.pipelineparameter import PipelineParameter
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.virtualterraformresource import VirtualTerraformResource
 from laktory.typing import AnyFrame
@@ -90,6 +92,29 @@ def parse_requirement_name(req: str) -> str | None:
     if match:
         return match.group(1)
     return None
+
+
+# Arguments of the job task entry point (`_execute`), which can't be used as parameters
+RESERVED_PARAMETER_NAMES = [
+    "filepath",
+    "selects",
+    "refresh",
+    "reset_mode",
+    "full_refresh",
+]
+
+PARAMETER_PATTERN = re.compile(r"\$\{params\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
+
+
+def _find_parameters(o) -> set[str]:
+    """Names of the `${params.<name>}` references found in a model dump"""
+    if isinstance(o, dict):
+        return set().union(*[_find_parameters(v) for v in o.values()])
+    if isinstance(o, list):
+        return set().union(*[_find_parameters(v) for v in o])
+    if isinstance(o, str):
+        return set(PARAMETER_PATTERN.findall(o))
+    return set()
 
 
 # --------------------------------------------------------------------------- #
@@ -283,6 +308,16 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         # discriminator="type",  # discriminator can't be used because BaseModel adds
         # str to Literal type to support variables
     )
+    parameters: dict[str, PipelineParameter | None] = Field(
+        {},
+        description="""
+        Parameters referenced as `${params.<name>}` in the pipeline nodes (e.g. in sink
+        table names) and resolved at run time, to reuse a single deployed pipeline across
+        clients. Set as job parameters with a Lakeflow Job orchestrator, DAG run `conf` with
+        Airflow or `params` with `execute()`. Not supported with declarative pipelines
+        orchestrators.
+        """,
+    )
     root_path_: str | Path = Field(
         None,
         description="Location of the pipeline node root used to store logs, metrics and checkpoints.",
@@ -291,6 +326,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     )
     _imports_imported: bool = False
     _plan: "PipelineExecutionPlan" = None
+    _parameter_values: dict[str, str] | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -323,6 +359,54 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         ):
             o.name = o.name or pl_name
         return data
+
+    @field_validator("parameters", mode="after")
+    @classmethod
+    def default_parameters(cls, v: dict) -> dict:
+        return {k: p or PipelineParameter() for k, p in v.items()}
+
+    @model_validator(mode="after")
+    def validate_parameters(self) -> Any:
+        for name in self.parameters:
+            if name in RESERVED_PARAMETER_NAMES:
+                raise ValueError(
+                    f"Parameter name '{name}' is reserved. Reserved names are "
+                    f"{RESERVED_PARAMETER_NAMES}."
+                )
+
+        if not self.parameters:
+            return self
+
+        if self.is_orchestrator_ldp or self.is_orchestrator_sdp:
+            raise ValueError(
+                f"`parameters` are not supported with {type(self.orchestrator).__name__}: "
+                "the tables of a declarative pipeline are defined at deployment. Use "
+                "`variables` instead and deploy one pipeline per value."
+            )
+
+        # Values consumed at deployment (orchestrator, resources, etc.) can't depend on
+        # parameters. `root_path` is only used at run time, e.g. to store checkpoints.
+        names = _find_parameters(
+            self.model_dump(
+                mode="json", exclude={"nodes", "parameters", "variables", "root_path"}
+            )
+        )
+        if names:
+            raise ValueError(
+                f"Parameters {sorted(names)} of pipeline '{self.name}' are used outside "
+                "of the pipeline nodes. Parameters are resolved at run time and can only "
+                "be used in `nodes`."
+            )
+
+        names = _find_parameters(self.model_dump(mode="json", include={"nodes"}))
+        undeclared = sorted(names - set(self.parameters))
+        if undeclared:
+            raise ValueError(
+                f"Parameters {undeclared} of pipeline '{self.name}' are not declared in "
+                f"`parameters`."
+            )
+
+        return self
 
     @model_validator(mode="after")
     def validate_sinks(self) -> Any:
@@ -941,6 +1025,51 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         self._plan = plan
         return plan
 
+    def resolve_parameters(self, params: dict[str, Any] | None = None) -> "Pipeline":
+        """
+        Resolve the `${params.<name>}` references of the pipeline nodes.
+
+        Parameters
+        ----------
+        params:
+            Parameter values. Parameters not set (or set to an empty string) fall back to
+            their default.
+
+        Returns
+        -------
+        :
+            Copy of the pipeline with resolved parameters.
+        """
+        params = params or {}
+
+        unknown = sorted(set(params) - set(self.parameters))
+        if unknown:
+            raise ValueError(
+                f"Parameters {unknown} are not declared by pipeline '{self.name}'. "
+                f"Declared parameters are {sorted(self.parameters)}."
+            )
+
+        values = {}
+        missing = []
+        for name, p in self.parameters.items():
+            value = params.get(name)
+            if value is None or value == "":
+                value = p.default
+            if value is None or value == "":
+                missing += [name]
+            values[name] = value
+        if missing:
+            raise ValueError(
+                f"Parameters {missing} of pipeline '{self.name}' are required: set them "
+                "for the run (e.g. as job parameters) or declare a default."
+            )
+
+        logger.info(f"Resolving pipeline '{self.name}' parameters {values}")
+        pl = self.inject_vars(objs={"params": values})
+        pl._plan = None
+        pl._parameter_values = values
+        return pl
+
     def validate_run_parameters(
         self,
         refresh: str | None,
@@ -1002,6 +1131,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         refresh: Literal["INCREMENTAL", "FULL", "RESET"] = "INCREMENTAL",
         reset_mode: Literal["DROP", "TRUNCATE"] | None = None,
         full_refresh: bool | None = None,
+        params: dict[str, Any] | None = None,
     ) -> None:
         """
         Execute the pipeline (read sources and write sinks) by sequentially
@@ -1049,7 +1179,25 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         full_refresh:
             Replaced by `refresh` in 0.13.0: `True` raises an error (use
             `refresh='FULL'`), `False` logs a warning and runs incrementally.
+        params:
+            Values of the pipeline `parameters` for this run.
         """
+
+        if self._parameter_values is None and (self.parameters or params):
+            return self.resolve_parameters(params).execute(
+                write_sinks=write_sinks,
+                named_dfs=named_dfs,
+                update_tables_metadata=update_tables_metadata,
+                selects=selects,
+                use_orchestrator=use_orchestrator,
+                refresh=refresh,
+                reset_mode=reset_mode,
+                full_refresh=full_refresh,
+            )
+        if params:
+            raise ValueError(
+                f"Parameters of pipeline '{self.name}' are already resolved."
+            )
 
         logger.info(f"Executing pipeline '{self.name}'")
 

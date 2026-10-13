@@ -1,2 +1,4 @@
 pyspark[connect]>=3.5,<4
 delta-spark>=3.3,<4
+# pyspark[connect] 3.5 requires numpy<2, pyarrow 26 requires numpy>=2
+pyarrow<26

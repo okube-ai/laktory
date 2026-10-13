@@ -219,6 +219,26 @@ def _resolve_value(o, vars, objs, stringify=False):
     if not isinstance(o, str):
         return o
 
+    # Resolve ${params.<name>} syntax: pipeline parameters, only available at run time
+    # (see `Pipeline.resolve_parameters`)
+    params = (objs or {}).get("params")
+    if params is not None:
+        pattern = re.compile(r"\$\{params\.([a-zA-Z_][a-zA-Z0-9_]*)\}")
+        for match in pattern.finditer(o):
+            name = match.group(1)
+            if name not in params:
+                continue
+            resolved_value = params[name]
+            if isinstance(resolved_value, str):
+                o = o.replace(match.group(0), resolved_value)
+            elif stringify:
+                o = o.replace(match.group(0), json.dumps(resolved_value))
+            else:
+                o = resolved_value
+
+    if not isinstance(o, str):
+        return o
+
     # Resolve ${{ <expression> }} syntax
     pattern = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
     for match in pattern.finditer(o):

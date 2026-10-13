@@ -217,6 +217,7 @@ nav:
         - Pipeline: api/models/pipeline/pipeline.md
         - PipelineChild: api/models/pipeline/pipelinechild.md
         - PipelineNode: api/models/pipeline/pipelinenode.md
+        - PipelineParameter: api/models/pipeline/pipelineparameter.md
         - PipelineTask: api/models/pipeline/pipelinetask.md
         - PipelineExecutionPlan: api/models/pipeline/pipelineexecutionplan.md
         - Orchestrators:

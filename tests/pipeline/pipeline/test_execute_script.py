@@ -25,6 +25,7 @@ def run_execute(tmp_path, monkeypatch):
     """Run `_execute` with the given arguments and return the `Pipeline.execute` kwargs"""
     pl = models.Pipeline(
         name="pl",
+        parameters={"client": {}},
         nodes=[
             {
                 "name": "n",
@@ -77,3 +78,13 @@ def test_execute_script_unknown_arguments(run_execute, caplog, monkeypatch):
     with caplog.at_level("WARNING"):
         run_execute("--purge", "true")
     assert "Ignoring unknown arguments ['--purge', 'true']" in caplog.text
+
+
+def test_execute_script_parameters(run_execute, caplog, monkeypatch):
+    monkeypatch.setattr(execute_module.logger, "propagate", True)
+    assert run_execute()["params"] is None
+    assert run_execute("--client", "acme")["params"] == {"client": "acme"}
+    with caplog.at_level("WARNING"):
+        kwargs = run_execute("--client=acme", "--region", "eu")
+    assert kwargs["params"] == {"client": "acme"}
+    assert "Ignoring unknown arguments ['--region', 'eu']" in caplog.text

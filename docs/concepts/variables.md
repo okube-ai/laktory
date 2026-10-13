@@ -1,15 +1,16 @@
 
 # Variables, Expressions, and References
 
-Laktory uses three distinct mechanisms to make declarations dynamic. They share a curly-brace syntax but differ in purpose, resolution time, and where they are valid.
+Laktory uses four distinct mechanisms to make declarations dynamic. They share a curly-brace syntax but differ in purpose, resolution time, and where they are valid.
 
 | Mechanism | Syntax | Resolved | Valid in |
 |-----------|--------|----------|----------|
 | **Variable** | `${vars.X}` · `${resources.X.id}` · `${settings.X}` · `${current_user.X}` | Config / deployment time | Any model field |
 | **Expression** | `${{ python expr }}` | Config / deployment time | Any model field |
+| **Parameter** | `${params.X}` | Run time, before any data is read | Pipeline nodes only |
 | **Reference** | `{df}` · `{sources.X}` · `{nodes.X}` | Execution time | Transformer nodes only |
 
-**The `$` rule** - the dollar sign is the tell. Variables and Expressions always start with `$` and are resolved before the pipeline runs. References have no `$` and are resolved at runtime by the transformer engine when it has actual DataFrames in memory.
+**The `$` rule** - the dollar sign is the tell. Variables, Expressions and Parameters always start with `$` and are resolved before any data is read: Variables and Expressions at deployment, Parameters when a run starts. References have no `$` and are resolved at runtime by the transformer engine when it has actual DataFrames in memory.
 
 ---
 
@@ -177,6 +178,50 @@ resources:
 Unlike `settings.*`, `current_user.*` isn't backed by a stack config field - it's resolved lazily, only when `${current_user.X}` is actually referenced somewhere in the stack, via one live SDK call (`workspace_client.current_user.me()`). A stack that never references it makes no network call for it. Referencing it without a `DatabricksProvider` in the stack raises a clear error rather than silently leaving the template unresolved.
 
 If the stack also uses `settings.workspace_root: "user_root"` (see [Laktory Settings - Workspace Root](laktorysettings.md#workspace-root)) and/or `terraform.backend.databricks_workspace: true`, all three share the same single SDK lookup - no redundant calls.
+
+---
+
+## Parameters
+
+A Parameter is resolved at run time instead of at deployment, so that a single deployed pipeline can be reused across clients, tenants, regions, etc. Parameters are declared on the pipeline and referenced as `${params.PARAMETER_NAME}` in its nodes:
+
+```yaml title="pipeline.yaml"
+name: pl-sales
+orchestrator:
+  type: LAKEFLOW_JOB
+  max_concurrent_runs: 10
+parameters:
+  client: {}              # required for each run
+  region:
+    default: eu
+nodes:
+  - name: slv_sales
+    source:
+      table_name: brz_sales
+    sinks:
+      - schema_name: ${params.client}_silver
+        table_name: slv_sales_${params.region}
+```
+
+The deployed configuration keeps the `${params.X}` references. Their values are set for each run:
+
+| How the pipeline runs | Parameter values |
+|-----------------------|------------------|
+| Python | `pl.execute(params={"client": "acme"})` or `pl.resolve_parameters({"client": "acme"})` |
+| `LAKEFLOW_JOB` orchestrator | Job parameters, one per pipeline parameter (manual run, API, `run_job_task`, `for_each_task`, ...) |
+| `AIRFLOW` orchestrator | DAG run `conf`, falling back to the DAG `params` |
+| CLI | `laktory run --databricks-job pl-sales --param client=acme` |
+
+A parameter without a `default` must be set for each run, and a run with an undeclared parameter fails.
+
+Things to know:
+
+- Parameters are only valid in the pipeline `nodes` (sources, sinks, transformers) and its `root_path`. Values used at deployment (orchestrator, resources, grants, etc.) can't depend on them.
+- Sink checkpoints are derived from the resolved sink, so each client gets its own checkpoint. Expectations checkpoints are stored in the node `root_path`: use `${params.X}` in the pipeline `root_path` for streaming expectations.
+- To run several clients in parallel with a Lakeflow Job, set `max_concurrent_runs` on the orchestrator.
+- Declarative pipelines (`LAKEFLOW_DECLARATIVE_PIPELINE`, `SPARK_DECLARATIVE_PIPELINE`) don't support parameters: their tables are defined at deployment. Use Variables and deploy one pipeline per value instead.
+- Parameters are not available inside Expressions (`${{ }}`), which are evaluated at deployment.
+- `filepath`, `selects`, `refresh`, `reset_mode` and `full_refresh` are reserved names.
 
 ---
 

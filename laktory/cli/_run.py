@@ -5,6 +5,7 @@ import typer
 from laktory.cli._common import CLIController
 from laktory.cli.app import app
 from laktory.dispatcher.dispatcher import Dispatcher
+from laktory.models.pipeline.pipeline import RESERVED_PARAMETER_NAMES
 
 
 @app.command()
@@ -41,6 +42,14 @@ def run(
             "--refresh FULL or RESET (jobs only).",
         ),
     ] = None,
+    param: Annotated[
+        list[str],
+        typer.Option(
+            "--param",
+            help="Pipeline parameter value as key=value, set as a job parameter. Can be "
+            "repeated (jobs only).",
+        ),
+    ] = [],
     tasks: Annotated[
         str,
         typer.Option(
@@ -96,6 +105,9 @@ def run(
     reset_mode:
         Override of the sinks reset mode (`DROP` or `TRUNCATE`), with `refresh` `FULL`
         or `RESET` (jobs only).
+    param:
+        Pipeline parameter value as `key=value` (`${params.key}`), set as a job
+        parameter. Can be repeated (jobs only).
     tasks:
         Comma-separated keys of the job tasks to run (jobs only). Defaults to all the
         tasks.
@@ -118,6 +130,7 @@ def run(
     laktory run --env dev --databricks-job my-job --var profile=MY_PROFILE
     laktory run --env dev --databricks-job my-job --refresh FULL --tasks node-slv_prices
     laktory run --env dev --databricks-job my-job --refresh RESET --reset-mode DROP
+    laktory run --env dev --databricks-job pl-sales --param client=acme
     ```
 
     References
@@ -135,6 +148,21 @@ def run(
     refresh, reset_mode, task_keys = _validate_run_options(
         refresh, reset_mode, tasks, is_job=databricks_job is not None
     )
+    params = {}
+    for entry in param:
+        key, sep, value = entry.partition("=")
+        if not sep or not key.strip():
+            raise ValueError(f"`--param` '{entry}' is not formatted as key=value.")
+        if key.strip() in RESERVED_PARAMETER_NAMES:
+            raise ValueError(
+                f"`--param` '{key.strip()}' is reserved. Use the dedicated options instead."
+            )
+        params[key.strip()] = value
+    if params and not databricks_job:
+        raise ValueError(
+            "`--param` not supported with `--databricks-pipeline`: declarative pipelines "
+            "don't support pipeline parameters."
+        )
 
     # Set Dispatcher
     controller = CLIController(
@@ -152,6 +180,7 @@ def run(
             job_parameters["refresh"] = refresh
         if reset_mode:
             job_parameters["reset_mode"] = reset_mode
+        job_parameters.update(params)
         dispatcher.run_databricks_job(
             job_name=databricks_job,
             timeout=timeout,
