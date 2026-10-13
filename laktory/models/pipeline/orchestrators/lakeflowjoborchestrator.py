@@ -171,6 +171,9 @@ class LakeflowJobOrchestrator(Job, PipelineChild):
             JobParameter(name="refresh", default="INCREMENTAL"),
             JobParameter(name="reset_mode", default=""),
         ]
+        # Pushed down by Databricks to the tasks named parameters
+        for name, p in pl.parameters.items():
+            self.parameter += [JobParameter(name=name, default=p.default or "")]
 
     # ----------------------------------------------------------------------- #
     # DABs                                                                    #

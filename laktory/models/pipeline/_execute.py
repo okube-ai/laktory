@@ -126,8 +126,6 @@ def _execute():
 
     # Get arguments
     args, unknown = parser.parse_known_args()
-    if unknown:
-        logger.warning(f"Ignoring unknown arguments {unknown}")
     filepath = args.filepath
     selects = args.selects
     check_legacy_full_refresh(args.full_refresh)
@@ -148,9 +146,28 @@ def _execute():
         else:
             pl = lk.models.Pipeline.model_validate_json(fp.read())
 
+    # Pipeline parameters, pushed down from the job parameters
+    params = {}
+    ignored = []
+    unknown = iter(unknown)
+    for arg in unknown:
+        name = arg.lstrip("-")
+        value = None
+        if "=" in name:
+            name, value = name.split("=", 1)
+        if name not in pl.parameters:
+            ignored += [arg]
+            continue
+        if value is None:
+            value = next(unknown, "")
+        params[name] = value
+    if ignored:
+        logger.warning(f"Ignoring unknown arguments {ignored}")
+
     # Execute
     pl.execute(
         selects=selects,
         refresh=refresh,
         reset_mode=reset_mode,
+        params=params or None,
     )

@@ -158,7 +158,7 @@ class BaseDataSink(BaseModel, PipelineChild):
     databricks_data_profiling_config: Literal[None] = Field(
         None, description="Databricks Data Quality Monitor data profiling configuration"
     )
-    checkpoint_path_: str | Path = Field(
+    checkpoint_path_: str | Path | None = Field(
         None,
         description="Path to which the checkpoint file for which a streaming dataframe should be written.",
         validation_alias=AliasChoices("checkpoint_path", "checkpoint_path_"),
@@ -437,7 +437,12 @@ class BaseDataSink(BaseModel, PipelineChild):
         return None
 
     @field_serializer("checkpoint_path", when_used="json")
-    def serialize_path(self, value: Path) -> str:
+    def serialize_path(self, value: Path) -> str | None:
+        # Derived from a sink resolved at run time (`${params.<name>}`): left out of the
+        # dump so that it's derived again once resolved and each run gets its own
+        # checkpoint
+        if not self.checkpoint_path_ and "${params." in self._id:
+            return None
         return value.as_posix()
 
     def is_streaming(self, df=None) -> bool:

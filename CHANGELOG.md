@@ -2,7 +2,7 @@
 
 ## [0.13.1] - Unreleased
 ### Added
-* n/a
+* Added pipeline `parameters`, referenced as `${params.X}` in pipeline nodes and resolved at run time from job parameters (`LAKEFLOW_JOB`), Airflow DAG run `conf`, `pl.execute(params=...)` or `laktory run --param`, to reuse a single deployed pipeline across clients. Sink checkpoints are derived from the resolved sinks, so each client gets its own. [[#694](https://github.com/okube-ai/laktory/issues/694)]
 ### Fixed
 * n/a
 ### Updated

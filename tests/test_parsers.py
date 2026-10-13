@@ -1,6 +1,7 @@
 import laktory
 
 # from laktory._parsers import remove_empty
+from laktory._parsers import _resolve_value
 from laktory._parsers import merge_dicts
 from laktory.models import BaseModel
 
@@ -89,3 +90,14 @@ if __name__ == "__main__":
     test_camel_case()
     # test_remove_empty()
     test_merge_dicts()
+
+
+def test_resolve_params():
+    o = "${params.client}_silver"
+
+    # Not resolved without parameters (e.g. at deployment)
+    assert _resolve_value(o, {"client": "acme"}, None) == o
+    assert _resolve_value(o, {}, {"params": {"region": "eu"}}) == o
+
+    assert _resolve_value(o, {}, {"params": {"client": "acme"}}) == "acme_silver"
+    assert _resolve_value("${params.n}", {}, {"params": {"n": 2}}) == 2

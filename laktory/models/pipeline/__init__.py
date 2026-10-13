@@ -9,4 +9,5 @@ from .orchestrators.sparkdeclarativepipelineorchestrator import (
 from .pipeline import Pipeline
 from .pipeline import PipelineNode
 from .pipelineexecutionplan import PipelineExecutionPlan
+from .pipelineparameter import PipelineParameter
 from .pipelinetask import PipelineTask
