@@ -26,6 +26,7 @@ class ConnectionBase(BaseModel, TerraformResource):
     name: str | None = Field(None)
     options: dict[str, str] | None = Field(None)
     owner: str | None = Field(None)
+    parent: str | None = Field(None)
     properties: dict[str, str] | None = Field(None)
     read_only: bool | None = Field(None)
     environment_settings: ConnectionEnvironmentSettings | None = Field(None)

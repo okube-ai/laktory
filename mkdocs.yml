@@ -241,7 +241,9 @@ nav:
           - api/models/resources/databricks/cluster.md
           - ClusterPolicy: api/models/resources/databricks/clusterpolicy.md
           - Connection: api/models/resources/databricks/connection.md
+          - Credential: api/models/resources/databricks/credential.md
           - CurrentUser: api/models/resources/databricks/currentuser.md
+          - CustomAppIntegration: api/models/resources/databricks/customappintegration.md
           - Dashboard: api/models/resources/databricks/dashboard.md
           - DataQualityMonitor: api/models/resources/databricks/dataqualitymonitor.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
@@ -256,6 +258,7 @@ nav:
           - api/models/resources/databricks/grants.md
           - GroupMember: api/models/resources/databricks/groupmember.md
           - api/models/resources/databricks/group.md
+          - GroupRole: api/models/resources/databricks/grouprole.md
           - InstancePool: api/models/resources/databricks/instancepool.md
           - InstanceProfile: api/models/resources/databricks/instanceprofile.md
           - IpAccessList: api/models/resources/databricks/ipaccesslist.md
@@ -283,6 +286,7 @@ nav:
           - api/models/resources/databricks/notebook.md
           - NotificationDestination: api/models/resources/databricks/notificationdestination.md
           - OboToken: api/models/resources/databricks/obotoken.md
+          - PermissionAssignment: api/models/resources/databricks/permissionassignment.md
           - Permissions: api/models/resources/databricks/permissions.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
           - PythonPackagePermissions: api/models/resources/databricks/pythonpackagepermissions.md
@@ -294,11 +298,14 @@ nav:
           - api/models/resources/databricks/secret.md
           - SecretAcl: api/models/resources/databricks/secretacl.md
           - SecretScope: api/models/resources/databricks/secretscope.md
+          - SecretUc: api/models/resources/databricks/secretuc.md
           - ServicePrincipal: api/models/resources/databricks/serviceprincipal.md
           - ServicePrincipalFederationPolicy: api/models/resources/databricks/serviceprincipalfederationpolicy.md
           - ServicePrincipalRole: api/models/resources/databricks/serviceprincipalrole.md
+          - ServicePrincipalSecret: api/models/resources/databricks/serviceprincipalsecret.md
           - Share: api/models/resources/databricks/share.md
           - StorageCredential: api/models/resources/databricks/storagecredential.md
+          - SystemSchema: api/models/resources/databricks/systemschema.md
           - api/models/resources/databricks/table.md
           - Token: api/models/resources/databricks/token.md
           - api/models/resources/databricks/user.md

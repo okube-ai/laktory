@@ -4,3 +4,7 @@
 ---
 
 ::: laktory.models.resources.databricks.mwsnccprivateendpointrule.MwsNccPrivateEndpointRuleGcpEndpoint
+
+---
+
+::: laktory.models.resources.databricks.mwsnccprivateendpointrule.MwsNccPrivateEndpointRuleGcpEndpointGoogleApiEndpoints

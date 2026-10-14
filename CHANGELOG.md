@@ -3,10 +3,11 @@
 ## [0.13.1] - Unreleased
 ### Added
 * Added pipeline `parameters`, referenced as `${params.X}` in pipeline nodes and resolved at run time from job parameters (`LAKEFLOW_JOB`), Airflow DAG run `conf`, `pl.execute(params=...)` or `laktory run --param`, to reuse a single deployed pipeline across clients. Sink checkpoints are derived from the resolved sinks, so each client gets its own. [[#694](https://github.com/okube-ai/laktory/issues/694)]
+* Added `ServicePrincipalSecret` (service principal OAuth secret, whose generated `secret` can be referenced as `${resources.<key>.secret}`), `GroupRole`, `Credential` (Unity Catalog service credential), `SecretUc`, `PermissionAssignment`, `CustomAppIntegration` and `SystemSchema` resources. [[#695](https://github.com/okube-ai/laktory/issues/695)]
 ### Fixed
 * n/a
 ### Updated
-* n/a
+* Updated Databricks resources to Terraform provider 1.137.0: new fields on `Job`, `Pipeline`, `App`, `Grant`, `Grants`, `Cluster`, `Connection`, `ModelServing`, `Secret` and `MwsNccPrivateEndpointRule`, and some fields no longer required (e.g. `Secret.string_value`, now optional with `string_value_wo`). [[#695](https://github.com/okube-ai/laktory/issues/695)]
 ### Breaking changes
 * n/a
 

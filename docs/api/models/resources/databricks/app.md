@@ -7,6 +7,14 @@
 
 ---
 
+::: laktory.models.resources.databricks.app.AppGitSource
+
+---
+
+::: laktory.models.resources.databricks.app.AppGitSourceGitRepository
+
+---
+
 ::: laktory.models.resources.databricks.app.AppProviderConfig
 
 ---

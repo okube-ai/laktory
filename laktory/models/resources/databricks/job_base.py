@@ -10,6 +10,15 @@ from laktory.models.basemodel import PluralField
 from laktory.models.resources.terraformresource import TerraformResource
 
 
+class JobContinuousMaintenanceWindow(BaseModel):
+    day_of_week: str = Field(...)
+    start_hour: int = Field(...)
+    timezone_id: str = Field(
+        ...,
+        description="A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required",
+    )
+
+
 class JobContinuous(BaseModel):
     pause_status: str | None = Field(
         None,
@@ -19,6 +28,7 @@ class JobContinuous(BaseModel):
         None,
         description="Controls task level retry behaviour. Allowed values are: * `NEVER` (default): The failed task will not be retried. * `ON_FAILURE`: Retry a failed task if at least one other task in the job is still running its first attempt. When this condition is no longer met or the retry limit is reached, the job run is cancelled and a new run is started",
     )
+    maintenance_window: JobContinuousMaintenanceWindow | None = Field(None)
 
 
 class JobDbtTask(BaseModel):
@@ -72,6 +82,8 @@ class JobEmailNotifications(BaseModel):
         None,
         description="(List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified",
     )
+    on_maintenance_complete: list[str] | None = Field(None)
+    on_maintenance_start: list[str] | None = Field(None)
     on_start: list[str] | None = Field(
         None,
         description="(List) list of notification IDs to call when the run starts. A maximum of 3 destinations can be specified",
@@ -98,6 +110,7 @@ class JobEnvironmentSpec(BaseModel):
         description="client version used by the environment. Each version comes with a specific Python version and a set of Python packages",
     )
     java_dependencies: list[str] | None = Field(None)
+    project_environment: str | None = Field(None)
 
 
 class JobEnvironment(BaseModel):
@@ -106,6 +119,23 @@ class JobEnvironment(BaseModel):
         description="an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task",
     )
     spec: JobEnvironmentSpec | None = Field(
+        None,
+        description="block describing the Environment. Consists of following attributes:",
+    )
+
+
+class JobEnvironmentVariablesSpec(BaseModel):
+    files: list[str] | None = Field(None)
+    variables_: dict[str, str] | None = Field(
+        None,
+        serialization_alias="variables",
+        validation_alias=AliasChoices("variables", "variables_"),
+    )
+
+
+class JobEnvironmentVariables(BaseModel):
+    environment_variables_key: str = Field(...)
+    spec: JobEnvironmentVariablesSpec | None = Field(
         None,
         description="block describing the Environment. Consists of following attributes:",
     )
@@ -250,6 +280,7 @@ class JobJobClusterNewClusterDockerImage(BaseModel):
 
 class JobJobClusterNewClusterDriverNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobJobClusterNewClusterGcpAttributes(BaseModel):
@@ -337,6 +368,7 @@ class JobJobClusterNewClusterLibrary(BaseModel):
 
 class JobJobClusterNewClusterWorkerNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobJobClusterNewClusterWorkloadTypeClients(BaseModel):
@@ -521,6 +553,7 @@ class JobNewClusterDockerImage(BaseModel):
 
 class JobNewClusterDriverNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobNewClusterGcpAttributes(BaseModel):
@@ -608,6 +641,7 @@ class JobNewClusterLibrary(BaseModel):
 
 class JobNewClusterWorkerNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobNewClusterWorkloadTypeClients(BaseModel):
@@ -815,10 +849,11 @@ class JobSparkSubmitTask(BaseModel):
 class JobTaskAiRuntimeTaskDeploymentsCompute(BaseModel):
     accelerator_count: int = Field(...)
     accelerator_type: str = Field(...)
+    provisioned_capacity_id: str | None = Field(None)
 
 
 class JobTaskAiRuntimeTaskDeployments(BaseModel):
-    command_path: str = Field(...)
+    command_path: str | None = Field(None)
     name: str | None = Field(
         None,
         description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
@@ -831,9 +866,13 @@ class JobTaskAiRuntimeTaskDeployments(BaseModel):
 
 class JobTaskAiRuntimeTask(BaseModel):
     code_source_path: str | None = Field(None)
+    docker_image_url: str | None = Field(None)
     experiment: str = Field(...)
+    mlflow_artifact_location: str | None = Field(None)
     mlflow_experiment_directory: str | None = Field(None)
     mlflow_run: str | None = Field(None)
+    priority_class: str | None = Field(None)
+    unity_catalog_image_path: str | None = Field(None)
     deployments: list[JobTaskAiRuntimeTaskDeployments] | None = Field(None)
 
 
@@ -849,6 +888,10 @@ class JobTaskAlertTask(BaseModel):
     alert_id: str | None = Field(
         None,
         description="(String) identifier of the Databricks Alert (databricks_alert)",
+    )
+    parameters: dict[str, str] | None = Field(
+        None,
+        description="(Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters",
     )
     warehouse_id: str | None = Field(
         None,
@@ -978,6 +1021,8 @@ class JobTaskEmailNotifications(BaseModel):
         None,
         description="(List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified",
     )
+    on_maintenance_complete: list[str] | None = Field(None)
+    on_maintenance_start: list[str] | None = Field(None)
     on_start: list[str] | None = Field(
         None,
         description="(List) list of notification IDs to call when the run starts. A maximum of 3 destinations can be specified",
@@ -995,10 +1040,11 @@ class JobTaskEmailNotifications(BaseModel):
 class JobTaskForEachTaskTaskAiRuntimeTaskDeploymentsCompute(BaseModel):
     accelerator_count: int = Field(...)
     accelerator_type: str = Field(...)
+    provisioned_capacity_id: str | None = Field(None)
 
 
 class JobTaskForEachTaskTaskAiRuntimeTaskDeployments(BaseModel):
-    command_path: str = Field(...)
+    command_path: str | None = Field(None)
     name: str | None = Field(
         None,
         description="The name of the defined parameter. May only contain alphanumeric characters, `_`, `-`, and `.`",
@@ -1011,9 +1057,13 @@ class JobTaskForEachTaskTaskAiRuntimeTaskDeployments(BaseModel):
 
 class JobTaskForEachTaskTaskAiRuntimeTask(BaseModel):
     code_source_path: str | None = Field(None)
+    docker_image_url: str | None = Field(None)
     experiment: str = Field(...)
+    mlflow_artifact_location: str | None = Field(None)
     mlflow_experiment_directory: str | None = Field(None)
     mlflow_run: str | None = Field(None)
+    priority_class: str | None = Field(None)
+    unity_catalog_image_path: str | None = Field(None)
     deployments: list[JobTaskForEachTaskTaskAiRuntimeTaskDeployments] | None = Field(
         None
     )
@@ -1031,6 +1081,10 @@ class JobTaskForEachTaskTaskAlertTask(BaseModel):
     alert_id: str | None = Field(
         None,
         description="(String) identifier of the Databricks Alert (databricks_alert)",
+    )
+    parameters: dict[str, str] | None = Field(
+        None,
+        description="(Map) parameters to be used for each run of this task. The SQL alert task does not support custom parameters",
     )
     warehouse_id: str | None = Field(
         None,
@@ -1162,6 +1216,8 @@ class JobTaskForEachTaskTaskEmailNotifications(BaseModel):
         None,
         description="(List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified",
     )
+    on_maintenance_complete: list[str] | None = Field(None)
+    on_maintenance_start: list[str] | None = Field(None)
     on_start: list[str] | None = Field(
         None,
         description="(List) list of notification IDs to call when the run starts. A maximum of 3 destinations can be specified",
@@ -1330,6 +1386,7 @@ class JobTaskForEachTaskTaskNewClusterDockerImage(BaseModel):
 
 class JobTaskForEachTaskTaskNewClusterDriverNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobTaskForEachTaskTaskNewClusterGcpAttributes(BaseModel):
@@ -1417,6 +1474,7 @@ class JobTaskForEachTaskTaskNewClusterLibrary(BaseModel):
 
 class JobTaskForEachTaskTaskNewClusterWorkerNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobTaskForEachTaskTaskNewClusterWorkloadTypeClients(BaseModel):
@@ -1760,6 +1818,14 @@ class JobTaskForEachTaskTaskWebhookNotificationsOnFailure(BaseModel):
     id: str = Field(..., description="ID of the job")
 
 
+class JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceComplete(BaseModel):
+    id: str = Field(..., description="ID of the job")
+
+
+class JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceStart(BaseModel):
+    id: str = Field(..., description="ID of the job")
+
+
 class JobTaskForEachTaskTaskWebhookNotificationsOnStart(BaseModel):
     id: str = Field(..., description="ID of the job")
 
@@ -1790,6 +1856,12 @@ class JobTaskForEachTaskTaskWebhookNotifications(BaseModel):
             description="(List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified",
         )
     )
+    on_maintenance_complete: (
+        list[JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceComplete] | None
+    ) = PluralField(None, plural="on_maintenance_completes")
+    on_maintenance_start: (
+        list[JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceStart] | None
+    ) = PluralField(None, plural="on_maintenance_starts")
     on_start: list[JobTaskForEachTaskTaskWebhookNotificationsOnStart] | None = (
         PluralField(
             None,
@@ -1827,6 +1899,7 @@ class JobTaskForEachTaskTask(BaseModel):
         None,
         description="an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task",
     )
+    environment_variables_key: str | None = Field(None)
     existing_cluster_id: str | None = Field(
         None,
         description="Identifier of the interactive cluster to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
@@ -2079,6 +2152,7 @@ class JobTaskNewClusterDockerImage(BaseModel):
 
 class JobTaskNewClusterDriverNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobTaskNewClusterGcpAttributes(BaseModel):
@@ -2166,6 +2240,7 @@ class JobTaskNewClusterLibrary(BaseModel):
 
 class JobTaskNewClusterWorkerNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class JobTaskNewClusterWorkloadTypeClients(BaseModel):
@@ -2501,6 +2576,14 @@ class JobTaskWebhookNotificationsOnFailure(BaseModel):
     id: str = Field(..., description="ID of the job")
 
 
+class JobTaskWebhookNotificationsOnMaintenanceComplete(BaseModel):
+    id: str = Field(..., description="ID of the job")
+
+
+class JobTaskWebhookNotificationsOnMaintenanceStart(BaseModel):
+    id: str = Field(..., description="ID of the job")
+
+
 class JobTaskWebhookNotificationsOnStart(BaseModel):
     id: str = Field(..., description="ID of the job")
 
@@ -2525,6 +2608,12 @@ class JobTaskWebhookNotifications(BaseModel):
         None,
         plural="on_failures",
         description="(List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified",
+    )
+    on_maintenance_complete: (
+        list[JobTaskWebhookNotificationsOnMaintenanceComplete] | None
+    ) = PluralField(None, plural="on_maintenance_completes")
+    on_maintenance_start: list[JobTaskWebhookNotificationsOnMaintenanceStart] | None = (
+        PluralField(None, plural="on_maintenance_starts")
     )
     on_start: list[JobTaskWebhookNotificationsOnStart] | None = PluralField(
         None,
@@ -2558,6 +2647,7 @@ class JobTask(BaseModel):
         None,
         description="an unique identifier of the Environment.  It will be referenced from `environment_key` attribute of corresponding task",
     )
+    environment_variables_key: str | None = Field(None)
     existing_cluster_id: str | None = Field(
         None,
         description="Identifier of the interactive cluster to run job on.  *Note: running tasks on interactive clusters may lead to increased costs!*",
@@ -2740,11 +2830,140 @@ class JobTrigger(BaseModel):
     )
 
 
+class JobTriggersContinuousMaintenanceWindow(BaseModel):
+    day_of_week: str = Field(...)
+    start_hour: int = Field(...)
+    timezone_id: str = Field(
+        ...,
+        description="A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required",
+    )
+
+
+class JobTriggersContinuous(BaseModel):
+    task_retry_mode: str | None = Field(
+        None,
+        description="Controls task level retry behaviour. Allowed values are: * `NEVER` (default): The failed task will not be retried. * `ON_FAILURE`: Retry a failed task if at least one other task in the job is still running its first attempt. When this condition is no longer met or the retry limit is reached, the job run is cancelled and a new run is started",
+    )
+    maintenance_window: JobTriggersContinuousMaintenanceWindow | None = Field(None)
+
+
+class JobTriggersFileArrival(BaseModel):
+    min_time_between_triggers_seconds: int | None = Field(
+        None,
+        description="If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds",
+    )
+    url: str = Field(..., description="URL of the job on the given workspace")
+    wait_after_last_change_seconds: int | None = Field(
+        None,
+        description="If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds",
+    )
+
+
+class JobTriggersModel(BaseModel):
+    aliases: list[str] | None = Field(None)
+    condition: str = Field(
+        ...,
+        description="The table(s) condition based on which to trigger a job run.  Possible values are `ANY_UPDATED`, `ALL_UPDATED`",
+    )
+    min_time_between_triggers_seconds: int | None = Field(
+        None,
+        description="If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds",
+    )
+    securable_name: str | None = Field(None)
+    wait_after_last_change_seconds: int | None = Field(
+        None,
+        description="If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds",
+    )
+
+
+class JobTriggersPeriodic(BaseModel):
+    interval: int = Field(
+        ..., description="Specifies the interval at which the job should run"
+    )
+    unit: str = Field(
+        ...,
+        description="The unit of time for the interval.  Possible values are: `DAYS`, `HOURS`, `WEEKS`",
+    )
+
+
+class JobTriggersSchedule(BaseModel):
+    quartz_cron_expression: str = Field(
+        ...,
+        description="A [Cron expression using Quartz syntax](http://www.quartz-scheduler.org/documentation/quartz-2.3.0/tutorials/crontrigger.html) that describes the schedule for a job. This field is required",
+    )
+    timezone_id: str = Field(
+        ...,
+        description="A Java timezone ID. The schedule for a job will be resolved with respect to this timezone. See Java TimeZone for details. This field is required",
+    )
+
+
+class JobTriggersSqlCondition(BaseModel):
+    sql_query_id: str = Field(...)
+    trigger_mode: str | None = Field(None)
+    warehouse_id: str = Field(
+        ...,
+        description="ID of the (the databricks_sql_endpoint) that will be used to execute the task.  Only Serverless & Pro warehouses are supported right now",
+    )
+
+
+class JobTriggersTableUpdate(BaseModel):
+    condition: str | None = Field(
+        None,
+        description="The table(s) condition based on which to trigger a job run.  Possible values are `ANY_UPDATED`, `ALL_UPDATED`",
+    )
+    min_time_between_triggers_seconds: int | None = Field(
+        None,
+        description="If set, the trigger starts a run only after the specified amount of time passed since the last time the trigger fired. The minimum allowed value is 60 seconds",
+    )
+    table_names: list[str] = Field(
+        ...,
+        description="A non-empty list of tables to monitor for changes. The table name must be in the format `catalog_name.schema_name.table_name`",
+    )
+    wait_after_last_change_seconds: int | None = Field(
+        None,
+        description="If set, the trigger starts a run only after no file activity has occurred for the specified amount of time. This makes it possible to wait for a batch of incoming files to arrive before triggering a run. The minimum allowed value is 60 seconds",
+    )
+
+
+class JobTriggers(BaseModel):
+    pause_status: str | None = Field(
+        None,
+        description="Indicate whether this trigger is paused or not. Either `PAUSED` or `UNPAUSED`. When the `pause_status` field is omitted in the block, the server will default to using `UNPAUSED` as a value for `pause_status`",
+    )
+    continuous: JobTriggersContinuous | None = Field(None)
+    file_arrival: JobTriggersFileArrival | None = Field(
+        None,
+        description="configuration block to define a trigger for [File Arrival events](https://learn.microsoft.com/en-us/azure/databricks/workflows/jobs/file-arrival-triggers) consisting of following attributes:",
+    )
+    model: JobTriggersModel | None = Field(None)
+    periodic: JobTriggersPeriodic | None = Field(
+        None,
+        description="configuration block to define a trigger for Periodic Triggers consisting of the following attributes:",
+    )
+    schedule: JobTriggersSchedule | None = Field(
+        None,
+        description="An optional periodic schedule for this job. The default behavior is that the job runs when triggered by clicking Run Now in the Jobs UI or sending an API request to runNow. See [schedule Configuration Block](#schedule-configuration-block) below",
+    )
+    sql_condition: JobTriggersSqlCondition | None = Field(None)
+    table_update: JobTriggersTableUpdate | None = Field(
+        None,
+        description="configuration block to define a trigger for [Table Updates](https://docs.databricks.com/aws/en/jobs/trigger-table-update) consisting of following attributes:",
+    )
+
+
 class JobWebhookNotificationsOnDurationWarningThresholdExceeded(BaseModel):
     id: str = Field(..., description="ID of the job")
 
 
 class JobWebhookNotificationsOnFailure(BaseModel):
+    id: str = Field(..., description="ID of the job")
+
+
+class JobWebhookNotificationsOnMaintenanceComplete(BaseModel):
+    id: str = Field(..., description="ID of the job")
+
+
+class JobWebhookNotificationsOnMaintenanceStart(BaseModel):
     id: str = Field(..., description="ID of the job")
 
 
@@ -2772,6 +2991,12 @@ class JobWebhookNotifications(BaseModel):
         None,
         plural="on_failures",
         description="(List) list of notification IDs to call when the run fails. A maximum of 3 destinations can be specified",
+    )
+    on_maintenance_complete: (
+        list[JobWebhookNotificationsOnMaintenanceComplete] | None
+    ) = PluralField(None, plural="on_maintenance_completes")
+    on_maintenance_start: list[JobWebhookNotificationsOnMaintenanceStart] | None = (
+        PluralField(None, plural="on_maintenance_starts")
     )
     on_start: list[JobWebhookNotificationsOnStart] | None = PluralField(
         None,
@@ -2864,6 +3089,7 @@ class JobBase(BaseModel, TerraformResource):
         description="An optional block to specify a set of email addresses notified when this task begins, completes or fails. The default behavior is to not send any emails. This block is [documented below](#email_notifications-configuration-block)",
     )
     environment: list[JobEnvironment] | None = PluralField(None, plural="environments")
+    environment_variables: list[JobEnvironmentVariables] | None = Field(None)
     git_source: JobGitSource | None = Field(
         None,
         description="Specifies the a Git repository for task source code. See [git_source Configuration Block](#git_source-configuration-block) below",
@@ -2922,6 +3148,7 @@ class JobBase(BaseModel, TerraformResource):
         None,
         description="The conditions that triggers the job to start. See [trigger Configuration Block](#trigger-configuration-block) below. * `continuous`- (Optional) Configuration block to configure pause status. See [continuous Configuration Block](#continuous-configuration-block)",
     )
+    triggers: list[JobTriggers] | None = Field(None)
     webhook_notifications: JobWebhookNotifications | None = Field(
         None,
         description="(List) An optional set of system destinations (for example, webhook destinations or Slack) to be notified when runs of this task begins, completes or fails. The default behavior is to not send any notifications. This field is a block and is documented below",
@@ -2935,11 +3162,14 @@ class JobBase(BaseModel, TerraformResource):
 __all__ = [
     "JobBase",
     "JobContinuous",
+    "JobContinuousMaintenanceWindow",
     "JobDbtTask",
     "JobDeployment",
     "JobEmailNotifications",
     "JobEnvironment",
     "JobEnvironmentSpec",
+    "JobEnvironmentVariables",
+    "JobEnvironmentVariablesSpec",
     "JobGitSource",
     "JobGitSourceGitSnapshot",
     "JobGitSourceJobSource",
@@ -3121,6 +3351,8 @@ __all__ = [
     "JobTaskForEachTaskTaskWebhookNotifications",
     "JobTaskForEachTaskTaskWebhookNotificationsOnDurationWarningThresholdExceeded",
     "JobTaskForEachTaskTaskWebhookNotificationsOnFailure",
+    "JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceComplete",
+    "JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceStart",
     "JobTaskForEachTaskTaskWebhookNotificationsOnStart",
     "JobTaskForEachTaskTaskWebhookNotificationsOnStreamingBacklogExceeded",
     "JobTaskForEachTaskTaskWebhookNotificationsOnSuccess",
@@ -3186,6 +3418,8 @@ __all__ = [
     "JobTaskWebhookNotifications",
     "JobTaskWebhookNotificationsOnDurationWarningThresholdExceeded",
     "JobTaskWebhookNotificationsOnFailure",
+    "JobTaskWebhookNotificationsOnMaintenanceComplete",
+    "JobTaskWebhookNotificationsOnMaintenanceStart",
     "JobTaskWebhookNotificationsOnStart",
     "JobTaskWebhookNotificationsOnStreamingBacklogExceeded",
     "JobTaskWebhookNotificationsOnSuccess",
@@ -3196,9 +3430,20 @@ __all__ = [
     "JobTriggerPeriodic",
     "JobTriggerSqlCondition",
     "JobTriggerTableUpdate",
+    "JobTriggers",
+    "JobTriggersContinuous",
+    "JobTriggersContinuousMaintenanceWindow",
+    "JobTriggersFileArrival",
+    "JobTriggersModel",
+    "JobTriggersPeriodic",
+    "JobTriggersSchedule",
+    "JobTriggersSqlCondition",
+    "JobTriggersTableUpdate",
     "JobWebhookNotifications",
     "JobWebhookNotificationsOnDurationWarningThresholdExceeded",
     "JobWebhookNotificationsOnFailure",
+    "JobWebhookNotificationsOnMaintenanceComplete",
+    "JobWebhookNotificationsOnMaintenanceStart",
     "JobWebhookNotificationsOnStart",
     "JobWebhookNotificationsOnStreamingBacklogExceeded",
     "JobWebhookNotificationsOnSuccess",

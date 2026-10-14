@@ -23,11 +23,9 @@ class GlobalInitScriptBase(BaseModel, TerraformResource):
     name: str = Field(..., description="the name of the script.  It should be unique")
     content_base64: str | None = Field(
         None,
-        description="The base64-encoded source code global init script. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances",
+        description="The base64-encoded source code global init script. Conflicts with `source`. Use of `content_base64` is discouraged, as it's increasing memory footprint of Terraform state and should only be used in exceptional circumstances * `enabled` (bool, optional default: `false`) specifies if the script is enabled for execution, or not",
     )
-    enabled: bool | None = Field(
-        None, description="specifies if the script is enabled for execution, or not"
-    )
+    enabled: bool | None = Field(None)
     md5: str | None = Field(None)
     position: int | None = Field(
         None,

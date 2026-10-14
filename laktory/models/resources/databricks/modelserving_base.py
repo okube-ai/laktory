@@ -200,6 +200,7 @@ class ModelServingConfigServedEntitiesExternalModelAmazonBedrockConfig(BaseModel
         None,
         description="ARN of the instance profile that the served model will use to access AWS resources",
     )
+    uc_service_credential_name: str | None = Field(None)
 
 
 class ModelServingConfigServedEntitiesExternalModelAnthropicConfig(BaseModel):
@@ -594,6 +595,7 @@ class ModelServingTelemetryConfigTableNames(BaseModel):
 
 
 class ModelServingTelemetryConfig(BaseModel):
+    enabled_telemetry_features: list[str] | None = Field(None)
     telemetry_profile_id: str | None = Field(None)
     inference_table_config: ModelServingTelemetryConfigInferenceTableConfig | None = (
         Field(

@@ -9,7 +9,9 @@ from .catalog import Catalog
 from .cluster import Cluster
 from .clusterpolicy import ClusterPolicy
 from .connection import Connection
+from .credential import Credential
 from .currentuser import CurrentUser
+from .customappintegration import CustomAppIntegration
 from .dashboard import Dashboard
 from .dataqualitymonitor import DataQualityMonitor
 from .dbfsfile import DbfsFile
@@ -22,6 +24,7 @@ from .grant import Grant
 from .grants import Grants
 from .group import Group
 from .groupmember import GroupMember
+from .grouprole import GroupRole
 from .instancepool import InstancePool
 from .instanceprofile import InstanceProfile
 from .ipaccesslist import IpAccessList
@@ -49,6 +52,7 @@ from .mwsworkspaces import MwsWorkspaces
 from .notebook import Notebook
 from .notificationdestination import NotificationDestination
 from .obotoken import OboToken
+from .permissionassignment import PermissionAssignment
 from .permissions import Permissions
 from .pipeline import Pipeline
 from .pythonpackage import PythonPackage
@@ -60,11 +64,14 @@ from .schema import Schema
 from .secret import Secret
 from .secretacl import SecretAcl
 from .secretscope import SecretScope
+from .secretuc import SecretUc
 from .serviceprincipal import ServicePrincipal
 from .serviceprincipalfederationpolicy import ServicePrincipalFederationPolicy
 from .serviceprincipalrole import ServicePrincipalRole
+from .serviceprincipalsecret import ServicePrincipalSecret
 from .share import Share
 from .storagecredential import StorageCredential
+from .systemschema import SystemSchema
 from .table import Table
 from .token import Token
 from .user import User

@@ -24,8 +24,11 @@ class GrantBase(BaseModel, TerraformResource):
     external_location: str | None = Field(None)
     foreign_connection: str | None = Field(None)
     function: str | None = Field(None)
+    mcp_service: str | None = Field(None)
     metastore: str | None = Field(None)
     model: str | None = Field(None)
+    model_provider_service: str | None = Field(None)
+    model_service: str | None = Field(None)
     pipeline: str | None = Field(None)
     recipient: str | None = Field(None)
     schema_: str | None = Field(
@@ -33,6 +36,7 @@ class GrantBase(BaseModel, TerraformResource):
         serialization_alias="schema",
         validation_alias=AliasChoices("schema", "schema_"),
     )
+    secret: str | None = Field(None)
     share: str | None = Field(None)
     storage_credential: str | None = Field(None)
     table: str | None = Field(None)

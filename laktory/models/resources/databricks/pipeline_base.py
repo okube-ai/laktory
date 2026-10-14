@@ -302,6 +302,12 @@ class PipelineIngestionDefinitionObjectsReport(BaseModel):
     )
 
 
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsApiSourceConnectorOptions(
+    BaseModel
+):
+    options: dict[str, str] | None = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsConfluenceOptions(
     BaseModel
 ):
@@ -374,6 +380,43 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsJiraOptions(BaseMo
     include_jira_spaces: list[str] | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptions(
+    BaseModel
+):
+    parse_mode: str | None = Field(None)
+    schema_: str | None = Field(
+        None,
+        description="The UC schema the event log is published under",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    schema_file_path: str | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerJsonOptions(
     BaseModel
 ):
@@ -389,12 +432,92 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTra
     schema_hints: str | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions(
+    BaseModel
+):
+    desc_file_path: str | None = Field(None)
+    message_name: str | None = Field(None)
+    parse_mode: str | None = Field(None)
+    recursive_fields_max_depth: int | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformer(
     BaseModel
 ):
     format: str | None = Field(None)
+    input_column: str | None = Field(None)
+    output_column: str | None = Field(None)
+    avro_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptions
+        | None
+    ) = Field(None)
     json_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerJsonOptions
+        | None
+    ) = Field(None)
+    protobuf_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptions(
+    BaseModel
+):
+    parse_mode: str | None = Field(None)
+    schema_: str | None = Field(
+        None,
+        description="The UC schema the event log is published under",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    schema_file_path: str | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry
         | None
     ) = Field(None)
 
@@ -414,12 +537,55 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueT
     schema_hints: str | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptions(
+    BaseModel
+):
+    desc_file_path: str | None = Field(None)
+    message_name: str | None = Field(None)
+    parse_mode: str | None = Field(None)
+    recursive_fields_max_depth: int | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformer(
     BaseModel
 ):
     format: str | None = Field(None)
+    input_column: str | None = Field(None)
+    output_column: str | None = Field(None)
+    avro_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptions
+        | None
+    ) = Field(None)
     json_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerJsonOptions
+        | None
+    ) = Field(None)
+    protobuf_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptions
         | None
     ) = Field(None)
 
@@ -438,6 +604,30 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptions(BaseM
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformer
         | None
     ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    entity_granularity: list[str] | None = Field(None)
+    finder: str = Field(...)
+    metrics: list[str] | None = Field(None)
+    time_granularity: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptions(
+    BaseModel
+):
+    lookback_window_days: int | None = Field(None)
+    sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMarketoOptions(BaseModel):
+    sync_start_date: str | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptionsCustomReportOptions(
@@ -477,6 +667,12 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions(Bas
     sender_filter: list[str] | None = Field(None)
     start_date: str | None = Field(None)
     subject_filter: list[str] | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRabbitmqOptions(
+    BaseModel
+):
+    queue: str = Field(...)
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptionsCustomReportOptions(
@@ -579,6 +775,10 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptionsZendeskSupportOpti
 
 
 class PipelineIngestionDefinitionObjectsSchemaConnectorOptions(BaseModel):
+    api_source_connector_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsApiSourceConnectorOptions
+        | None
+    ) = Field(None)
     confluence_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsConfluenceOptions | None
     ) = Field(None)
@@ -594,11 +794,21 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptions(BaseModel):
     kafka_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptions | None
     ) = Field(None)
+    linkedin_ads_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptions
+        | None
+    ) = Field(None)
+    marketo_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMarketoOptions | None
+    ) = Field(None)
     meta_ads_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptions | None
     ) = Field(None)
     outlook_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions | None
+    ) = Field(None)
+    rabbitmq_options: (
+        PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRabbitmqOptions | None
     ) = Field(None)
     reddit_ads_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptions | None
@@ -618,6 +828,43 @@ class PipelineIngestionDefinitionObjectsSchemaConnectorOptions(BaseModel):
     ) = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptions(
+    BaseModel
+):
+    parse_mode: str | None = Field(None)
+    schema_: str | None = Field(
+        None,
+        description="The UC schema the event log is published under",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    schema_file_path: str | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions(
     BaseModel
 ):
@@ -633,10 +880,53 @@ class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions
     schema_hints: str | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptions(
+    BaseModel
+):
+    desc_file_path: str | None = Field(None)
+    message_name: str | None = Field(None)
+    parse_mode: str | None = Field(None)
+    recursive_fields_max_depth: int | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransforms(BaseModel):
     format: str | None = Field(None)
+    input_column: str | None = Field(None)
+    output_column: str | None = Field(None)
+    avro_options: (
+        PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptions
+        | None
+    ) = Field(None)
     json_options: (
         PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions
+        | None
+    ) = Field(None)
+    protobuf_options: (
+        PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptions
         | None
     ) = Field(None)
 
@@ -713,7 +1003,7 @@ class PipelineIngestionDefinitionObjectsSchema(BaseModel):
     destination_catalog: str = Field(...)
     destination_schema: str = Field(...)
     source_catalog: str | None = Field(None)
-    source_schema: str = Field(...)
+    source_schema: str | None = Field(None)
     connector_options: (
         PipelineIngestionDefinitionObjectsSchemaConnectorOptions | None
     ) = Field(None)
@@ -726,6 +1016,12 @@ class PipelineIngestionDefinitionObjectsSchema(BaseModel):
         None,
         description="Configuration settings to control the ingestion of tables. These settings are applied to all tables in the pipeline",
     )
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsApiSourceConnectorOptions(
+    BaseModel
+):
+    options: dict[str, str] | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsConfluenceOptions(
@@ -800,6 +1096,43 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsJiraOptions(BaseMod
     include_jira_spaces: list[str] | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptions(
+    BaseModel
+):
+    parse_mode: str | None = Field(None)
+    schema_: str | None = Field(
+        None,
+        description="The UC schema the event log is published under",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    schema_file_path: str | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerJsonOptions(
     BaseModel
 ):
@@ -815,12 +1148,92 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTran
     schema_hints: str | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions(
+    BaseModel
+):
+    desc_file_path: str | None = Field(None)
+    message_name: str | None = Field(None)
+    parse_mode: str | None = Field(None)
+    recursive_fields_max_depth: int | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformer(
     BaseModel
 ):
     format: str | None = Field(None)
+    input_column: str | None = Field(None)
+    output_column: str | None = Field(None)
+    avro_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptions
+        | None
+    ) = Field(None)
     json_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerJsonOptions
+        | None
+    ) = Field(None)
+    protobuf_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptions(
+    BaseModel
+):
+    parse_mode: str | None = Field(None)
+    schema_: str | None = Field(
+        None,
+        description="The UC schema the event log is published under",
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "schema_"),
+    )
+    schema_file_path: str | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry
         | None
     ) = Field(None)
 
@@ -840,12 +1253,55 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTr
     schema_hints: str | None = Field(None)
 
 
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions(
+    BaseModel
+):
+    subject: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry(
+    BaseModel
+):
+    connection_name: str | None = Field(
+        None,
+        description="Immutable. The Unity Catalog connection this ingestion pipeline uses to communicate with the source. Specify either ingestion_gateway_id or connection_name",
+    )
+    protobuf_message_name: str | None = Field(None)
+    confluent_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptions(
+    BaseModel
+):
+    desc_file_path: str | None = Field(None)
+    message_name: str | None = Field(None)
+    parse_mode: str | None = Field(None)
+    recursive_fields_max_depth: int | None = Field(None)
+    schema_registry: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry
+        | None
+    ) = Field(None)
+
+
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformer(
     BaseModel
 ):
     format: str | None = Field(None)
+    input_column: str | None = Field(None)
+    output_column: str | None = Field(None)
+    avro_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptions
+        | None
+    ) = Field(None)
     json_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerJsonOptions
+        | None
+    ) = Field(None)
+    protobuf_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptions
         | None
     ) = Field(None)
 
@@ -864,6 +1320,30 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptions(BaseMo
         PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformer
         | None
     ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptionsCustomReportOptions(
+    BaseModel
+):
+    entity_granularity: list[str] | None = Field(None)
+    finder: str = Field(...)
+    metrics: list[str] | None = Field(None)
+    time_granularity: str | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptions(
+    BaseModel
+):
+    lookback_window_days: int | None = Field(None)
+    sync_start_date: str | None = Field(None)
+    custom_report_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptionsCustomReportOptions
+        | None
+    ) = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsMarketoOptions(BaseModel):
+    sync_start_date: str | None = Field(None)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptionsCustomReportOptions(
@@ -903,6 +1383,10 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions(Base
     sender_filter: list[str] | None = Field(None)
     start_date: str | None = Field(None)
     subject_filter: list[str] | None = Field(None)
+
+
+class PipelineIngestionDefinitionObjectsTableConnectorOptionsRabbitmqOptions(BaseModel):
+    queue: str = Field(...)
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptionsCustomReportOptions(
@@ -1005,6 +1489,10 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptionsZendeskSupportOptio
 
 
 class PipelineIngestionDefinitionObjectsTableConnectorOptions(BaseModel):
+    api_source_connector_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsApiSourceConnectorOptions
+        | None
+    ) = Field(None)
     confluence_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsConfluenceOptions | None
     ) = Field(None)
@@ -1020,11 +1508,20 @@ class PipelineIngestionDefinitionObjectsTableConnectorOptions(BaseModel):
     kafka_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptions | None
     ) = Field(None)
+    linkedin_ads_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptions | None
+    ) = Field(None)
+    marketo_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsMarketoOptions | None
+    ) = Field(None)
     meta_ads_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptions | None
     ) = Field(None)
     outlook_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions | None
+    ) = Field(None)
+    rabbitmq_options: (
+        PipelineIngestionDefinitionObjectsTableConnectorOptionsRabbitmqOptions | None
     ) = Field(None)
     reddit_ads_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptions | None
@@ -1111,7 +1608,7 @@ class PipelineIngestionDefinitionObjectsTable(BaseModel):
     destination_table: str | None = Field(None)
     source_catalog: str | None = Field(None)
     source_schema: str | None = Field(None)
-    source_table: str = Field(...)
+    source_table: str | None = Field(None)
     connector_options: (
         PipelineIngestionDefinitionObjectsTableConnectorOptions | None
     ) = Field(None)
@@ -1129,6 +1626,12 @@ class PipelineIngestionDefinitionObjects(BaseModel):
         None, description="The UC schema the event log is published under"
     )
     table: PipelineIngestionDefinitionObjectsTable | None = Field(None)
+
+
+class PipelineIngestionDefinitionSourceConfigurationsApiSourceConnectorConfig(
+    BaseModel
+):
+    configs: dict[str, str] | None = Field(None)
 
 
 class PipelineIngestionDefinitionSourceConfigurationsCatalogPostgresSlotConfig(
@@ -1156,6 +1659,9 @@ class PipelineIngestionDefinitionSourceConfigurationsGoogleAdsConfig(BaseModel):
 
 
 class PipelineIngestionDefinitionSourceConfigurations(BaseModel):
+    api_source_connector_config: (
+        PipelineIngestionDefinitionSourceConfigurationsApiSourceConnectorConfig | None
+    ) = Field(None)
     catalog: PipelineIngestionDefinitionSourceConfigurationsCatalog | None = Field(
         None, description="The UC catalog the event log is published under"
     )
@@ -1305,6 +1811,7 @@ class PipelineRestartWindow(BaseModel):
 
 
 class PipelineRunAs(BaseModel):
+    group_name: str | None = Field(None)
     service_principal_name: str | None = Field(
         None,
         description="The application ID of an active service principal. Setting this field requires the `servicePrincipal/user` role",
@@ -1494,6 +2001,7 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsReportTableConfigurationWorkdayReportParametersReportParameters",
     "PipelineIngestionDefinitionObjectsSchema",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsApiSourceConnectorOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsConfluenceOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsGdriveOptionsFileIngestionOptions",
@@ -1503,12 +2011,28 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsJiraOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformer",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerJsonOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformer",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerJsonOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptionsCustomReportOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMarketoOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMetaAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions",
+    "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRabbitmqOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRedditAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsSharepointOptions",
@@ -1520,7 +2044,13 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsSchemaConnectorOptionsZendeskSupportOptions",
     "PipelineIngestionDefinitionObjectsSchemaFanoutOptions",
     "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransforms",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptions",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptions",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsSchemaTableConfiguration",
     "PipelineIngestionDefinitionObjectsSchemaTableConfigurationAutoFullRefreshPolicy",
     "PipelineIngestionDefinitionObjectsSchemaTableConfigurationQueryBasedConnectorConfig",
@@ -1528,6 +2058,7 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsSchemaTableConfigurationWorkdayReportParametersReportParameters",
     "PipelineIngestionDefinitionObjectsTable",
     "PipelineIngestionDefinitionObjectsTableConnectorOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsApiSourceConnectorOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsConfluenceOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsGdriveOptionsFileIngestionOptions",
@@ -1537,12 +2068,28 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsJiraOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformer",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerJsonOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformer",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerJsonOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptionsCustomReportOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsMarketoOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsMetaAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions",
+    "PipelineIngestionDefinitionObjectsTableConnectorOptionsRabbitmqOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsRedditAdsOptionsCustomReportOptions",
     "PipelineIngestionDefinitionObjectsTableConnectorOptionsSharepointOptions",
@@ -1558,6 +2105,7 @@ __all__ = [
     "PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParameters",
     "PipelineIngestionDefinitionObjectsTableTableConfigurationWorkdayReportParametersReportParameters",
     "PipelineIngestionDefinitionSourceConfigurations",
+    "PipelineIngestionDefinitionSourceConfigurationsApiSourceConnectorConfig",
     "PipelineIngestionDefinitionSourceConfigurationsCatalog",
     "PipelineIngestionDefinitionSourceConfigurationsCatalogPostgres",
     "PipelineIngestionDefinitionSourceConfigurationsCatalogPostgresSlotConfig",
