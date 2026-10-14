@@ -120,6 +120,17 @@
     "usage_policy_id": "The Usage Policy ID set for this resource",
     "user_api_scopes": "A list of api scopes granted to the user access token.  See [REST API docs](https://docs.databricks.com/api/workspace/api/scopes) for full list of supported scopes"
   },
+  "databricks_artifact_allowlist": {
+    "artifact": "The artifact path or maven coordinate",
+    "artifact_type": "The artifact type of the allowlist. Can be `INIT_SCRIPT`, `LIBRARY_JAR` or `LIBRARY_MAVEN`. Change forces creation of a new resource",
+    "created_at": "Time at which this artifact allowlist was set",
+    "created_by": "Identity that set the artifact allowlist",
+    "id": "ID of the artifact allow list in form of `metastore_id|artifact_type`",
+    "match_type": "The pattern matching type of the artifact. Only `PREFIX_MATCH` is supported",
+    "metastore_id": "ID of the parent metastore",
+    "provider_config": "Configure the provider for management through account provider. This block consists of the following fields:",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
   "databricks_budget": {
     "account_id": "The ID of the Databricks Account",
     "action_configurations": "List of action configurations to take when the budget alert is triggered. Consists of the following fields:",
@@ -326,7 +337,46 @@
     "workspace_consume": "This is a field to allow the principal to have access only to [Databricks One](https://docs.databricks.com/aws/en/workspace/databricks-one#who-can-access-databricks-one).  Couldn't be used with `workspace_access` or `databricks_sql_access`",
     "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
   },
+  "databricks_entity_tag_assignment": {
+    "entity_name": "The fully qualified name of the entity to which the tag is assigned",
+    "entity_type": "The type of the entity to which the tag is assigned",
+    "provider_config": "Configure the provider for management through account provider",
+    "source_type": "The source type of the tag assignment, e.g., user-assigned or system-assigned. Possible values are: `TAG_ASSIGNMENT_SOURCE_TYPE_SYSTEM_DATA_CLASSIFICATION`",
+    "tag_key": "The key of the tag",
+    "tag_value": "The value of the tag",
+    "update_time": "The timestamp when the tag assignment was last updated",
+    "updated_by": "The user or principal who updated the tag assignment",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
   "databricks_external_location": {},
+  "databricks_external_metadata": {
+    "columns": "List of columns associated with the external metadata object",
+    "create_time": "Time at which this external metadata object was created",
+    "created_by": "Username of external metadata object creator",
+    "description": "User-provided free-form text description",
+    "entity_type": "Type of entity within the external system",
+    "id": "Unique identifier of the external metadata object",
+    "metastore_id": "Unique identifier of parent metastore",
+    "name": "Name of the external metadata object",
+    "owner": "Owner of the external metadata object",
+    "properties": "A map of key-value properties attached to the external metadata object",
+    "provider_config": "Configure the provider for management through account provider",
+    "system_type": "Type of external system. Possible values are: `AMAZON_REDSHIFT`, `AZURE_SYNAPSE`, `CONFLUENT`, `DATABRICKS`, `GOOGLE_BIGQUERY`, `KAFKA`, `LOOKER`, `MICROSOFT_FABRIC`, `MICROSOFT_SQL_SERVER`, `MONGODB`, `MYSQL`, `ORACLE`, `OTHER`, `POSTGRESQL`, `POWER_BI`, `SALESFORCE`, `SAP`, `SERVICENOW`, `SNOWFLAKE`, `STREAM_NATIVE`, `TABLEAU`, `TERADATA`, `WORKDAY`",
+    "update_time": "Time at which this external metadata object was last modified",
+    "updated_by": "Username of user who last modified external metadata object",
+    "url": "URL associated with the external metadata object",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
+  "databricks_file": {
+    "content_base64": "Contents in base 64 format. Conflicts with `source`",
+    "file_size": "The file size of the file that is being tracked by this resource in bytes",
+    "id": "Same as `path`",
+    "modification_time": "The last time stamp when the file was modified",
+    "path": "The path of the file in which you wish to save. For example, `/Volumes/main/default/volume1/file.txt`",
+    "provider_config": "Configure the provider for management through account provider. This block consists of the following fields:",
+    "source": "The full absolute path to the file. Conflicts with `content_base64`",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
   "databricks_git_credential": {
     "force": "specify if settings need to be enforced (i.e., to overwrite previously set credential for service principals)",
     "git_email": "The email associated with your Git provider user account. Used for authentication with the remote repository and also sets the author & committer identity for commits",
@@ -1034,6 +1084,51 @@
     "user_name": "The email of an active workspace user. Non-admin users can only set this field to their own email",
     "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
   },
+  "databricks_policy_info": {
+    "alias": "Optional alias of the matched column",
+    "column_alias": "The alias from MATCH COLUMNS that identifies the column",
+    "column_mask": "Options for column mask policies. Valid only if `policy_type` is `POLICY_TYPE_COLUMN_MASK`. Required on create and optional on update. When specified on update, the new options will replace the existing options as a whole",
+    "column_tag_value": "Extracts the value of a column-level tag",
+    "comment": "Optional description of the policy",
+    "condition": "The condition expression used to match a table column",
+    "constant": "A constant literal",
+    "created_at": "Time at which the policy was created, in epoch milliseconds. Output only",
+    "created_by": "Username of the user who created the policy. Output only",
+    "deny": "Options for deny policies. Valid only if `policy_type` is `POLICY_TYPE_DENY`. Required on create and optional on update. When specified on update, the new options will replace the existing options as a whole",
+    "except_principals": "Optional list of user or group names that should be excluded from the policy",
+    "for_securable_type": "Type of securables that the policy should take effect on. Required on create and optional on update. Possible values are: `AGENT_SERVICE`, `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `SKILL`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`",
+    "function_arg_expression": "An expression evaluated at query time. Wraps per-request expression variants (e.g., tag introspection) so new variants can be added without extending the FunctionArgument oneof",
+    "function_name": "The fully qualified name of the row filter function. The function is called on each row of the target table. It should return a boolean value indicating whether the row should be visible to the user. Required on create and update",
+    "grant": "Options for grant policies. Valid only if `policy_type` is `POLICY_TYPE_GRANT`. Required on create and optional on update. When specified on update, the new options will replace the existing options as a whole",
+    "id": "Unique identifier of the policy. This field is output only and is generated by the system",
+    "match_columns": "Optional list of condition expressions used to match table columns. Only valid when `for_securable_type` is `TABLE`. When specified, the policy only applies to tables whose columns satisfy all match conditions",
+    "name": "Name of the policy. Required on create and optional on update. To rename the policy, set `name` to a different value on update",
+    "on_column": "The alias of the column to be masked. The alias must refer to one of matched columns. The values of the column is passed to the column mask function as the first argument. Required on create and update",
+    "on_securable_fullname": "Full name of the securable on which the policy is defined. Required on create",
+    "on_securable_type": "Type of the securable on which the policy is defined. Only `CATALOG`, `SCHEMA` and `TABLE` are supported at this moment. Required on create. Possible values are: `AGENT_SERVICE`, `CATALOG`, `CLEAN_ROOM`, `CONNECTION`, `CREDENTIAL`, `EXTERNAL_LOCATION`, `EXTERNAL_METADATA`, `FUNCTION`, `MCP_SERVICE`, `METASTORE`, `MODEL`, `MODEL_PROVIDER_SERVICE`, `MODEL_SERVICE`, `PIPELINE`, `PROVIDER`, `RECIPIENT`, `SCHEMA`, `SHARE`, `SKILL`, `STAGING_TABLE`, `STORAGE_CREDENTIAL`, `TABLE`, `VOLUME`",
+    "policy_type": "Type of the policy. Required on create. Possible values are: `POLICY_TYPE_COLUMN_MASK`, `POLICY_TYPE_DENY`, `POLICY_TYPE_GRANT`, `POLICY_TYPE_ROW_FILTER`",
+    "privileges": "List of privileges to grant. When any of these privileges are requested, the policy will grant access if the principal and condition match. Required on create and update",
+    "provider_config": "Configure the provider for management through account provider",
+    "row_filter": "Options for row filter policies. Valid only if `policy_type` is `POLICY_TYPE_ROW_FILTER`. Required on create and optional on update. When specified on update, the new options will replace the existing options as a whole",
+    "tag_introspection": "An expression that introspects tags at query time",
+    "tag_key": "1024 matches the max_length on FunctionArgument.constant above",
+    "tag_value": "Extracts the value of a securable-level tag",
+    "to_principals": "List of user or group names that the policy applies to. Required on create and optional on update",
+    "updated_at": "Time at which the policy was last modified, in epoch milliseconds. Output only",
+    "updated_by": "Username of the user who last modified the policy. Output only",
+    "using": "Optional list of column aliases or constant literals to be passed as arguments to the row filter function. The type of each column should match the positional argument of the row filter function",
+    "when_condition": "Optional condition when the policy should take effect",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
+  "databricks_provider": {
+    "authentication_type": "The delta sharing authentication type. Valid values are `TOKEN`",
+    "comment": "Description about the provider",
+    "id": "ID of this provider - same as the `name`",
+    "name": "Name of provider. Change forces creation of a new resource",
+    "provider_config": "Configure the provider for management through account provider. This block consists of the following fields:",
+    "recipient_profile_str": "This is the json file that is created from a recipient url",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
   "databricks_quality_monitor": {
     "assets_dir": "- The directory to store the monitoring assets (Eg. Dashboard and Metric Tables)",
     "baseline_table_name": "Name of the baseline table from which drift metrics are computed from.Columns in the monitored table should also be present in the baseline table",
@@ -1371,6 +1466,12 @@
     "state": "The current state of enablement for the system schema",
     "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
   },
+  "databricks_tag_policy": {
+    "create_time": "Timestamp when the tag policy was created * `id` (string)",
+    "provider_config": "Configure the provider for management through account provider",
+    "update_time": "Timestamp when the tag policy was last updated",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
   "databricks_token": {
     "comment": "(String) Comment that will appear on the user's settings page for this token",
     "id": "Canonical unique identifier for the token",
@@ -1470,6 +1571,14 @@
     "provider_config": "Configure the provider for management through account provider. This block consists of the following fields:",
     "securable_name": "Name of securable. Change forces creation of a new resource",
     "securable_type": "Type of securable. Can be `catalog`, `external_location`, `storage_credential` or `credential`. Default to `catalog`. Change forces creation of a new resource",
+    "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
+  },
+  "databricks_workspace_entity_tag_assignment": {
+    "entity_id": "The identifier of the entity to which the tag is assigned. For apps, the entity_id is the app name",
+    "entity_type": "The type of entity to which the tag is assigned. Allowed values are apps, dashboards, geniespaces, notebooks",
+    "provider_config": "Configure the provider for management through account provider",
+    "tag_key": "The key of the tag. The characters , . : / - = and leading/trailing spaces are not allowed",
+    "tag_value": "The value of the tag",
     "workspace_id": "Workspace ID which the resource belongs to. This workspace must be part of the account which the provider is configured with"
   },
   "databricks_workspace_file": {

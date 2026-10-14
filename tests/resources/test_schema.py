@@ -1,5 +1,7 @@
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
+from laktory.models.resources.databricks import EntityTagAssignment
+from laktory.models.resources.databricks import PolicyInfo
 from laktory.models.resources.databricks import Schema
 from laktory.models.resources.databricks import Table
 from laktory.models.resources.databricks.table_base import TableColumn
@@ -53,6 +55,32 @@ def test_schema_additional_resources():
     resources = schema.additional_core_resources
     types_found = {type(r).__name__ for r in resources}
     assert "Table" in types_found
+
+
+def test_schema_tags_and_policies():
+    schema = Schema(
+        catalog_name="dev",
+        name="finance",
+        tags={"domain": "finance"},
+        policies=[
+            {
+                "name": "mask_pii",
+                "policy_type": "POLICY_TYPE_COLUMN_MASK",
+                "for_securable_type": "TABLE",
+                "to_principals": ["account users"],
+                "match_columns": [{"condition": "hasTag('pii')", "alias": "c"}],
+                "column_mask": {"function_name": "dev.finance.mask", "on_column": "c"},
+            }
+        ],
+    )
+    resources = schema.additional_core_resources
+    (tag,) = [r for r in resources if isinstance(r, EntityTagAssignment)]
+    assert tag.entity_type == "schemas"
+    assert tag.entity_name == "${resources.schema-dev-finance.id}"
+    (policy,) = [r for r in resources if isinstance(r, PolicyInfo)]
+    assert policy.on_securable_type == "SCHEMA"
+    assert policy.on_securable_fullname == "${resources.schema-dev-finance.id}"
+    assert "tags" not in schema.terraform_properties
 
 
 def test_terraform_plan():

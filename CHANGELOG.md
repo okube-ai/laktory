@@ -5,6 +5,7 @@
 * Added pipeline `parameters`, referenced as `${params.X}` in pipeline nodes and resolved at run time from job parameters (`LAKEFLOW_JOB`), Airflow DAG run `conf`, `pl.execute(params=...)` or `laktory run --param`, to reuse a single deployed pipeline across clients. Sink checkpoints are derived from the resolved sinks, so each client gets its own. [[#694](https://github.com/okube-ai/laktory/issues/694)]
 * Added `ServicePrincipalSecret` (service principal OAuth secret, whose generated `secret` can be referenced as `${resources.<key>.secret}`), `GroupRole`, `Credential` (Unity Catalog service credential), `SecretUc`, `PermissionAssignment`, `CustomAppIntegration` and `SystemSchema` resources. [[#695](https://github.com/okube-ai/laktory/issues/695)]
 * Added nested `ServicePrincipal.secrets`, `Group.roles` and `Credential.grant`/`grants` (with the new `CredentialGrant` model) to declare service principal secrets, group roles and service credential grants with their parent resource. [[#695](https://github.com/okube-ai/laktory/issues/695)]
+* Added `TagPolicy`, `EntityTagAssignment`, `WorkspaceEntityTagAssignment`, `PolicyInfo` (ABAC), `ArtifactAllowlist`, `ShareProvider` (Delta Sharing), `File` (Unity Catalog volume file) and `ExternalMetadata` resources, with nested `tags` on `Catalog`, `Schema`, `Volume`, `Table`, table columns, `App`, `Dashboard` and `Notebook`, nested ABAC `policies` on `Catalog`, `Schema` and `Table`, and nested `files` on `Volume`. [[#702](https://github.com/okube-ai/laktory/issues/702)]
 ### Fixed
 * n/a
 ### Updated

@@ -7,6 +7,7 @@ from __future__ import annotations
 # Maps a resource_key to an alternate naming key used for class/file naming.
 # The terraform_resource_type property still returns the original resource_key.
 RESOURCE_NAME_OVERRIDES: dict[str, str] = {
+    "databricks_provider": "databricks_share_provider",
     "databricks_sql_table": "databricks_table",
     # "databricks_quality_monitor": "databricks_data_profiling_monitor",
 }
@@ -17,6 +18,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_account_federation_policy",
     "databricks_alert",
     "databricks_app",
+    "databricks_artifact_allowlist",
     "databricks_budget",
     "databricks_budget_policy",
     "databricks_catalog",
@@ -31,7 +33,10 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_dbfs_file",
     "databricks_directory",
     "databricks_entitlements",
+    "databricks_entity_tag_assignment",
     "databricks_external_location",
+    "databricks_external_metadata",
+    "databricks_file",
     "databricks_git_credential",
     "databricks_global_init_script",
     "databricks_grant",
@@ -69,6 +74,8 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_permission_assignment",
     "databricks_permissions",
     "databricks_pipeline",
+    "databricks_policy_info",
+    "databricks_provider",
     # "databricks_quality_monitor",
     "databricks_query",
     "databricks_recipient",
@@ -88,6 +95,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_sql_table",
     "databricks_storage_credential",
     "databricks_system_schema",
+    "databricks_tag_policy",
     "databricks_token",
     "databricks_user",
     "databricks_user_role",
@@ -95,6 +103,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_vector_search_index",
     "databricks_volume",
     "databricks_workspace_binding",
+    "databricks_workspace_entity_tag_assignment",
     "databricks_workspace_file",
 ]
 

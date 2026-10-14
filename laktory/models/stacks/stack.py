@@ -26,6 +26,7 @@ from laktory.models.resources.databricks.accountfederationpolicy import (
 )
 from laktory.models.resources.databricks.alert import Alert
 from laktory.models.resources.databricks.app import App
+from laktory.models.resources.databricks.artifactallowlist import ArtifactAllowlist
 from laktory.models.resources.databricks.budget import Budget
 from laktory.models.resources.databricks.budgetpolicy import BudgetPolicy
 from laktory.models.resources.databricks.catalog import Catalog
@@ -42,7 +43,10 @@ from laktory.models.resources.databricks.dataqualitymonitor import DataQualityMo
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
 from laktory.models.resources.databricks.entitlements import Entitlements
+from laktory.models.resources.databricks.entitytagassignment import EntityTagAssignment
 from laktory.models.resources.databricks.externallocation import ExternalLocation
+from laktory.models.resources.databricks.externalmetadata import ExternalMetadata
+from laktory.models.resources.databricks.file import File
 from laktory.models.resources.databricks.gitcredential import GitCredential
 from laktory.models.resources.databricks.globalinitscript import GlobalInitScript
 from laktory.models.resources.databricks.grant import Grant
@@ -91,6 +95,7 @@ from laktory.models.resources.databricks.permissionassignment import (
 )
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
+from laktory.models.resources.databricks.policyinfo import PolicyInfo
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
 from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.recipient import Recipient
@@ -108,9 +113,11 @@ from laktory.models.resources.databricks.serviceprincipalsecret import (
     ServicePrincipalSecret,
 )
 from laktory.models.resources.databricks.share import Share
+from laktory.models.resources.databricks.shareprovider import ShareProvider
 from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.databricks.systemschema import SystemSchema
 from laktory.models.resources.databricks.table import Table
+from laktory.models.resources.databricks.tagpolicy import TagPolicy
 from laktory.models.resources.databricks.token import Token
 from laktory.models.resources.databricks.user import User
 from laktory.models.resources.databricks.vectorsearchendpoint import (
@@ -120,6 +127,9 @@ from laktory.models.resources.databricks.vectorsearchindex import VectorSearchIn
 from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.databricks.warehouse import Warehouse
 from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
+from laktory.models.resources.databricks.workspaceentitytagassignment import (
+    WorkspaceEntityTagAssignment,
+)
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
 from laktory.models.resources.databricks.workspacetree import WorkspaceTree
 from laktory.models.resources.providers.awsprovider import AWSProvider
@@ -362,6 +372,7 @@ class StackResources(BaseModel):
     databricks_accountfederationpolicies: dict[str, AccountFederationPolicy] = {}
     databricks_alerts: dict[str, Alert] = {}
     databricks_apps: dict[str, App] = {}
+    databricks_artifactallowlists: dict[str, ArtifactAllowlist] = {}
     databricks_budgets: dict[str, Budget] = {}
     databricks_budgetpolicies: dict[str, BudgetPolicy] = {}
     databricks_catalogs: dict[str, Catalog] = {}
@@ -375,8 +386,11 @@ class StackResources(BaseModel):
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
     databricks_directories: dict[str, Directory] = {}
     databricks_entitlements: dict[str, Entitlements] = {}
+    databricks_entitytagassignments: dict[str, EntityTagAssignment] = {}
     databricks_pipelines: dict[str, DatabricksPipeline] = {}
     databricks_externallocations: dict[str, ExternalLocation] = {}
+    databricks_externalmetadata: dict[str, ExternalMetadata] = {}
+    databricks_files: dict[str, File] = {}
     databricks_gitcredentials: dict[str, GitCredential] = {}
     databricks_globalinitscripts: dict[str, GlobalInitScript] = {}
     databricks_grant: dict[str, Grant] = {}
@@ -410,6 +424,7 @@ class StackResources(BaseModel):
     databricks_obotokens: dict[str, OboToken] = {}
     databricks_permissionassignments: dict[str, PermissionAssignment] = {}
     databricks_permissions: dict[str, Permissions] = {}
+    databricks_policyinfos: dict[str, PolicyInfo] = {}
     databricks_dataqualitymonitors: dict[str, DataQualityMonitor] = {}
     databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}
@@ -426,9 +441,11 @@ class StackResources(BaseModel):
     ] = {}
     databricks_serviceprincipalsecrets: dict[str, ServicePrincipalSecret] = {}
     databricks_shares: dict[str, Share] = {}
+    databricks_shareproviders: dict[str, ShareProvider] = {}
     databricks_storagecredentials: dict[str, StorageCredential] = {}
     databricks_systemschemas: dict[str, SystemSchema] = {}
     databricks_tables: dict[str, Table] = {}
+    databricks_tagpolicies: dict[str, TagPolicy] = {}
     databricks_tokens: dict[str, Token] = {}
     databricks_users: dict[str, User] = {}
     databricks_vectorsearchendpoints: dict[str, VectorSearchEndpoint] = {}
@@ -436,6 +453,9 @@ class StackResources(BaseModel):
     databricks_volumes: dict[str, Volume] = {}
     databricks_warehouses: dict[str, Warehouse] = {}
     databricks_workspacebindings: dict[str, WorkspaceBinding] = {}
+    databricks_workspaceentitytagassignments: dict[
+        str, WorkspaceEntityTagAssignment
+    ] = {}
     databricks_workspacefiles: dict[str, WorkspaceFile | PythonPackage] = {}
     databricks_workspacetrees: dict[str, WorkspaceTree | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
@@ -793,12 +813,10 @@ class Stack(BaseModel):
 
         logger.info("Rendering variable-templated file content...")
         for k, r in env.resources._get_all(providers_excluded=True).items():
-            if isinstance(r, RenderableFileMixin) and r.render_vars:
-                r.build(vars=env.variables)
-            if isinstance(r, WorkspaceTree):
-                for _r in r.core_resources:
-                    if isinstance(_r, RenderableFileMixin) and _r.render_vars:
-                        _r.build(vars=env.variables)
+            # Includes nested files (e.g. `WorkspaceTree` files, `Volume.files`)
+            for _r in r.core_resources:
+                if isinstance(_r, RenderableFileMixin) and _r.render_vars:
+                    _r.build(vars=env.variables)
 
         logger.info("Build completed.")
 

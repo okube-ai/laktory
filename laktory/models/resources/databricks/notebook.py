@@ -8,6 +8,7 @@ from pydantic import computed_field
 from laktory import settings
 from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
+from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.notebook_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.notebook_base import NotebookBase
@@ -24,7 +25,7 @@ class NotebookLookup(ResourceLookup):
     )
 
 
-class Notebook(RenderableFileMixin, NotebookBase):
+class Notebook(RenderableFileMixin, TagsMixin, NotebookBase):
     """
     Databricks Notebook
 
@@ -41,6 +42,8 @@ class Notebook(RenderableFileMixin, NotebookBase):
     access_controls:
     - group_name: role-engineers
       permission_level: CAN_RUN
+    tags:
+      team: engineering
     '''
     notebook = models.resources.databricks.Notebook.model_validate_yaml(
         io.StringIO(notebook_yaml)
@@ -133,6 +136,7 @@ class Notebook(RenderableFileMixin, NotebookBase):
     def additional_core_resources(self) -> list:
         """
         - permissions
+        - tags
         """
         resources = []
         if self.access_controls:
@@ -144,6 +148,9 @@ class Notebook(RenderableFileMixin, NotebookBase):
                 )
             ]
 
+        resources += self.get_tags_additional_resources(
+            "notebooks", f"${{resources.{self.resource_name}.object_id}}"
+        )
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -152,4 +159,4 @@ class Notebook(RenderableFileMixin, NotebookBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["access_controls", "dirpath", "render_vars"]
+        return ["access_controls", "dirpath", "render_vars", "tags"]

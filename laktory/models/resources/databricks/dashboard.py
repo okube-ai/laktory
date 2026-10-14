@@ -8,13 +8,14 @@ from pydantic import model_validator
 
 from laktory._settings import settings
 from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
+from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.dashboard_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.dashboard_base import DashboardBase
 from laktory.models.resources.databricks.permissions import Permissions
 
 
-class Dashboard(RenderableFileMixin, DashboardBase):
+class Dashboard(RenderableFileMixin, TagsMixin, DashboardBase):
     """
     Databricks Lakeview Dashboard
 
@@ -35,6 +36,8 @@ class Dashboard(RenderableFileMixin, DashboardBase):
       permission_level: CAN_VIEW
     - group_name: role-engineers
       permission_level: CAN_RUN
+    tags:
+      team: finance
     '''
     dashboard = models.resources.databricks.Dashboard.model_validate_yaml(
         io.StringIO(dashboard_yaml)
@@ -147,6 +150,7 @@ class Dashboard(RenderableFileMixin, DashboardBase):
     def additional_core_resources(self) -> list:
         """
         - permissions
+        - tags
         """
         resources = []
         if self.access_controls:
@@ -157,6 +161,9 @@ class Dashboard(RenderableFileMixin, DashboardBase):
                     dashboard_id=f"${{resources.{self.resource_name}.id}}",
                 )
             ]
+        resources += self.get_tags_additional_resources(
+            "dashboards", f"${{resources.{self.resource_name}.id}}"
+        )
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -170,4 +177,5 @@ class Dashboard(RenderableFileMixin, DashboardBase):
             "name_prefix",
             "name_suffix",
             "render_vars",
+            "tags",
         ]

@@ -3,6 +3,8 @@ from pydantic import model_validator
 
 from laktory.models.grants.schemagrant import SchemaGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._policiesmixin import PoliciesMixin
+from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.schema_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.schema_base import SchemaBase
@@ -17,7 +19,7 @@ class SchemaLookup(ResourceLookup):
     )
 
 
-class Schema(UnityCatalogMixin, SchemaBase):
+class Schema(UnityCatalogMixin, TagsMixin, PoliciesMixin, SchemaBase):
     """
     A schema (also called a database) is the second layer of Unity Catalog's
     three-level namespace. A schema organizes tables and views.
@@ -32,10 +34,26 @@ class Schema(UnityCatalogMixin, SchemaBase):
     schema_yaml = '''
     catalog_name: dev
     name: engineering
+    tags:
+      domain: engineering
     grants:
     - principal: domain-engineering
       privileges:
       - SELECT
+    policies:
+    - name: mask_pii
+      policy_type: POLICY_TYPE_COLUMN_MASK
+      for_securable_type: TABLE
+      to_principals:
+      - account users
+      except_principals:
+      - domain-engineering
+      match_columns:
+      - condition: hasTag('pii')
+        alias: pii_col
+      column_mask:
+        function_name: dev.engineering.mask_string
+        on_column: pii_col
     '''
     schema = models.resources.databricks.Schema.model_validate_yaml(
         io.StringIO(schema_yaml)
@@ -116,6 +134,8 @@ class Schema(UnityCatalogMixin, SchemaBase):
     def additional_core_resources(self) -> list:
         """
         - schema grants
+        - schema tags
+        - schema policies
         - tables
         - volumes
         """
@@ -125,6 +145,12 @@ class Schema(UnityCatalogMixin, SchemaBase):
         resources += self.get_grants_additional_resources(
             object={"schema": f"${{resources.{self.resource_name}.id}}"}
         )
+
+        # Schema tags and policies
+        resources += self.get_tags_additional_resources(
+            "schemas", f"${{resources.{self.resource_name}.id}}"
+        )
+        resources += self.get_policies_additional_resources("SCHEMA")
 
         if self.volumes:
             for v in self.volumes:
@@ -142,4 +168,4 @@ class Schema(UnityCatalogMixin, SchemaBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["tables", "volumes", "grant", "grants"]
+        return ["tables", "volumes", "grant", "grants", "tags", "policies"]
