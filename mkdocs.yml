@@ -203,6 +203,7 @@ nav:
       - Grants:
         - CatalogGrant: api/models/grants/cataloggrant.md
         - ConnectionGrant: api/models/grants/connectiongrant.md
+        - CredentialGrant: api/models/grants/credentialgrant.md
         - ExternalLocationGrant: api/models/grants/externallocationgrant.md
         - FunctionGrant: api/models/grants/functiongrant.md
         - MetastoreGrant: api/models/grants/metastoregrant.md

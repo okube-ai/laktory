@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from laktory.models.resources.databricks.serviceprincipalsecret_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.serviceprincipalsecret_base import (
     ServicePrincipalSecretBase,
@@ -32,6 +34,12 @@ class ServicePrincipalSecret(ServicePrincipalSecretBase):
 
     * [Databricks Service Principal Secret](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/service_principal_secret)
     """
+
+    service_principal_id: str | None = Field(
+        None,
+        description="SCIM ID of the databricks_service_principal (not application ID). Set automatically when "
+        "declared in the `secrets` of a service principal.",
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
