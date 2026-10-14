@@ -53,7 +53,10 @@ class AccountFederationPolicyBase(BaseModel, TerraformResource):
         None,
         description="The service principal ID that this federation policy applies to. Output only. Only set for service principal federation policies",
     )
-    oidc_policy: AccountFederationPolicyOidcPolicy | None = Field(None)
+    oidc_policy: AccountFederationPolicyOidcPolicy | None = Field(
+        None,
+        description="audit_mode INCLUDE is required on both this message field and its leaf fields so the OIDC policy configuration is captured in create/update audit logs (see go/auditlogs)",
+    )
 
     @property
     def terraform_resource_type(self) -> str:

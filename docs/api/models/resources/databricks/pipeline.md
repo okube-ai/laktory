@@ -147,6 +147,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsApiSourceConnectorOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsConfluenceOptions
 
 ---
@@ -183,7 +187,31 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions
 
 ---
 
@@ -191,7 +219,43 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsLinkedinAdsOptionsCustomReportOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsMarketoOptions
 
 ---
 
@@ -204,6 +268,10 @@
 ---
 
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsOutlookOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaConnectorOptionsRabbitmqOptions
 
 ---
 
@@ -251,7 +319,31 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsAvroOptionsSchemaRegistryConfluentOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsSchemaFanoutOptionsTransformsProtobufOptionsSchemaRegistryConfluentOptions
 
 ---
 
@@ -280,6 +372,10 @@
 ---
 
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsApiSourceConnectorOptions
 
 ---
 
@@ -319,7 +415,31 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerAvroOptionsSchemaRegistryConfluentOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsKeyTransformerProtobufOptionsSchemaRegistryConfluentOptions
 
 ---
 
@@ -327,7 +447,43 @@
 
 ---
 
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerAvroOptionsSchemaRegistryConfluentOptions
+
+---
+
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerJsonOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistry
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsKafkaOptionsValueTransformerProtobufOptionsSchemaRegistryConfluentOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsLinkedinAdsOptionsCustomReportOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsMarketoOptions
 
 ---
 
@@ -340,6 +496,10 @@
 ---
 
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsOutlookOptions
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionObjectsTableConnectorOptionsRabbitmqOptions
 
 ---
 
@@ -400,6 +560,10 @@
 ---
 
 ::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionSourceConfigurations
+
+---
+
+::: laktory.models.resources.databricks.pipeline.PipelineIngestionDefinitionSourceConfigurationsApiSourceConnectorConfig
 
 ---
 

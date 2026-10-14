@@ -109,7 +109,8 @@ class MwsWorkspacesBase(BaseModel, TerraformResource):
     )
     network_connectivity_config_id: str | None = Field(None)
     network_id: str | None = Field(
-        None, description="(Optional) `network_id` from networks"
+        None,
+        description="Modifying networks on running workspaces would require three separate `terraform apply` steps. * `credentials_id` * `storage_customer_managed_key_id` * `private_access_settings_id` * `custom_tags`",
     )
     pricing_tier: str | None = Field(
         None, description="- The pricing tier of the workspace"

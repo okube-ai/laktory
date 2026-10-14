@@ -9,11 +9,55 @@ from laktory.models.resources.terraformresource import TerraformResource
 
 
 class AppGitRepository(BaseModel):
+    auto_deploy: bool | None = Field(
+        None,
+        description="When `true`, the app is automatically redeployed on push events to the branch configured in `git_source`. This requires `git_source` to specify a `branch`; a `tag` or `commit` cannot be used, because automatic deployment is triggered by pushes to a branch. Automatic deployment is currently supported only for the `gitHub` and `azureDevOpsServices` providers",
+    )
+    caller_credential_id: int | None = Field(
+        None,
+        description="ID of a personal access token Git credential owned by the caller, used to grant the app's service principal access to this repository. This is only applied when the app is created and is not returned by the service; changing it on an existing app is not supported",
+    )
     provider: str = Field(
         ...,
         description="Git provider. Case insensitive. Supported values: `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`",
     )
     url: str = Field(..., description="The URL of the app once it is deployed")
+
+
+class AppGitSourceGitRepository(BaseModel):
+    auto_deploy: bool | None = Field(
+        None,
+        description="When `true`, the app is automatically redeployed on push events to the branch configured in `git_source`. This requires `git_source` to specify a `branch`; a `tag` or `commit` cannot be used, because automatic deployment is triggered by pushes to a branch. Automatic deployment is currently supported only for the `gitHub` and `azureDevOpsServices` providers",
+    )
+    caller_credential_id: int | None = Field(
+        None,
+        description="ID of a personal access token Git credential owned by the caller, used to grant the app's service principal access to this repository. This is only applied when the app is created and is not returned by the service; changing it on an existing app is not supported",
+    )
+    provider: str = Field(
+        ...,
+        description="Git provider. Case insensitive. Supported values: `gitHub`, `gitHubEnterprise`, `bitbucketCloud`, `bitbucketServer`, `azureDevOpsServices`, `gitLab`, `gitLabEnterpriseEdition`, `awsCodeCommit`",
+    )
+    url: str = Field(..., description="The URL of the app once it is deployed")
+
+
+class AppGitSource(BaseModel):
+    branch: str | None = Field(
+        None,
+        description="Git branch to check out and deploy from. Required when `git_repository.auto_deploy` is `true`, since automatic deployment tracks pushes to a branch",
+    )
+    commit: str | None = Field(
+        None, description="Git commit SHA to check out and deploy from"
+    )
+    git_repository: AppGitSourceGitRepository | None = Field(
+        None,
+        description="Git repository configuration for app deployments (see [below](#git_repository-configuration-attribute)). When specified, deployments can reference code from this repository by providing only the git reference (branch, tag, or commit)",
+    )
+    resolved_commit: str | None = Field(None)
+    source_code_path: str | None = Field(
+        None,
+        description="The snapshotted workspace file system path of the source code loaded by the deployed app. * `pending_deployment` attribute - the pending deployment of the app. A deployment is considered pending when it is being prepared for deployment to the app compute. Schema is identical to `active_deployment`",
+    )
+    tag: str | None = Field(None, description="Git tag to check out and deploy from")
 
 
 class AppProviderConfig(BaseModel):
@@ -75,7 +119,7 @@ class AppResourcesJob(BaseModel):
 class AppResourcesPostgres(BaseModel):
     branch: str | None = Field(
         None,
-        description="The resource path of the Lakebase Autoscaling branch to grant permission on (e.g. `projects/proj-abc123/branches/branch-xyz789`)",
+        description="Git branch to check out and deploy from. Required when `git_repository.auto_deploy` is `true`, since automatic deployment tracks pushes to a branch",
     )
     database: str | None = Field(
         None,
@@ -185,7 +229,12 @@ class AppBase(BaseModel, TerraformResource):
         description="A string specifying compute size for the App. Possible values are `MEDIUM`, `LARGE`",
     )
     description: str | None = Field(None, description="The description of the resource")
+    forward_user_access_token: bool | None = Field(None)
     no_compute: bool | None = Field(None)
+    source_code_path: str | None = Field(
+        None,
+        description="The snapshotted workspace file system path of the source code loaded by the deployed app. * `pending_deployment` attribute - the pending deployment of the app. A deployment is considered pending when it is being prepared for deployment to the app compute. Schema is identical to `active_deployment`",
+    )
     space: str | None = Field(None)
     usage_policy_id: str | None = Field(
         None, description="The Usage Policy ID set for this resource"
@@ -197,6 +246,10 @@ class AppBase(BaseModel, TerraformResource):
     git_repository: AppGitRepository | None = Field(
         None,
         description="Git repository configuration for app deployments (see [below](#git_repository-configuration-attribute)). When specified, deployments can reference code from this repository by providing only the git reference (branch, tag, or commit)",
+    )
+    git_source: AppGitSource | None = Field(
+        None,
+        description="The Git source to deploy from, specifying the reference to check out and an optional path to the app source code within the repository configured in `git_repository` (see [below](#git_source-configuration-attribute))",
     )
     provider_config: AppProviderConfig | None = Field(None)
     resources: list[AppResources] | None = Field(
@@ -215,6 +268,8 @@ class AppBase(BaseModel, TerraformResource):
 __all__ = [
     "AppBase",
     "AppGitRepository",
+    "AppGitSource",
+    "AppGitSourceGitRepository",
     "AppProviderConfig",
     "AppResources",
     "AppResourcesApp",

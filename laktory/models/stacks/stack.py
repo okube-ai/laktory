@@ -32,7 +32,11 @@ from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.clusterpolicy import ClusterPolicy
 from laktory.models.resources.databricks.connection import Connection
+from laktory.models.resources.databricks.credential import Credential
 from laktory.models.resources.databricks.currentuser import CurrentUser
+from laktory.models.resources.databricks.customappintegration import (
+    CustomAppIntegration,
+)
 from laktory.models.resources.databricks.dashboard import Dashboard
 from laktory.models.resources.databricks.dataqualitymonitor import DataQualityMonitor
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
@@ -44,6 +48,7 @@ from laktory.models.resources.databricks.globalinitscript import GlobalInitScrip
 from laktory.models.resources.databricks.grant import Grant
 from laktory.models.resources.databricks.grants import Grants
 from laktory.models.resources.databricks.group import Group
+from laktory.models.resources.databricks.grouprole import GroupRole
 from laktory.models.resources.databricks.instancepool import InstancePool
 from laktory.models.resources.databricks.instanceprofile import InstanceProfile
 from laktory.models.resources.databricks.ipaccesslist import IpAccessList
@@ -81,6 +86,9 @@ from laktory.models.resources.databricks.notificationdestination import (
     NotificationDestination,
 )
 from laktory.models.resources.databricks.obotoken import OboToken
+from laktory.models.resources.databricks.permissionassignment import (
+    PermissionAssignment,
+)
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
@@ -91,12 +99,17 @@ from laktory.models.resources.databricks.repo import Repo
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretscope import SecretScope
+from laktory.models.resources.databricks.secretuc import SecretUc
 from laktory.models.resources.databricks.serviceprincipal import ServicePrincipal
 from laktory.models.resources.databricks.serviceprincipalfederationpolicy import (
     ServicePrincipalFederationPolicy,
 )
+from laktory.models.resources.databricks.serviceprincipalsecret import (
+    ServicePrincipalSecret,
+)
 from laktory.models.resources.databricks.share import Share
 from laktory.models.resources.databricks.storagecredential import StorageCredential
+from laktory.models.resources.databricks.systemschema import SystemSchema
 from laktory.models.resources.databricks.table import Table
 from laktory.models.resources.databricks.token import Token
 from laktory.models.resources.databricks.user import User
@@ -355,7 +368,9 @@ class StackResources(BaseModel):
     databricks_clusterpolicies: dict[str, ClusterPolicy] = {}
     databricks_clusters: dict[str, Cluster] = {}
     databricks_connections: dict[str, Connection] = {}
+    databricks_credentials: dict[str, Credential] = {}
     databricks_currentusers: dict[str, CurrentUser] = {}
+    databricks_customappintegrations: dict[str, CustomAppIntegration] = {}
     databricks_dashboards: dict[str, Dashboard] = {}
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
     databricks_directories: dict[str, Directory] = {}
@@ -367,6 +382,7 @@ class StackResources(BaseModel):
     databricks_grant: dict[str, Grant] = {}
     databricks_grants: dict[str, Grants] = {}
     databricks_groups: dict[str, Group] = {}
+    databricks_grouproles: dict[str, GroupRole] = {}
     databricks_instancepools: dict[str, InstancePool] = {}
     databricks_instanceprofiles: dict[str, InstanceProfile] = {}
     databricks_ipaccesslists: dict[str, IpAccessList] = {}
@@ -392,6 +408,7 @@ class StackResources(BaseModel):
     databricks_notebooks: dict[str, Notebook] = {}
     databricks_notificationdestinations: dict[str, NotificationDestination] = {}
     databricks_obotokens: dict[str, OboToken] = {}
+    databricks_permissionassignments: dict[str, PermissionAssignment] = {}
     databricks_permissions: dict[str, Permissions] = {}
     databricks_dataqualitymonitors: dict[str, DataQualityMonitor] = {}
     databricks_pythonpackages: dict[str, PythonPackage] = {}
@@ -402,12 +419,15 @@ class StackResources(BaseModel):
     databricks_schemas: dict[str, Schema] = {}
     databricks_secrets: dict[str, Secret] = {}
     databricks_secretscopes: dict[str, SecretScope] = {}
+    databricks_secretucs: dict[str, SecretUc] = {}
     databricks_serviceprincipals: dict[str, ServicePrincipal] = {}
     databricks_serviceprincipalfederationpolicies: dict[
         str, ServicePrincipalFederationPolicy
     ] = {}
+    databricks_serviceprincipalsecrets: dict[str, ServicePrincipalSecret] = {}
     databricks_shares: dict[str, Share] = {}
     databricks_storagecredentials: dict[str, StorageCredential] = {}
+    databricks_systemschemas: dict[str, SystemSchema] = {}
     databricks_tables: dict[str, Table] = {}
     databricks_tokens: dict[str, Token] = {}
     databricks_users: dict[str, User] = {}

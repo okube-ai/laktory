@@ -14,7 +14,7 @@ Usage:
     python scripts/build_resources/00_fetch.py 1.81.1 --schema-only
     python scripts/build_resources/00_fetch.py 1.81.1 --descriptions-only
 
-    If version is omitted, defaults to 1.126.0.
+    If version is omitted, defaults to 1.137.0.
 
 Outputs (written to the same directory as this script):
     databricks_schema.json
@@ -41,7 +41,7 @@ GITHUB_RAW = (
     "https://raw.githubusercontent.com/databricks/terraform-provider-databricks"
 )
 
-DEFAULT_VERSION = "1.126.0"
+DEFAULT_VERSION = "1.137.0"
 
 # Resources whose descriptions come from Go model struct comments.
 # Format: resource_key → {service dir, primary struct, fallback structs}
@@ -84,6 +84,8 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_budget",
     "databricks_budget_policy",
     "databricks_cluster_policy",
+    "databricks_credential",
+    "databricks_custom_app_integration",
     "databricks_dashboard",
     "databricks_data_quality_monitor",  # preview only
     "databricks_dbfs_file",
@@ -96,6 +98,7 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_grants",
     "databricks_group",
     "databricks_group_member",
+    "databricks_group_role",
     "databricks_instance_pool",
     "databricks_instance_profile",
     "databricks_ip_access_list",
@@ -123,6 +126,7 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_notification_destination",
     "databricks_obo_token",
     "databricks_online_table",
+    "databricks_permission_assignment",
     "databricks_permissions",
     "databricks_pipeline",
     "databricks_quality_monitor",
@@ -133,13 +137,16 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_secret",
     "databricks_secret_acl",
     "databricks_secret_scope",
+    "databricks_secret_uc",
     "databricks_service_principal",
     "databricks_service_principal_federation_policy",
     "databricks_service_principal_role",
+    "databricks_service_principal_secret",
     "databricks_share",
     "databricks_sql_endpoint",
     "databricks_sql_table",
     "databricks_storage_credential",
+    "databricks_system_schema",
     "databricks_token",
     "databricks_user",
     "databricks_user_role",

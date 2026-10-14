@@ -15,6 +15,9 @@ from laktory.models.resources.databricks.serviceprincipalfederationpolicy import
 from laktory.models.resources.databricks.serviceprincipalrole import (
     ServicePrincipalRole,
 )
+from laktory.models.resources.databricks.serviceprincipalsecret import (
+    ServicePrincipalSecret,
+)
 
 
 class ServicePrincipalLookup(ResourceLookup):
@@ -43,6 +46,8 @@ class ServicePrincipal(ServicePrincipalBase):
     - ${resources.group-domain-finance.id}
     roles:
     - account_admin
+    secrets:
+    - lifetime: 7776000s
     '''
     sp = models.resources.databricks.ServicePrincipal.model_validate_yaml(
         io.StringIO(sp_yaml)
@@ -70,6 +75,14 @@ class ServicePrincipal(ServicePrincipalBase):
     roles: list[str] = Field(
         [], description="List of roles assigned to the user e.g. ('account_admin')"
     )
+    secrets: list[ServicePrincipalSecret] = Field(
+        None,
+        description="""
+    List of OAuth secrets of the service principal. The first secret is named `{service principal resource name}-secret`
+    and the next ones `{service principal resource name}-secret-{i}`, unless `resource_options.name` is set. The
+    generated secret is available as `${resources.{secret resource name}.secret}`.
+    """,
+    )
     workspace_permission_assignments: list[MwsPermissionAssignment] = Field(
         None, description=""
     )
@@ -87,6 +100,7 @@ class ServicePrincipal(ServicePrincipalBase):
         """
         - service principal roles
         - service principal group members
+        - service principal secrets
         - service principal federation policies
         """
         resources = []
@@ -114,6 +128,15 @@ class ServicePrincipal(ServicePrincipalBase):
                     a.principal_id = f"${{resources.{self.resource_name}.id}}"
                 resources += [a]
 
+        # Secrets
+        for i, secret in enumerate(self.secrets or []):
+            if secret.service_principal_id is None:
+                secret.service_principal_id = f"${{resources.{self.resource_name}.id}}"
+            if not secret.resource_options.name:
+                suffix = f"-{i}" if i else ""
+                secret.resource_options.name = f"{self.resource_name}-secret{suffix}"
+            resources += [secret]
+
         # Federation Policies
         if self.federation_policies:
             for p in self.federation_policies:
@@ -135,4 +158,5 @@ class ServicePrincipal(ServicePrincipalBase):
             "group_ids",
             "workspace_permission_assignments",
             "federation_policies",
+            "secrets",
         ]

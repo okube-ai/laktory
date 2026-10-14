@@ -12,17 +12,23 @@ class BudgetAlertConfigurationsActionConfigurations(BaseModel):
     action_configuration_id: str | None = Field(None)
     action_type: str | None = Field(
         None,
-        description="The type of action to take when the budget alert is triggered. (Enum: `EMAIL_NOTIFICATION`)",
+        description="The type of action to take when the budget alert is triggered. (Enum: `EMAIL_NOTIFICATION`, `BLOCK_USAGE`). Note: `BLOCK_USAGE` action type is only supported on AI Gateway-scoped budgets",
     )
     target: str | None = Field(
         None,
-        description="The target of the action. For `EMAIL_NOTIFICATION`, this is the email address to send the notification to",
+        description="For `EMAIL_NOTIFICATION` action type, this is the email address to send the notification to. Required if the `action_type` is `EMAIL_NOTIFICATION`. Does not apply to the `BLOCK_USAGE` action type, and this field must be omitted in that case",
     )
 
 
 class BudgetAlertConfigurationsPrincipalOverrides(BaseModel):
-    override_threshold: str | None = Field(None)
-    principal_id: int | None = Field(None)
+    override_threshold: str | None = Field(
+        None,
+        description="Dollar amount that overrides the parent alert's `quantity_threshold` for this principal",
+    )
+    principal_id: int | None = Field(
+        None,
+        description="Account-level principal id (user, group, or service principal)",
+    )
 
 
 class BudgetAlertConfigurations(BaseModel):
@@ -35,7 +41,10 @@ class BudgetAlertConfigurations(BaseModel):
         None,
         description="The way to calculate cost for this budget alert. This is what quantity_threshold is measured in. (Enum: `LIST_PRICE_DOLLARS_USD`)",
     )
-    scope_type: str | None = Field(None)
+    scope_type: str | None = Field(
+        None,
+        description="How the alert threshold is evaluated. Determines whether spend is tracked in aggregate or per individual user. (Enum: `ALERT_CONFIGURATION_SCOPE_TYPE_SHARED`, `ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`)",
+    )
     time_period: str | None = Field(
         None,
         description="The time window of usage data for the budget. (Enum: `MONTH`)",
@@ -51,7 +60,10 @@ class BudgetAlertConfigurations(BaseModel):
         description="List of action configurations to take when the budget alert is triggered. Consists of the following fields:",
     )
     principal_overrides: list[BudgetAlertConfigurationsPrincipalOverrides] | None = (
-        Field(None)
+        Field(
+            None,
+            description="Per-principal threshold overrides for this alert. Only applies to per-user alerts (`scope_type` = `ALERT_CONFIGURATION_SCOPE_TYPE_PER_USER`); ignored for shared alerts. Consists of the following fields:",
+        )
     )
 
 
@@ -102,7 +114,10 @@ class BudgetBase(BaseModel, TerraformResource):
     display_name: str | None = Field(
         None, description="Name of the budget in Databricks Account"
     )
-    resource_type: str | None = Field(None)
+    resource_type: str | None = Field(
+        None,
+        description="The resource scope for this budget. Determines whether the budget tracks all resources or a specific resource. (Enum: `BUDGET_RESOURCE_TYPE_ALL_RESOURCES`, `BUDGET_RESOURCE_TYPE_UNITY_AI_GATEWAY`)",
+    )
     update_time: int | None = Field(None)
     alert_configurations: list[BudgetAlertConfigurations] | None = Field(None)
     filter: BudgetFilter | None = Field(None)

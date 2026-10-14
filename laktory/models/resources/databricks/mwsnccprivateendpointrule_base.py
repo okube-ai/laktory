@@ -8,8 +8,16 @@ from laktory.models.basemodel import BaseModel
 from laktory.models.resources.terraformresource import TerraformResource
 
 
+class MwsNccPrivateEndpointRuleGcpEndpointGoogleApiEndpoints(BaseModel):
+    endpoints: list[str] | None = Field(None)
+
+
 class MwsNccPrivateEndpointRuleGcpEndpoint(BaseModel):
+    all_vpc_sc_services: bool | None = Field(None)
     service_attachment: str | None = Field(None)
+    google_api_endpoints: (
+        MwsNccPrivateEndpointRuleGcpEndpointGoogleApiEndpoints | None
+    ) = Field(None)
 
 
 class MwsNccPrivateEndpointRuleBase(BaseModel, TerraformResource):
@@ -24,10 +32,7 @@ class MwsNccPrivateEndpointRuleBase(BaseModel, TerraformResource):
         ...,
         description="Canonical unique identifier of Network Connectivity Config in Databricks Account. Change forces creation of a new resource",
     )
-    domain_names: list[str] | None = Field(
-        None,
-        description="List of domain names of target private link service (Azure, conflicts with `group_id`) or target resource FQDNs accessible via the VPC endpoint service (AWS, conflicts with `resource_names`)",
-    )
+    domain_names: list[str] | None = Field(None)
     enabled: bool | None = Field(
         None,
         description="Activation status. Only used by private endpoints towards an AWS S3 service",
@@ -38,7 +43,7 @@ class MwsNccPrivateEndpointRuleBase(BaseModel, TerraformResource):
     )
     group_id: str | None = Field(
         None,
-        description="(Azure only) Not used by customer-managed private endpoint services. The sub-resource type (group ID) of the target resource. Must be one of supported resource types (i.e., `blob`, `dfs`, `sqlServer` , etc. Consult the [Azure documentation](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource) for full list of supported resources). Note that to connect to workspace root storage (root DBFS), you need two endpoints, one for `blob` and one for `dfs`. Change forces creation of a new resource. Conflicts with `domain_names`",
+        description="(Azure only) Not used by customer-managed private endpoint services. The sub-resource type (group ID) of the target resource. Must be one of supported resource types (i.e., `blob`, `dfs`, `sqlServer` , etc. Consult the [Azure documentation](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource) for full list of supported resources). Note that to connect to workspace root storage (root DBFS), you need two endpoints, one for `blob` and one for `dfs`. Change forces creation of a new resource. Conflicts with `domain_names`. * `domain_names` * On Azure: List of domain names of target private link service. Only used by private endpoints to customer-managed private endpoint services. Conflicts with `group_id`. * On AWS: List of target resource FQDNs accessible via the VPC endpoint service. Only used by private endpoints towards a VPC endpoint service behind a customer-managed VPC endpoint service. Conflicts with `resource_names`",
     )
     resource_id: str | None = Field(
         None,
@@ -55,4 +60,8 @@ class MwsNccPrivateEndpointRuleBase(BaseModel, TerraformResource):
         return "databricks_mws_ncc_private_endpoint_rule"
 
 
-__all__ = ["MwsNccPrivateEndpointRuleBase", "MwsNccPrivateEndpointRuleGcpEndpoint"]
+__all__ = [
+    "MwsNccPrivateEndpointRuleBase",
+    "MwsNccPrivateEndpointRuleGcpEndpoint",
+    "MwsNccPrivateEndpointRuleGcpEndpointGoogleApiEndpoints",
+]

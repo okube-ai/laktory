@@ -90,6 +90,7 @@ class ClusterDockerImage(BaseModel):
 
 class ClusterDriverNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class ClusterGcpAttributes(BaseModel):
@@ -185,6 +186,7 @@ class ClusterTimeouts(BaseModel):
 
 class ClusterWorkerNodeTypeFlexibility(BaseModel):
     alternate_node_type_ids: list[str] | None = Field(None)
+    aws_context_id: str | None = Field(None)
 
 
 class ClusterWorkloadTypeClients(BaseModel):
@@ -292,7 +294,7 @@ class ClusterBase(BaseModel, TerraformResource):
     )
     total_initial_remote_disk_size: int | None = Field(
         None,
-        description="If set, what the total initial volume size (in GB) of the remote disks should be. Currently only supported for GCP HYPERDISK_BALANCED disks.",
+        description="If set, what the total initial volume size (in GB) of the remote disks should be. Supported for GCP.",
     )
     use_ml_runtime: bool | None = Field(
         None, description="This field can only be used when `kind = CLASSIC_PREVIEW`."

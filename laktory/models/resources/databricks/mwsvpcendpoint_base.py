@@ -50,7 +50,10 @@ class MwsVpcEndpointBase(BaseModel, TerraformResource):
         description="(AWS only) ID of configured [aws_vpc_endpoint](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint)",
     )
     region: str | None = Field(None, description="(AWS only) Region of AWS VPC")
-    state: str | None = Field(None, description="(AWS Only) State of VPC Endpoint")
+    state: str | None = Field(
+        None,
+        description="(AWS Only) State of VPC Endpoint * `gcp_vpc_endpoint_info`- (GCP only) a block consists of Google Cloud specific information for this PSC endpoint. It has the following fields exported:",
+    )
     use_case: str | None = Field(None)
     vpc_endpoint_id: str | None = Field(
         None,

@@ -7,6 +7,10 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobContinuousMaintenanceWindow
+
+---
+
 ::: laktory.models.resources.databricks.job.JobDbtTask
 
 ---
@@ -24,6 +28,14 @@
 ---
 
 ::: laktory.models.resources.databricks.job.JobEnvironmentSpec
+
+---
+
+::: laktory.models.resources.databricks.job.JobEnvironmentVariables
+
+---
+
+::: laktory.models.resources.databricks.job.JobEnvironmentVariablesSpec
 
 ---
 
@@ -755,6 +767,14 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceComplete
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskWebhookNotificationsOnMaintenanceStart
+
+---
+
 ::: laktory.models.resources.databricks.job.JobTaskForEachTaskTaskWebhookNotificationsOnStart
 
 ---
@@ -1015,6 +1035,14 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobTaskWebhookNotificationsOnMaintenanceComplete
+
+---
+
+::: laktory.models.resources.databricks.job.JobTaskWebhookNotificationsOnMaintenanceStart
+
+---
+
 ::: laktory.models.resources.databricks.job.JobTaskWebhookNotificationsOnStart
 
 ---
@@ -1055,6 +1083,42 @@
 
 ---
 
+::: laktory.models.resources.databricks.job.JobTriggers
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersContinuous
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersContinuousMaintenanceWindow
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersFileArrival
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersModel
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersPeriodic
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersSchedule
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersSqlCondition
+
+---
+
+::: laktory.models.resources.databricks.job.JobTriggersTableUpdate
+
+---
+
 ::: laktory.models.resources.databricks.job.JobWebhookNotifications
 
 ---
@@ -1064,6 +1128,14 @@
 ---
 
 ::: laktory.models.resources.databricks.job.JobWebhookNotificationsOnFailure
+
+---
+
+::: laktory.models.resources.databricks.job.JobWebhookNotificationsOnMaintenanceComplete
+
+---
+
+::: laktory.models.resources.databricks.job.JobWebhookNotificationsOnMaintenanceStart
 
 ---
 

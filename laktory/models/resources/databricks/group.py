@@ -4,6 +4,7 @@ from laktory.models.resources.baseresource import ResourceLookup
 from laktory.models.resources.databricks.group_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.group_base import GroupBase
 from laktory.models.resources.databricks.groupmember import GroupMember
+from laktory.models.resources.databricks.grouprole import GroupRole
 from laktory.models.resources.databricks.mwspermissionassignment import (
     MwsPermissionAssignment,
 )
@@ -33,6 +34,8 @@ class Group(GroupBase):
     member_ids:
     - ${resources.user-john.id}
     - ${resources.sp-neptune.id}
+    roles:
+    - account_admin
     '''
     group = models.resources.databricks.Group.model_validate_yaml(
         io.StringIO(group_yaml)
@@ -53,6 +56,9 @@ class Group(GroupBase):
     member_ids: list[str] = Field(
         [],
         description="A list of all member ids of the group. Can be users, groups or service principals",
+    )
+    roles: list[str] = Field(
+        [], description="List of roles assigned to the group e.g. ('account_admin')"
     )
     workspace_permission_assignments: list[MwsPermissionAssignment] = Field(
         None, description="Workspace access privileges"
@@ -86,9 +92,20 @@ class Group(GroupBase):
     @property
     def additional_core_resources(self) -> list:
         """
+        - group members
+        - group roles
         - workspace permission assignments
         """
         resources = []
+
+        # Group Roles
+        for role in self.roles:
+            resources += [
+                GroupRole(
+                    group_id=f"${{resources.{self.resource_name}.id}}",
+                    role=role,
+                )
+            ]
 
         # Group Members
         for member_id in self.member_ids:
@@ -112,4 +129,4 @@ class Group(GroupBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["member_ids", "workspace_permission_assignments"]
+        return ["member_ids", "roles", "workspace_permission_assignments"]
