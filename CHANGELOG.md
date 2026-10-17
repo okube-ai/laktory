@@ -8,6 +8,7 @@
 * Added `TagPolicy`, `EntityTagAssignment`, `WorkspaceEntityTagAssignment`, `PolicyInfo` (ABAC), `ArtifactAllowlist`, `ShareProvider` (Delta Sharing), `File` (Unity Catalog volume file) and `ExternalMetadata` resources, with nested `tags` on `Catalog`, `Schema`, `Volume`, `Table`, table columns, `App`, `Dashboard` and `Notebook`, nested ABAC `policies` on `Catalog`, `Schema` and `Table`, and nested `files` on `Volume`. [[#702](https://github.com/okube-ai/laktory/issues/702)]
 ### Fixed
 * Fixed resources nested in a schema or catalog (e.g. volume grants) being listed twice in the parent's `core_resources`. [[#702](https://github.com/okube-ai/laktory/issues/702)]
+* Fixed `TableDataSinkMetadata.get_current()` failing when a table property value contains a comma or `=` (e.g. `delta.workloadBasedColumns.optimizerStatistics` added by Predictive Optimization), by reading properties with `SHOW TBLPROPERTIES`. [[#699](https://github.com/okube-ai/laktory/issues/699)]
 ### Updated
 * Updated Databricks resources to Terraform provider 1.137.0: new fields on `Job`, `Pipeline`, `App`, `Grant`, `Grants`, `Cluster`, `Connection`, `ModelServing`, `Secret` and `MwsNccPrivateEndpointRule`, and some fields no longer required (e.g. `Secret.string_value`, now optional with `string_value_wo`). [[#695](https://github.com/okube-ai/laktory/issues/695)]
 ### Breaking changes

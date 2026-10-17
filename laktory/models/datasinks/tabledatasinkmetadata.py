@@ -235,10 +235,10 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
                 f"Table '{table_full_name}' is a STREAMING_TABLE. Properties can't be updated. Skipping."
             )
         else:
-            # previously_managed is read from the table's own TBLPROPERTIES (pipe-delimited
-            # to avoid corrupting the DESCRIBE EXTENDED comma-based parser). This provides
-            # cross-run state without external storage, so only Laktory-managed properties
-            # are ever unset - system properties are never touched.
+            # previously_managed is read from the table's own TBLPROPERTIES (pipe-delimited).
+            # This provides cross-run state without external storage, so only
+            # Laktory-managed properties are ever unset - system properties are never
+            # touched.
             previously_managed = set(
                 k.strip()
                 for k in self.current.properties.get(_LAKTORY_MANAGED_KEY, "").split(
@@ -329,20 +329,12 @@ class TableDataSinkMetadata(BaseModel, PipelineChild):
         # Owner
         owner = _meta.get("owner", None)
 
-        # Properties
-        if "properties" in _meta:
-            _properties = _meta["properties"]
-        elif "table properties" in _meta:
-            _properties = _meta["table properties"]
-        else:
-            _properties = "[]"
-        _properties = _properties.replace("]", "").replace("[", "").split(",")
-        properties = {}
-        for p in _properties:
-            if p == "":
-                continue
-            k, v = p.strip().split("=")
-            properties[k] = v
+        # Properties (not parsed from DESCRIBE EXTENDED, where values containing
+        # `,` or `=` are not escaped)
+        properties = {
+            row["key"]: row["value"]
+            for row in spark.sql(f"SHOW TBLPROPERTIES {self.table_full_name}").collect()
+        }
 
         # Tags
         table_tags = {}
