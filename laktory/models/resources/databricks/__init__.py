@@ -68,6 +68,16 @@ from .permissionassignment import PermissionAssignment
 from .permissions import Permissions
 from .pipeline import Pipeline
 from .policyinfo import PolicyInfo
+from .postgresbranch import PostgresBranch
+from .postgrescatalog import PostgresCatalog
+from .postgrescdfconfig import PostgresCdfConfig
+from .postgresdataapi import PostgresDataApi
+from .postgresdatabase import PostgresDatabase
+from .postgresendpoint import PostgresEndpoint
+from .postgresproject import PostgresProject
+from .postgresrole import PostgresRole
+from .postgressnapshotschedule import PostgresSnapshotSchedule
+from .postgressyncedtable import PostgresSyncedTable
 from .pythonpackage import PythonPackage
 from .query import Query
 from .recipient import Recipient

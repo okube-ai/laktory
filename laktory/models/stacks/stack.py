@@ -112,6 +112,18 @@ from laktory.models.resources.databricks.permissionassignment import (
 from laktory.models.resources.databricks.permissions import Permissions
 from laktory.models.resources.databricks.pipeline import Pipeline as DatabricksPipeline
 from laktory.models.resources.databricks.policyinfo import PolicyInfo
+from laktory.models.resources.databricks.postgresbranch import PostgresBranch
+from laktory.models.resources.databricks.postgrescatalog import PostgresCatalog
+from laktory.models.resources.databricks.postgrescdfconfig import PostgresCdfConfig
+from laktory.models.resources.databricks.postgresdataapi import PostgresDataApi
+from laktory.models.resources.databricks.postgresdatabase import PostgresDatabase
+from laktory.models.resources.databricks.postgresendpoint import PostgresEndpoint
+from laktory.models.resources.databricks.postgresproject import PostgresProject
+from laktory.models.resources.databricks.postgresrole import PostgresRole
+from laktory.models.resources.databricks.postgressnapshotschedule import (
+    PostgresSnapshotSchedule,
+)
+from laktory.models.resources.databricks.postgressyncedtable import PostgresSyncedTable
 from laktory.models.resources.databricks.pythonpackage import PythonPackage
 from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.recipient import Recipient
@@ -454,6 +466,16 @@ class StackResources(BaseModel):
     databricks_permissions: dict[str, Permissions] = {}
     databricks_policyinfos: dict[str, PolicyInfo] = {}
     databricks_dataqualitymonitors: dict[str, DataQualityMonitor] = {}
+    databricks_postgresbranches: dict[str, PostgresBranch] = {}
+    databricks_postgrescatalogs: dict[str, PostgresCatalog] = {}
+    databricks_postgrescdfconfigs: dict[str, PostgresCdfConfig] = {}
+    databricks_postgresdataapis: dict[str, PostgresDataApi] = {}
+    databricks_postgresdatabases: dict[str, PostgresDatabase] = {}
+    databricks_postgresendpoints: dict[str, PostgresEndpoint] = {}
+    databricks_postgresprojects: dict[str, PostgresProject] = {}
+    databricks_postgresroles: dict[str, PostgresRole] = {}
+    databricks_postgressnapshotschedules: dict[str, PostgresSnapshotSchedule] = {}
+    databricks_postgressyncedtables: dict[str, PostgresSyncedTable] = {}
     databricks_pythonpackages: dict[str, PythonPackage] = {}
     databricks_queries: dict[str, Query] = {}
     databricks_recipients: dict[str, Recipient] = {}

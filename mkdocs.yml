@@ -302,6 +302,16 @@ nav:
           - PermissionAssignment: api/models/resources/databricks/permissionassignment.md
           - Permissions: api/models/resources/databricks/permissions.md
           - PolicyInfo: api/models/resources/databricks/policyinfo.md
+          - PostgresBranch: api/models/resources/databricks/postgresbranch.md
+          - PostgresCatalog: api/models/resources/databricks/postgrescatalog.md
+          - PostgresCdfConfig: api/models/resources/databricks/postgrescdfconfig.md
+          - PostgresDataApi: api/models/resources/databricks/postgresdataapi.md
+          - PostgresDatabase: api/models/resources/databricks/postgresdatabase.md
+          - PostgresEndpoint: api/models/resources/databricks/postgresendpoint.md
+          - PostgresProject: api/models/resources/databricks/postgresproject.md
+          - PostgresRole: api/models/resources/databricks/postgresrole.md
+          - PostgresSnapshotSchedule: api/models/resources/databricks/postgressnapshotschedule.md
+          - PostgresSyncedTable: api/models/resources/databricks/postgressyncedtable.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
           - PythonPackagePermissions: api/models/resources/databricks/pythonpackagepermissions.md
           - api/models/resources/databricks/query.md
