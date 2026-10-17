@@ -2,6 +2,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.resources.databricks.postgresbranch import PostgresBranch
+from laktory.models.resources.databricks.postgresbranch import add_depends_on
 from laktory.models.resources.databricks.postgresproject_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgresproject_base import PostgresProjectBase
 
@@ -70,13 +71,18 @@ class PostgresProject(PostgresProjectBase):
         """Set the project path on nested branches and their resources"""
         for b in self.branches or []:
             if b.parent is None:
-                b.parent = f"projects/{self.project_id}"
+                b.parent = self.path
             b.assign_parents()
         return self
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
+
+    @property
+    def path(self) -> str:
+        """Lakebase resource path `projects/{project_id}`"""
+        return f"projects/{self.project_id}"
 
     @property
     def resource_key(self) -> str:
@@ -86,8 +92,16 @@ class PostgresProject(PostgresProjectBase):
     def additional_core_resources(self) -> list:
         """
         - branches
+
+        A branch forked from a sibling (`spec.source_branch`) is created after it.
         """
-        return self.branches or []
+        branches = self.branches or []
+        paths = {b.path: b for b in branches}
+        for b in branches:
+            source = paths.get(b.spec.source_branch) if b.spec else None
+            if source is not None and source is not b:
+                add_depends_on(b, [source])
+        return branches
 
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #

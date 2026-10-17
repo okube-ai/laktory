@@ -24,7 +24,9 @@ def get_database():
 
 def test_postgresdatabase():
     database = get_database()
-    assert database.resource_name == ("postgres-database-laktory-app-dev-app-db")
+    assert database.resource_name == (
+        "postgres-database-projects-laktory-app-branches-dev-databases-app-db"
+    )
     props = database.terraform_properties
     assert "data_api" not in props
     assert "cdf_configs" not in props
@@ -33,12 +35,16 @@ def test_postgresdatabase():
     api, cdf = database.additional_core_resources
     assert isinstance(api, PostgresDataApi)
     assert api.parent == database_name
-    assert api.resource_name == ("postgres-data-api-laktory-app-dev-app-db")
+    assert api.resource_name == (
+        "postgres-data-api-projects-laktory-app-branches-dev-databases-app-db"
+    )
     assert isinstance(cdf, PostgresCdfConfig)
     assert cdf.parent == database_name
     assert cdf.schema_ == "app_rep"
     assert cdf.terraform_properties["schema"] == "app_rep"
-    assert cdf.resource_name == ("postgres-cdf-config-laktory-app-dev-app-db-public")
+    assert cdf.resource_name == (
+        "postgres-cdf-config-projects-laktory-app-branches-dev-databases-app-db-public"
+    )
 
 
 def test_terraform_plan():

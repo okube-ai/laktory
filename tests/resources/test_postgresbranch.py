@@ -1,7 +1,10 @@
+import pytest
+
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import PostgresBranch
 from laktory.models.resources.databricks import PostgresCatalog
+from laktory.models.resources.databricks import PostgresDatabase
 from laktory.models.resources.databricks import PostgresEndpoint
 from laktory.models.resources.databricks import PostgresRole
 from laktory.models.resources.databricks import PostgresSnapshotSchedule
@@ -64,7 +67,7 @@ def get_branch():
 
 def test_postgresbranch():
     branch = get_branch()
-    assert branch.resource_name == "postgres-branch-laktory-app-dev"
+    assert branch.resource_name == "postgres-branch-projects-laktory-app-branches-dev"
     props = branch.terraform_properties
     for k in ["endpoints", "roles", "catalogs", "synced_tables", "snapshot_schedule"]:
         assert k not in props
@@ -73,11 +76,14 @@ def test_postgresbranch():
     resources = {type(r): r for r in branch.additional_core_resources}
     endpoint = resources[PostgresEndpoint]
     assert endpoint.parent == branch_name
-    assert endpoint.resource_name == "postgres-endpoint-laktory-app-dev-primary"
+    assert (
+        endpoint.resource_name
+        == "postgres-endpoint-projects-laktory-app-branches-dev-endpoints-primary"
+    )
     assert resources[PostgresRole].parent == branch_name
     assert resources[PostgresSnapshotSchedule].parent == branch_name
     assert resources[PostgresSnapshotSchedule].resource_name == (
-        "postgres-snapshot-schedule-laktory-app-dev"
+        "postgres-snapshot-schedule-projects-laktory-app-branches-dev"
     )
     assert resources[PostgresCatalog].spec.branch == branch_name
     assert resources[PostgresCatalog].resource_name == "postgres-catalog-laktory_app_pg"
@@ -86,6 +92,60 @@ def test_postgresbranch():
     assert synced_table.resource_name == (
         "postgres-synced-table-laktory_app_pg-public-stock_prices"
     )
+
+
+def test_postgresbranch_creation_order():
+    branch = PostgresBranch.model_validate(
+        {
+            "parent": "projects/app",
+            "branch_id": "staging",
+            "roles": [{"role_id": "owner"}],
+            "databases": [
+                {
+                    "database_id": "db",
+                    "spec": {
+                        "postgres_database": "db",
+                        "role": "projects/app/branches/staging/roles/owner",
+                    },
+                }
+            ],
+            "catalogs": [{"catalog_id": "app_pg", "spec": {"postgres_database": "db"}}],
+            "synced_tables": [
+                {
+                    "synced_table_id": "app_pg.public.t",
+                    "spec": {
+                        "postgres_database": "db",
+                        "source_table_full_name": "dev.gold.t",
+                    },
+                }
+            ],
+        }
+    )
+    resources = {type(r): r for r in branch.additional_core_resources}
+    role = f"${{resources.{resources[PostgresRole].resource_name}}}"
+    database = f"${{resources.{resources[PostgresDatabase].resource_name}}}"
+    catalog = f"${{resources.{resources[PostgresCatalog].resource_name}}}"
+    assert resources[PostgresRole].resource_options.depends_on == []
+    assert resources[PostgresDatabase].resource_options.depends_on == [role]
+    assert resources[PostgresCatalog].resource_options.depends_on == [database]
+    assert resources[PostgresSyncedTable].resource_options.depends_on == [
+        database,
+        catalog,
+    ]
+
+    # Idempotent
+    branch.additional_core_resources
+    assert resources[PostgresSyncedTable].resource_options.depends_on == [
+        database,
+        catalog,
+    ]
+
+
+def test_catalog_and_synced_table_require_spec():
+    with pytest.raises(ValueError):
+        PostgresCatalog(catalog_id="app_pg")
+    with pytest.raises(ValueError):
+        PostgresSyncedTable(synced_table_id="app_pg.public.t")
 
 
 def test_terraform_plan():

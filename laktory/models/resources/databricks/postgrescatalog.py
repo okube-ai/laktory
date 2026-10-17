@@ -1,5 +1,8 @@
+from pydantic import Field
+
 from laktory.models.resources.databricks.postgrescatalog_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgrescatalog_base import PostgresCatalogBase
+from laktory.models.resources.databricks.postgrescatalog_base import PostgresCatalogSpec
 
 
 class PostgresCatalog(PostgresCatalogBase):
@@ -36,6 +39,12 @@ class PostgresCatalog(PostgresCatalogBase):
     * [Lakebase Autoscaling](https://docs.databricks.com/aws/en/oltp/)
     * [Terraform databricks_postgres_catalog](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/postgres_catalog)
     """
+
+    # Required (base marks it optional)
+    spec: PostgresCatalogSpec = Field(
+        ...,
+        description="Catalog configuration: Postgres database and branch (set automatically when declared in the catalogs of a branch)",
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

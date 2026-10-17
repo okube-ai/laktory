@@ -1,6 +1,5 @@
 from pydantic import Field
 
-from laktory.models.resources.databricks._postgrespath import postgres_path_key
 from laktory.models.resources.databricks.postgresrole_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgresrole_base import PostgresRoleBase
 
@@ -56,4 +55,4 @@ class PostgresRole(PostgresRoleBase):
 
     @property
     def resource_key(self) -> str:
-        return postgres_path_key(self.parent, self.role_id)
+        return f"{self.parent}/roles/{self.role_id}"

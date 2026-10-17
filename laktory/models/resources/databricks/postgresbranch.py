@@ -1,7 +1,6 @@
 from pydantic import Field
 from pydantic import model_validator
 
-from laktory.models.resources.databricks._postgrespath import postgres_path_key
 from laktory.models.resources.databricks.postgresbranch_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgresbranch_base import PostgresBranchBase
 from laktory.models.resources.databricks.postgrescatalog import PostgresCatalog
@@ -12,6 +11,16 @@ from laktory.models.resources.databricks.postgressnapshotschedule import (
     PostgresSnapshotSchedule,
 )
 from laktory.models.resources.databricks.postgressyncedtable import PostgresSyncedTable
+
+
+def add_depends_on(resource, others: list) -> None:
+    """Make `resource` depend on each of `others` (siblings named by string)"""
+    depends_on = list(resource.resource_options.depends_on)
+    for o in others:
+        dep = f"${{resources.{o.resource_name}}}"
+        if dep not in depends_on:
+            depends_on += [dep]
+    resource.resource_options.depends_on = depends_on
 
 
 class PostgresBranch(PostgresBranchBase):
@@ -118,7 +127,6 @@ class PostgresBranch(PostgresBranchBase):
         """Set the branch path on nested resources"""
         if self.parent is None:
             return self
-        name = f"{self.parent}/branches/{self.branch_id}"
         children = (
             (self.endpoints or [])
             + (self.roles or [])
@@ -127,12 +135,12 @@ class PostgresBranch(PostgresBranchBase):
         )
         for r in children:
             if r.parent is None:
-                r.parent = name
+                r.parent = self.path
         for db in self.databases or []:
             db.assign_parents()
         for r in (self.catalogs or []) + (self.synced_tables or []):
             if r.spec is not None and r.spec.branch is None:
-                r.spec.branch = name
+                r.spec.branch = self.path
         return self
 
     # ----------------------------------------------------------------------- #
@@ -140,8 +148,13 @@ class PostgresBranch(PostgresBranchBase):
     # ----------------------------------------------------------------------- #
 
     @property
+    def path(self) -> str:
+        """Lakebase resource path `{project path}/branches/{branch_id}`"""
+        return f"{self.parent}/branches/{self.branch_id}"
+
+    @property
     def resource_key(self) -> str:
-        return postgres_path_key(self.parent, self.branch_id)
+        return self.path
 
     @property
     def additional_core_resources(self) -> list:
@@ -152,14 +165,28 @@ class PostgresBranch(PostgresBranchBase):
         - snapshot schedule
         - catalogs
         - synced tables
+
+        Siblings reference each other by name only (database owner role,
+        catalog and synced table Postgres database), so they are created in
+        that order: roles, databases, catalogs, synced tables.
         """
+        roles = self.roles or []
+        databases = self.databases or []
+        catalogs = self.catalogs or []
+        synced_tables = self.synced_tables or []
+        for r in databases:
+            add_depends_on(r, roles)
+        for r in catalogs:
+            add_depends_on(r, databases)
+        for r in synced_tables:
+            add_depends_on(r, databases + catalogs)
         return (
             (self.endpoints or [])
-            + (self.roles or [])
-            + (self.databases or [])
+            + roles
+            + databases
             + ([self.snapshot_schedule] if self.snapshot_schedule else [])
-            + (self.catalogs or [])
-            + (self.synced_tables or [])
+            + catalogs
+            + synced_tables
         )
 
     # ----------------------------------------------------------------------- #

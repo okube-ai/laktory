@@ -1,6 +1,5 @@
 from pydantic import Field
 
-from laktory.models.resources.databricks._postgrespath import postgres_path_key
 from laktory.models.resources.databricks.postgrescdfconfig_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgrescdfconfig_base import (
     PostgresCdfConfigBase,
@@ -52,6 +51,4 @@ class PostgresCdfConfig(PostgresCdfConfigBase):
 
     @property
     def resource_key(self) -> str:
-        return postgres_path_key(
-            self.parent, self.cdf_config_id or self.postgres_schema
-        )
+        return f"{self.parent}/{self.cdf_config_id or self.postgres_schema}"

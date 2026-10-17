@@ -1,6 +1,5 @@
 from pydantic import Field
 
-from laktory.models.resources.databricks._postgrespath import postgres_path_key
 from laktory.models.resources.databricks.postgresdataapi_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgresdataapi_base import PostgresDataApiBase
 
@@ -51,4 +50,4 @@ class PostgresDataApi(PostgresDataApiBase):
 
     @property
     def resource_key(self) -> str:
-        return postgres_path_key(self.parent)
+        return self.parent

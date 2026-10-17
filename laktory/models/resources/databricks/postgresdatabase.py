@@ -1,7 +1,6 @@
 from pydantic import Field
 from pydantic import model_validator
 
-from laktory.models.resources.databricks._postgrespath import postgres_path_key
 from laktory.models.resources.databricks.postgrescdfconfig import PostgresCdfConfig
 from laktory.models.resources.databricks.postgresdataapi import PostgresDataApi
 from laktory.models.resources.databricks.postgresdatabase_base import *  # NOQA: F403 required for documentation
@@ -75,10 +74,9 @@ class PostgresDatabase(PostgresDatabaseBase):
         """Set the database path on nested resources"""
         if self.parent is None:
             return self
-        name = f"{self.parent}/databases/{self.database_id}"
         for r in ([self.data_api] if self.data_api else []) + (self.cdf_configs or []):
             if r.parent is None:
-                r.parent = name
+                r.parent = self.path
         return self
 
     # ----------------------------------------------------------------------- #
@@ -86,8 +84,13 @@ class PostgresDatabase(PostgresDatabaseBase):
     # ----------------------------------------------------------------------- #
 
     @property
+    def path(self) -> str:
+        """Lakebase resource path `{branch path}/databases/{database_id}`"""
+        return f"{self.parent}/databases/{self.database_id}"
+
+    @property
     def resource_key(self) -> str:
-        return postgres_path_key(self.parent, self.database_id)
+        return self.path
 
     @property
     def additional_core_resources(self) -> list:

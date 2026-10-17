@@ -1,6 +1,11 @@
+from pydantic import Field
+
 from laktory.models.resources.databricks.postgressyncedtable_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgressyncedtable_base import (
     PostgresSyncedTableBase,
+)
+from laktory.models.resources.databricks.postgressyncedtable_base import (
+    PostgresSyncedTableSpec,
 )
 
 
@@ -47,6 +52,12 @@ class PostgresSyncedTable(PostgresSyncedTableBase):
     * [Lakebase synced tables](https://docs.databricks.com/aws/en/oltp/sync-data/sync-table)
     * [Terraform databricks_postgres_synced_table](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/postgres_synced_table)
     """
+
+    # Required (base marks it optional)
+    spec: PostgresSyncedTableSpec = Field(
+        ...,
+        description="Synced table configuration: source table, Postgres database, branch (set automatically when declared in the synced tables of a branch) and scheduling",
+    )
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

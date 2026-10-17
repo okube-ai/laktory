@@ -1,6 +1,5 @@
 from pydantic import Field
 
-from laktory.models.resources.databricks._postgrespath import postgres_path_key
 from laktory.models.resources.databricks.postgressnapshotschedule_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.postgressnapshotschedule_base import (
     PostgresSnapshotScheduleBase,
@@ -53,4 +52,4 @@ class PostgresSnapshotSchedule(PostgresSnapshotScheduleBase):
 
     @property
     def resource_key(self) -> str:
-        return postgres_path_key(self.parent)
+        return self.parent
