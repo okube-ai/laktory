@@ -109,6 +109,8 @@ def pluralize(name: str) -> str:
 # Only these field names represent genuine decimal values and should stay float.
 FLOAT_FIELDS: frozenset[str] = frozenset(
     {
+        "autoscaling_limit_max_cu",  # Lakebase compute units (minimum 0.5)
+        "autoscaling_limit_min_cu",
         "double_value",  # alert threshold: "double value to compare against integer and double results"
         "spot_bid_max_price",  # Azure spot instance price in USD (can be e.g. 0.05)
     }
