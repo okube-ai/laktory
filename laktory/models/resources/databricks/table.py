@@ -1,11 +1,15 @@
 from pydantic import Field
 
 from laktory._logger import get_logger
+from laktory.models.basemodel import PluralField
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._policiesmixin import PoliciesMixin
+from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.table_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.table_base import TableBase
+from laktory.models.resources.databricks.table_base import TableColumn as _TableColumn
 
 logger = get_logger(__name__)
 
@@ -17,7 +21,14 @@ class TableLookup(ResourceLookup):
     )
 
 
-class Table(UnityCatalogMixin, TableBase):
+class TableColumn(_TableColumn):
+    tags: dict[str, str | None] = Field(
+        None,
+        description="Tags assigned to the column as `{tag_key: tag_value}`. Use a `null` value for a key-only tag. Each tag is deployed as a separate tag assignment resource.",
+    )
+
+
+class Table(UnityCatalogMixin, TagsMixin, PoliciesMixin, TableBase):
     """
     A table resides in the third layer of Unity Catalog’s three-level namespace. It contains rows of data.
 
@@ -33,6 +44,15 @@ class Table(UnityCatalogMixin, TableBase):
     catalog_name: dev
     schema_name: finance
     table_type: MANAGED
+    columns:
+    - name: symbol
+      type: STRING
+    - name: trader_email
+      type: STRING
+      tags:
+        pii: email
+    tags:
+      data_classification: confidential
     grants:
     - principal: account users
       privileges:
@@ -65,6 +85,9 @@ class Table(UnityCatalogMixin, TableBase):
     outside Laktory - with only the entries listed here. Use only when Laktory owns all access management for this
     resource. Mutually exclusive with `grant`.
     """,
+    )
+    column: list[TableColumn] | None = PluralField(
+        None, plural="columns", description="Table columns"
     )
     lookup_existing: TableLookup = Field(
         None,
@@ -108,6 +131,8 @@ class Table(UnityCatalogMixin, TableBase):
     def additional_core_resources(self) -> list:
         """
         - table grants
+        - table and columns tags
+        - table policies
         """
         resources = []
 
@@ -115,6 +140,17 @@ class Table(UnityCatalogMixin, TableBase):
         resources += self.get_grants_additional_resources(
             object={"table": f"${{resources.{self.resource_name}.id}}"}
         )
+
+        # Table and columns tags
+        table_id = f"${{resources.{self.resource_name}.id}}"
+        resources += self.get_tags_additional_resources("tables", table_id)
+        for c in self.column or []:
+            resources += self.get_tags_additional_resources(
+                "columns", f"{table_id}.{c.name}", tags=c.tags or {}
+            )
+
+        # Table policies
+        resources += self.get_policies_additional_resources("TABLE")
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -127,7 +163,10 @@ class Table(UnityCatalogMixin, TableBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return [
-            "grant",
-            "grants",
-        ]
+        return {
+            "grant": True,
+            "grants": True,
+            "tags": True,
+            "policies": True,
+            "column": {"__all__": {"tags"}},
+        }

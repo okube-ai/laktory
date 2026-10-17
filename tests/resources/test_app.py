@@ -1,6 +1,7 @@
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import App
+from laktory.models.resources.databricks import WorkspaceEntityTagAssignment
 from laktory.models.resources.databricks.permissions import Permissions
 
 app = App(
@@ -28,6 +29,16 @@ def test_app():
 def test_app_additional_resources():
     assert len(app.additional_core_resources) == 1
     assert isinstance(app.additional_core_resources[0], Permissions)
+
+
+def test_app_tags():
+    _app = App(name="stocks", tags={"cost_center": "finance"})
+    (tag,) = _app.additional_core_resources
+    assert isinstance(tag, WorkspaceEntityTagAssignment)
+    assert tag.entity_type == "apps"
+    assert tag.entity_id == "${resources.app-stocks.name}"
+    assert tag.tag_value == "finance"
+    assert "tags" not in _app.terraform_properties
 
 
 def test_terraform_plan():

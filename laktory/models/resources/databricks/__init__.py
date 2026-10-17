@@ -3,6 +3,7 @@ from .accesscontrolruleset import AccessControlRuleSet
 from .accountfederationpolicy import AccountFederationPolicy
 from .alert import Alert
 from .app import App
+from .artifactallowlist import ArtifactAllowlist
 from .budget import Budget
 from .budgetpolicy import BudgetPolicy
 from .catalog import Catalog
@@ -17,7 +18,10 @@ from .dataqualitymonitor import DataQualityMonitor
 from .dbfsfile import DbfsFile
 from .directory import Directory
 from .entitlements import Entitlements
+from .entitytagassignment import EntityTagAssignment
 from .externallocation import ExternalLocation
+from .externalmetadata import ExternalMetadata
+from .file import File
 from .gitcredential import GitCredential
 from .globalinitscript import GlobalInitScript
 from .grant import Grant
@@ -55,6 +59,7 @@ from .obotoken import OboToken
 from .permissionassignment import PermissionAssignment
 from .permissions import Permissions
 from .pipeline import Pipeline
+from .policyinfo import PolicyInfo
 from .pythonpackage import PythonPackage
 from .query import Query
 from .recipient import Recipient
@@ -70,9 +75,11 @@ from .serviceprincipalfederationpolicy import ServicePrincipalFederationPolicy
 from .serviceprincipalrole import ServicePrincipalRole
 from .serviceprincipalsecret import ServicePrincipalSecret
 from .share import Share
+from .shareprovider import ShareProvider
 from .storagecredential import StorageCredential
 from .systemschema import SystemSchema
 from .table import Table
+from .tagpolicy import TagPolicy
 from .token import Token
 from .user import User
 from .userrole import UserRole
@@ -81,5 +88,6 @@ from .vectorsearchindex import VectorSearchIndex
 from .volume import Volume
 from .warehouse import Warehouse
 from .workspacebinding import WorkspaceBinding
+from .workspaceentitytagassignment import WorkspaceEntityTagAssignment
 from .workspacefile import WorkspaceFile
 from .workspacetree import WorkspaceTree

@@ -81,3 +81,12 @@ reset by replacing the table on the first write (overwrite with `overwriteSchema
 dropping it. Open points: streaming sinks (first micro-batch), declarative orchestrators (not
 applicable), DELTA file sinks (overwrite of the path). Possibly the future default for Unity
 Catalog tables.
+
+## A12 — Default resource name prefix: strict match
+
+`BaseResource.resource_name` skips the `{resource_type_id}-` prefix when the type id appears
+anywhere in the key (`_resource_safe_key_has_type_id`), so e.g. a notebook under `/notebooks/` or a
+DBFS file named `profiles.json` gets no prefix. `File` (0.13.1, #702) already uses a strict check
+(key starts with `{resource_type_id}-`). Applying it to every resource renames the Terraform state
+address of already deployed resources (destroy / recreate), so it belongs in a major release, with
+an upgrade note (or `moved` blocks).

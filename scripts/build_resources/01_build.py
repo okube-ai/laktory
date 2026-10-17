@@ -65,6 +65,7 @@ PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_alert": {"parent_path"},
     "databricks_dashboard": {"parent_path", "file_path"},
     "databricks_dbfs_file": {"path", "source"},
+    "databricks_file": {"path", "source"},
     "databricks_notebook": {"path", "source"},
     "databricks_quality_monitor": {
         "table_name",

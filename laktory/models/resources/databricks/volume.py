@@ -1,10 +1,13 @@
+from pathlib import PurePosixPath
 from typing import Literal
 
 from pydantic import Field
 
 from laktory.models.grants.volumegrant import VolumeGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
+from laktory.models.resources.databricks.file import File
 from laktory.models.resources.databricks.volume_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.volume_base import VolumeBase
 
@@ -16,7 +19,7 @@ class VolumeLookup(ResourceLookup):
     )
 
 
-class Volume(UnityCatalogMixin, VolumeBase):
+class Volume(UnityCatalogMixin, TagsMixin, VolumeBase):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for
@@ -39,6 +42,11 @@ class Volume(UnityCatalogMixin, VolumeBase):
     comment: Landing zone for raw data
     volume_type: EXTERNAL
     storage_location: abfss://landing@lakehouse-storage.dfs.core.windows.net/
+    tags:
+      purpose: data_ingestion
+    files:
+    - source: ./data/stock_prices/prices.json
+      dirpath: stock_prices/
     grants:
     - principal: account users
       privileges:
@@ -54,6 +62,8 @@ class Volume(UnityCatalogMixin, VolumeBase):
     # > dev.sources.landing
     print(volume.parent_full_name)
     # > dev.sources
+    print(volume.path)
+    # > /Volumes/dev/sources/landing
     ```
 
     References
@@ -72,6 +82,12 @@ class Volume(UnityCatalogMixin, VolumeBase):
         description="Import a pre-existing Volume by full `name` (`catalog.schema.volume`) instead of creating it. The volume becomes available for cross-referencing and child resource deployment (grants, etc.); its own field values are not written to the existing resource.",
     )
     schema_name: str = Field(None, description="Name of the schema storing the volume")
+
+    # Laktory-specific
+    files: list[File] = Field(
+        None,
+        description="Files uploaded to the volume. Their `dirpath` is relative to the volume root.",
+    )
 
     # Narrow the type from base's plain str
     volume_type: Literal["MANAGED", "EXTERNAL"] = Field(
@@ -112,6 +128,11 @@ class Volume(UnityCatalogMixin, VolumeBase):
             return self.lookup_existing.name
         return super().full_name
 
+    @property
+    def path(self) -> str:
+        """Volume path `/Volumes/{catalog_name}/{schema_name}/{volume_name}`"""
+        return "/Volumes/" + self.full_name.replace(".", "/")
+
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #
     # ----------------------------------------------------------------------- #
@@ -120,6 +141,8 @@ class Volume(UnityCatalogMixin, VolumeBase):
     def additional_core_resources(self) -> list:
         """
         - volume grants
+        - volume tags
+        - volume files
         """
         resources = []
 
@@ -127,6 +150,19 @@ class Volume(UnityCatalogMixin, VolumeBase):
         resources += self.get_grants_additional_resources(
             object={"volume": f"${{resources.{self.resource_name}.id}}"}
         )
+
+        # Volume tags
+        resources += self.get_tags_additional_resources(
+            "volumes", f"${{resources.{self.resource_name}.id}}"
+        )
+
+        # Volume files
+        for f in self.files or []:
+            if f.path_ is None and not (f.dirpath or "").startswith(self.path):
+                dirpath = (f.dirpath or "").lstrip("/")
+                f.dirpath = (PurePosixPath(self.path) / dirpath).as_posix()
+            resources += [f]
+
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -135,4 +171,4 @@ class Volume(UnityCatalogMixin, VolumeBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["grant", "grants"]
+        return ["files", "grant", "grants", "tags"]

@@ -4,6 +4,7 @@ from pydantic import Field
 from pydantic import model_validator
 
 from laktory.models.basemodel import BaseModel
+from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks.accesscontrol import AccessControl
 from laktory.models.resources.databricks.app_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.app_base import AppBase
@@ -123,7 +124,7 @@ class AppTelemetryExportDestination(BaseModel):
     )
 
 
-class App(AppBase):
+class App(TagsMixin, AppBase):
     """
     Databricks App
 
@@ -145,6 +146,8 @@ class App(AppBase):
     access_controls:
     - group_name: account users
       permission_level: CAN_USE
+    tags:
+      cost_center: finance
     '''
     app = models.resources.databricks.App.model_validate_yaml(io.StringIO(app_yaml))
     ```
@@ -189,6 +192,7 @@ class App(AppBase):
     def additional_core_resources(self) -> list:
         """
         - permissions
+        - tags
         """
         resources = []
         if self.access_controls:
@@ -199,6 +203,9 @@ class App(AppBase):
                     app_name=f"${{resources.{self.resource_name}.name}}",
                 )
             ]
+        resources += self.get_tags_additional_resources(
+            "apps", f"${{resources.{self.resource_name}.name}}"
+        )
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -211,4 +218,5 @@ class App(AppBase):
             "access_controls",
             "name_prefix",
             "name_suffix",
+            "tags",
         ]

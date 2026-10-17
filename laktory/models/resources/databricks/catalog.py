@@ -5,6 +5,8 @@ from pydantic import model_validator
 
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._policiesmixin import PoliciesMixin
+from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks.catalog_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.catalog_base import CatalogBase
 from laktory.models.resources.databricks.schema import Schema
@@ -15,7 +17,7 @@ class CatalogLookup(ResourceLookup):
     name: str = Field(serialization_alias="id", description="Catalog name")
 
 
-class Catalog(CatalogBase):
+class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
     """
     A catalog is the first layer of Unity Catalog's three-level namespace. It's
     used to organize your data assets.
@@ -29,6 +31,8 @@ class Catalog(CatalogBase):
 
     catalog_yaml = '''
     name: dev
+    tags:
+      environment: dev
     grants:
     - principal: account users
       privileges:
@@ -141,6 +145,8 @@ class Catalog(CatalogBase):
     def additional_core_resources(self) -> list:
         """
         - catalog grants
+        - catalog tags
+        - catalog policies
         - schemas resources
         """
         resources = []
@@ -149,10 +155,17 @@ class Catalog(CatalogBase):
         resources += self.get_grants_additional_resources(
             object={"catalog": f"${{resources.{self.resource_name}.id}}"}
         )
+
+        # Catalog tags and policies
+        resources += self.get_tags_additional_resources(
+            "catalogs", f"${{resources.{self.resource_name}.id}}"
+        )
+        resources += self.get_policies_additional_resources("CATALOG")
+
         # Catalog schemas
         if self.schemas:
             for s in self.schemas:
-                resources += s.core_resources
+                resources += [s]
 
         # Workspace Bindings
         if self.workspace_bindings:
@@ -172,4 +185,6 @@ class Catalog(CatalogBase):
             "grants",
             "grant",
             "workspace_bindings",
+            "tags",
+            "policies",
         ]

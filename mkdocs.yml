@@ -236,6 +236,7 @@ nav:
           - AccountFederationPolicy: api/models/resources/databricks/accountfederationpolicy.md
           - api/models/resources/databricks/alert.md
           - App: api/models/resources/databricks/app.md
+          - ArtifactAllowlist: api/models/resources/databricks/artifactallowlist.md
           - Budget: api/models/resources/databricks/budget.md
           - BudgetPolicy: api/models/resources/databricks/budgetpolicy.md
           - api/models/resources/databricks/catalog.md
@@ -252,7 +253,10 @@ nav:
           - Declarative Pipeline:
             - api/models/resources/databricks/pipeline.md
           - Entitlements: api/models/resources/databricks/entitlements.md
+          - EntityTagAssignment: api/models/resources/databricks/entitytagassignment.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
+          - ExternalMetadata: api/models/resources/databricks/externalmetadata.md
+          - File: api/models/resources/databricks/file.md
           - GitCredential: api/models/resources/databricks/gitcredential.md
           - GlobalInitScript: api/models/resources/databricks/globalinitscript.md
           - api/models/resources/databricks/grant.md
@@ -289,6 +293,7 @@ nav:
           - OboToken: api/models/resources/databricks/obotoken.md
           - PermissionAssignment: api/models/resources/databricks/permissionassignment.md
           - Permissions: api/models/resources/databricks/permissions.md
+          - PolicyInfo: api/models/resources/databricks/policyinfo.md
           - PythonPackage: api/models/resources/databricks/pythonpackage.md
           - PythonPackagePermissions: api/models/resources/databricks/pythonpackagepermissions.md
           - api/models/resources/databricks/query.md
@@ -305,9 +310,11 @@ nav:
           - ServicePrincipalRole: api/models/resources/databricks/serviceprincipalrole.md
           - ServicePrincipalSecret: api/models/resources/databricks/serviceprincipalsecret.md
           - Share: api/models/resources/databricks/share.md
+          - ShareProvider: api/models/resources/databricks/shareprovider.md
           - StorageCredential: api/models/resources/databricks/storagecredential.md
           - SystemSchema: api/models/resources/databricks/systemschema.md
           - api/models/resources/databricks/table.md
+          - TagPolicy: api/models/resources/databricks/tagpolicy.md
           - Token: api/models/resources/databricks/token.md
           - api/models/resources/databricks/user.md
           - UserRole: api/models/resources/databricks/userrole.md
@@ -317,6 +324,7 @@ nav:
           - api/models/resources/databricks/warehouse.md
           - WorkspaceFile: api/models/resources/databricks/workspacefile.md
           - WorkspaceBinding: api/models/resources/databricks/workspacebinding.md
+          - WorkspaceEntityTagAssignment: api/models/resources/databricks/workspaceentitytagassignment.md
           - WorkspaceTree: api/models/resources/databricks/workspacetree.md
         - Providers:
           - BaseProvider: api/models/resources/providers/baseprovider.md

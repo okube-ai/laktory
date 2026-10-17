@@ -243,7 +243,7 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
             name = self.resource_safe_key
             if name == "":
                 name = self.resource_type_id
-            elif self.resource_type_id not in self.resource_safe_key:
+            elif not self._resource_safe_key_has_type_id:
                 name = f"{self.resource_type_id}-{name}"
             else:
                 pass
@@ -333,6 +333,16 @@ class BaseResource(_BaseModel, metaclass=ModelMetaclass):
         if self.resource_key is None:
             return ""
         return to_safe_name(self.resource_key)
+
+    @property
+    def _resource_safe_key_has_type_id(self) -> bool:
+        """
+        If `True`, the default resource name skips the `{resource_type_id}-`
+        prefix. Matches the type id anywhere in the key (e.g. a notebook under
+        `/notebooks/`): kept as is, since changing it would rename the state
+        address of already deployed resources.
+        """
+        return self.resource_type_id in self.resource_safe_key
 
     @property
     def self_as_core_resources(self):

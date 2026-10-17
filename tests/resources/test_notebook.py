@@ -1,6 +1,7 @@
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
 from laktory.models.resources.databricks import Notebook
+from laktory.models.resources.databricks import WorkspaceEntityTagAssignment
 from laktory.models.resources.databricks.permissions import Permissions
 
 
@@ -44,6 +45,15 @@ def test_notebook_additional_resources():
     )
     assert len(nb.additional_core_resources) == 1
     assert isinstance(nb.additional_core_resources[0], Permissions)
+
+
+def test_notebook_tags():
+    nb = Notebook(source="./hello_world.py", tags={"team": "engineering"})
+    (tag,) = nb.additional_core_resources
+    assert isinstance(tag, WorkspaceEntityTagAssignment)
+    assert tag.entity_type == "notebooks"
+    assert tag.entity_id == f"${{resources.{nb.resource_name}.object_id}}"
+    assert "tags" not in nb.terraform_properties
 
 
 def test_terraform_plan():
