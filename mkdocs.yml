@@ -233,8 +233,15 @@ nav:
         - Databricks:
           - AccessControl: api/models/resources/databricks/accesscontrol.md
           - AccessControlRuleSet: api/models/resources/databricks/accesscontrolruleset.md
+          - AccessRequestDestinations: api/models/resources/databricks/accessrequestdestinations.md
           - AccountFederationPolicy: api/models/resources/databricks/accountfederationpolicy.md
+          - AiGatewayMcpService: api/models/resources/databricks/aigatewaymcpservice.md
+          - AiGatewayModelProviderService: api/models/resources/databricks/aigatewaymodelproviderservice.md
+          - AiGatewayModelService: api/models/resources/databricks/aigatewaymodelservice.md
+          - AiSearchEndpoint: api/models/resources/databricks/aisearchendpoint.md
+          - AiSearchIndex: api/models/resources/databricks/aisearchindex.md
           - api/models/resources/databricks/alert.md
+          - AlertV2: api/models/resources/databricks/alertv2.md
           - App: api/models/resources/databricks/app.md
           - ArtifactAllowlist: api/models/resources/databricks/artifactallowlist.md
           - Budget: api/models/resources/databricks/budget.md
@@ -247,6 +254,7 @@ nav:
           - CurrentUser: api/models/resources/databricks/currentuser.md
           - CustomAppIntegration: api/models/resources/databricks/customappintegration.md
           - Dashboard: api/models/resources/databricks/dashboard.md
+          - DataClassificationCatalogConfig: api/models/resources/databricks/dataclassificationcatalogconfig.md
           - DataQualityMonitor: api/models/resources/databricks/dataqualitymonitor.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
           - api/models/resources/databricks/directory.md

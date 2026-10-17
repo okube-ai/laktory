@@ -5,10 +5,16 @@ from pydantic import model_validator
 
 from laktory.models.grants.cataloggrant import CatalogGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._accessrequestdestinationsmixin import (
+    AccessRequestDestinationsMixin,
+)
 from laktory.models.resources.databricks._policiesmixin import PoliciesMixin
 from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks.catalog_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.catalog_base import CatalogBase
+from laktory.models.resources.databricks.dataclassificationcatalogconfig import (
+    DataClassificationCatalogConfig,
+)
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
 
@@ -17,7 +23,7 @@ class CatalogLookup(ResourceLookup):
     name: str = Field(serialization_alias="id", description="Catalog name")
 
 
-class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
+class Catalog(TagsMixin, PoliciesMixin, AccessRequestDestinationsMixin, CatalogBase):
     """
     A catalog is the first layer of Unity Catalog's three-level namespace. It's
     used to organize your data assets.
@@ -33,6 +39,13 @@ class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
     name: dev
     tags:
       environment: dev
+    data_classification:
+      auto_tag_configs:
+      - classification_tag: class.email_address
+        auto_tagging_mode: AUTO_TAGGING_ENABLED
+    access_request_destinations:
+    - destination_type: EMAIL
+      destination_id: data-owners@okube.ai
     grants:
     - principal: account users
       privileges:
@@ -99,6 +112,10 @@ class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
     resource. Mutually exclusive with `grant`.
     """,
     )
+    data_classification: DataClassificationCatalogConfig = Field(
+        None,
+        description="Data Classification configuration of the catalog: sensitive data is automatically identified and optionally tagged. `parent` is set automatically.",
+    )
     lookup_existing: CatalogLookup = Field(
         None,
         exclude=True,
@@ -147,6 +164,8 @@ class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
         - catalog grants
         - catalog tags
         - catalog policies
+        - catalog data classification
+        - catalog access request destinations
         - schemas resources
         """
         resources = []
@@ -161,6 +180,17 @@ class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
             "catalogs", f"${{resources.{self.resource_name}.id}}"
         )
         resources += self.get_policies_additional_resources("CATALOG")
+
+        # Data classification and access requests
+        if self.data_classification:
+            if self.data_classification.parent is None:
+                self.data_classification.parent = (
+                    f"catalogs/${{resources.{self.resource_name}.name}}"
+                )
+            resources += [self.data_classification]
+        resources += self.get_access_request_destinations_additional_resources(
+            "CATALOG"
+        )
 
         # Catalog schemas
         if self.schemas:
@@ -187,4 +217,6 @@ class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
             "workspace_bindings",
             "tags",
             "policies",
+            "data_classification",
+            "access_request_destinations",
         ]

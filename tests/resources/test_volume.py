@@ -2,6 +2,7 @@ from laktory import models
 from laktory import settings
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
+from laktory.models.resources.databricks import AccessRequestDestinations
 from laktory.models.resources.databricks import EntityTagAssignment
 from laktory.models.resources.databricks import File
 from laktory.models.resources.databricks import Volume
@@ -79,6 +80,25 @@ def test_build_renders_volume_files(tmp_path, monkeypatch):
 
     staged = tmp_path / "build" / "files" / "Volumes/dev/sources/landing/config.json"
     assert staged.read_text() == '{"catalog": "dev_cat"}'
+
+
+def test_volume_access_request_destinations():
+    obj = Volume(
+        catalog_name="dev",
+        schema_name="sources",
+        name="landing",
+        access_request_destinations=[
+            {"destination_type": "EMAIL", "destination_id": "owners@okube.ai"}
+        ],
+    )
+    (dest,) = [
+        r
+        for r in obj.additional_core_resources
+        if isinstance(r, AccessRequestDestinations)
+    ]
+    assert dest.securable.type == "VOLUME"
+    assert dest.securable.full_name == f"${{resources.{obj.resource_name}.id}}"
+    assert "access_request_destinations" not in obj.terraform_properties
 
 
 def test_terraform_plan():

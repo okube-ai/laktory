@@ -3,6 +3,9 @@ from pydantic import model_validator
 
 from laktory.models.grants.schemagrant import SchemaGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._accessrequestdestinationsmixin import (
+    AccessRequestDestinationsMixin,
+)
 from laktory.models.resources.databricks._policiesmixin import PoliciesMixin
 from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
@@ -19,7 +22,13 @@ class SchemaLookup(ResourceLookup):
     )
 
 
-class Schema(UnityCatalogMixin, TagsMixin, PoliciesMixin, SchemaBase):
+class Schema(
+    UnityCatalogMixin,
+    TagsMixin,
+    PoliciesMixin,
+    AccessRequestDestinationsMixin,
+    SchemaBase,
+):
     """
     A schema (also called a database) is the second layer of Unity Catalog's
     three-level namespace. A schema organizes tables and views.
@@ -136,6 +145,7 @@ class Schema(UnityCatalogMixin, TagsMixin, PoliciesMixin, SchemaBase):
         - schema grants
         - schema tags
         - schema policies
+        - schema access request destinations
         - tables
         - volumes
         """
@@ -151,6 +161,7 @@ class Schema(UnityCatalogMixin, TagsMixin, PoliciesMixin, SchemaBase):
             "schemas", f"${{resources.{self.resource_name}.id}}"
         )
         resources += self.get_policies_additional_resources("SCHEMA")
+        resources += self.get_access_request_destinations_additional_resources("SCHEMA")
 
         if self.volumes:
             for v in self.volumes:
@@ -168,4 +179,12 @@ class Schema(UnityCatalogMixin, TagsMixin, PoliciesMixin, SchemaBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["tables", "volumes", "grant", "grants", "tags", "policies"]
+        return [
+            "tables",
+            "volumes",
+            "grant",
+            "grants",
+            "tags",
+            "policies",
+            "access_request_destinations",
+        ]

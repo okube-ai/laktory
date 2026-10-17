@@ -1,5 +1,6 @@
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
+from laktory.models.resources.databricks import AccessRequestDestinations
 from laktory.models.resources.databricks import EntityTagAssignment
 from laktory.models.resources.databricks import PolicyInfo
 from laktory.models.resources.databricks import Table
@@ -57,6 +58,26 @@ def test_table_tags_and_policies():
     props = table.terraform_properties
     assert "tags" not in props
     assert props["column"][1] == {"name": "trader_email", "type": "string"}
+
+
+def test_table_access_request_destinations():
+    obj = Table(
+        catalog_name="dev",
+        schema_name="markets",
+        name="slv",
+        table_type="MANAGED",
+        access_request_destinations=[
+            {"destination_type": "EMAIL", "destination_id": "owners@okube.ai"}
+        ],
+    )
+    (dest,) = [
+        r
+        for r in obj.additional_core_resources
+        if isinstance(r, AccessRequestDestinations)
+    ]
+    assert dest.securable.type == "TABLE"
+    assert dest.securable.full_name == f"${{resources.{obj.resource_name}.id}}"
+    assert "access_request_destinations" not in obj.terraform_properties
 
 
 def test_terraform_plan():

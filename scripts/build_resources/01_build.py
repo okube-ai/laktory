@@ -63,6 +63,7 @@ ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
 # must still define the `xxx_`/computed-`xxx` override itself.
 PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_alert": {"parent_path"},
+    "databricks_alert_v2": {"parent_path"},
     "databricks_dashboard": {"parent_path", "file_path"},
     "databricks_dbfs_file": {"path", "source"},
     "databricks_file": {"path", "source"},
