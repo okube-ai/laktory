@@ -100,6 +100,40 @@ def test_hive_table(backend, tmp_path):
     }
 
 
+def test_get_current_properties_special_characters(tmp_path):
+    # Values containing `,` or `=`, e.g. Predictive Optimization's
+    # `delta.workloadBasedColumns.optimizerStatistics` (issue #699)
+    spark = get_spark_session()
+    spark.conf.set("spark.sql.sources.useV1SourceList", "delta")
+    sink = HiveMetastoreDataSink(
+        schema_name="default",
+        table_name="df_properties",
+        mode="OVERWRITE",
+        format="DELTA",
+        writer_kwargs={"path": tmp_path.as_posix()},
+        metadata=lk.models.TableDataSinkMetadata(properties={"lk.version": "0"}),
+    )
+    df0 = get_df0("PYSPARK")
+    sink.create(df0)
+    sink.write(df0)
+    sink.metadata.execute()
+    spark.sql(
+        "ALTER TABLE default.df_properties SET TBLPROPERTIES ("
+        "'lk.optimizerStatistics' = '`col_a`,`col_b`', 'lk.expression' = 'x=y')"
+    )
+
+    properties = sink.metadata.get_current().properties
+    assert properties["lk.optimizerStatistics"] == "`col_a`,`col_b`"
+    assert properties["lk.expression"] == "x=y"
+    assert properties["laktory.managedProperties"] == "lk.version"
+
+    # Re-applying the metadata leaves the unmanaged properties untouched
+    sink.metadata.execute()
+    assert sink.metadata.get_current().properties["lk.optimizerStatistics"] == (
+        "`col_a`,`col_b`"
+    )
+
+
 def test_set_tags_value_quoting(monkeypatch):
     mock_spark = MagicMock()
     monkeypatch.setattr("laktory.get_spark_session", lambda: mock_spark)
