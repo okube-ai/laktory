@@ -7,7 +7,7 @@
 * Added nested `ServicePrincipal.secrets`, `Group.roles` and `Credential.grant`/`grants` (with the new `CredentialGrant` model) to declare service principal secrets, group roles and service credential grants with their parent resource. [[#695](https://github.com/okube-ai/laktory/issues/695)]
 * Added `TagPolicy`, `EntityTagAssignment`, `WorkspaceEntityTagAssignment`, `PolicyInfo` (ABAC), `ArtifactAllowlist`, `ShareProvider` (Delta Sharing), `File` (Unity Catalog volume file) and `ExternalMetadata` resources, with nested `tags` on `Catalog`, `Schema`, `Volume`, `Table`, table columns, `App`, `Dashboard` and `Notebook`, nested ABAC `policies` on `Catalog`, `Schema` and `Table`, and nested `files` on `Volume`. [[#702](https://github.com/okube-ai/laktory/issues/702)]
 ### Fixed
-* n/a
+* Fixed resources nested in a schema or catalog (e.g. volume grants) being listed twice in the parent's `core_resources`. [[#702](https://github.com/okube-ai/laktory/issues/702)]
 ### Updated
 * Updated Databricks resources to Terraform provider 1.137.0: new fields on `Job`, `Pipeline`, `App`, `Grant`, `Grants`, `Cluster`, `Connection`, `ModelServing`, `Secret` and `MwsNccPrivateEndpointRule`, and some fields no longer required (e.g. `Secret.string_value`, now optional with `string_value_wo`). [[#695](https://github.com/okube-ai/laktory/issues/695)]
 ### Breaking changes

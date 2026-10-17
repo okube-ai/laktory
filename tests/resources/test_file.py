@@ -21,6 +21,7 @@ def test_file():
 
     f = File(source="./a.json", path="/Volumes/laktory/unit_tests/files/b.json")
     assert f.path == "/Volumes/laktory/unit_tests/files/b.json"
+    assert f.resource_name == "file-Volumes-laktory-unit_tests-files-b-json"
 
 
 def test_terraform_plan():

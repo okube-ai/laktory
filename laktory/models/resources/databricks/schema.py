@@ -154,11 +154,11 @@ class Schema(UnityCatalogMixin, TagsMixin, PoliciesMixin, SchemaBase):
 
         if self.volumes:
             for v in self.volumes:
-                resources += v.core_resources
+                resources += [v]
 
         if self.tables:
             for t in self.tables:
-                resources += t.core_resources
+                resources += [t]
 
         return resources
 

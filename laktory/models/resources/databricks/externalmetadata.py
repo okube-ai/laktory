@@ -12,6 +12,10 @@ class ExternalMetadata(ExternalMetadataBase):
     object upstream or a Power BI report downstream) used to extend Unity
     Catalog lineage beyond Databricks.
 
+    Set `owner` explicitly: when it is left empty, the Databricks provider
+    (1.137.0) reports the owner assigned by Databricks as an inconsistent
+    result and fails the apply.
+
     Examples
     --------
     ```py
@@ -25,6 +29,7 @@ class ExternalMetadata(ExternalMetadataBase):
     entity_type: Report
     description: Daily stock prices report
     url: https://app.powerbi.com/groups/finance/reports/stock-prices
+    owner: role-data-engineers
     '''
     metadata = models.resources.databricks.ExternalMetadata.model_validate_yaml(
         io.StringIO(metadata_yaml)

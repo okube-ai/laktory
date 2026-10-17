@@ -87,3 +87,30 @@ def test_terraform_plan():
     skip_terraform_plan()
     schema_simple = Schema(name="test", catalog_name="dev")
     plan_resource(schema_simple)
+
+
+def test_schema_nested_resources_not_duplicated():
+    schema = Schema(
+        catalog_name="dev",
+        name="sources",
+        volumes=[
+            {
+                "name": "landing",
+                "tags": {"purpose": "ingestion"},
+                "grants": [
+                    {"principal": "account users", "privileges": ["READ_VOLUME"]}
+                ],
+            }
+        ],
+        tables=[{"name": "brz", "table_type": "MANAGED", "tags": {"layer": "bronze"}}],
+    )
+    names = [r.resource_name for r in schema.core_resources]
+    assert len(names) == len(set(names))
+    assert names == [
+        "schema-dev-sources",
+        "volume-dev-sources-landing",
+        "grants-volume-dev-sources-landing",
+        "entity-tag-assignment-volumes-volume-dev-sources-landing-purpose",
+        "table-dev-sources-brz",
+        "entity-tag-assignment-tables-table-dev-sources-brz-layer",
+    ]

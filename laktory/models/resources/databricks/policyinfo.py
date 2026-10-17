@@ -15,6 +15,10 @@ class PolicyInfo(PolicyInfoBase):
     tags and the user identity. Policies can also be declared directly on
     `Catalog`, `Schema` and `Table` with their `policies` field.
 
+    A policy referencing a governed tag created in the same deployment may
+    fail with `Unknown tag policy key` while the new `TagPolicy` propagates;
+    deploying again resolves it.
+
     Examples
     --------
     ```py

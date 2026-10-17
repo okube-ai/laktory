@@ -100,6 +100,12 @@ class File(RenderableFileMixin, FileBase):
     def resource_key(self) -> str:
         return self.path
 
+    @property
+    def _resource_safe_key_has_type_id(self) -> bool:
+        # Paths often contain "file" (e.g. `profiles.json`), so only an explicit
+        # prefix counts
+        return self.resource_safe_key.startswith(f"{self.resource_type_id}-")
+
     # ----------------------------------------------------------------------- #
     # Terraform Properties                                                    #
     # ----------------------------------------------------------------------- #

@@ -165,7 +165,7 @@ class Catalog(TagsMixin, PoliciesMixin, CatalogBase):
         # Catalog schemas
         if self.schemas:
             for s in self.schemas:
-                resources += s.core_resources
+                resources += [s]
 
         # Workspace Bindings
         if self.workspace_bindings:
