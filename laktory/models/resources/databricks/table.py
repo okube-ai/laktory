@@ -4,6 +4,9 @@ from laktory._logger import get_logger
 from laktory.models.basemodel import PluralField
 from laktory.models.grants.tablegrant import TableGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._accessrequestdestinationsmixin import (
+    AccessRequestDestinationsMixin,
+)
 from laktory.models.resources.databricks._policiesmixin import PoliciesMixin
 from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
@@ -28,7 +31,13 @@ class TableColumn(_TableColumn):
     )
 
 
-class Table(UnityCatalogMixin, TagsMixin, PoliciesMixin, TableBase):
+class Table(
+    UnityCatalogMixin,
+    TagsMixin,
+    PoliciesMixin,
+    AccessRequestDestinationsMixin,
+    TableBase,
+):
     """
     A table resides in the third layer of Unity Catalog’s three-level namespace. It contains rows of data.
 
@@ -133,6 +142,7 @@ class Table(UnityCatalogMixin, TagsMixin, PoliciesMixin, TableBase):
         - table grants
         - table and columns tags
         - table policies
+        - table access request destinations
         """
         resources = []
 
@@ -151,6 +161,9 @@ class Table(UnityCatalogMixin, TagsMixin, PoliciesMixin, TableBase):
 
         # Table policies
         resources += self.get_policies_additional_resources("TABLE")
+
+        # Table access request destinations
+        resources += self.get_access_request_destinations_additional_resources("TABLE")
         return resources
 
     # ----------------------------------------------------------------------- #
@@ -168,5 +181,6 @@ class Table(UnityCatalogMixin, TagsMixin, PoliciesMixin, TableBase):
             "grants": True,
             "tags": True,
             "policies": True,
+            "access_request_destinations": True,
             "column": {"__all__": {"tags"}},
         }

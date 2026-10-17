@@ -1,6 +1,8 @@
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
+from laktory.models.resources.databricks import AccessRequestDestinations
 from laktory.models.resources.databricks import Catalog
+from laktory.models.resources.databricks import DataClassificationCatalogConfig
 from laktory.models.resources.databricks import EntityTagAssignment
 from laktory.models.resources.databricks import PolicyInfo
 
@@ -75,6 +77,33 @@ def test_catalog_tags_and_policies():
     assert policy.resource_name == "policy-info-catalog-dev-filter_region"
     assert "tags" not in cat.terraform_properties
     assert "policies" not in cat.terraform_properties
+
+
+def test_catalog_data_classification_and_access_requests():
+    cat = Catalog(
+        name="dev",
+        data_classification={
+            "auto_tag_configs": [
+                {
+                    "classification_tag": "class.email_address",
+                    "auto_tagging_mode": "AUTO_TAGGING_ENABLED",
+                }
+            ]
+        },
+        access_request_destinations=[
+            {"destination_type": "EMAIL", "destination_id": "owners@okube.ai"}
+        ],
+    )
+    resources = cat.additional_core_resources
+    (config,) = [r for r in resources if isinstance(r, DataClassificationCatalogConfig)]
+    assert config.parent == "catalogs/${resources.catalog-dev.name}"
+    (dest,) = [r for r in resources if isinstance(r, AccessRequestDestinations)]
+    assert dest.securable.type == "CATALOG"
+    assert dest.securable.full_name == "${resources.catalog-dev.id}"
+    assert dest.destinations[0].destination_id == "owners@okube.ai"
+    props = cat.terraform_properties
+    assert "data_classification" not in props
+    assert "access_request_destinations" not in props
 
 
 def test_terraform_plan():

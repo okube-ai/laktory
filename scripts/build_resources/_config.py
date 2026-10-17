@@ -8,6 +8,7 @@ from __future__ import annotations
 # The terraform_resource_type property still returns the original resource_key.
 RESOURCE_NAME_OVERRIDES: dict[str, str] = {
     "databricks_provider": "databricks_share_provider",
+    "databricks_rfa_access_request_destinations": "databricks_access_request_destinations",
     "databricks_sql_table": "databricks_table",
     # "databricks_quality_monitor": "databricks_data_profiling_monitor",
 }
@@ -16,7 +17,13 @@ RESOURCE_NAME_OVERRIDES: dict[str, str] = {
 DEFAULT_TARGETS: list[str] = [
     "databricks_access_control_rule_set",
     "databricks_account_federation_policy",
+    "databricks_ai_gateway_mcp_service",
+    "databricks_ai_gateway_model_provider_service",
+    "databricks_ai_gateway_model_service",
+    "databricks_ai_search_endpoint",
+    "databricks_ai_search_index",
     "databricks_alert",
+    "databricks_alert_v2",
     "databricks_app",
     "databricks_artifact_allowlist",
     "databricks_budget",
@@ -29,6 +36,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_current_user",
     "databricks_custom_app_integration",
     "databricks_dashboard",
+    "databricks_data_classification_catalog_config",
     "databricks_data_quality_monitor",
     "databricks_dbfs_file",
     "databricks_directory",
@@ -81,6 +89,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_recipient",
     "databricks_registered_model",
     "databricks_repo",
+    "databricks_rfa_access_request_destinations",
     "databricks_schema",
     "databricks_secret",
     "databricks_secret_acl",

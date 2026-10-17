@@ -21,10 +21,23 @@ from laktory.models.resources.databricks._renderablefile import RenderableFileMi
 from laktory.models.resources.databricks.accesscontrolruleset import (
     AccessControlRuleSet,
 )
+from laktory.models.resources.databricks.accessrequestdestinations import (
+    AccessRequestDestinations,
+)
 from laktory.models.resources.databricks.accountfederationpolicy import (
     AccountFederationPolicy,
 )
+from laktory.models.resources.databricks.aigatewaymcpservice import AiGatewayMcpService
+from laktory.models.resources.databricks.aigatewaymodelproviderservice import (
+    AiGatewayModelProviderService,
+)
+from laktory.models.resources.databricks.aigatewaymodelservice import (
+    AiGatewayModelService,
+)
+from laktory.models.resources.databricks.aisearchendpoint import AiSearchEndpoint
+from laktory.models.resources.databricks.aisearchindex import AiSearchIndex
 from laktory.models.resources.databricks.alert import Alert
+from laktory.models.resources.databricks.alertv2 import AlertV2
 from laktory.models.resources.databricks.app import App
 from laktory.models.resources.databricks.artifactallowlist import ArtifactAllowlist
 from laktory.models.resources.databricks.budget import Budget
@@ -39,6 +52,9 @@ from laktory.models.resources.databricks.customappintegration import (
     CustomAppIntegration,
 )
 from laktory.models.resources.databricks.dashboard import Dashboard
+from laktory.models.resources.databricks.dataclassificationcatalogconfig import (
+    DataClassificationCatalogConfig,
+)
 from laktory.models.resources.databricks.dataqualitymonitor import DataQualityMonitor
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
 from laktory.models.resources.databricks.directory import Directory
@@ -369,8 +385,17 @@ class StackResources(BaseModel):
     """
 
     databricks_accesscontrolrulesets: dict[str, AccessControlRuleSet] = {}
+    databricks_accessrequestdestinations: dict[str, AccessRequestDestinations] = {}
     databricks_accountfederationpolicies: dict[str, AccountFederationPolicy] = {}
+    databricks_aigatewaymcpservices: dict[str, AiGatewayMcpService] = {}
+    databricks_aigatewaymodelproviderservices: dict[
+        str, AiGatewayModelProviderService
+    ] = {}
+    databricks_aigatewaymodelservices: dict[str, AiGatewayModelService] = {}
+    databricks_aisearchendpoints: dict[str, AiSearchEndpoint] = {}
+    databricks_aisearchindexes: dict[str, AiSearchIndex] = {}
     databricks_alerts: dict[str, Alert] = {}
+    databricks_alertsv2: dict[str, AlertV2] = {}
     databricks_apps: dict[str, App] = {}
     databricks_artifactallowlists: dict[str, ArtifactAllowlist] = {}
     databricks_budgets: dict[str, Budget] = {}
@@ -383,6 +408,9 @@ class StackResources(BaseModel):
     databricks_currentusers: dict[str, CurrentUser] = {}
     databricks_customappintegrations: dict[str, CustomAppIntegration] = {}
     databricks_dashboards: dict[str, Dashboard] = {}
+    databricks_dataclassificationcatalogconfigs: dict[
+        str, DataClassificationCatalogConfig
+    ] = {}
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
     databricks_directories: dict[str, Directory] = {}
     databricks_entitlements: dict[str, Entitlements] = {}

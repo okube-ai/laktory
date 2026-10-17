@@ -5,6 +5,9 @@ from pydantic import Field
 
 from laktory.models.grants.volumegrant import VolumeGrant
 from laktory.models.resources.baseresource import ResourceLookup
+from laktory.models.resources.databricks._accessrequestdestinationsmixin import (
+    AccessRequestDestinationsMixin,
+)
 from laktory.models.resources.databricks._tagsmixin import TagsMixin
 from laktory.models.resources.databricks._unitycatalogmixin import UnityCatalogMixin
 from laktory.models.resources.databricks.file import File
@@ -19,7 +22,7 @@ class VolumeLookup(ResourceLookup):
     )
 
 
-class Volume(UnityCatalogMixin, TagsMixin, VolumeBase):
+class Volume(UnityCatalogMixin, TagsMixin, AccessRequestDestinationsMixin, VolumeBase):
     """
     Volumes are Unity Catalog objects representing a logical volume of storage
     in a cloud object storage location. Volumes provide capabilities for
@@ -142,6 +145,7 @@ class Volume(UnityCatalogMixin, TagsMixin, VolumeBase):
         """
         - volume grants
         - volume tags
+        - volume access request destinations
         - volume files
         """
         resources = []
@@ -155,6 +159,9 @@ class Volume(UnityCatalogMixin, TagsMixin, VolumeBase):
         resources += self.get_tags_additional_resources(
             "volumes", f"${{resources.{self.resource_name}.id}}"
         )
+
+        # Volume access request destinations
+        resources += self.get_access_request_destinations_additional_resources("VOLUME")
 
         # Volume files
         for f in self.files or []:
@@ -171,4 +178,4 @@ class Volume(UnityCatalogMixin, TagsMixin, VolumeBase):
 
     @property
     def terraform_excludes(self) -> list[str] | dict[str, bool]:
-        return ["files", "grant", "grants", "tags"]
+        return ["access_request_destinations", "files", "grant", "grants", "tags"]
