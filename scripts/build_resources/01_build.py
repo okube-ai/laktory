@@ -18,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from _config import DEFAULT_TARGETS  # noqa: E402
 from _config import RESOURCE_NAME_OVERRIDES  # noqa: E402
+from _config import SETTING_V2_EFFECTIVE_ATTRS  # noqa: E402
 from _config import base_file_stem  # noqa: E402
 from _config import resource_to_class_name  # noqa: E402
 
@@ -54,19 +55,6 @@ RESERVED_FIELD_RENAMES: dict[str, str] = {
 
 # Block types that are always excluded (Laktory infrastructure, not Databricks fields)
 ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
-
-# Settings v2 effective values the provider marks optional although they are
-# outputs. Must match TYPED_VALUES_WITH_OPTIONAL_EFFECTIVE in
-# laktory/models/resources/databricks/_settingv2mixin.py (checked by
-# tests/resources/test_settings.py against the provider schema).
-SETTING_V2_EFFECTIVE_ATTRS: set[str] = {
-    "effective_aibi_dashboard_embedding_access_policy",
-    "effective_aibi_dashboard_embedding_approved_domains",
-    "effective_automatic_cluster_update_workspace",
-    "effective_personal_compute",
-    "effective_restrict_workspace_admins",
-    "effective_workspace_label",
-}
 
 # Per-resource attribute exclusions: fields that override classes handle via
 # @computed_field. If the base emits these as regular fields, Pydantic raises

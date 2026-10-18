@@ -15,6 +15,19 @@ RESOURCE_NAME_OVERRIDES: dict[str, str] = {
     # "databricks_quality_monitor": "databricks_data_profiling_monitor",
 }
 
+# Settings v2 effective values the provider marks optional although they are
+# outputs. Must match TYPED_VALUES_WITH_OPTIONAL_EFFECTIVE in
+# laktory/models/resources/databricks/_settingv2mixin.py (checked by
+# tests/resources/test_settings.py against the provider schema).
+SETTING_V2_EFFECTIVE_ATTRS: set[str] = {
+    "effective_aibi_dashboard_embedding_access_policy",
+    "effective_aibi_dashboard_embedding_approved_domains",
+    "effective_automatic_cluster_update_workspace",
+    "effective_personal_compute",
+    "effective_restrict_workspace_admins",
+    "effective_workspace_label",
+}
+
 # Default generation targets
 DEFAULT_TARGETS: list[str] = [
     "databricks_access_control_rule_set",

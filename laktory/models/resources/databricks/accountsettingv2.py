@@ -25,6 +25,7 @@ class AccountSettingV2(SettingV2Mixin, AccountSettingV2Base):
     `GET /api/2.1/settings/{name}`: with provider 1.137.0, a subfield left out
     and filled in by Databricks fails the apply with "Provider produced
     inconsistent result".
+
     Requires an account-level provider.
 
     Examples

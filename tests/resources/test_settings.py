@@ -96,12 +96,15 @@ def test_setting_v2_effective_value():
 def test_setting_v2_effective_attributes_match_provider_schema():
     # The workaround and the generator skip list are written for the provider
     # schema: re-check them on each provider round trip
-    spec = importlib.util.spec_from_file_location("build", BUILD_DIR / "01_build.py")
-    build = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(build)
+    # Load the generator constants module alone: no sys.path or sys.modules change
+    spec = importlib.util.spec_from_file_location(
+        "laktory_build_resources_config", BUILD_DIR / "_config.py"
+    )
+    config = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(config)
 
     expected = {f"effective_{k}" for k in TYPED_VALUES_WITH_OPTIONAL_EFFECTIVE}
-    assert build.SETTING_V2_EFFECTIVE_ATTRS == expected
+    assert config.SETTING_V2_EFFECTIVE_ATTRS == expected
 
     schema = json.loads((BUILD_DIR / "databricks_schema.json").read_text())
     resources = next(iter(schema["provider_schemas"].values()))["resource_schemas"]
