@@ -1,6 +1,16 @@
 # Release History
 
-## [0.13.1] - Unreleased
+## [0.13.2] - Unreleased
+### Added
+* n/a
+### Fixed
+* n/a
+### Updated
+* n/a
+### Breaking changes
+* n/a
+
+## [0.13.1] - 2026-10-18
 ### Added
 * Added pipeline `parameters`, referenced as `${params.X}` in pipeline nodes and resolved at run time from job parameters (`LAKEFLOW_JOB`), Airflow DAG run `conf`, `pl.execute(params=...)` or `laktory run --param`, to reuse a single deployed pipeline across clients. Sink checkpoints are derived from the resolved sinks, so each client gets its own. [[#694](https://github.com/okube-ai/laktory/issues/694)]
 * Added `ServicePrincipalSecret` (service principal OAuth secret, whose generated `secret` can be referenced as `${resources.<key>.secret}`), `GroupRole`, `Credential` (Unity Catalog service credential), `SecretUc`, `PermissionAssignment`, `CustomAppIntegration` and `SystemSchema` resources. [[#695](https://github.com/okube-ai/laktory/issues/695)]
