@@ -36,7 +36,7 @@ class WorkspaceBaseEnvironmentBase(BaseModel, TerraformResource):
     )
     workspace_base_environment_id: str | None = Field(
         None,
-        description="The ID to use for the workspace base environment, which will become the final component of the resource name. This value should be 4-63 characters, and valid characters are /[a-z][0-9]-/",
+        description="The ID to use for the workspace base environment, which will become the final component of the resource name. This value should be 4-63 characters, and valid characters are `/[a-z][0-9]-/`",
     )
     provider_config: WorkspaceBaseEnvironmentProviderConfig | None = Field(
         None,

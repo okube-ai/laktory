@@ -10,6 +10,9 @@ class MetastoreAssignment(MetastoreAssignmentBase):
     """
     Databricks Metastore Assignment
 
+    To set the workspace default catalog, use `DefaultNamespaceSetting` (the
+    `default_catalog_name` attribute is deprecated by the provider).
+
     Examples
     --------
     ```py
@@ -20,7 +23,6 @@ class MetastoreAssignment(MetastoreAssignmentBase):
     assignment_yaml = '''
     metastore_id: ${resources.metastore-prod.metastore_id}
     workspace_id: 1234567890
-    default_catalog_name: dev
     '''
     assignment = models.resources.databricks.MetastoreAssignment.model_validate_yaml(
         io.StringIO(assignment_yaml)

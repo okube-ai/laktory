@@ -189,6 +189,7 @@ A Parameter is resolved at run time instead of at deployment, so that a single d
 name: pl-sales
 orchestrator:
   type: LAKEFLOW_JOB
+  serverless_environment_version: "3"
   max_concurrent_runs: 10
 parameters:
   client: {}              # required for each run
@@ -216,7 +217,7 @@ A parameter without a `default` must be set for each run, and a run with an unde
 
 Things to know:
 
-- Parameters are only valid in the pipeline `nodes` (sources, sinks, transformers) and its `root_path`. Values used at deployment (orchestrator, resources, grants, etc.) can't depend on them.
+- Parameters are only valid in the pipeline `nodes` (sources, sinks, transformers) and its `root_path`. Node names and values used at deployment (orchestrator, resources, grants, etc.) can't depend on them.
 - Sink checkpoints are derived from the resolved sink, so each client gets its own checkpoint. Expectations checkpoints are stored in the node `root_path`: use `${params.X}` in the pipeline `root_path` for streaming expectations.
 - To run several clients in parallel with a Lakeflow Job, set `max_concurrent_runs` on the orchestrator.
 - Declarative pipelines (`LAKEFLOW_DECLARATIVE_PIPELINE`, `SPARK_DECLARATIVE_PIPELINE`) don't support parameters: their tables are defined at deployment. Use Variables and deploy one pipeline per value instead.

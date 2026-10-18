@@ -54,7 +54,7 @@ class AlertV2(AlertV2Base):
         io.StringIO(alert_yaml)
     )
     print(alert.parent_path)
-    # > /.laktory/alerts
+    # > /Workspace/.laktory/alerts
     ```
 
     References
@@ -73,7 +73,7 @@ class AlertV2(AlertV2Base):
         None,
         description="""
         The path to a workspace folder (inside laktory root) containing the alert. If changed, the alert will be
-        recreated.
+        recreated. The folder must exist, e.g. created by a `Directory` or a workspace file of the stack.
         """,
         validation_alias=AliasChoices("parent_path", "dirpath", "parent_path_"),
         exclude=True,
@@ -86,7 +86,12 @@ class AlertV2(AlertV2Base):
             self.parent_path_ = ""
         self.parent_path_ = self.parent_path_.removeprefix("/")
         parent_path = Path(settings.workspace_root) / self.parent_path_
-        return parent_path.as_posix()
+        parent_path = parent_path.as_posix()
+        # The API returns the path with the `/Workspace` prefix: set it to avoid an
+        # inconsistent result after apply
+        if not parent_path.startswith("/Workspace/"):
+            parent_path = "/Workspace" + parent_path
+        return parent_path
 
     @model_validator(mode="after")
     def update_name(self) -> Any:

@@ -126,6 +126,14 @@ def test_validation():
             }
         )
 
+    # Used in a node name
+    with pytest.raises(ValidationError, match=r"use parameters in their name"):
+        models.Pipeline(
+            name="pl",
+            parameters={"client": {}},
+            nodes=[{"name": "brz_${params.client}", "source": {"table_name": "x"}}],
+        )
+
     # Run time root path is supported
     pl = _get_pl(root_path="/Volumes/dev/laktory/${params.client}")
     pl = pl.resolve_parameters({"client": "acme"})

@@ -203,7 +203,10 @@ def test_terraform_stack(monkeypatch, stack):
     assert data_default == {
         "terraform": {
             "required_providers": {
-                "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
+                "databricks": {
+                    "source": "databricks/databricks",
+                    "version": ">=1.137.0",
+                }
             }
         },
         "provider": {"databricks": {"host": "my-host", "token": "my-token"}},
@@ -329,7 +332,10 @@ def test_terraform_stack(monkeypatch, stack):
     assert data == {
         "terraform": {
             "required_providers": {
-                "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
+                "databricks": {
+                    "source": "databricks/databricks",
+                    "version": ">=1.137.0",
+                }
             }
         },
         "provider": {"databricks": {"host": "my-host", "token": "my-token"}},
@@ -455,7 +461,10 @@ def test_terraform_stack(monkeypatch, stack):
     assert data == {
         "terraform": {
             "required_providers": {
-                "databricks": {"source": "databricks/databricks", "version": ">=1.49"}
+                "databricks": {
+                    "source": "databricks/databricks",
+                    "version": ">=1.137.0",
+                }
             }
         },
         "provider": {"databricks": {"host": "my-host", "token": "my-token"}},

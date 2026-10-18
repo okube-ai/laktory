@@ -33,7 +33,6 @@ class Metastore(MetastoreBase):
       - CREATE_CATALOG
     workspace_assignments:
     - workspace_id: 1234567890
-      default_catalog_name: dev
     '''
     metastore = models.resources.databricks.Metastore.model_validate_yaml(
         io.StringIO(metastore_yaml)
@@ -102,7 +101,9 @@ class Metastore(MetastoreBase):
                 depends_on += [f"${{resources.{a.resource_name}}}"]
                 resources += [a]
 
-        options = {"provider": self.grants_provider}
+        options = {}
+        if self.grants_provider:
+            options["provider"] = self.grants_provider
         if depends_on:
             options["depends_on"] = depends_on
 

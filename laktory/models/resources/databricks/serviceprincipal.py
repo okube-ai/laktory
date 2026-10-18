@@ -31,6 +31,10 @@ class ServicePrincipal(ServicePrincipalBase):
     """
     Databricks account service principal
 
+    With a workspace provider on an identity federated workspace, destroying the
+    service principal only removes it from the workspace: the account service
+    principal remains. Use an account provider to delete it from the account.
+
     Examples
     --------
     ```py

@@ -141,6 +141,28 @@ def test_postgresbranch_creation_order():
     ]
 
 
+def test_catalog_grants_and_tags():
+    catalog = PostgresCatalog.model_validate(
+        {
+            "catalog_id": "app_pg",
+            "spec": {"postgres_database": "db"},
+            "tags": {"domain": "app"},
+            "grants": [{"principal": "account users", "privileges": ["USE_CATALOG"]}],
+        }
+    )
+    grants, tag = catalog.core_resources[1:]
+    depends_on = ["${resources.postgres-catalog-app_pg}"]
+
+    # UC objects use the catalog name: the Terraform `id` is the Lakebase path
+    assert grants.catalog == "app_pg"
+    assert grants.resource_options.depends_on == depends_on
+    assert tag.entity_type == "catalogs"
+    assert tag.entity_name == "app_pg"
+    assert tag.resource_options.depends_on == depends_on
+    assert "grants" not in catalog.terraform_properties
+    assert "tags" not in catalog.terraform_properties
+
+
 def test_catalog_and_synced_table_require_spec():
     with pytest.raises(ValueError):
         PostgresCatalog(catalog_id="app_pg")
