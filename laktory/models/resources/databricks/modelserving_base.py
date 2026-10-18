@@ -584,7 +584,7 @@ class ModelServingTelemetryConfigInferenceTableConfig(BaseModel):
         None,
         description="The name of a served model. It must be unique across an endpoint. If not specified, this field will default to `modelname-modelversion`. A served model name can consist of alphanumeric characters, dashes, and underscores",
     )
-    sampling_fraction: int | None = Field(None)
+    sampling_fraction: float | None = Field(None)
 
 
 class ModelServingTelemetryConfigTableNames(BaseModel):

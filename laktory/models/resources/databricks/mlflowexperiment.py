@@ -27,7 +27,6 @@ class MLflowExperiment(MlflowExperimentBase):
     exp_yaml = '''
     name: /.laktory/Sample
     artifact_location: dbfs:/tmp/my-experiment
-    description: My MLflow experiment description
     access_controls:
     - group_name: account users
       permission_level: CAN_MANAGE

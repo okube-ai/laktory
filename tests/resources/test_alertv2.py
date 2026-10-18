@@ -21,11 +21,11 @@ alert = AlertV2(
 
 def test_alertv2():
     assert alert.display_name == "[dev] My Alert"
-    assert alert.parent_path == "/.laktory/alerts"
+    assert alert.parent_path == "/Workspace/.laktory/alerts"
     assert alert.resource_name == "alert-v2-dev-_My_Alert"
     assert alert.terraform_resource_type == "databricks_alert_v2"
     props = alert.terraform_properties
-    assert props["parent_path"] == "/.laktory/alerts"
+    assert props["parent_path"] == "/Workspace/.laktory/alerts"
     assert "access_controls" not in props
 
     (permissions,) = alert.additional_core_resources

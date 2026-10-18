@@ -61,6 +61,7 @@ All paths are relative to the current file. Variables can appear in paths:
 | `${{ expr }}` | Python expression — evaluated at deploy time; supports conditionals |
 | `${resources.<key>.<prop>}` | Cross-reference another resource's runtime output (e.g. `.id`, `.name`) |
 | `${settings.name}` | Reuse a `laktory.settings` value (e.g. `settings.workspace_root`) elsewhere in the stack; also works inside `${{ }}` |
+| `${params.name}` | Pipeline parameter; resolved at **run time** (job parameters, Airflow `conf`, `pl.execute(params=...)`, `laktory run --param`); only valid in pipeline `nodes` and `root_path` (see Pipeline parameters below) |
 
 ```yaml
 catalog_name: ${vars.catalog}
@@ -537,6 +538,43 @@ sinks:
   '<id>'`, or reset the table). A table written before being shared has no writer column (e.g. several nodes
   writing to it before 0.13.0): writes and refreshes fail until it is dropped once (`refresh=RESET`, `reset_mode=DROP`).
 - Full guide: https://www.laktory.ai/concepts/sharedsinks/
+
+### Data Pipeline — Pipeline parameters (one deployed pipeline, many clients)
+
+Declare `parameters` and reference them as `${params.name}` in the nodes. The deployed config
+keeps the references; values are set for each run, and each resolved sink gets its own checkpoint.
+
+```yaml
+name: pl-sales
+orchestrator:
+  type: LAKEFLOW_JOB
+  serverless_environment_version: "3"
+  max_concurrent_runs: 10   # run several clients in parallel
+parameters:
+  client: {}                # no default: required for each run
+  region:
+    default: eu
+nodes:
+  - name: slv_sales
+    source:
+      table_name: brz_sales
+    sinks:
+      - schema_name: ${params.client}_silver
+        table_name: slv_sales_${params.region}
+```
+
+```bash
+laktory run --env dev --databricks-job pl-sales --param client=acme
+```
+
+- `LAKEFLOW_JOB`: one job parameter per pipeline parameter. `AIRFLOW`: DAG run `conf`. Python:
+  `pl.execute(params={"client": "acme"})`.
+- Only valid in `nodes` (sources, sinks, transformers) and `root_path`: not in node names, the
+  orchestrator or any value used at deployment (validation error).
+- Not supported by declarative orchestrators (`LAKEFLOW_DECLARATIVE_PIPELINE`,
+  `SPARK_DECLARATIVE_PIPELINE`): use `${vars.x}` and deploy one pipeline per value.
+- Not available inside `${{ }}` expressions (evaluated at deployment).
+- Reserved names: `filepath`, `selects`, `refresh`, `reset_mode`, `full_refresh`.
 
 ### Data Pipeline — Pipeline with Lakeflow Job orchestrator
 

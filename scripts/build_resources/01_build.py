@@ -116,6 +116,7 @@ FLOAT_FIELDS: frozenset[str] = frozenset(
         "autoscaling_limit_max_cu",  # Lakebase compute units (minimum 0.5)
         "autoscaling_limit_min_cu",
         "double_value",  # alert threshold: "double value to compare against integer and double results"
+        "sampling_fraction",  # model serving inference table sampling, between 0 and 1
         "spot_bid_max_price",  # Azure spot instance price in USD (can be e.g. 0.05)
     }
 )
@@ -213,6 +214,8 @@ def get_desc(
         or attr.get("description", "")
     )
     cleaned = re.sub(r"\[([^\]]+)\]\((?!https?://)[^)]+\.md[^)]*\)", r"\1", raw)
+    # Character classes such as `/[a-z][0-9]-/` render as Markdown reference links
+    cleaned = re.sub(r"(/?(?:\[[^\]\s]+\]){2,}[^\s/]*/?)", r"`\1`", cleaned)
     return cleaned.strip().replace('"', "'")
 
 

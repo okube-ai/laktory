@@ -30,8 +30,8 @@ class DatabricksProvider(BaseProvider, TerraformResource):
 
     source: str = Field("databricks/databricks", exclude=True)
     version: str = Field(
-        ">=1.49", exclude=True
-    )  # Required to support Databricks dashboard
+        ">=1.137.0", exclude=True
+    )  # Resource models are generated from this provider version
 
     account_id: str = Field(
         None,

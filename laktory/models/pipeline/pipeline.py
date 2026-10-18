@@ -384,6 +384,18 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 "`variables` instead and deploy one pipeline per value."
             )
 
+        # Node names identify nodes before parameters are resolved (execution plan,
+        # job tasks, `selects`)
+        names = sorted(
+            {n.name for n in self.nodes if n.name and PARAMETER_PATTERN.search(n.name)}
+        )
+        if names:
+            raise ValueError(
+                f"Nodes {names} of pipeline '{self.name}' use parameters in their name. "
+                "Node names identify nodes before parameters are resolved: use parameters "
+                "in sources, sinks and transformers instead."
+            )
+
         # Values consumed at deployment (orchestrator, resources, etc.) can't depend on
         # parameters. `root_path` is only used at run time, e.g. to store checkpoints.
         names = _find_parameters(
