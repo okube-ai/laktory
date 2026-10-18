@@ -7,16 +7,33 @@ from __future__ import annotations
 # Maps a resource_key to an alternate naming key used for class/file naming.
 # The terraform_resource_type property still returns the original resource_key.
 RESOURCE_NAME_OVERRIDES: dict[str, str] = {
+    "databricks_environments_default_workspace_base_environment": "databricks_default_workspace_base_environment",
+    "databricks_environments_workspace_base_environment": "databricks_workspace_base_environment",
     "databricks_provider": "databricks_share_provider",
     "databricks_rfa_access_request_destinations": "databricks_access_request_destinations",
     "databricks_sql_table": "databricks_table",
     # "databricks_quality_monitor": "databricks_data_profiling_monitor",
 }
 
+# Settings v2 effective values the provider marks optional although they are
+# outputs. Must match TYPED_VALUES_WITH_OPTIONAL_EFFECTIVE in
+# laktory/models/resources/databricks/_settingv2mixin.py (checked by
+# tests/resources/test_settings.py against the provider schema).
+SETTING_V2_EFFECTIVE_ATTRS: set[str] = {
+    "effective_aibi_dashboard_embedding_access_policy",
+    "effective_aibi_dashboard_embedding_approved_domains",
+    "effective_automatic_cluster_update_workspace",
+    "effective_personal_compute",
+    "effective_restrict_workspace_admins",
+    "effective_workspace_label",
+}
+
 # Default generation targets
 DEFAULT_TARGETS: list[str] = [
     "databricks_access_control_rule_set",
     "databricks_account_federation_policy",
+    "databricks_account_network_policy",
+    "databricks_account_setting_v2",
     "databricks_ai_gateway_mcp_service",
     "databricks_ai_gateway_model_provider_service",
     "databricks_ai_gateway_model_service",
@@ -31,6 +48,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_catalog",
     "databricks_cluster",
     "databricks_cluster_policy",
+    "databricks_compliance_security_profile_workspace_setting",
     "databricks_connection",
     "databricks_credential",
     "databricks_current_user",
@@ -39,9 +57,14 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_data_classification_catalog_config",
     "databricks_data_quality_monitor",
     "databricks_dbfs_file",
+    "databricks_default_namespace_setting",
     "databricks_directory",
+    "databricks_disable_legacy_features_setting",
+    "databricks_enhanced_security_monitoring_workspace_setting",
     "databricks_entitlements",
     "databricks_entity_tag_assignment",
+    "databricks_environments_default_workspace_base_environment",
+    "databricks_environments_workspace_base_environment",
     "databricks_external_location",
     "databricks_external_metadata",
     "databricks_file",
@@ -99,6 +122,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_recipient",
     "databricks_registered_model",
     "databricks_repo",
+    "databricks_restrict_workspace_admins_setting",
     "databricks_rfa_access_request_destinations",
     "databricks_schema",
     "databricks_secret",
@@ -111,6 +135,7 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_service_principal_secret",
     "databricks_share",
     "databricks_sql_endpoint",  # Warehouse
+    "databricks_sql_global_config",
     "databricks_sql_table",
     "databricks_storage_credential",
     "databricks_system_schema",
@@ -122,8 +147,11 @@ DEFAULT_TARGETS: list[str] = [
     "databricks_vector_search_index",
     "databricks_volume",
     "databricks_workspace_binding",
+    "databricks_workspace_conf",
     "databricks_workspace_entity_tag_assignment",
     "databricks_workspace_file",
+    "databricks_workspace_network_option",
+    "databricks_workspace_setting_v2",
 ]
 
 

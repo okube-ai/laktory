@@ -235,6 +235,8 @@ nav:
           - AccessControlRuleSet: api/models/resources/databricks/accesscontrolruleset.md
           - AccessRequestDestinations: api/models/resources/databricks/accessrequestdestinations.md
           - AccountFederationPolicy: api/models/resources/databricks/accountfederationpolicy.md
+          - AccountNetworkPolicy: api/models/resources/databricks/accountnetworkpolicy.md
+          - AccountSettingV2: api/models/resources/databricks/accountsettingv2.md
           - AiGatewayMcpService: api/models/resources/databricks/aigatewaymcpservice.md
           - AiGatewayModelProviderService: api/models/resources/databricks/aigatewaymodelproviderservice.md
           - AiGatewayModelService: api/models/resources/databricks/aigatewaymodelservice.md
@@ -249,6 +251,7 @@ nav:
           - api/models/resources/databricks/catalog.md
           - api/models/resources/databricks/cluster.md
           - ClusterPolicy: api/models/resources/databricks/clusterpolicy.md
+          - ComplianceSecurityProfileWorkspaceSetting: api/models/resources/databricks/compliancesecurityprofileworkspacesetting.md
           - Connection: api/models/resources/databricks/connection.md
           - Credential: api/models/resources/databricks/credential.md
           - CurrentUser: api/models/resources/databricks/currentuser.md
@@ -257,9 +260,13 @@ nav:
           - DataClassificationCatalogConfig: api/models/resources/databricks/dataclassificationcatalogconfig.md
           - DataQualityMonitor: api/models/resources/databricks/dataqualitymonitor.md
           - DbfsFile: api/models/resources/databricks/dbfsfile.md
+          - DefaultNamespaceSetting: api/models/resources/databricks/defaultnamespacesetting.md
+          - DefaultWorkspaceBaseEnvironment: api/models/resources/databricks/defaultworkspacebaseenvironment.md
           - api/models/resources/databricks/directory.md
           - Declarative Pipeline:
             - api/models/resources/databricks/pipeline.md
+          - DisableLegacyFeaturesSetting: api/models/resources/databricks/disablelegacyfeaturessetting.md
+          - EnhancedSecurityMonitoringWorkspaceSetting: api/models/resources/databricks/enhancedsecuritymonitoringworkspacesetting.md
           - Entitlements: api/models/resources/databricks/entitlements.md
           - EntityTagAssignment: api/models/resources/databricks/entitytagassignment.md
           - ExternalLocation: api/models/resources/databricks/externallocation.md
@@ -318,6 +325,7 @@ nav:
           - api/models/resources/databricks/recipient.md
           - RegisteredModel: api/models/resources/databricks/registeredmodel.md
           - api/models/resources/databricks/repo.md
+          - RestrictWorkspaceAdminsSetting: api/models/resources/databricks/restrictworkspaceadminssetting.md
           - api/models/resources/databricks/schema.md
           - api/models/resources/databricks/secret.md
           - SecretAcl: api/models/resources/databricks/secretacl.md
@@ -329,6 +337,7 @@ nav:
           - ServicePrincipalSecret: api/models/resources/databricks/serviceprincipalsecret.md
           - Share: api/models/resources/databricks/share.md
           - ShareProvider: api/models/resources/databricks/shareprovider.md
+          - SqlGlobalConfig: api/models/resources/databricks/sqlglobalconfig.md
           - StorageCredential: api/models/resources/databricks/storagecredential.md
           - SystemSchema: api/models/resources/databricks/systemschema.md
           - api/models/resources/databricks/table.md
@@ -340,9 +349,13 @@ nav:
           - VectorSearchIndex: api/models/resources/databricks/vectorsearchindex.md
           - api/models/resources/databricks/volume.md
           - api/models/resources/databricks/warehouse.md
+          - WorkspaceBaseEnvironment: api/models/resources/databricks/workspacebaseenvironment.md
+          - WorkspaceConf: api/models/resources/databricks/workspaceconf.md
           - WorkspaceFile: api/models/resources/databricks/workspacefile.md
           - WorkspaceBinding: api/models/resources/databricks/workspacebinding.md
           - WorkspaceEntityTagAssignment: api/models/resources/databricks/workspaceentitytagassignment.md
+          - WorkspaceNetworkOption: api/models/resources/databricks/workspacenetworkoption.md
+          - WorkspaceSettingV2: api/models/resources/databricks/workspacesettingv2.md
           - WorkspaceTree: api/models/resources/databricks/workspacetree.md
         - Providers:
           - BaseProvider: api/models/resources/providers/baseprovider.md

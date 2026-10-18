@@ -18,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from _config import DEFAULT_TARGETS  # noqa: E402
 from _config import RESOURCE_NAME_OVERRIDES  # noqa: E402
+from _config import SETTING_V2_EFFECTIVE_ATTRS  # noqa: E402
 from _config import base_file_stem  # noqa: E402
 from _config import resource_to_class_name  # noqa: E402
 
@@ -64,6 +65,8 @@ ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
 PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_alert": {"parent_path"},
     "databricks_alert_v2": {"parent_path"},
+    # Settings v2 effective values are outputs, although marked optional
+    "databricks_account_setting_v2": SETTING_V2_EFFECTIVE_ATTRS,
     "databricks_dashboard": {"parent_path", "file_path"},
     "databricks_dbfs_file": {"path", "source"},
     "databricks_file": {"path", "source"},
@@ -82,6 +85,7 @@ PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_query": {"parent_path"},
     "databricks_registered_model": {"full_name"},
     "databricks_workspace_file": {"path", "source"},
+    "databricks_workspace_setting_v2": SETTING_V2_EFFECTIVE_ATTRS,
 }
 
 # Irregular singular→plural mappings for PluralField

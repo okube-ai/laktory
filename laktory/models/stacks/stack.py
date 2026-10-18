@@ -27,6 +27,10 @@ from laktory.models.resources.databricks.accessrequestdestinations import (
 from laktory.models.resources.databricks.accountfederationpolicy import (
     AccountFederationPolicy,
 )
+from laktory.models.resources.databricks.accountnetworkpolicy import (
+    AccountNetworkPolicy,
+)
+from laktory.models.resources.databricks.accountsettingv2 import AccountSettingV2
 from laktory.models.resources.databricks.aigatewaymcpservice import AiGatewayMcpService
 from laktory.models.resources.databricks.aigatewaymodelproviderservice import (
     AiGatewayModelProviderService,
@@ -45,6 +49,9 @@ from laktory.models.resources.databricks.budgetpolicy import BudgetPolicy
 from laktory.models.resources.databricks.catalog import Catalog
 from laktory.models.resources.databricks.cluster import Cluster
 from laktory.models.resources.databricks.clusterpolicy import ClusterPolicy
+from laktory.models.resources.databricks.compliancesecurityprofileworkspacesetting import (
+    ComplianceSecurityProfileWorkspaceSetting,
+)
 from laktory.models.resources.databricks.connection import Connection
 from laktory.models.resources.databricks.credential import Credential
 from laktory.models.resources.databricks.currentuser import CurrentUser
@@ -57,7 +64,19 @@ from laktory.models.resources.databricks.dataclassificationcatalogconfig import 
 )
 from laktory.models.resources.databricks.dataqualitymonitor import DataQualityMonitor
 from laktory.models.resources.databricks.dbfsfile import DbfsFile
+from laktory.models.resources.databricks.defaultnamespacesetting import (
+    DefaultNamespaceSetting,
+)
+from laktory.models.resources.databricks.defaultworkspacebaseenvironment import (
+    DefaultWorkspaceBaseEnvironment,
+)
 from laktory.models.resources.databricks.directory import Directory
+from laktory.models.resources.databricks.disablelegacyfeaturessetting import (
+    DisableLegacyFeaturesSetting,
+)
+from laktory.models.resources.databricks.enhancedsecuritymonitoringworkspacesetting import (
+    EnhancedSecurityMonitoringWorkspaceSetting,
+)
 from laktory.models.resources.databricks.entitlements import Entitlements
 from laktory.models.resources.databricks.entitytagassignment import EntityTagAssignment
 from laktory.models.resources.databricks.externallocation import ExternalLocation
@@ -129,6 +148,9 @@ from laktory.models.resources.databricks.query import Query
 from laktory.models.resources.databricks.recipient import Recipient
 from laktory.models.resources.databricks.registeredmodel import RegisteredModel
 from laktory.models.resources.databricks.repo import Repo
+from laktory.models.resources.databricks.restrictworkspaceadminssetting import (
+    RestrictWorkspaceAdminsSetting,
+)
 from laktory.models.resources.databricks.schema import Schema
 from laktory.models.resources.databricks.secret import Secret
 from laktory.models.resources.databricks.secretscope import SecretScope
@@ -142,6 +164,7 @@ from laktory.models.resources.databricks.serviceprincipalsecret import (
 )
 from laktory.models.resources.databricks.share import Share
 from laktory.models.resources.databricks.shareprovider import ShareProvider
+from laktory.models.resources.databricks.sqlglobalconfig import SqlGlobalConfig
 from laktory.models.resources.databricks.storagecredential import StorageCredential
 from laktory.models.resources.databricks.systemschema import SystemSchema
 from laktory.models.resources.databricks.table import Table
@@ -154,11 +177,19 @@ from laktory.models.resources.databricks.vectorsearchendpoint import (
 from laktory.models.resources.databricks.vectorsearchindex import VectorSearchIndex
 from laktory.models.resources.databricks.volume import Volume
 from laktory.models.resources.databricks.warehouse import Warehouse
+from laktory.models.resources.databricks.workspacebaseenvironment import (
+    WorkspaceBaseEnvironment,
+)
 from laktory.models.resources.databricks.workspacebinding import WorkspaceBinding
+from laktory.models.resources.databricks.workspaceconf import WorkspaceConf
 from laktory.models.resources.databricks.workspaceentitytagassignment import (
     WorkspaceEntityTagAssignment,
 )
 from laktory.models.resources.databricks.workspacefile import WorkspaceFile
+from laktory.models.resources.databricks.workspacenetworkoption import (
+    WorkspaceNetworkOption,
+)
+from laktory.models.resources.databricks.workspacesettingv2 import WorkspaceSettingV2
 from laktory.models.resources.databricks.workspacetree import WorkspaceTree
 from laktory.models.resources.providers.awsprovider import AWSProvider
 from laktory.models.resources.providers.azureprovider import AzureProvider
@@ -399,6 +430,8 @@ class StackResources(BaseModel):
     databricks_accesscontrolrulesets: dict[str, AccessControlRuleSet] = {}
     databricks_accessrequestdestinations: dict[str, AccessRequestDestinations] = {}
     databricks_accountfederationpolicies: dict[str, AccountFederationPolicy] = {}
+    databricks_accountnetworkpolicies: dict[str, AccountNetworkPolicy] = {}
+    databricks_accountsettingsv2: dict[str, AccountSettingV2] = {}
     databricks_aigatewaymcpservices: dict[str, AiGatewayMcpService] = {}
     databricks_aigatewaymodelproviderservices: dict[
         str, AiGatewayModelProviderService
@@ -415,6 +448,9 @@ class StackResources(BaseModel):
     databricks_catalogs: dict[str, Catalog] = {}
     databricks_clusterpolicies: dict[str, ClusterPolicy] = {}
     databricks_clusters: dict[str, Cluster] = {}
+    databricks_compliancesecurityprofileworkspacesettings: dict[
+        str, ComplianceSecurityProfileWorkspaceSetting
+    ] = {}
     databricks_connections: dict[str, Connection] = {}
     databricks_credentials: dict[str, Credential] = {}
     databricks_currentusers: dict[str, CurrentUser] = {}
@@ -424,7 +460,17 @@ class StackResources(BaseModel):
         str, DataClassificationCatalogConfig
     ] = {}
     databricks_dbfsfiles: dict[str, DbfsFile] = {}
+    databricks_defaultnamespacesettings: dict[str, DefaultNamespaceSetting] = {}
+    databricks_defaultworkspacebaseenvironments: dict[
+        str, DefaultWorkspaceBaseEnvironment
+    ] = {}
     databricks_directories: dict[str, Directory] = {}
+    databricks_disablelegacyfeaturessettings: dict[
+        str, DisableLegacyFeaturesSetting
+    ] = {}
+    databricks_enhancedsecuritymonitoringworkspacesettings: dict[
+        str, EnhancedSecurityMonitoringWorkspaceSetting
+    ] = {}
     databricks_entitlements: dict[str, Entitlements] = {}
     databricks_entitytagassignments: dict[str, EntityTagAssignment] = {}
     databricks_pipelines: dict[str, DatabricksPipeline] = {}
@@ -481,6 +527,9 @@ class StackResources(BaseModel):
     databricks_recipients: dict[str, Recipient] = {}
     databricks_registeredmodels: dict[str, RegisteredModel] = {}
     databricks_repos: dict[str, Repo] = {}
+    databricks_restrictworkspaceadminssettings: dict[
+        str, RestrictWorkspaceAdminsSetting
+    ] = {}
     databricks_schemas: dict[str, Schema] = {}
     databricks_secrets: dict[str, Secret] = {}
     databricks_secretscopes: dict[str, SecretScope] = {}
@@ -492,6 +541,7 @@ class StackResources(BaseModel):
     databricks_serviceprincipalsecrets: dict[str, ServicePrincipalSecret] = {}
     databricks_shares: dict[str, Share] = {}
     databricks_shareproviders: dict[str, ShareProvider] = {}
+    databricks_sqlglobalconfigs: dict[str, SqlGlobalConfig] = {}
     databricks_storagecredentials: dict[str, StorageCredential] = {}
     databricks_systemschemas: dict[str, SystemSchema] = {}
     databricks_tables: dict[str, Table] = {}
@@ -502,11 +552,15 @@ class StackResources(BaseModel):
     databricks_vectorsearchindexes: dict[str, VectorSearchIndex] = {}
     databricks_volumes: dict[str, Volume] = {}
     databricks_warehouses: dict[str, Warehouse] = {}
+    databricks_workspacebaseenvironments: dict[str, WorkspaceBaseEnvironment] = {}
     databricks_workspacebindings: dict[str, WorkspaceBinding] = {}
+    databricks_workspaceconfs: dict[str, WorkspaceConf] = {}
     databricks_workspaceentitytagassignments: dict[
         str, WorkspaceEntityTagAssignment
     ] = {}
     databricks_workspacefiles: dict[str, WorkspaceFile | PythonPackage] = {}
+    databricks_workspacenetworkoptions: dict[str, WorkspaceNetworkOption] = {}
+    databricks_workspacesettingsv2: dict[str, WorkspaceSettingV2] = {}
     databricks_workspacetrees: dict[str, WorkspaceTree | PythonPackage] = {}
     pipelines: dict[str, Pipeline] = {}
     providers: dict[str, AWSProvider | AzureProvider | DatabricksProvider] = {}
