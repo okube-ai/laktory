@@ -16,7 +16,10 @@ class SettingV2Mixin:
     `effective_*` attribute is optional but not computed, Terraform expects
     the effective value to stay null and fails the apply ("Provider produced
     inconsistent result") when Databricks returns it: the requested value is
-    also sent as the effective value.
+    also sent as the effective value. It only matches what Databricks returns
+    when the typed value sets every subfield: a subfield Databricks fills in
+    (e.g. the `maintenance_window` of `automatic_cluster_update_workspace`)
+    still fails the apply.
     """
 
     @property

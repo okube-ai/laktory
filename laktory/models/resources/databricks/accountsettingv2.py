@@ -19,6 +19,12 @@ class AccountSettingV2(SettingV2Mixin, AccountSettingV2Base):
     resource doesn't reset the setting: the provider only drops it from the
     Terraform state, leaving the last value. Apply the default value before
     removing it to revert a change.
+
+    Typed values (e.g. `workspace_label`, `automatic_cluster_update_workspace`,
+    `restrict_workspace_admins`) must set every subfield, as returned by
+    `GET /api/2.1/settings/{name}`: with provider 1.137.0, a subfield left out
+    and filled in by Databricks fails the apply with "Provider produced
+    inconsistent result".
     Requires an account-level provider.
 
     Examples

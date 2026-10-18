@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from laktory.models.resources.databricks.workspacenetworkoption_base import *  # NOQA: F403 required for documentation
 from laktory.models.resources.databricks.workspacenetworkoption_base import (
     WorkspaceNetworkOptionBase,
@@ -34,6 +36,9 @@ class WorkspaceNetworkOption(WorkspaceNetworkOptionBase):
     * [Databricks serverless egress control](https://docs.databricks.com/aws/en/security/network/serverless-network-security/network-policies)
     * [Terraform databricks_workspace_network_option](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/workspace_network_option)
     """
+
+    # Required (base marks it optional)
+    workspace_id: int = Field(..., description="The workspace ID")
 
     # ----------------------------------------------------------------------- #
     # Resource Properties                                                     #

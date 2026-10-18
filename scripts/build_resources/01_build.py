@@ -55,12 +55,10 @@ RESERVED_FIELD_RENAMES: dict[str, str] = {
 # Block types that are always excluded (Laktory infrastructure, not Databricks fields)
 ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
 
-# Per-resource attribute exclusions: fields that override classes handle via
-# @computed_field. If the base emits these as regular fields, Pydantic raises
-# "override with a computed_field is incompatible".
-# Reminder: adding a field here only stops it being generated in *_base.py -
-# the hand-written subclass (e.g. laktory/models/resources/databricks/dashboard.py)
-# must still define the `xxx_`/computed-`xxx` override itself.
+# Settings v2 effective values the provider marks optional although they are
+# outputs. Must match TYPED_VALUES_WITH_OPTIONAL_EFFECTIVE in
+# laktory/models/resources/databricks/_settingv2mixin.py (checked by
+# tests/resources/test_settings.py against the provider schema).
 SETTING_V2_EFFECTIVE_ATTRS: set[str] = {
     "effective_aibi_dashboard_embedding_access_policy",
     "effective_aibi_dashboard_embedding_approved_domains",
@@ -70,6 +68,12 @@ SETTING_V2_EFFECTIVE_ATTRS: set[str] = {
     "effective_workspace_label",
 }
 
+# Per-resource attribute exclusions: fields that override classes handle via
+# @computed_field. If the base emits these as regular fields, Pydantic raises
+# "override with a computed_field is incompatible".
+# Reminder: adding a field here only stops it being generated in *_base.py -
+# the hand-written subclass (e.g. laktory/models/resources/databricks/dashboard.py)
+# must still define the `xxx_`/computed-`xxx` override itself.
 PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_alert": {"parent_path"},
     "databricks_alert_v2": {"parent_path"},

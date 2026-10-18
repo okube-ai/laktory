@@ -1,8 +1,17 @@
+import importlib.util
+import json
+from pathlib import Path
+
 import pytest
 
 from laktory._testing import plan_resource
 from laktory._testing import skip_terraform_plan
 from laktory.models.resources import databricks as dbks
+from laktory.models.resources.databricks._settingv2mixin import (
+    TYPED_VALUES_WITH_OPTIONAL_EFFECTIVE,
+)
+
+BUILD_DIR = Path(__file__).parents[2] / "scripts" / "build_resources"
 
 settings = [
     (
@@ -82,6 +91,33 @@ def test_setting_v2_effective_value():
     }
     setting = dbks.AccountSettingV2(name="abac_on_views", boolean_val={"value": True})
     assert "effective_boolean_val" not in setting.terraform_properties
+
+
+def test_setting_v2_effective_attributes_match_provider_schema():
+    # The workaround and the generator skip list are written for the provider
+    # schema: re-check them on each provider round trip
+    spec = importlib.util.spec_from_file_location("build", BUILD_DIR / "01_build.py")
+    build = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(build)
+
+    expected = {f"effective_{k}" for k in TYPED_VALUES_WITH_OPTIONAL_EFFECTIVE}
+    assert build.SETTING_V2_EFFECTIVE_ATTRS == expected
+
+    schema = json.loads((BUILD_DIR / "databricks_schema.json").read_text())
+    resources = next(iter(schema["provider_schemas"].values()))["resource_schemas"]
+    for name in ["databricks_workspace_setting_v2", "databricks_account_setting_v2"]:
+        attributes = resources[name]["block"]["attributes"]
+        optional_effective = {
+            k
+            for k, v in attributes.items()
+            if k.startswith("effective_") and v.get("optional")
+        }
+        assert optional_effective == expected
+
+
+def test_workspace_network_option_requires_workspace():
+    with pytest.raises(ValueError):
+        dbks.WorkspaceNetworkOption(network_policy_id="laktory-restricted")
 
 
 @pytest.mark.parametrize("cls,data,name,tf_type", settings)
