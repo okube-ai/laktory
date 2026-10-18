@@ -2,6 +2,8 @@ from .accesscontrol import AccessControl
 from .accesscontrolruleset import AccessControlRuleSet
 from .accessrequestdestinations import AccessRequestDestinations
 from .accountfederationpolicy import AccountFederationPolicy
+from .accountnetworkpolicy import AccountNetworkPolicy
+from .accountsettingv2 import AccountSettingV2
 from .aigatewaymcpservice import AiGatewayMcpService
 from .aigatewaymodelproviderservice import AiGatewayModelProviderService
 from .aigatewaymodelservice import AiGatewayModelService
@@ -16,6 +18,9 @@ from .budgetpolicy import BudgetPolicy
 from .catalog import Catalog
 from .cluster import Cluster
 from .clusterpolicy import ClusterPolicy
+from .compliancesecurityprofileworkspacesetting import (
+    ComplianceSecurityProfileWorkspaceSetting,
+)
 from .connection import Connection
 from .credential import Credential
 from .currentuser import CurrentUser
@@ -24,7 +29,13 @@ from .dashboard import Dashboard
 from .dataclassificationcatalogconfig import DataClassificationCatalogConfig
 from .dataqualitymonitor import DataQualityMonitor
 from .dbfsfile import DbfsFile
+from .defaultnamespacesetting import DefaultNamespaceSetting
+from .defaultworkspacebaseenvironment import DefaultWorkspaceBaseEnvironment
 from .directory import Directory
+from .disablelegacyfeaturessetting import DisableLegacyFeaturesSetting
+from .enhancedsecuritymonitoringworkspacesetting import (
+    EnhancedSecurityMonitoringWorkspaceSetting,
+)
 from .entitlements import Entitlements
 from .entitytagassignment import EntityTagAssignment
 from .externallocation import ExternalLocation
@@ -83,6 +94,7 @@ from .query import Query
 from .recipient import Recipient
 from .registeredmodel import RegisteredModel
 from .repo import Repo
+from .restrictworkspaceadminssetting import RestrictWorkspaceAdminsSetting
 from .schema import Schema
 from .secret import Secret
 from .secretacl import SecretAcl
@@ -94,6 +106,7 @@ from .serviceprincipalrole import ServicePrincipalRole
 from .serviceprincipalsecret import ServicePrincipalSecret
 from .share import Share
 from .shareprovider import ShareProvider
+from .sqlglobalconfig import SqlGlobalConfig
 from .storagecredential import StorageCredential
 from .systemschema import SystemSchema
 from .table import Table
@@ -105,7 +118,11 @@ from .vectorsearchendpoint import VectorSearchEndpoint
 from .vectorsearchindex import VectorSearchIndex
 from .volume import Volume
 from .warehouse import Warehouse
+from .workspacebaseenvironment import WorkspaceBaseEnvironment
 from .workspacebinding import WorkspaceBinding
+from .workspaceconf import WorkspaceConf
 from .workspaceentitytagassignment import WorkspaceEntityTagAssignment
 from .workspacefile import WorkspaceFile
+from .workspacenetworkoption import WorkspaceNetworkOption
+from .workspacesettingv2 import WorkspaceSettingV2
 from .workspacetree import WorkspaceTree

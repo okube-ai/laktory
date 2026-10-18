@@ -79,6 +79,8 @@ RESOURCE_STRUCTS: dict[str, dict] = {
 MARKDOWN_TARGETS: list[str] = [
     "databricks_access_control_rule_set",
     "databricks_account_federation_policy",
+    "databricks_account_network_policy",
+    "databricks_account_setting_v2",
     "databricks_ai_gateway_mcp_service",
     "databricks_ai_gateway_model_provider_service",
     "databricks_ai_gateway_model_service",
@@ -91,15 +93,21 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_budget",
     "databricks_budget_policy",
     "databricks_cluster_policy",
+    "databricks_compliance_security_profile_workspace_setting",
     "databricks_credential",
     "databricks_custom_app_integration",
     "databricks_dashboard",
     "databricks_data_classification_catalog_config",
     "databricks_data_quality_monitor",  # preview only
     "databricks_dbfs_file",
+    "databricks_default_namespace_setting",
     "databricks_directory",
+    "databricks_disable_legacy_features_setting",
+    "databricks_enhanced_security_monitoring_workspace_setting",
     "databricks_entitlements",
     "databricks_entity_tag_assignment",
+    "databricks_environments_default_workspace_base_environment",
+    "databricks_environments_workspace_base_environment",
     "databricks_external_location",
     "databricks_external_metadata",
     "databricks_file",
@@ -157,6 +165,7 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_recipient",
     "databricks_registered_model",
     "databricks_repo",
+    "databricks_restrict_workspace_admins_setting",
     "databricks_rfa_access_request_destinations",
     "databricks_secret",
     "databricks_secret_acl",
@@ -168,6 +177,7 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_service_principal_secret",
     "databricks_share",
     "databricks_sql_endpoint",
+    "databricks_sql_global_config",
     "databricks_sql_table",
     "databricks_storage_credential",
     "databricks_system_schema",
@@ -178,9 +188,18 @@ MARKDOWN_TARGETS: list[str] = [
     "databricks_vector_search_endpoint",
     "databricks_vector_search_index",
     "databricks_workspace_binding",
+    "databricks_workspace_conf",
     "databricks_workspace_entity_tag_assignment",
     "databricks_workspace_file",
+    "databricks_workspace_network_option",
+    "databricks_workspace_setting_v2",
 ]
+
+# Docs filename stems differing from the resource name
+MARKDOWN_DOC_STEMS: dict[str, str] = {
+    "databricks_compliance_security_profile_workspace_setting": "compliance_security_profile_setting",
+    "databricks_enhanced_security_monitoring_workspace_setting": "enhanced_security_monitoring_setting",
+}
 
 MAIN_TF_TEMPLATE = """\
 terraform {{
@@ -366,7 +385,9 @@ def parse_md_descriptions(md_source: str) -> dict[str, str]:
 
 def fetch_md_descriptions(resource_key: str, tag: str) -> dict[str, str]:
     """Fetch field descriptions from the provider docs markdown file."""
-    stem = resource_key.removeprefix("databricks_")
+    stem = MARKDOWN_DOC_STEMS.get(
+        resource_key, resource_key.removeprefix("databricks_")
+    )
     url = f"{GITHUB_RAW}/{tag}/docs/resources/{stem}.md"
     try:
         source = fetch_text(url)

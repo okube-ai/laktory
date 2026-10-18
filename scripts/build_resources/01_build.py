@@ -61,9 +61,20 @@ ALWAYS_SKIP_BLOCK_TYPES = {"provider_config"}
 # Reminder: adding a field here only stops it being generated in *_base.py -
 # the hand-written subclass (e.g. laktory/models/resources/databricks/dashboard.py)
 # must still define the `xxx_`/computed-`xxx` override itself.
+SETTING_V2_EFFECTIVE_ATTRS: set[str] = {
+    "effective_aibi_dashboard_embedding_access_policy",
+    "effective_aibi_dashboard_embedding_approved_domains",
+    "effective_automatic_cluster_update_workspace",
+    "effective_personal_compute",
+    "effective_restrict_workspace_admins",
+    "effective_workspace_label",
+}
+
 PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_alert": {"parent_path"},
     "databricks_alert_v2": {"parent_path"},
+    # Settings v2 effective values are outputs, although marked optional
+    "databricks_account_setting_v2": SETTING_V2_EFFECTIVE_ATTRS,
     "databricks_dashboard": {"parent_path", "file_path"},
     "databricks_dbfs_file": {"path", "source"},
     "databricks_file": {"path", "source"},
@@ -82,6 +93,7 @@ PER_RESOURCE_SKIP_ATTRS: dict[str, set[str]] = {
     "databricks_query": {"parent_path"},
     "databricks_registered_model": {"full_name"},
     "databricks_workspace_file": {"path", "source"},
+    "databricks_workspace_setting_v2": SETTING_V2_EFFECTIVE_ATTRS,
 }
 
 # Irregular singular→plural mappings for PluralField
