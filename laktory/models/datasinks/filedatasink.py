@@ -431,14 +431,8 @@ class FileDataSink(BaseDataSink):
             File Data Source
         """
 
-        # Spark writes JSON as JSON Lines (one object per line), while a `JSON`
-        # source reads each file as a single JSON document
-        fmt = self.format
-        if fmt == "JSON" and self.dataframe_backend == DataFrameBackends.PYSPARK:
-            fmt = "JSONL"
-
         source = FileDataSource(
-            path=self.path, format=fmt, dataframe_backend=self.dataframe_backend
+            path=self.path, format=self.format, dataframe_backend=self.dataframe_backend
         )
 
         if as_stream:

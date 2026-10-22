@@ -117,30 +117,6 @@ def assert_dfs_equal(result, expected, sort=True) -> None:
 # Spark                                                                       #
 # --------------------------------------------------------------------------- #
 
-# Test DataFrames have a few rows: Spark defaults (200 shuffle partitions, UI,
-# default Delta snapshot partitions) mostly add overhead. PySpark reads
-# `PYSPARK_SUBMIT_ARGS` when it starts the JVM, so these apply to the local session
-# whenever it is first built, without starting Spark for tests that don't need it.
-SPARK_TEST_CONFIG = {
-    "spark.sql.shuffle.partitions": "1",
-    "spark.default.parallelism": "1",
-    "spark.ui.enabled": "false",
-    "spark.databricks.delta.snapshotPartitions": "1",
-}
-os.environ.setdefault(
-    "PYSPARK_SUBMIT_ARGS",
-    " ".join(f"--conf {k}={v}" for k, v in SPARK_TEST_CONFIG.items())
-    + " pyspark-shell",
-)
-
-# Runtime SQL configuration for `spark-pipelines` runs (SDP orchestrator), which
-# start their own Spark session. Passed through the pipeline spec `configuration`:
-# extra `--conf` launch arguments break the Delta classpath of `spark-pipelines`.
-SDP_TEST_CONFIGURATION = {
-    "spark.sql.shuffle.partitions": "1",
-    "spark.databricks.delta.snapshotPartitions": "1",
-}
-
 
 @pytest.fixture()
 def spark_dbks():

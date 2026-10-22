@@ -87,24 +87,6 @@ def test_write(backend, fmt, tmp_path):
     sink.purge()
 
 
-def test_as_source_json(tmp_path):
-    # Spark writes JSON Lines: several rows in a single file must all be read back
-    df0 = get_df0("PYSPARK").to_native().coalesce(1)
-    sink = FileDataSink(
-        format="JSON", path=(tmp_path / "df.json").as_posix(), mode="OVERWRITE"
-    )
-    sink.write(df0)
-    assert len(list((tmp_path / "df.json").glob("*.json"))) == 1
-
-    source = sink.as_source()
-    assert source.format == "JSONL"
-    assert_dfs_equal(source.read(), df0)
-
-    # Polars writes a JSON document
-    sink = FileDataSink(format="JSON", path="df.json", dataframe_backend="POLARS")
-    assert sink.as_source().format == "JSON"
-
-
 def test_unknown_format():
     # Both backends accept unknown formats at construction; format validation happens at write time.
     # For PYSPARK, a warning is logged at write time and Spark handles the format natively.
