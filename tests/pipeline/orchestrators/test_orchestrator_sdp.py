@@ -25,9 +25,14 @@ from laktory import models
 from laktory._settings import settings
 from laktory._testing import StreamingSource
 
+from ...conftest import SDP_TEST_CONFIGURATION
 from ...conftest import assert_dfs_equal
 
-_SDP_ORCH = {"type": "SPARK_DECLARATIVE_PIPELINE", "database": "default"}
+_SDP_ORCH = {
+    "type": "SPARK_DECLARATIVE_PIPELINE",
+    "database": "default",
+    "configuration": SDP_TEST_CONFIGURATION,
+}
 
 # ---------------------------------------------------------------------------
 # Pipeline YAML fixtures
@@ -162,12 +167,16 @@ def _get_pl(tmp_path=""):
 
 def _get_pl_exec(tmp_path):
     data = _EXEC_PIPELINE_YAML.replace("{tmp_path}", str(tmp_path))
-    return models.Pipeline.model_validate_yaml(io.StringIO(data))
+    pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
+    pl.orchestrator.configuration = SDP_TEST_CONFIGURATION
+    return pl
 
 
 def _get_pl_stream(source_path):
     data = _STREAMING_PIPELINE_YAML.replace("{source_path}", str(source_path))
-    return models.Pipeline.model_validate_yaml(io.StringIO(data))
+    pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
+    pl.orchestrator.configuration = SDP_TEST_CONFIGURATION
+    return pl
 
 
 # ---------------------------------------------------------------------------
