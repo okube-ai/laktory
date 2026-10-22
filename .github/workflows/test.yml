@@ -94,5 +94,9 @@ jobs:
           DATABRICKS_ACCOUNT_ID: ${{ secrets.DATABRICKS_ACCOUNT_ID }}
 
 
+      - name: Run slow tests
+        if: ${{ env.run_tests == 'true' && success() && matrix.pyVersion == '3.12' && matrix.sparkVersion == '4' }}
+        run: make test-slow
+
 #      - name: Publish test coverage
 #        uses: codecov/codecov-action@v1

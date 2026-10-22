@@ -4,9 +4,9 @@
 ### Added
 * n/a
 ### Fixed
-* n/a
+* Fixed `FileDataSink.as_source()` on a PySpark `JSON` sink reading back only the first row of each file: Spark writes JSON Lines, so the source now uses the `JSONL` format. This also applies to pipeline nodes reading an upstream node with a PySpark `JSON` sink.
 ### Updated
-* n/a
+* Reduced the unit test suite run time with low-parallelism local Spark settings for tests. [[#698](https://github.com/okube-ai/laktory/issues/698)]
 ### Breaking changes
 * n/a
 

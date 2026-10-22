@@ -50,10 +50,11 @@ uv sync --all-extras     # all extras (dev, polars, pyspark, databricks, airflow
 ruff format ./
 ruff check ./
 
-# Tests (excludes Databricks Connect tests)
+# Tests (excludes Databricks Connect and slow tests)
 make test
 # or directly:
-uv run pytest -m "not databricks_connect" --cov=laktory tests
+uv run pytest -m "not databricks_connect and not slow" --cov=laktory tests
+make test-slow           # slow tests only
 
 # Build & publish
 uv build
