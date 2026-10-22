@@ -60,7 +60,7 @@ def test_display(backend, is_streaming, tmp_path):
         df = nw.from_native(df)
 
     # TODO: capture stdout to test output
-    df.laktory.display(n=2, timeout=1)
+    df.laktory.display(n=2, timeout=1, refresh_interval=0.1)
 
 
 @pytest.mark.parametrize("backend", ["POLARS", "PYSPARK"])
