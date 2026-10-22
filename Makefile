@@ -15,7 +15,10 @@ format-and-lint:
 	ruff check ./
 
 test:
-	uv run pytest -m "not databricks_connect" --durations=20 --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
+	uv run pytest -m "not databricks_connect and not slow" --durations=20 --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
+
+test-slow:
+	uv run pytest -m "slow and not databricks_connect" tests
 
 coverage:
 	open htmlcov/index.html

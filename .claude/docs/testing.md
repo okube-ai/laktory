@@ -6,6 +6,7 @@
 |--------|---------|--------------------------|
 | `databricks_connect` | Requires a live Databricks workspace (DatabricksSession or SDK calls) | No - excluded |
 | `parametrize` | Standard pytest parametrization | Yes |
+| `slow` | Slow tests with little local value (e.g. `test_streaming_incremental`: two `spark-pipelines` runs, always xfails locally) | No - excluded; run with `make test-slow`, and in CI by the 3.12 / Spark 4 matrix entry only |
 
 Tests that call `skip_dbks_test()` inside the test body also skip automatically when no credentials are available, without a marker.
 
@@ -18,7 +19,10 @@ Tests that call `skip_dbks_test()` inside the test body also skip automatically 
 ```bash
 make test
 # equivalent:
-uv run pytest -m "not databricks_connect" --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
+uv run pytest -m "not databricks_connect and not slow" --durations=20 --junitxml=junit/test-results.xml --cov=laktory --cov-report=xml --cov-report=html tests
+
+# slow tests only
+make test-slow
 ```
 
 ### Live tests (Databricks Connect)
@@ -68,6 +72,8 @@ All fixtures are defined in `tests/conftest.py`.
 | `wsclient` | fixture | Returns a `databricks.sdk.WorkspaceClient`, or `None` if no credentials |
 | `assert_dfs_equal(result, expected, sort=True)` | helper | Compares two DataFrames (any Narwhals-compatible backend) by columns and row content |
 | `skip_dbks_test()` | helper | Calls `pytest.skip()` if no Databricks credentials can be loaded; use at the top of live tests that don't use the `databricks_connect` marker |
+| `SPARK_TEST_CONFIG` | constant | Low-parallelism settings (1 shuffle partition, no UI, ...) for the local test Spark session, set through `PYSPARK_SUBMIT_ARGS` so Spark still only starts when a test needs it. An explicit `PYSPARK_SUBMIT_ARGS` takes precedence |
+| `SDP_TEST_CONFIGURATION` | constant | Runtime SQL settings for `spark-pipelines` runs, passed through the SDP orchestrator `configuration` (spec). Never pass them as extra `--conf` launch arguments: that breaks the Delta classpath of `spark-pipelines` |
 
 ---
 
@@ -138,8 +144,9 @@ Structure mirrors the feature surface of the orchestrator:
 | `is_streaming` | Sink picks up `as_stream` from source |
 | Expectations | `test_expectations_raise_on_sdp_execute` - monkeypatches `laktory.is_sdp_execute` to `True`, asserts `TypeError` |
 | CLI flags | `spark-pipelines` CLI args assembled correctly |
-| End-to-end execution | `test_execute`, `test_execute_declarative`, `test_streaming_incremental` - run the full pipeline locally via `orchestrator.execute()`; guarded by `is_sdp_available()` |
-| Sentinel file | `test_is_sdp_execute_true_during_execution` - `laktory_sdp.py` writes `.laktory_is_sdp_execute` to `root_path`; test reads it after execution. Robust to future changes in `is_sdp_compatible` |
+| End-to-end execution | `test_execute_transformers`, `test_execute_declarative`, `test_execute_shared_sink` - assert on one shared run of the full pipeline via `orchestrator.execute()` (module-scoped `e2e` fixture, see below); skipped when `spark-pipelines` is unavailable |
+| Sentinel file | `test_is_sdp_execute_true_during_execution` - `laktory_sdp.py` writes `.laktory_is_sdp_execute` to `root_path`; test reads it from the shared run. Robust to future changes in `is_sdp_compatible` |
+| Incremental streaming | `test_streaming_incremental` - two runs of its own pipeline; `slow` and xfail locally (#680) |
 
 **Key pattern - testing runtime flag detection:**
 ```python
@@ -152,6 +159,32 @@ def test_is_sdp_execute_flag_true(spark):
         _spark.conf.unset("laktory.executor")
 ```
 Always clean up with `try/finally`; the `spark` fixture is required to ensure a session exists.
+
+**End-to-end tests are coupled on purpose - one `spark-pipelines` run:**
+
+Each `spark-pipelines` run starts a new JVM and Spark session, a fixed cost of about 15s whatever the
+pipeline size. With one run per test, the end-to-end tests took ~94s, 40% of the whole suite.
+They now share a single run (~30s):
+
+- `_get_pl_e2e()` builds one pipeline combining every scenario: transformers (`brz`, `slv`, `slv_nw`,
+  `gld_join`), declarative datasets (`dec_slv`, `dec_slv_stream`, `dec_gld_view`) and shared sink
+  (`feed_a`, `feed_b` -> `shared`). The `dec_` prefix avoids node / table name clashes.
+- The module-scoped `e2e` fixture writes the source data, runs `execute(read_output=True)` once and
+  returns the pipeline, its nodes and the source DataFrame. `runtime_root` is patched with
+  `pytest.MonkeyPatch.context()` for the run only (`monkeypatch` is function-scoped), and the pipeline
+  has an explicit `root_path`, so assertions don't depend on settings.
+- Each test asserts on its own nodes only, so a wrong output still fails the test for that scenario.
+
+Trade-offs to keep in mind:
+
+- If the run itself fails (subprocess error), all coupled tests error together in the fixture setup:
+  read the setup traceback, not the individual tests.
+- A scenario that is broken (e.g. a new node failing in SDP) breaks every coupled test. To debug it in
+  isolation, temporarily build a pipeline with only its nodes.
+- Adding a scenario: add its nodes to `_get_pl_e2e()` (unique node and table names) and a test using
+  the `e2e` fixture, rather than a new `execute()` call. Only scenarios that can't share the run
+  (several runs, different sources or settings, expected failures) get their own pipeline, and are
+  marked `slow` when they have little local value.
 
 ### `test_orchestrator_lakeflow_declarative.py` - LakeflowDeclarativePipelineOrchestrator
 

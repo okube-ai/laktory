@@ -125,6 +125,7 @@ laktory = "laktory.cli.app:app"
 [tool.pytest.ini_options]
 markers = [
     "databricks_connect: marks tests requiring databricks_connect package to run",
+    "slow: marks slow tests excluded from `make test`, run by a single CI matrix entry",
 ]
 
 [tool.ruff]

@@ -15,6 +15,7 @@ Covers:
 
 import io
 import shutil
+from types import SimpleNamespace
 
 import narwhals as nw
 import pyspark.sql.functions as F
@@ -37,62 +38,6 @@ _SDP_ORCH = {
 # ---------------------------------------------------------------------------
 # Pipeline YAML fixtures
 # ---------------------------------------------------------------------------
-
-# Four-node pipeline exercising NATIVE transformer, NARWHALS transformer,
-# and a SQL JOIN across two upstream nodes.
-_EXEC_PIPELINE_YAML = """\
-name: pl-sdp-exec
-orchestrator:
-  type: SPARK_DECLARATIVE_PIPELINE
-  database: default
-nodes:
-  - name: brz
-    sources:
-    - format: JSON
-      path: {tmp_path}/brz_source/
-    sinks:
-      - table_name: brz
-    transformer:
-      dataframe_api: NATIVE
-      nodes:
-        - func_name: withColumn
-          func_args:
-            - zero
-            - F.lit(0.0)
-  - name: slv
-    sources:
-    - node_name: brz
-    sinks:
-      - table_name: slv
-    transformer:
-      dataframe_api: NATIVE
-      nodes:
-        - func_name: withColumn
-          func_args:
-            - x2
-            - F.col('x1')
-  - name: slv_nw
-    sources:
-    - node_name: brz
-    sinks:
-      - table_name: slv_nw
-    transformer:
-      dataframe_api: NARWHALS
-      nodes:
-        - func_name: with_columns
-          func_kwargs:
-            y1: x1
-  - name: gld_join
-    sources:
-    - node_name: slv
-    sinks:
-      - table_name: gld_join
-        format: PARQUET
-    transformer:
-      nodes:
-        - expr: "SELECT {df}.id, {df}.x2, {nodes.slv_nw}.y1 FROM {df} LEFT JOIN\
- {nodes.slv_nw} ON {df}.id = {nodes.slv_nw}.id"
-"""
 
 # Single streaming node - used for the incremental accumulation test.
 _STREAMING_PIPELINE_YAML = """\
@@ -165,13 +110,6 @@ def _get_pl(tmp_path=""):
     )
 
 
-def _get_pl_exec(tmp_path):
-    data = _EXEC_PIPELINE_YAML.replace("{tmp_path}", str(tmp_path))
-    pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
-    pl.orchestrator.configuration = SDP_TEST_CONFIGURATION
-    return pl
-
-
 def _get_pl_stream(source_path):
     data = _STREAMING_PIPELINE_YAML.replace("{source_path}", str(source_path))
     pl = models.Pipeline.model_validate_yaml(io.StringIO(data))
@@ -226,8 +164,6 @@ def test_spec_dict(monkeypatch, tmp_path):
 
 
 def test_launch_args(monkeypatch, tmp_path):
-    from types import SimpleNamespace
-
     from pyspark.errors import PySparkNotImplementedError
 
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
@@ -437,39 +373,140 @@ def test_cli_flags(tmp_path, monkeypatch, mocker):
 # ---------------------------------------------------------------------------
 # End-to-end execution
 # ---------------------------------------------------------------------------
+# Each `spark-pipelines` run starts a new JVM and Spark session (~15s), so the
+# end-to-end scenarios share a single pipeline run: the module-scoped `e2e`
+# fixture executes one pipeline combining all of them, and each test asserts on
+# its own nodes. See `.claude/docs/testing.md` (SDP end-to-end tests).
 
-
-@pytest.mark.skipif(
+_skip_no_sdp = pytest.mark.skipif(
     not is_sdp_available(),
     reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
 )
-def test_execute(tmp_path, monkeypatch, spark):
+
+
+def _get_pl_e2e(tmp_path):
     """
-    Four-node pipeline: NATIVE transformer, NARWHALS transformer, SQL JOIN node.
-    Output values are verified end-to-end for each node.
-    Sinks use the default DELTA format, except gld_join which covers PARQUET.
+    Combined end-to-end pipeline. Scenarios:
+      - transformers: NATIVE (brz, slv), NARWHALS (slv_nw) and SQL JOIN (gld_join,
+        PARQUET sink) nodes
+      - declarative: materialized view (dec_slv), streaming table (dec_slv_stream)
+        and temporary view (dec_gld_view)
+      - shared sink: two streaming nodes (feed_a, feed_b) appending to one table
     """
-    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
+    return models.Pipeline.model_validate(
+        {
+            "name": "pl-sdp-e2e",
+            "root_path": str(tmp_path / "pl-sdp-e2e"),
+            "orchestrator": _SDP_ORCH,
+            "nodes": [
+                # Transformers
+                {
+                    "name": "brz",
+                    "sources": [{"format": "JSON", "path": f"{tmp_path}/brz_source/"}],
+                    "sinks": [{"table_name": "brz"}],
+                    "transformer": {
+                        "dataframe_api": "NATIVE",
+                        "nodes": [
+                            {
+                                "func_name": "withColumn",
+                                "func_args": ["zero", "F.lit(0.0)"],
+                            }
+                        ],
+                    },
+                },
+                {
+                    "name": "slv",
+                    "sources": [{"node_name": "brz"}],
+                    "sinks": [{"table_name": "slv"}],
+                    "transformer": {
+                        "dataframe_api": "NATIVE",
+                        "nodes": [
+                            {
+                                "func_name": "withColumn",
+                                "func_args": ["x2", "F.col('x1')"],
+                            }
+                        ],
+                    },
+                },
+                {
+                    "name": "slv_nw",
+                    "sources": [{"node_name": "brz"}],
+                    "sinks": [{"table_name": "slv_nw"}],
+                    "transformer": {
+                        "dataframe_api": "NARWHALS",
+                        "nodes": [
+                            {"func_name": "with_columns", "func_kwargs": {"y1": "x1"}}
+                        ],
+                    },
+                },
+                {
+                    "name": "gld_join",
+                    "sources": [{"node_name": "slv"}],
+                    "sinks": [{"table_name": "gld_join", "format": "PARQUET"}],
+                    "transformer": {
+                        "nodes": [
+                            {
+                                "expr": "SELECT {df}.id, {df}.x2, {nodes.slv_nw}.y1 "
+                                "FROM {df} LEFT JOIN {nodes.slv_nw} "
+                                "ON {df}.id = {nodes.slv_nw}.id"
+                            }
+                        ]
+                    },
+                },
+                # Declarative datasets
+                {
+                    "name": "dec_slv",
+                    "sources": [{"node_name": "brz"}],
+                    "sinks": [{"table_name": "dec_slv"}],
+                },
+                {
+                    "name": "dec_slv_stream",
+                    "sources": [{"node_name": "brz", "as_stream": True}],
+                    "sinks": [{"table_name": "dec_slv_stream"}],
+                },
+                {
+                    "name": "dec_gld_view",
+                    "sources": [{"node_name": "dec_slv"}],
+                    "sinks": [{"pipeline_view_name": "dec_gld_view"}],
+                },
+                # Shared sink
+                *[
+                    {
+                        "name": name,
+                        "sources": [{"node_name": "brz", "as_stream": True}],
+                        "sinks": [{"table_name": "shared"}],
+                    }
+                    for name in ["feed_a", "feed_b"]
+                ],
+            ],
+        }
+    )
 
-    ss = StreamingSource("PYSPARK")
-    src_df = ss.write_to_json(tmp_path / "brz_source").to_native()
 
-    pl = _get_pl_exec(tmp_path)
+@pytest.fixture(scope="module")
+def e2e(tmp_path_factory):
+    """Single `spark-pipelines` run of the combined end-to-end pipeline"""
+    if not is_sdp_available():
+        pytest.skip("spark-pipelines CLI not available (requires PySpark 4.1+)")
 
-    pl.nodes = pl.nodes[0:4]
+    tmp_path = tmp_path_factory.mktemp("sdp_e2e")
+    src_df = StreamingSource("PYSPARK").write_to_json(tmp_path / "brz_source")
+    pl = _get_pl_e2e(tmp_path)
 
-    for node in pl.nodes:
-        data = node.model_dump(exclude_unset=True)
-        print(data)
+    # Module scope: `monkeypatch` is function-scoped, patch for the run only
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(settings, "runtime_root", str(tmp_path))
+        pl.orchestrator.execute(read_output=True)
 
-    # raise ValueError()
+    return SimpleNamespace(pl=pl, nodes=pl.nodes_dict, src_df=src_df.to_native())
 
-    pl.orchestrator.execute(read_output=True)
 
-    nd = pl.nodes_dict
+def test_execute_transformers(e2e):
+    """NATIVE, NARWHALS and SQL JOIN transformers: output values for each node"""
+    nd = e2e.nodes
 
     # brz: NATIVE PySpark transformer adds zero=0.0
-    df_brz = src_df.withColumn("zero", F.lit(0.0))
+    df_brz = e2e.src_df.withColumn("zero", F.lit(0.0))
     assert_dfs_equal(nd["brz"].output_df, df_brz)
 
     # slv: NATIVE PySpark transformer adds x2=x1
@@ -487,12 +524,13 @@ def test_execute(tmp_path, monkeypatch, spark):
     )
     assert_dfs_equal(nd["gld_join"].output_df, expected_gld)
 
+    # gld_join covers the PARQUET sink format
+    warehouse = e2e.pl.root_path.absolute() / "spark-warehouse"
+    assert (warehouse / "gld_join").exists()
+    assert not (warehouse / "gld_join" / "_delta_log").exists()
 
-@pytest.mark.skipif(
-    not is_sdp_available(),
-    reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
-)
-def test_is_sdp_execute_true_during_execution(tmp_path, monkeypatch, spark):
+
+def test_is_sdp_execute_true_during_execution(e2e):
     """
     Verifies that is_sdp_execute() returns True inside the spark-pipelines subprocess.
 
@@ -501,98 +539,44 @@ def test_is_sdp_execute_true_during_execution(tmp_path, monkeypatch, spark):
     config.  Asserting that file contains "true" is a direct, robust check that
     is independent of is_sdp_compatible or any expectation logic.
     """
-    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
-    StreamingSource("PYSPARK").write_to_json(tmp_path / "brz_source")
-
-    pl = _get_pl_exec(tmp_path)  # no expectations - pipeline completes successfully
-    pl.orchestrator.execute()
-
-    sentinel = pl.root_path / ".laktory_is_sdp_execute"
+    sentinel = e2e.pl.root_path / ".laktory_is_sdp_execute"
     assert sentinel.exists(), "laktory_sdp.py did not write the sentinel file"
     assert sentinel.read_text().strip() == "true"
 
 
-@pytest.mark.skipif(
-    not is_sdp_available(),
-    reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
-)
-def test_execute_declarative(tmp_path, monkeypatch, spark):
+def test_execute_declarative(e2e):
     """
-    Declarative pipeline: batch materialized_view, streaming table, temporary view.
-    Expectations are cleared so that the run completes without error (the incompatibility
-    is verified separately in test_expectations_raise_on_sdp_execute).
-    Output values verified for batch nodes; streaming table row count verified.
+    Declarative datasets: batch materialized_view, streaming table, temporary view.
+    Output values verified for the batch node; streaming table row count verified.
     """
-    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
+    nd = e2e.nodes
 
-    ss = StreamingSource("PYSPARK")
-    src_df = ss.write_to_json(tmp_path / "brz_source")
+    # dec_slv: pass-through node, output equals brz
+    df_brz = e2e.src_df.withColumn("zero", F.lit(0.0))
+    assert_dfs_equal(nd["dec_slv"].output_df, df_brz)
 
-    pl = _get_pl(tmp_path)
-    for node in pl.nodes:
-        node.expectations = []
-    pl.orchestrator.execute(read_output=True)
+    # dec_slv_stream: streaming table accumulates 3 rows from one run
+    assert nw.from_native(nd["dec_slv_stream"].output_df).collect().shape[0] == 3
 
-    nd = pl.nodes_dict
-
-    # brz and slv: pass-through nodes, output equals source data
-    assert_dfs_equal(nd["brz"].output_df, src_df)
-    assert_dfs_equal(nd["slv"].output_df, src_df)
-
-    # slv_stream: streaming table accumulates 3 rows from one run
-    assert nw.from_native(nd["slv_stream"].output_df).collect().shape[0] == 3
-
-    # gld_view: temporary pipeline view - not persisted to warehouse
-    assert nd["gld_view"].output_df is None
+    # dec_gld_view: temporary pipeline view - not persisted to warehouse
+    assert nd["dec_gld_view"].output_df is None
 
     # Tables default to Delta, as on Databricks
-    warehouse = pl.root_path.absolute() / "spark-warehouse"
-    for table in ["brz", "slv", "slv_stream"]:
+    warehouse = e2e.pl.root_path.absolute() / "spark-warehouse"
+    for table in ["brz", "dec_slv", "dec_slv_stream"]:
         assert (warehouse / table / "_delta_log").exists()
 
 
-@pytest.mark.skipif(
-    not is_sdp_available(),
-    reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
-)
-def test_execute_shared_sink(tmp_path, monkeypatch, spark):
+def test_execute_shared_sink(e2e):
     """Two streaming nodes append to the same Delta table through append flows"""
-    monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
-    StreamingSource("PYSPARK").write_to_json(tmp_path / "brz_source")
-
-    pl = models.Pipeline.model_validate(
-        {
-            "name": "pl-sdp-shared",
-            "orchestrator": _SDP_ORCH,
-            "nodes": [
-                {
-                    "name": "brz",
-                    "sources": [{"format": "JSON", "path": f"{tmp_path}/brz_source/"}],
-                    "sinks": [{"table_name": "brz"}],
-                },
-            ]
-            + [
-                {
-                    "name": name,
-                    "sources": [{"node_name": "brz", "as_stream": True}],
-                    "sinks": [{"table_name": "shared"}],
-                }
-                for name in ["feed_a", "feed_b"]
-            ],
-        }
-    )
-    pl.orchestrator.execute(read_output=True)
-
-    warehouse = pl.root_path.absolute() / "spark-warehouse"
+    warehouse = e2e.pl.root_path.absolute() / "spark-warehouse"
     assert (warehouse / "shared" / "_delta_log").exists()
-    df = pl.nodes_dict["feed_a"].output_df
+    df = e2e.nodes["feed_a"].output_df
     assert nw.from_native(df).collect().shape[0] == 6
 
 
-@pytest.mark.skipif(
-    not is_sdp_available(),
-    reason="spark-pipelines CLI not available (requires PySpark 4.1+)",
-)
+@pytest.mark.slow
+@_skip_no_sdp
 @pytest.mark.xfail(
     strict=False,
     reason=(
@@ -609,6 +593,9 @@ def test_streaming_incremental(tmp_path, monkeypatch, spark):
     Streaming SDP table accumulates new rows across successive pipeline runs.
     Run 1: source has 3 rows → streaming table has 3 rows.
     Run 2: 3 more rows appended to Delta source → streaming table has 6 rows.
+
+    Marked `slow` (two `spark-pipelines` runs, expected to fail locally): excluded
+    from `make test`, run by a single CI matrix entry to catch an upstream fix.
     """
     monkeypatch.setattr(settings, "runtime_root", str(tmp_path))
 
