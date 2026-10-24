@@ -29,8 +29,10 @@ def _jar_module(filename: str) -> str:
 class SparkDeclarativePipelineOrchestrator(PipelineChild):
     """
     Spark Declarative Pipeline used as an orchestrator to execute a Laktory
-    pipeline locally (via `spark-pipelines run`) or as a plain Databricks Job
-    task on DBR 16.x.
+    pipeline with open-source Spark 4.1+ (via `spark-pipelines run`), locally or
+    outside Databricks. Typically used to test locally a declarative pipeline
+    later deployed with `LakeflowDeclarativePipelineOrchestrator`, with the same
+    behavior.
 
     Generates three artifacts into `build_root/pipelines/`:
 
