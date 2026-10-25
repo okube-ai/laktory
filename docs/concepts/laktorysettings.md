@@ -43,15 +43,14 @@ Separately, `terraform.backend.databricks_workspace: true` stores Terraform stat
 
 ## Runtime Root
 
-`settings.runtime_root` is the root Laktory writes pipeline *runtime* artifacts to - today, that's exclusively Spark structured-streaming checkpoints (sink checkpoints and pipeline node expectations checkpoints). It defaults to:
+`settings.runtime_root` is the root Laktory writes pipeline *runtime* artifacts to - today, that's exclusively Spark structured-streaming checkpoints (sink checkpoints and pipeline node expectations checkpoints). Unless set explicitly, it defaults to:
 
-```
-/laktory/
-```
+- `/.laktory/` for pipelines with a `LAKEFLOW_JOB` or `LAKEFLOW_DECLARATIVE_PIPELINE` orchestrator: an absolute path resolved on DBFS on Databricks compute
+- `./.laktory/` otherwise (local execution, including the `SPARK_DECLARATIVE_PIPELINE` orchestrator), relative to the current working directory
 
-an absolute path that historically resolves through the DBFS FUSE mount on Databricks compute. Newer workspaces - serverless compute, or workspaces created after DBFS legacy features were disabled - don't have that mount, so this default may not work there. This default is likely to change in a future version; no replacement has been decided yet.
+Pipeline checkpoints are stored under `{runtime_root}/pipelines/{pipeline_name}/`.
 
-On a workspace without DBFS, set `runtime_root` explicitly to a path under a [Unity Catalog Volume](https://docs.databricks.com/en/sql/language-manual/sql-ref-volumes.html) - the best alternative, since Volumes are exposed via an automatic FUSE mount on all Databricks compute (classic and serverless), so checkpoint read/write/purge all work through the plain filesystem with nothing else to configure:
+New Databricks workspaces don't support DBFS, so the `/.laktory/` default doesn't work there. On a workspace without DBFS, set `runtime_root` explicitly to a path under a [Unity Catalog Volume](https://docs.databricks.com/en/sql/language-manual/sql-ref-volumes.html) - the best alternative, since Volumes are exposed via an automatic FUSE mount on all Databricks compute (classic and serverless), so checkpoint read/write/purge all work through the plain filesystem with nothing else to configure:
 
 ```yaml title="stack.yaml"
 settings:

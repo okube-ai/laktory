@@ -9,6 +9,7 @@ from laktory._cache import cache_dir
 DEFAULT_BUILD_ROOT = cache_dir.as_posix()
 DEFAULT_WORKSPACE_ROOT = "/.laktory/"
 DEFAULT_RUNTIME_ROOT = "./.laktory/"
+DEFAULT_DATABRICKS_RUNTIME_ROOT = "/.laktory/"
 
 
 class Settings(BaseSettings):

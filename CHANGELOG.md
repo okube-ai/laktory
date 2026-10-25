@@ -1,6 +1,6 @@
 # Release History
 
-## [0.13.2] - Unreleased
+## [0.14.0] - Unreleased
 ### Added
 * n/a
 ### Fixed
@@ -8,7 +8,7 @@
 ### Updated
 * Reduced the unit test suite run time with low-parallelism local Spark settings for tests. [[#698](https://github.com/okube-ai/laktory/issues/698)]
 ### Breaking changes
-* n/a
+* The default pipeline root (streaming checkpoints) no longer depends on the presence of a stack `settings:` block: `/.laktory/` with `LAKEFLOW_JOB` / `LAKEFLOW_DECLARATIVE_PIPELINE` orchestrators, `./.laktory/` otherwise (including `SPARK_DECLARATIVE_PIPELINE`). Stacks with a `settings:` block that doesn't set `runtime_root` previously used `/laktory/`: set `settings.runtime_root: /laktory/` to keep existing checkpoints. [[#716](https://github.com/okube-ai/laktory/issues/716)]
 
 ## [0.13.1] - 2026-10-18
 ### Added

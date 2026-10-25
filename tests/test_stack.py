@@ -823,6 +823,44 @@ def test_stack_settings(monkeypatch):
     assert settings.runtime_root == custom_root
 
 
+@pytest.mark.parametrize(
+    "orchestrator,expected",
+    [
+        (
+            {"type": "LAKEFLOW_JOB", "serverless_environment_version": "4"},
+            "/.laktory/pipelines/pl",
+        ),
+        (
+            {"type": "LAKEFLOW_DECLARATIVE_PIPELINE", "catalog": "c", "schema": "s"},
+            "/.laktory/pipelines/pl",
+        ),
+        ({"type": "SPARK_DECLARATIVE_PIPELINE"}, ".laktory/pipelines/pl"),
+        (None, ".laktory/pipelines/pl"),
+    ],
+)
+@pytest.mark.parametrize(
+    "stack_settings",
+    [None, {"dataframe_backend": "PYSPARK"}, {"runtime_root": "/custom/"}],
+)
+def test_stack_settings_runtime_root_default(
+    monkeypatch, orchestrator, expected, stack_settings
+):
+    monkeypatch.setattr(settings, "runtime_root", settings.runtime_root)
+
+    pl = {"name": "pl", "nodes": [{"name": "n"}]}
+    if orchestrator:
+        pl["orchestrator"] = orchestrator
+    stack = {"name": "s", "resources": {"pipelines": {"pl": pl}}}
+    if stack_settings:
+        stack["settings"] = stack_settings
+
+    stack = models.Stack.model_validate(stack)
+
+    if stack_settings and "runtime_root" in stack_settings:
+        expected = "/custom/pipelines/pl"
+    assert stack.resources.pipelines["pl"].root_path.as_posix() == expected
+
+
 def test_stack_settings_vars_construction(monkeypatch):
     """#617: settings.workspace_root using ${vars.x} stays an unresolved
     template right after Stack construction - same as any other templated
