@@ -191,7 +191,7 @@ def test_stack_to_terraform_cli_vars_override_env_var(monkeypatch, stack):
 
 def test_terraform_stack(monkeypatch, stack):
     # Mock laktory version to account for dynamically changing value
-    lk.__version__ = "<version>"
+    monkeypatch.setattr(lk, "__version__", "<version>")
 
     # To prevent from exposing sensitive data, we overwrite some env vars
     monkeypatch.setenv("DATABRICKS_HOST", "my-host")
