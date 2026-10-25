@@ -208,6 +208,14 @@ tell a legacy workspace from a new one: no build-time failure.
    `settings.runtime_root` defaults to `None`, `Pipeline.root_path` substitutes `/laktory/` for
    Databricks orchestrators, SDP (local) keeps `./.laktory/`. Upgrade note: set `runtime_root`
    explicitly to keep existing checkpoints.
+   **Done (#716): aligned on `/.laktory/` instead** - the default since v0.10.0 for stacks without
+   a `settings:` block (all quickstarts, DAB), consistent with `workspace_root` and `./.laktory/`.
+   Only stacks with a `settings:` block not setting `runtime_root` move (from `/laktory/`).
+3. **Follow-up - scope checkpoints by stack / env (decide with A4, 0.14)**: the root is
+   `{runtime_root}/pipelines/{pipeline}/`, so dev and prod of a stack sharing a workspace with
+   the same pipeline name share streaming checkpoints. Scoping like A4
+   (`/.laktory/{stack}/{env}/pipelines/{pipeline}/`) fixes it, but moving checkpoints restarts
+   every stream (unlike A4's deployed files): if done, a single checkpoint move for everyone.
 
 ## A14 — Quickstarts on a Unity Catalog Volume
 

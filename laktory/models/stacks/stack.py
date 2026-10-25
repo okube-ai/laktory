@@ -366,12 +366,13 @@ class LaktorySettings(BaseModel):
         ),
     )
     runtime_root: str = Field(
-        "/laktory/",
+        None,
         description=(
             "Laktory cache root directory. Used when a pipeline needs to write "
-            "checkpoint files. The default assumes a DBFS FUSE mount, which is "
-            "unavailable on newer/serverless Databricks workspaces - on those, set "
-            "this explicitly to a Unity Catalog Volume path instead, e.g. "
+            "checkpoint files. Default: `/.laktory/` (DBFS on Databricks) for "
+            "`LAKEFLOW_JOB` and `LAKEFLOW_DECLARATIVE_PIPELINE` orchestrators, "
+            "`./.laktory/` otherwise. On workspaces without DBFS, set this to a Unity "
+            "Catalog Volume path instead, e.g. "
             "`/Volumes/{catalog}/{schema}/{volume}/{path}/`. See "
             "[Laktory Settings](../../../concepts/laktorysettings.md#runtime-root)."
         ),

@@ -14,6 +14,7 @@ from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
+from laktory._settings import DEFAULT_DATABRICKS_RUNTIME_ROOT
 from laktory._settings import DEFAULT_RUNTIME_ROOT
 from laktory._settings import settings
 from laktory.models import UnityCatalogDataSink
@@ -764,11 +765,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
                 (
                     LakeflowDeclarativePipelineOrchestrator,
                     LakeflowJobOrchestrator,
-                    SparkDeclarativePipelineOrchestrator,
                 ),
             )
         ):
-            root = "/.laktory/"
+            root = DEFAULT_DATABRICKS_RUNTIME_ROOT
 
         return Path(root) / "pipelines" / self.safe_name
 
