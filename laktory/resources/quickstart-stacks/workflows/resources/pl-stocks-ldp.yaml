@@ -19,7 +19,7 @@ orchestrator:
   schema: default
   libraries:
   - notebook:
-      path: /.laktory/notebooks/laktory_ldp.py
+      path: ${settings.workspace_root}notebooks/laktory_ldp.py
 
 # Define nodes (each node is a table or a view)
 nodes:

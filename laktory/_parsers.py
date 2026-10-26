@@ -327,7 +327,7 @@ def _resolve_current_user(name, vars, objs):
     """Resolve a `${current_user.<name>}` reference.
 
     `laktory._current_user.current_user` is populated by `Stack` (see
-    `Stack._resolve_user_root` in `laktory/models/stacks/stack.py`) before
+    `Stack._resolve_workspace_root` in `laktory/models/stacks/stack.py`) before
     the general variable-resolution pass runs, so by the time this is
     called the value should already be set. Returns the raw template
     unresolved (matching `${settings.x}`'s behavior) if it isn't - e.g. when

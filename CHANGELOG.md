@@ -2,12 +2,15 @@
 
 ## [0.14.0] - Unreleased
 ### Added
-* n/a
+* Added environment-specific Laktory settings (`environments.{env}.settings`), merged field by field over the stack `settings`, e.g. to deploy under `workspace_root: user_root` in a development environment only.
 ### Fixed
+* Fixed `settings.workspace_root` set to a `${vars.x}` variable resolving to `user_root` not being resolved to the user root.
+* Fixed building several environments of the same stack in one process (e.g. `stack.to_terraform(env_name="dev")` then `"prd"`) leaking variables and settings of the first environment into the next ones.
 * Fixed `FileDataSink.as_source()` on a PySpark `JSON` sink reading back only the first row of each file: Spark writes JSON Lines, so the source now uses the `JSONL` format. This also applies to pipeline nodes reading an upstream node with a PySpark `JSON` sink.
 ### Updated
 * Reduced the unit test suite run time with low-parallelism local Spark settings for tests. [[#698](https://github.com/okube-ai/laktory/issues/698)]
 ### Breaking changes
+* Inside a stack, `settings.workspace_root` now defaults to `/.laktory/{stack_name}/{env_name}/` (`/.laktory/{stack_name}/` without environment) instead of `/.laktory/`, so that stacks and environments deployed to the same workspace don't collide. Deployed notebooks, workspace files, dashboards, queries, alerts and pipeline config files move on the next deploy (recreated, with new resource names). Set `settings.workspace_root: /.laktory/` to keep the previous layout. Standalone pipelines (no stack) and `LAKTORY_WORKSPACE_ROOT` are unchanged.
 * The default pipeline root (streaming checkpoints) no longer depends on the presence of a stack `settings:` block: `/.laktory/` with `LAKEFLOW_JOB` / `LAKEFLOW_DECLARATIVE_PIPELINE` orchestrators, `./.laktory/` otherwise (including `SPARK_DECLARATIVE_PIPELINE`). Stacks with a `settings:` block that doesn't set `runtime_root` previously used `/laktory/`: set `settings.runtime_root: /laktory/` to keep existing checkpoints. [[#716](https://github.com/okube-ai/laktory/issues/716)]
 
 ## [0.13.1] - 2026-10-18

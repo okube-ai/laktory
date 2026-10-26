@@ -4,7 +4,7 @@ class CurrentUser:
 
     `None` until a `Stack` build/preview/deploy/validate finds a
     `${current_user.x}` reference somewhere in the stack and resolves it via
-    a live Databricks SDK call (see `Stack._resolve_user_root` in
+    a live Databricks SDK call (see `Stack._resolve_workspace_root` in
     `laktory/models/stacks/stack.py`) - never auto-injected or eagerly
     fetched, to avoid a surprise network call for stacks that don't
     reference it.

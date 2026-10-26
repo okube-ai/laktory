@@ -56,7 +56,7 @@ dictionaries with three levels: `resource_type.resource_name.resource_properties
 The `variables` attribute declares variables that can be used to parameterize a model declaration. More details can be found [here](variables.md).
 
 ### Environments
-The `environments` attribute defines environment-specific properties for `config`, `resources`, or `variables`. Each
+The `environments` attribute defines environment-specific properties for `resources`, `variables`, `settings` or `terraform`. Each
 environment is structured similarly to the root and overwrites the default values at the root level.
 
 For example, both the `dev` and `prod` environments will include a pipeline named `pl-stock-prices` with an associated 
@@ -73,6 +73,8 @@ settings:
 ```
 
 Settings values can reference [variables](variables.md) via `${vars.x}`, and are themselves reusable elsewhere in the stack via `${settings.x}` (see [Variables - Settings](variables.md#settings)).
+
+Environment-specific settings, under `environments.{env}.settings`, are merged field by field over the stack `settings` (see [Laktory Settings - Environment Settings](laktorysettings.md#environment-settings)).
 
 ### Backend configuration
 The `terraform` block attributes define the Infrastructure-as-Code (IaC) configuration, and how to 

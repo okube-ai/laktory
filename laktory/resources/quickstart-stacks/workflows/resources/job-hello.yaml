@@ -3,7 +3,7 @@ name: job-hello
 tasks:
   - task_key: print_hello
     notebook_task:
-      notebook_path: /.laktory/notebooks/job_hello.py
+      notebook_path: ${settings.workspace_root}notebooks/job_hello.py
 
 access_controls:
   - group_name: users
