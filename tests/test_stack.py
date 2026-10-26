@@ -279,13 +279,13 @@ def test_terraform_stack(monkeypatch, stack):
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 },
-                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "permissions-workspace-file-laktory-unit-testing-pipelines-pl-stock-prices-ut-stack-json": {
                     "access_control": [
                         {"group_name": "users", "permission_level": "CAN_READ"}
                     ],
-                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "workspace_file_path": "/.laktory/unit-testing/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
+                        "databricks_workspace_file.workspace-file-laktory-unit-testing-pipelines-pl-stock-prices-ut-stack-json"
                     ],
                     "provider": "databricks",
                 },
@@ -298,7 +298,7 @@ def test_terraform_stack(monkeypatch, stack):
                         "laktory.pipeline_name": "pl-stock-prices-ut-stack",
                         "laktory.executor": "LDP",
                         "laktory.requirements": '["laktory==<version>"]',
-                        "laktory.config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "laktory.config_filepath": "/Workspace/.laktory/unit-testing/pipelines/pl-stock-prices-ut-stack.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
                     "library": [
@@ -308,9 +308,9 @@ def test_terraform_stack(monkeypatch, stack):
                 }
             },
             "databricks_workspace_file": {
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "workspace-file-laktory-unit-testing-pipelines-pl-stock-prices-ut-stack-json": {
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/unit-testing/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 },
@@ -408,13 +408,13 @@ def test_terraform_stack(monkeypatch, stack):
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 },
-                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "permissions-workspace-file-laktory-unit-testing-dev-pipelines-pl-stock-prices-ut-stack-json": {
                     "access_control": [
                         {"group_name": "users", "permission_level": "CAN_READ"}
                     ],
-                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "workspace_file_path": "/.laktory/unit-testing/dev/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
+                        "databricks_workspace_file.workspace-file-laktory-unit-testing-dev-pipelines-pl-stock-prices-ut-stack-json"
                     ],
                     "provider": "databricks",
                 },
@@ -427,7 +427,7 @@ def test_terraform_stack(monkeypatch, stack):
                         "laktory.pipeline_name": "pl-stock-prices-ut-stack",
                         "laktory.executor": "LDP",
                         "laktory.requirements": '["laktory==<version>"]',
-                        "laktory.config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "laktory.config_filepath": "/Workspace/.laktory/unit-testing/dev/pipelines/pl-stock-prices-ut-stack.json",
                     },
                     "name": "pl-stock-prices-ut-stack",
                     "library": [
@@ -437,9 +437,9 @@ def test_terraform_stack(monkeypatch, stack):
                 }
             },
             "databricks_workspace_file": {
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "workspace-file-laktory-unit-testing-dev-pipelines-pl-stock-prices-ut-stack-json": {
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/unit-testing/dev/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 },
@@ -537,13 +537,13 @@ def test_terraform_stack(monkeypatch, stack):
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 },
-                "permissions-workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "permissions-workspace-file-laktory-unit-testing-prod-pipelines-pl-stock-prices-ut-stack-json": {
                     "access_control": [
                         {"group_name": "users", "permission_level": "CAN_READ"}
                     ],
-                    "workspace_file_path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "workspace_file_path": "/.laktory/unit-testing/prod/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": [
-                        "databricks_workspace_file.workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json"
+                        "databricks_workspace_file.workspace-file-laktory-unit-testing-prod-pipelines-pl-stock-prices-ut-stack-json"
                     ],
                     "provider": "databricks",
                 },
@@ -556,7 +556,7 @@ def test_terraform_stack(monkeypatch, stack):
                         "laktory.pipeline_name": "pl-stock-prices-ut-stack",
                         "laktory.executor": "LDP",
                         "laktory.requirements": '["laktory==<version>"]',
-                        "laktory.config_filepath": "/Workspace/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                        "laktory.config_filepath": "/Workspace/.laktory/unit-testing/prod/pipelines/pl-stock-prices-ut-stack.json",
                     },
                     "development": False,
                     "name": "pl-stock-prices-ut-stack",
@@ -567,9 +567,9 @@ def test_terraform_stack(monkeypatch, stack):
                 }
             },
             "databricks_workspace_file": {
-                "workspace-file-laktory-pipelines-pl-stock-prices-ut-stack-json": {
+                "workspace-file-laktory-unit-testing-prod-pipelines-pl-stock-prices-ut-stack-json": {
                     "source": "/tmp/laktory/cache/pipelines/pl-stock-prices-ut-stack.json",
-                    "path": "/.laktory/pipelines/pl-stock-prices-ut-stack.json",
+                    "path": "/.laktory/unit-testing/prod/pipelines/pl-stock-prices-ut-stack.json",
                     "depends_on": ["databricks_pipeline.dlt-custom-name"],
                     "provider": "databricks",
                 },
@@ -1442,6 +1442,156 @@ def test_workspace_root_user_root_lakeflow_declarative_pipeline_config_filepath(
     )
 
 
+def _nb_path(stack, env_name):
+    d = stack.to_terraform(env_name=env_name).model_dump()
+    return d["resource"]["databricks_notebook"]["nb"]["path"]
+
+
+def _nb_stack(**kwargs):
+    return models.Stack(
+        name="my-stack",
+        resources={
+            "databricks_notebooks": {
+                "nb": {"source": "./test_stack.py", "dirpath": "foo"}
+            },
+        },
+        **kwargs,
+    )
+
+
+def test_workspace_root_scoped_default():
+    """Inside a stack, `workspace_root` defaults to `/.laktory/{stack}/{env}/`,
+    for each environment built from the same stack."""
+    stack = _nb_stack(environments={"dev": {}, "prd": {}})
+
+    assert _nb_path(stack, None) == "/.laktory/my-stack/foo/test_stack.py"
+    assert _nb_path(stack, "dev") == "/.laktory/my-stack/dev/foo/test_stack.py"
+    assert settings.workspace_root == "/.laktory/my-stack/dev/"
+    assert _nb_path(stack, "prd") == "/.laktory/my-stack/prd/foo/test_stack.py"
+
+    # Resolving an environment doesn't mutate the stack
+    assert stack.settings is None
+
+
+def test_workspace_root_scoped_default_explicit_root():
+    """An explicit `workspace_root` (e.g. the pre-0.14 `/.laktory/`) is kept."""
+    stack = _nb_stack(
+        settings={"workspace_root": "/.laktory/"}, environments={"dev": {}}
+    )
+    assert _nb_path(stack, "dev") == "/.laktory/foo/test_stack.py"
+
+
+def test_workspace_root_scoped_default_env_var(monkeypatch):
+    """`LAKTORY_WORKSPACE_ROOT` takes precedence over the scoped default."""
+    monkeypatch.setenv("LAKTORY_WORKSPACE_ROOT", "/custom/")
+    monkeypatch.setattr(settings, "workspace_root", "/custom/")
+
+    stack = _nb_stack(environments={"dev": {}})
+    assert _nb_path(stack, "dev") == "/custom/foo/test_stack.py"
+
+
+def test_env_settings_merged_over_stack_settings():
+    """`environments.x.settings` is merged field by field over the stack
+    `settings`, without mutating them."""
+    stack = _nb_stack(
+        settings={"workspace_root": "/root/", "runtime_root": "/Volumes/a/b/c/"},
+        environments={
+            "dev": {"settings": {"workspace_root": "/dev-root/"}},
+            "prd": {},
+        },
+    )
+
+    env = stack.get_env("dev")
+    assert env.settings.workspace_root == "/dev-root/"
+    assert env.settings.runtime_root == "/Volumes/a/b/c/"
+    assert stack.settings.workspace_root == "/root/"
+
+    assert _nb_path(stack, "dev") == "/dev-root/foo/test_stack.py"
+    assert _nb_path(stack, "prd") == "/root/foo/test_stack.py"
+
+
+def test_env_settings_not_applied_at_construction(monkeypatch):
+    """Environment settings are only pushed onto the settings singleton once
+    their environment is selected, not when the stack is created."""
+    monkeypatch.setattr(settings, "runtime_root", "/default/")
+
+    stack = _nb_stack(
+        environments={"dev": {"settings": {"runtime_root": "/Volumes/dev/"}}}
+    )
+    assert settings.runtime_root == "/default/"
+
+    stack.build(env_name="dev")
+    assert settings.runtime_root == "/Volumes/dev/"
+
+
+def _mock_workspace_client():
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "user@test.com"
+    mock = patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    )
+    return mock, mock_wc
+
+
+def test_env_settings_user_root_dev_only():
+    """`user_root` enabled for a single environment through its settings."""
+    mock, mock_wc = _mock_workspace_client()
+    with mock as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={
+                "dev": {"settings": {"workspace_root": "user_root"}},
+                "prd": {},
+            },
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "databricks_notebooks": {
+                    "nb": {"source": "./test_stack.py", "dirpath": "foo"}
+                },
+            },
+        )
+        dev_path = _nb_path(stack, "dev")
+        prd_path = _nb_path(stack, "prd")
+
+    assert dev_path == "/Users/user@test.com/.laktory/my-stack/dev/foo/test_stack.py"
+    assert prd_path == "/.laktory/my-stack/prd/foo/test_stack.py"
+    mock_wc.current_user.me.assert_called_once()
+
+
+def test_workspace_root_user_root_from_variable():
+    """`workspace_root: ${vars.x}` with `x` resolving to `user_root` triggers
+    the user root, like the literal sentinel."""
+    mock, mock_wc = _mock_workspace_client()
+    with mock as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            settings={"workspace_root": "${vars.root}"},
+            variables={"root": "/.laktory/"},
+            environments={"dev": {"variables": {"root": "user_root"}}, "prd": {}},
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "databricks_notebooks": {
+                    "nb": {"source": "./test_stack.py", "dirpath": "foo"}
+                },
+            },
+        )
+        dev_path = _nb_path(stack, "dev")
+        prd_path = _nb_path(stack, "prd")
+
+    assert dev_path == "/Users/user@test.com/.laktory/my-stack/dev/foo/test_stack.py"
+    assert prd_path == "/.laktory/foo/test_stack.py"
+
+
 def test_current_user_variable_resolves(monkeypatch):
     """`${current_user.user_name}` resolves to the live Databricks username,
     the same way `${{ current_user.user_name }}` does inside an expression."""
@@ -1482,8 +1632,14 @@ def test_current_user_variable_resolves(monkeypatch):
 
     assert current_user.user_name == "user@test.com"
     notebooks = d["resource"]["databricks_notebook"]
-    assert notebooks["nb"]["path"] == "/.laktory/foo/user@test.com/test_stack.py"
-    assert notebooks["nb2"]["path"] == "/.laktory/bar-user@test.com/test_stack.py"
+    assert (
+        notebooks["nb"]["path"]
+        == "/.laktory/my-stack/dev/foo/user@test.com/test_stack.py"
+    )
+    assert (
+        notebooks["nb2"]["path"]
+        == "/.laktory/my-stack/dev/bar-user@test.com/test_stack.py"
+    )
 
 
 def test_current_user_variable_not_referenced_makes_no_sdk_call(monkeypatch):

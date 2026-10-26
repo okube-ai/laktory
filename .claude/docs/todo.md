@@ -50,6 +50,22 @@ environments:
   prod: {}                        # /.laktory/{stack}/prod/
 ```
 
+**Done (2026-10-25, branch `feat/a4-scoped-workspace-root`):** all three items, in
+`Stack._resolve_workspace_root` (renamed from `_resolve_user_root`). Notes:
+- `LaktorySettings.workspace_root` defaults to `None` so "unset" is detectable; the scoped
+  default is skipped when `LAKTORY_WORKSPACE_ROOT` is set in the environment.
+- Env settings are `EnvironmentLaktorySettings` (`_push_to_singleton = False`): not pushed onto
+  the singleton at stack construction, only once merged for the selected env.
+- Fixed on the way: `get_env()` mutated the stack (`get_env(None)` returned `self`; env
+  `variables`/`settings` merged in place into the shallow copy's shared objects), so building
+  several envs in one process leaked the first one into the next.
+- Still open (pre-existing): env `resources` are merged in place into the stack's
+  `StackResources` dicts, so they leak across envs built in one process; env-level `providers`
+  aren't routed to typed providers (`EnvironmentSettings.resources: Any`). A deep copy breaks
+  pipeline/orchestrator `_parent` links.
+- Workspace file resource names include the root (`workspace-file-laktory-{stack}-{env}-...`),
+  so files are recreated, not moved, on upgrade.
+
 ## A5 — `${current_user.x}`: add a short-name/`alphanumeric` form
 
 `${current_user.user_name}` shipped in #633 (`laktory/_current_user.py`, wired into `Stack._resolve_user_root`, documented in `docs/concepts/variables.md#current-user`). Not yet added: a "short name" form. The Databricks SDK's `User` object (`databricks.sdk.service.iam.User`) has no `short_name`/`alphanumeric` field — verified fields are `active, display_name, emails, entitlements, external_id, groups, id, name, roles, schemas, user_name`. Terraform's `databricks_current_user.alphanumeric` attribute is computed by the provider itself (Go code), not returned by the raw API. Before implementing, either (a) check the Databricks Terraform provider's source/docs to replicate that exact sanitization so it matches `${resources.x.alphanumeric}` if both appear in the same stack, or (b) derive Laktory's own convention (e.g. the part of `user_name` before `@`) and document it explicitly as not a claim of parity with Terraform's `alphanumeric`.

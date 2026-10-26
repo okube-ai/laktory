@@ -14,6 +14,22 @@ logger = get_logger(__name__)
 DATABRICKS_HOST = "https://adb-2211091707396001.1.azuredatabricks.net/"
 
 # --------------------------------------------------------------------------- #
+# Settings                                                                    #
+# --------------------------------------------------------------------------- #
+
+
+@pytest.fixture(autouse=True)
+def restore_workspace_root():
+    """Building a stack pushes its scoped `workspace_root` onto the global
+    settings singleton: restore it after each test."""
+    from laktory._settings import settings
+
+    workspace_root = settings.workspace_root
+    yield
+    settings.workspace_root = workspace_root
+
+
+# --------------------------------------------------------------------------- #
 # Databricks                                                                  #
 # --------------------------------------------------------------------------- #
 

@@ -453,7 +453,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # the caller's vars and self.variables values must be protected. Two
         # separate deepcopies (caller then update) would leave self.variables
         # unprotected; merging into a new dict first and copying once covers both.
-        vars = deepcopy({**(vars or {}), **self.variables})
+        vars = deepcopy({**(vars or {}), **(self.variables or {})})
 
         # Fetching objs - subclasses override _inject_vars_objs() to inject
         # context objects (e.g. pipeline, pipeline_node) without circular imports
@@ -564,7 +564,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         """
 
         # Setting vars - same merge-then-copy pattern as inject_vars()
-        vars = deepcopy({**(vars or {}), **self.variables})
+        vars = deepcopy({**(vars or {}), **(self.variables or {})})
 
         # Create copy
         if not inplace:
@@ -638,5 +638,5 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         # > {"tags": {"bu": "finance", "env": "dev"}}
         ```
         """
-        vars = deepcopy({**(vars or {}), **self.variables})
+        vars = deepcopy({**(vars or {}), **(self.variables or {})})
         return _resolve_value(text, vars, objs, stringify=True)
