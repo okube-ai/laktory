@@ -2,6 +2,7 @@
 
 ## [0.14.0] - Unreleased
 ### Added
+* Added the `${current_user.short_name}` variable, a short form of the deploying user's name (e.g. `jane_doe_smith` for `Jane.Doe-Smith@okube.ai`, the display name for a service principal), with the same algorithm as `${workspace.current_user.short_name}` in Declarative Automation Bundles, e.g. for per-developer schema names.
 * Added environment-specific Laktory settings (`environments.{env}.settings`), merged field by field over the stack `settings`, e.g. to deploy under `workspace_root: user_root` in a development environment only.
 ### Fixed
 * Fixed `settings.workspace_root` set to a `${vars.x}` variable resolving to `user_root` not being resolved to the user root.

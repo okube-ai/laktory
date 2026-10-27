@@ -163,7 +163,17 @@ For what `settings.workspace_root` actually controls, its default, and how to au
 
 ### Current User
 
-The `current_user.*` namespace exposes your live Databricks identity - currently just `user_name` - resolved via the Databricks SDK against the `DatabricksProvider` in your stack:
+The `current_user.*` namespace exposes your live Databricks identity, resolved via the Databricks SDK against the `DatabricksProvider` in your stack:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `${current_user.user_name}` | User name (email for a user, application id for a service principal) | `jane.doe-smith@okube.ai` |
+| `${current_user.short_name}` | Short form of `user_name`: the part before `@`, lowercased, with every character other than a letter or digit replaced by `_` (repeated `_` collapsed, leading and trailing `_` removed). For a service principal, its display name is used when set. | `jane_doe_smith` |
+
+`short_name` uses the same algorithm as `${workspace.current_user.short_name}` in Declarative Automation Bundles, so a stack and a bundle deployed by the same user resolve to the same name.
+
+!!! warning
+    Like in bundles, accented and other non-ASCII letters are kept (`tést.üser@okube.ai` -> `tést_üser`). Avoid `short_name` in names that only accept ASCII characters or no `_` (e.g. Databricks App names).
 
 ```yaml title="stack.yaml"
 resources:
@@ -173,6 +183,10 @@ resources:
     app:
       source: ./app/
       path: /Users/${current_user.user_name}/app
+  databricks_schemas:
+    sandbox:
+      name: sandbox_${current_user.short_name}
+      catalog_name: dev
 ```
 
 Unlike `settings.*`, `current_user.*` isn't backed by a stack config field - it's resolved lazily, only when `${current_user.X}` is actually referenced somewhere in the stack, via one live SDK call (`workspace_client.current_user.me()`). A stack that never references it makes no network call for it. Referencing it without a `DatabricksProvider` in the stack raises a clear error rather than silently leaving the template unresolved.

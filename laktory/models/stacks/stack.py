@@ -210,12 +210,13 @@ USER_ROOT_SENTINEL = "user_root"
 _WORKSPACE_ROOT_ENV_VAR = "LAKTORY_WORKSPACE_ROOT"
 
 
-def _resolve_databricks_provider_and_username(env):
+def _resolve_databricks_provider_and_user(env):
     """Find a `DatabricksProvider` among `env`'s resources and resolve the
-    live current username via the Databricks SDK.
+    live current user via the Databricks SDK.
 
-    Returns `(db_provider, workspace_client, username)`, or `(None, None,
-    None)` if no `DatabricksProvider` is present in the stack.
+    Returns `(db_provider, workspace_client, user)`, where `user` is the
+    `databricks.sdk.service.iam.User` returned by `current_user.me()`, or
+    `(None, None, None)` if no `DatabricksProvider` is present in the stack.
     """
     db_provider = None
     for r in env.resources._get_all(providers_only=True).values():
@@ -236,8 +237,7 @@ def _resolve_databricks_provider_and_username(env):
     db_provider = db_provider.inject_vars(vars=env.variables)
 
     wc = db_provider.workspace_client
-    username = wc.current_user.me().user_name
-    return db_provider, wc, username
+    return db_provider, wc, wc.current_user.me()
 
 
 _CURRENT_USER_REFERENCE_PATTERN = re.compile(r"current_user\.[a-zA-Z_]")
@@ -866,7 +866,7 @@ class Stack(BaseModel):
         if not needs_root and not needs_current_user:
             return None, None, None
 
-        db_provider, wc, username = _resolve_databricks_provider_and_username(env)
+        db_provider, wc, user = _resolve_databricks_provider_and_user(env)
         if db_provider is None:
             if needs_root:
                 raise ValueError(
@@ -876,6 +876,7 @@ class Stack(BaseModel):
             raise ValueError(
                 "'${current_user.x}' requires a DatabricksProvider in the stack."
             )
+        username = user.user_name
 
         if needs_root:
             env.settings.workspace_root = _user_workspace_root(
@@ -885,6 +886,7 @@ class Stack(BaseModel):
 
         if needs_current_user:
             current_user.user_name = username
+            current_user.display_name = user.display_name
 
         return db_provider, wc, username
 
@@ -1238,9 +1240,8 @@ class Stack(BaseModel):
                         _resolved_username,
                     )
                 else:
-                    db_provider, wc, username = (
-                        _resolve_databricks_provider_and_username(env)
-                    )
+                    db_provider, wc, user = _resolve_databricks_provider_and_user(env)
+                    username = user.user_name if user is not None else None
                 if db_provider is None:
                     raise ValueError(
                         "backend.databricks_workspace requires a DatabricksProvider in the stack."

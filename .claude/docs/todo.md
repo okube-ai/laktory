@@ -66,7 +66,10 @@ environments:
 - Workspace file resource names include the root (`workspace-file-laktory-{stack}-{env}-...`),
   so files are recreated, not moved, on upgrade.
 
-## A5 — `${current_user.x}`: add a short-name/`alphanumeric` form
+## A5 — `${current_user.short_name}` (DONE)
+
+**Done (2026-10-26):** shipped as `${current_user.short_name}` with the Declarative Automation Bundles algorithm (`GetShortUserName` in `databricks/cli` `libs/iamutil/user.go`: part before `@`, lowercase, non letter/digit -> `_`, collapse and trim `_`, service principal -> display name when set), not Terraform's `alphanumeric` (ASCII only, no collapse/trim, service principal -> application id). Chosen for parity with bundles, which Laktory users are more likely to use alongside a stack, and for cleaner names. `CurrentUser.short_name` in `laktory/_current_user.py`; `display_name` comes from the same `current_user.me()` call.
+
 
 `${current_user.user_name}` shipped in #633 (`laktory/_current_user.py`, wired into `Stack._resolve_user_root`, documented in `docs/concepts/variables.md#current-user`). Not yet added: a "short name" form. The Databricks SDK's `User` object (`databricks.sdk.service.iam.User`) has no `short_name`/`alphanumeric` field — verified fields are `active, display_name, emails, entitlements, external_id, groups, id, name, roles, schemas, user_name`. Terraform's `databricks_current_user.alphanumeric` attribute is computed by the provider itself (Go code), not returned by the raw API. Before implementing, either (a) check the Databricks Terraform provider's source/docs to replicate that exact sanitization so it matches `${resources.x.alphanumeric}` if both appear in the same stack, or (b) derive Laktory's own convention (e.g. the part of `user_name` before `@`) and document it explicitly as not a claim of parity with Terraform's `alphanumeric`.
 

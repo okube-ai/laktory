@@ -1602,6 +1602,7 @@ def test_current_user_variable_resolves(monkeypatch):
     from laktory.models.resources.providers.databricksprovider import DatabricksProvider
 
     monkeypatch.setattr(current_user, "user_name", current_user.user_name)
+    monkeypatch.setattr(current_user, "display_name", current_user.display_name)
 
     mock_wc = MagicMock()
     mock_wc.current_user.me.return_value.user_name = "user@test.com"
@@ -1642,6 +1643,91 @@ def test_current_user_variable_resolves(monkeypatch):
     )
 
 
+@pytest.mark.parametrize(
+    "user_name,display_name,expected",
+    [
+        # Cases from `TestGetShortUserName` in the Databricks CLI
+        # (`libs/iamutil/user_test.go`)
+        ("test.user.1234@example.com", None, "test_user_1234"),
+        ("tést.üser@example.com", None, "tést_üser"),
+        ("test$.user@example.com", None, "test_user"),
+        ("jöhn.dœ@domain.com", None, "jöhn_dœ"),
+        ("first+tag@email.com", None, "first_tag"),
+        ("email@sub.domain.com", None, "email"),
+        ('"_quoted"@domain.com', None, "quoted"),
+        ("name-o'mally@website.org", None, "name_o_mally"),
+        ("user%domain@external.com", None, "user_domain"),
+        ("long.name.with.dots@domain.net", None, "long_name_with_dots"),
+        ("me&you@together.com", None, "me_you"),
+        ("user!def!xyz@domain.org", None, "user_def_xyz"),
+        ("admin@ιντερνετ.com", None, "admin"),
+        ("Jane.Doe-Smith@okube.ai", "Jane Doe", "jane_doe_smith"),
+        (
+            "1706906c-c0a2-4c25-9f57-3a7aa3cb8123",
+            "my-service-principal",
+            "my_service_principal",
+        ),
+        (
+            "1706906c-c0a2-4c25-9f57-3a7aa3cb8123",
+            None,
+            "1706906c_c0a2_4c25_9f57_3a7aa3cb8123",
+        ),
+    ],
+)
+def test_current_user_short_name(monkeypatch, user_name, display_name, expected):
+    """Mirrors `${workspace.current_user.short_name}` of Declarative
+    Automation Bundles."""
+    monkeypatch.setattr(current_user, "user_name", user_name)
+    monkeypatch.setattr(current_user, "display_name", display_name)
+    assert current_user.short_name == expected
+
+
+def test_current_user_short_name_variable_resolves(monkeypatch):
+    """`${current_user.short_name}` resolves both as a plain variable and
+    inside an expression."""
+    from unittest.mock import MagicMock
+    from unittest.mock import PropertyMock
+    from unittest.mock import patch
+
+    from laktory.models.resources.providers.databricksprovider import DatabricksProvider
+
+    monkeypatch.setattr(current_user, "user_name", current_user.user_name)
+    monkeypatch.setattr(current_user, "display_name", current_user.display_name)
+
+    mock_wc = MagicMock()
+    mock_wc.current_user.me.return_value.user_name = "Jane.Doe@test.com"
+    mock_wc.current_user.me.return_value.display_name = "Jane Doe"
+
+    with patch.object(
+        DatabricksProvider, "workspace_client", new_callable=PropertyMock
+    ) as mock_prop:
+        mock_prop.return_value = mock_wc
+
+        stack = models.Stack(
+            name="my-stack",
+            environments={"dev": {"variables": {}}},
+            resources={
+                "providers": {"databricks": _DB_PROVIDER},
+                "databricks_schemas": {
+                    "s": {
+                        "name": "sandbox_${current_user.short_name}",
+                        "catalog_name": "dev",
+                    },
+                    "s2": {
+                        "name": "${{ 'tmp_' + current_user.short_name }}",
+                        "catalog_name": "dev",
+                    },
+                },
+            },
+        )
+        d = stack.to_terraform(env_name="dev").model_dump()
+
+    schemas = d["resource"]["databricks_schema"]
+    assert schemas["s"]["name"] == "sandbox_jane_doe"
+    assert schemas["s2"]["name"] == "tmp_jane_doe"
+    mock_wc.current_user.me.assert_called_once()
+
+
 def test_current_user_variable_not_referenced_makes_no_sdk_call(monkeypatch):
     """A stack that never references `${current_user.x}` must not trigger a
     live Databricks SDK lookup - it's opt-in, not auto-injected."""
@@ -1652,6 +1738,7 @@ def test_current_user_variable_not_referenced_makes_no_sdk_call(monkeypatch):
     from laktory.models.resources.providers.databricksprovider import DatabricksProvider
 
     monkeypatch.setattr(current_user, "user_name", current_user.user_name)
+    monkeypatch.setattr(current_user, "display_name", current_user.display_name)
 
     mock_wc = MagicMock()
     mock_wc.current_user.me.return_value.user_name = "user@test.com"
@@ -1709,6 +1796,7 @@ def test_current_user_variable_shares_single_lookup_with_user_root_and_backend(
 
     monkeypatch.setattr(settings, "workspace_root", settings.workspace_root)
     monkeypatch.setattr(current_user, "user_name", current_user.user_name)
+    monkeypatch.setattr(current_user, "display_name", current_user.display_name)
 
     mock_wc = MagicMock()
     mock_wc.current_user.me.return_value.user_name = "user@test.com"
