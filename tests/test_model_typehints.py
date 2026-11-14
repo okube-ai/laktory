@@ -1,5 +1,9 @@
+import pytest
+from pydantic import ValidationError
+
 from laktory.models import BaseModel
 from laktory.typing import VariableType
+from laktory.typing import variable_or
 
 
 class Price(BaseModel):
@@ -89,7 +93,7 @@ def test_list():
 
     # annotation
     ann = type(m).model_fields["ids"].annotation
-    assert ann == list[int | VariableType] | VariableType
+    assert ann == list[variable_or(int)] | VariableType
 
 
 def test_dict():
@@ -117,4 +121,37 @@ def test_dict():
 
     # annotation
     ann = type(m).model_fields["prices_dict"].annotation
-    assert ann == dict[int | VariableType, Price | VariableType] | VariableType
+    assert ann == dict[variable_or(int), variable_or(Price)] | VariableType
+
+
+@pytest.mark.parametrize(
+    "data,loc",
+    [
+        ({"id": "abc"}, ("id",)),
+        ({"active": "maybe"}, ("active",)),
+        ({"price": {"close": "abc"}}, ("price", "close")),
+        ({"prices": [{"close": 1.0}, {"close": "abc"}]}, ("prices", 1, "close")),
+        ({"prices_dict": {1: {"open": "abc"}}}, ("prices_dict", 1, "open")),
+        ({"ids": [1, "abc"]}, ("ids", 1)),
+    ],
+)
+def test_single_error(data, loc):
+    # The error is reported against the declared type only, not repeated
+    # against VariableType
+    with pytest.raises(ValidationError) as excinfo:
+        MyModel.model_validate(data)
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["loc"] == loc
+
+
+def test_serialization():
+    m = MyModel(price="${vars.price}", prices=[{"close": 1.0}, "${vars.p}"])
+    assert m.model_dump(exclude_unset=True) == {
+        "price": "${vars.price}",
+        "prices": [{"close": 1.0}, "${vars.p}"],
+    }
+    assert MyModel.model_json_schema()["properties"]["price"]["anyOf"][1] == {
+        "pattern": "^\\$\\{",
+        "type": "string",
+    }

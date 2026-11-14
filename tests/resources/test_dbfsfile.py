@@ -28,3 +28,12 @@ def test_dbfsfile_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(dbfs_file)
+
+
+def test_dbfs_file_dump_does_not_mutate():
+    for dirpath in [None, "/tmp/"]:
+        kwargs = {} if dirpath is None else {"dirpath": dirpath}
+        f = DbfsFile(source="./test_workspacefile.py", **kwargs)
+        dump0 = f.model_dump()
+        assert f.dirpath == dirpath
+        assert f.model_dump() == dump0

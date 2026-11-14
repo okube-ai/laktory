@@ -39,6 +39,7 @@ class PipelineTask(BaseModel):
     node_names: list[str] = Field(
         ..., description="""List of node names in sorted order of execution"""
     )
+    _upstream_task_names: list[str] | None = None
 
     def execute(
         self,
@@ -85,6 +86,10 @@ class PipelineTask(BaseModel):
     @property
     def upstream_task_names(self) -> list[str]:
         """Get upstream task names"""
+        # Set by the plan that created the task, not the pipeline latest one
+        # which may select different nodes
+        if self._upstream_task_names is not None:
+            return self._upstream_task_names
         plan = self.pipeline._plan
         names = []
         for edges in plan.dag.in_edges(self.name):

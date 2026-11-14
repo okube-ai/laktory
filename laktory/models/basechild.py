@@ -51,29 +51,34 @@ class BaseChild(BaseModel, metaclass=ModelMetaclass):
         model._assign_parent_to_children()
         return model
 
-    def _assign_parent_to_children(self):
-        def _set_parent(o, parent=self):
-            if isinstance(o, BaseChild):
-                o._parent = parent
-                o.update_from_parent()
-                # Recurse so a `model_copy(deep=True)` re-wires the whole
-                # subtree, not just direct children. `model_copy`'s override
-                # only fires `_assign_parent_to_children()` on the copied
-                # object itself, and plain `copy.deepcopy` cannot be trusted
-                # to preserve `_parent` back-references: pydantic's
-                # `__deepcopy__` doesn't memoize `self` before recursing into
-                # its own fields, so a child->parent cycle (e.g. a sink's
-                # `_parent` pointing back to its node) gets deep-copied into
-                # a disconnected duplicate instead of reusing the new parent.
-                o._assign_parent_to_children()
-
+    def _iter_children(self):
         for c_name in self.children_names:
             o = getattr(self, c_name)
             if isinstance(o, list):
-                for _o in o:
-                    _set_parent(_o)
+                children = o
             elif isinstance(o, dict):
-                for _o in o.values():
-                    _set_parent(_o)
+                children = o.values()
             else:
-                _set_parent(o)
+                children = [o]
+            for c in children:
+                if isinstance(c, BaseChild):
+                    yield c
+
+    def _assign_parent_to_children(self):
+        for c in self._iter_children():
+            c._parent = self
+            c.update_from_parent()
+            # Recurse so `update_from_parent()` runs on the whole subtree, not
+            # just direct children (`model_copy`'s override only fires
+            # `_assign_parent_to_children()` on the copied object itself).
+            c._assign_parent_to_children()
+
+    def _copy_tree(self) -> "BaseChild":
+        """
+        Deep copy, with the `_parent` of each child pointing to its copied parent
+        (see `BaseModel.__deepcopy__`). Unlike `model_copy(deep=True)`,
+        `update_from_parent()` is not called: the copied children already hold
+        the state derived from an identical parent (e.g. the tasks of a job
+        orchestrator), which can be costly to rebuild.
+        """
+        return BaseModel.model_copy(self, deep=True)

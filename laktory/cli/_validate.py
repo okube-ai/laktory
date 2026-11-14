@@ -60,8 +60,4 @@ def validate(
         var_list=var,
         var_file_path=var_file,
     )
-
-    # Shortcut to call resources cross-reference validation (_check_depends_on)
-    controller.stack.to_terraform(
-        env_name=controller.env, vars=controller.cli_vars or None
-    )
+    controller.validate_stack()

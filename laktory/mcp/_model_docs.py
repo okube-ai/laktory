@@ -72,11 +72,20 @@ def _load_class(ref: str) -> type[BaseModel]:
     return getattr(module, class_name)
 
 
+def _strip_annotated(ann: Any) -> Any:
+    """Return the type wrapped by `Annotated` (e.g. tagged union members)."""
+    if typing.get_origin(ann) is typing.Annotated:
+        return typing.get_args(ann)[0]
+    return ann
+
+
 def _nice_type(ann: Any) -> str:
     if ann is None:
         return "any"
     if ann is type(None):
         return "None"
+    if typing.get_origin(ann) is typing.Annotated:
+        return _nice_type(_strip_annotated(ann))
 
     origin = getattr(ann, "__origin__", None)
     args = getattr(ann, "__args__", None)
@@ -86,7 +95,7 @@ def _nice_type(ann: Any) -> str:
     )
 
     if is_union and args:
-        filtered = [a for a in args if a is not _VariableType]
+        filtered = [a for a in args if _strip_annotated(a) is not _VariableType]
         if len(filtered) == 1:
             return _nice_type(filtered[0])
         return " | ".join(_nice_type(a) for a in filtered)
@@ -107,6 +116,8 @@ def _inner_model(ann: Any) -> type[BaseModel] | None:
     """Return the innermost Pydantic BaseModel class from a type annotation."""
     if ann is None or ann is type(None):
         return None
+    if typing.get_origin(ann) is typing.Annotated:
+        return _inner_model(_strip_annotated(ann))
 
     origin = getattr(ann, "__origin__", None)
     args = getattr(ann, "__args__", None)
@@ -116,7 +127,11 @@ def _inner_model(ann: Any) -> type[BaseModel] | None:
     )
 
     if is_union and args:
-        filtered = [a for a in args if a is not _VariableType and a is not type(None)]
+        filtered = [
+            a
+            for a in args
+            if _strip_annotated(a) is not _VariableType and a is not type(None)
+        ]
         for a in filtered:
             result = _inner_model(a)
             if result is not None:

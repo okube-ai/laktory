@@ -171,8 +171,9 @@ def run(
         var_list=var,
         var_file_path=var_file,
     )
-    dispatcher = Dispatcher(stack=controller.stack, env=controller.env)
-    dispatcher.get_resource_ids()
+    with controller.stack_errors():
+        dispatcher = Dispatcher(stack=controller.stack, env=controller.env)
+        dispatcher.get_resource_ids()
 
     if databricks_job:
         job_parameters = {}

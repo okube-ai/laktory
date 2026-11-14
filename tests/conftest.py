@@ -19,14 +19,17 @@ DATABRICKS_HOST = "https://adb-2211091707396001.1.azuredatabricks.net/"
 
 
 @pytest.fixture(autouse=True)
-def restore_workspace_root():
-    """Building a stack pushes its scoped `workspace_root` onto the global
-    settings singleton: restore it after each test."""
+def restore_settings():
+    """Building a stack pushes its settings (e.g. the scoped `workspace_root`,
+    `runtime_root`) onto the global settings singleton: restore them after each
+    test."""
     from laktory._settings import settings
 
-    workspace_root = settings.workspace_root
+    values = settings.model_dump()
     yield
-    settings.workspace_root = workspace_root
+    for k, v in values.items():
+        if getattr(settings, k) != v:
+            setattr(settings, k, v)
 
 
 # --------------------------------------------------------------------------- #

@@ -4,6 +4,7 @@ import re
 import typing
 from copy import deepcopy
 from typing import Any
+from typing import ClassVar
 from typing import TextIO
 from typing import TypeVar
 from typing import Union
@@ -17,12 +18,17 @@ from pydantic import BaseModel as _BaseModel
 from pydantic import ConfigDict
 from pydantic import Field
 from pydantic import PrivateAttr
+from pydantic import ValidationError
 from pydantic import model_validator
 from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
+from pydantic_core import PydanticCustomError
+from pydantic_core import PydanticUndefined
 
 from laktory._parsers import _resolve_value
 from laktory._parsers import _resolve_values
-from laktory.typing import VariableType
+from laktory.typing import _is_placeholder
+from laktory.typing import is_tagged_union
+from laktory.typing import variable_or
 from laktory.yaml.recursiveloader import RecursiveLoader
 
 # ModelMetaclass relies on pydantic._internal internals; alert on untested upgrades.
@@ -86,13 +92,19 @@ def annotation_contains_list_of_basemodel(annotation, mymodel_cls) -> bool:
 # Fields always excluded from VariableType injection.
 _VARTYPE_EXCLUDED_FIELDS: set[str] = {"variables", "dataframe_backend"}
 
-# Per-class fields excluded from VariableType injection (e.g. discriminator fields
-# that Pydantic uses to select a union variant - injecting VariableType breaks the
-# discriminator logic at class-construction time).
-_VARTYPE_EXCLUDED_CLASS_FIELDS: dict[str, set[str]] = {
-    "UnityCatalogDataSink": {"type"},
-    "HiveMetastoreDataSink": {"type"},
-}
+
+def _is_type_selector(field_name: str, type_hint: Any) -> bool:
+    """
+    A `type` field with a single literal value (e.g. `Literal["FILE"]`) selects
+    the class of a union member (sources, sinks, orchestrators): the class is
+    selected when the model is parsed, so a variable resolved later could
+    contradict it.
+    """
+    return (
+        field_name == "type"
+        and get_origin(type_hint) is typing.Literal
+        and len(get_args(type_hint)) == 1
+    )
 
 
 def _resolve_plural_fields(namespace: dict[str, Any]) -> None:
@@ -128,8 +140,7 @@ def _expand_optional_fields(
                 remaining.discard(fname)
 
 
-def _inject_variable_types(namespace: dict[str, Any], cls_name: str) -> None:
-    excluded_class_fields = _VARTYPE_EXCLUDED_CLASS_FIELDS.get(cls_name, set())
+def _inject_variable_types(namespace: dict[str, Any]) -> None:
     for field_name in namespace.get("__annotations__", {}):
         type_hint = namespace["__annotations__"][field_name]
 
@@ -137,9 +148,14 @@ def _inject_variable_types(namespace: dict[str, Any], cls_name: str) -> None:
             continue
         if field_name in _VARTYPE_EXCLUDED_FIELDS:
             continue
-        if field_name in excluded_class_fields:
-            continue
         if type_hint is None or type_hint is typing.Any:
+            continue
+        if _is_type_selector(field_name, type_hint):
+            continue
+
+        # A tagged union already has VariableType as a member; wrapping it in
+        # another union would report its validation errors twice.
+        if is_tagged_union(type_hint):
             continue
 
         origin = get_origin(type_hint)
@@ -147,12 +163,55 @@ def _inject_variable_types(namespace: dict[str, Any], cls_name: str) -> None:
         new_type_hint = type_hint
 
         if origin is list:
-            new_type_hint = list[args[0] | VariableType]
+            new_type_hint = list[_variable_or_item(args[0])]
         elif origin is dict:
-            new_type_hint = dict[args[0] | VariableType, args[1] | VariableType]
+            new_type_hint = dict[variable_or(args[0]), _variable_or_item(args[1])]
 
-        new_type_hint = Union[new_type_hint, VariableType]
-        namespace["__annotations__"][field_name] = new_type_hint
+        namespace["__annotations__"][field_name] = variable_or(new_type_hint)
+
+
+def _placeholder_item_keys(o: Any) -> list:
+    """Indices (list) or keys (dict) of the `${...}` placeholder items of `o`."""
+    if isinstance(o, list):
+        items = enumerate(o)
+    elif isinstance(o, dict):
+        items = o.items()
+    else:
+        return []
+    return [k for k, v in items if _is_placeholder(v)]
+
+
+def _variable_or_item(type_hint: Any) -> Any:
+    # A tagged union already has VariableType as a member
+    if is_tagged_union(type_hint):
+        return type_hint
+    return variable_or(type_hint)
+
+
+def _prefix_loc(
+    error: ValidationError, loc: tuple, field: str | None = None, key: str | None = None
+) -> ValidationError:
+    """Prepend `loc` to the location of each error, e.g. for nested assignments,
+    and report the `field` name as the `key` it was given with (e.g. an alias)."""
+    if not loc and field == key:
+        return error
+
+    def _loc(e_loc: tuple) -> tuple:
+        if e_loc and e_loc[0] == field:
+            e_loc = (key, *e_loc[1:])
+        return (*loc, *e_loc)
+
+    return ValidationError.from_exception_data(
+        error.title,
+        [
+            {
+                "type": PydanticCustomError(e["type"], e["msg"]),
+                "loc": _loc(e["loc"]),
+                "input": e["input"],
+            }
+            for e in error.errors(include_url=False)
+        ],
+    )
 
 
 class ModelMetaclass(_ModelMetaclass):
@@ -165,7 +224,7 @@ class ModelMetaclass(_ModelMetaclass):
     ) -> type:
         _resolve_plural_fields(namespace)
         _expand_optional_fields(namespace, bases)
-        _inject_variable_types(namespace, cls_name)
+        _inject_variable_types(namespace)
         return super().__new__(mcs, cls_name, bases, namespace, **kwargs)
 
 
@@ -192,6 +251,46 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     )
     _inject_vars_cache_key: str | None = PrivateAttr(default=None)
     _inject_vars_cache_value: Any = PrivateAttr(default=None)
+    # Private attributes caching state derived from the fields, reset (not
+    # copied) by deep copies: the copy is often modified next (e.g. merged
+    # with environment overrides), which would leave them stale.
+    _uncopied_private: ClassVar[frozenset[str]] = frozenset(
+        {"_inject_vars_cache_key", "_inject_vars_cache_value"}
+    )
+
+    def _clear_inject_vars_cache(self) -> None:
+        self._inject_vars_cache_key = None
+        self._inject_vars_cache_value = None
+
+    def __deepcopy__(self, memo: dict[int, Any] | None = None) -> Any:
+        # Same as pydantic's, except that the copy is memoized before copying the
+        # fields: a back-reference (e.g. a sink `_parent` pointing to its node)
+        # then resolves to this copy instead of a second, detached copy.
+        if memo is None:
+            memo = {}
+        cls = type(self)
+        m = cls.__new__(cls)
+        memo[id(self)] = m
+        object.__setattr__(m, "__dict__", deepcopy(self.__dict__, memo=memo))
+        object.__setattr__(
+            m, "__pydantic_extra__", deepcopy(self.__pydantic_extra__, memo=memo)
+        )
+        object.__setattr__(
+            m, "__pydantic_fields_set__", copy.copy(self.__pydantic_fields_set__)
+        )
+        private = getattr(self, "__pydantic_private__", None)
+        if private is not None:
+            defaults = cls.__private_attributes__
+            private = deepcopy(
+                {
+                    k: defaults[k].get_default() if k in self._uncopied_private else v
+                    for k, v in private.items()
+                    if v is not PydanticUndefined
+                },
+                memo=memo,
+            )
+        object.__setattr__(m, "__pydantic_private__", private)
+        return m
 
     @model_validator(mode="after")
     def variables_self_reference(self) -> Any:
@@ -309,28 +408,58 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
     # Update                                                                  #
     # ----------------------------------------------------------------------- #
 
-    def update(self, update: dict[Any, Any]) -> None:
+    @classmethod
+    def _field_name(cls, key: str) -> str:
+        """Name of the field accepting `key`, which may be a validation alias
+        (e.g. the plural `tasks` of the `task` field)."""
+        if key in cls.model_fields:
+            return key
+        for name, f in cls.model_fields.items():
+            aliases = [f.alias]
+            if isinstance(f.validation_alias, AliasChoices):
+                aliases += f.validation_alias.choices
+            else:
+                aliases += [f.validation_alias]
+            if key in aliases:
+                return name
+        return key
+
+    def update(self, update: dict[Any, Any], _loc: tuple = ()) -> None:
+        if isinstance(self, BaseModel):
+            self._clear_inject_vars_cache()
         for key, value in update.items():
+            loc = (*_loc, key)
+            user_key = key
             if isinstance(self, BaseModel):
-                current = getattr(self, key)
+                key = type(self)._field_name(key)
+                try:
+                    current = getattr(self, key)
+                except AttributeError:
+                    raise ValidationError.from_exception_data(
+                        type(self).__name__,
+                        [{"type": "extra_forbidden", "loc": loc, "input": value}],
+                    ) from None
             elif isinstance(self, dict):
                 current = self.get(key)
             else:
                 raise TypeError(f"Unsupported self type: {type(self)}")
 
             if isinstance(current, BaseModel) and isinstance(value, dict):
-                current.update(value)
+                current.update(value, _loc=loc)
             elif isinstance(current, dict) and isinstance(value, dict):
                 for subkey, subval in value.items():
                     if isinstance(current.get(subkey), BaseModel) and isinstance(
                         subval, dict
                     ):
-                        current[subkey].update(subval)
+                        current[subkey].update(subval, _loc=(*loc, subkey))
                     else:
                         current[subkey] = subval
             else:
                 if isinstance(self, BaseModel):
-                    setattr(self, key, value)
+                    try:
+                        setattr(self, key, value)
+                    except ValidationError as e:
+                        raise _prefix_loc(e, _loc, key, user_key) from None
                 else:
                     self[key] = value
 
@@ -468,14 +597,17 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         if not inplace and _caller_objs is None:
             cache_key = json.dumps(vars, sort_keys=True)
             if self._inject_vars_cache_key == cache_key:
-                return self._inject_vars_cache_value.model_copy(deep=True)
+                # Plain deep copy: parents are preserved (`__deepcopy__`) and
+                # the state derived from them is already up to date
+                return BaseModel.model_copy(self._inject_vars_cache_value, deep=True)
 
         # Create copy
         if not inplace:
             original = self
-            self = self.model_copy(deep=True)
+            self = BaseModel.model_copy(self, deep=True)
 
         # Inject into field values
+        state = self._before_inject_vars()
         for k in list(self.model_fields_set):
             if k == "variables":
                 continue
@@ -489,13 +621,19 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
             if isinstance(o, BaseModel) or isinstance(o, dict) or isinstance(o, list):
                 # Mutable objects will be updated in place
+                placeholder_keys = _placeholder_item_keys(o)
                 _resolve_values(o, vars, objs)
+                if any(isinstance(o[i], (dict, list)) for i in placeholder_keys):
+                    # An item placeholder (e.g. `sinks: [${vars.sink}]`) resolved
+                    # to raw data: re-assign to validate it into a model
+                    setattr(self, k, o)
             else:
                 # Simple objects must be updated explicitly, but only if
                 # the resolved value actually changed
                 new_o = _resolve_value(o, vars, objs)
                 if new_o != o:
                     setattr(self, k, new_o)
+        self._after_inject_vars(state, vars=vars, objs=objs)
 
         # Inject into child resources
         if hasattr(self, "core_resources"):
@@ -509,6 +647,16 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
                 original._inject_vars_cache_key = cache_key
                 original._inject_vars_cache_value = self
             return self
+
+    def _before_inject_vars(self) -> Any:
+        """State captured before injecting variables into the fields, passed
+        to `_after_inject_vars`."""
+        return None
+
+    def _after_inject_vars(self, state: Any, vars: dict, objs: dict) -> None:
+        """Called once variables are injected into the fields, e.g. to rebuild
+        state derived from them at construction."""
+        pass
 
     def inject_vars_into_dump(
         self,
