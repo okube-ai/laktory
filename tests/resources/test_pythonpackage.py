@@ -56,3 +56,10 @@ def test_python_package_path():
         path="/Workspace/lake_1.whl",
     )
     assert pp.path == "/Workspace/lake_1.whl"
+
+
+def test_python_package_dump_does_not_mutate():
+    pp = get_python_package()
+    dump0 = pp.model_dump()
+    assert pp.dirpath == "/wheels/"
+    assert pp.model_dump() == dump0

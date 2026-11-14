@@ -59,3 +59,12 @@ def test_notebook_tags():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(get_notebook())
+
+
+def test_notebook_dump_does_not_mutate():
+    for dirpath in [None, "/notebooks/", "\\scripts"]:
+        kwargs = {} if dirpath is None else {"dirpath": dirpath}
+        nb = Notebook(source="./hello_world.py", **kwargs)
+        dump0 = nb.model_dump()
+        assert nb.dirpath == dirpath
+        assert nb.model_dump() == dump0

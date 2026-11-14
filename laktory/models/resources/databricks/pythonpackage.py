@@ -81,13 +81,10 @@ class PythonPackage(BaseModel, TerraformResource):
             return None
 
         # dir
-        if self.dirpath is None:
-            self.dirpath = ""
-        if self.dirpath.startswith("/"):
-            self.dirpath = self.dirpath[1:]
+        dirpath = (self.dirpath or "").removeprefix("/")
 
         # path
-        _path = Path(settings.workspace_root) / self.dirpath / self.filename
+        _path = Path(settings.workspace_root) / dirpath / self.filename
 
         return _path.as_posix()
 

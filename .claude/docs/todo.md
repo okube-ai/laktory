@@ -73,7 +73,33 @@ environments:
 
 `${current_user.user_name}` shipped in #633 (`laktory/_current_user.py`, wired into `Stack._resolve_user_root`, documented in `docs/concepts/variables.md#current-user`). Not yet added: a "short name" form. The Databricks SDK's `User` object (`databricks.sdk.service.iam.User`) has no `short_name`/`alphanumeric` field — verified fields are `active, display_name, emails, entitlements, external_id, groups, id, name, roles, schemas, user_name`. Terraform's `databricks_current_user.alphanumeric` attribute is computed by the provider itself (Go code), not returned by the raw API. Before implementing, either (a) check the Databricks Terraform provider's source/docs to replicate that exact sanitization so it matches `${resources.x.alphanumeric}` if both appear in the same stack, or (b) derive Laktory's own convention (e.g. the part of `user_name` before `@`) and document it explicitly as not a claim of parity with Terraform's `alphanumeric`.
 
-## A7 — Discriminated unions for sinks, sources and nodes
+## A7 — Discriminated unions for sinks, sources and nodes (DONE)
+
+**Done (2026-10-27):** `tagged_union(members, infer, kind)` in `laktory/typing.py` builds
+`Annotated[Union[Annotated[X, Tag("X")], ..., Annotated[VariableType, Tag("VariableType")]],
+Discriminator(fn)]` with a custom `invalid_<kind>_type` error listing the valid `type` values. Used by
+`DataSinksUnion`, `DataSourcesUnion`, `DataFrameTransformerNode` (`dataframetransformer.py`) and
+`PipelineOrchestrator` (`pipeline.py`, `type` required: no inference, `nullable=True`).
+`_inject_variable_types` skips tagged unions (and tagged list / dict items). Removed the ad-hoc `_validate_sink_types`
+/ `_validate_sources_types` field validators of `PipelineNode` (#559, explicit `type` only). MCP
+`_nice_type` / `_inner_model` unwrap `Annotated`; mkdocs `griffe_fieldz` uses `strip_annotated: True`.
+Parse pass (HEAD vs branch, `tests/`, `docs/`, quickstarts): 105 sources / sinks / nodes /
+orchestrators select the same class. Tests: `tests/pipeline/node/test_discrimination.py`.
+Not done: `type` in every reference example (class docstrings construct the classes directly; documented
+in `docs/concepts/sourcessinks.md` instead).
+
+**Follow-up (done 2026-10-27): generic `VariableType` wrapper.** `_inject_variable_types` now produces
+`Annotated[Union[T, VariableType], VARIABLE_OR]` (`variable_or()` in `laktory/typing.py`, also on list
+items and dict keys / values). The `_VariableOr` marker builds a wrap validator: a `${...}` string is kept
+as-is, anything else is validated against `T` only; a wrap serializer passes placeholders through; the
+JSON schema keeps `anyOf: [T, VariableType]` (`json_schema_input_schema`). Pydantic moves the marker to
+`FieldInfo.metadata`, so `model_fields[x].annotation` keeps the `Union[T, VariableType]` shape (list / dict
+items show `variable_or(T)`). Placeholders first (not "T first") matches smart mode: e.g.
+`DataFrameMethod.func_kwargs: {x: "${vars.y}"}` stays a raw string. Probe of every injected field of
+every model with `${vars.x}` / `${{ ... }}`: 14,156 checks, 0 differences vs the plain union. Result: a
+typo'd sink field in a stack is 1 error at `resources.pipelines.p.nodes.0.sinks.0.UnityCatalogDataSink.modee`
+(was 6, with `function-after[...]` paths). Perf (workflows quickstart stack): validation ~30% faster
+(no multi-member trials), `model_dump` 0.8 -> 1.2 ms, import unchanged. `tagged_list()` removed.
 
 A validation error in a sink is buried among the errors of every union member (one per sink type
 plus the `${...}` variable placeholder string), with unrelated errors first and very long error
@@ -247,3 +273,60 @@ data (`DbfsFile` upload, sources `dbfs:/laktory/data/stock_prices/` in `pl-stock
 there and point `runtime_root` at it. Works on legacy and new Unity Catalog workspaces (non-UC
 workspaces not covered, accepted). Not a 1.0 blocker, but an adoption one: verify each quickstart
 e2e on a new workspace.
+
+## A15 — `path` computed fields mutate `dirpath` during serialization (DONE)
+
+Found 2026-10-28 while verifying the A7 `get_env` leak fix. The `path` computed field of
+`Notebook`, `WorkspaceFile`, `DbfsFile` and `PythonPackage` normalizes `dirpath` by assigning
+back to the model (`None` -> `""`, backslashes -> `/`, leading `/` stripped). Every
+`model_dump()` therefore mutates the model: dumping one environment changes a model shared with
+another one (e.g. the base stack and an environment that doesn't override it), so a dump made
+before and after another dump can differ (`dirpath: null` vs `dirpath: ""`).
+
+Harmless for builds today (the computed `path` is the same either way), but a serialization side
+effect on shared models, and it made equivalence checks look like mismatches.
+
+**Done (2026-10-28):** `path` normalizes into a local variable and leaves `dirpath` as declared
+(no validator, so the user's value round-trips). Tests `test_*_dump_does_not_mutate` in
+`tests/resources/test_{notebook,workspacefile,dbfsfile,pythonpackage}.py` check that two dumps
+match and `dirpath` is unchanged; they fail on the previous code.
+
+## A16 — `CLIController` default `stack_filepath` is dead code
+
+Found 2026-11-14 in the final A7 branch review. `CLIController.model_post_init` opens
+`self.stack_filepath` to scan the stack environments before the later
+`if self.stack_filepath is None: self.stack_filepath = "./stack.yaml"` default is applied, so a
+controller created without `stack_filepath` fails with `TypeError: expected str, bytes or
+os.PathLike object, not NoneType` instead of reading `./stack.yaml`.
+
+Predates A7 and not reachable from the CLI today (every command passes its `--filepath` option,
+which defaults to `./stack.yaml`), only from Python code building a `CLIController` directly. Fix: apply
+the default first (or as the field default) and add a test.
+
+## A17 — `${...}` placeholder fields: serialization overhead
+
+Found 2026-11-14 in the final A7 branch review. `variable_or()` fields (`_VariableOr`, almost every
+field of every model) validate and serialize through a Python wrap function
+(`_passthrough_placeholder`) instead of a Rust-only `Union[T, VariableType]`. Validation got faster
+(shorter errors, no `VariableType` member tried on failure: 50 pipelines 0.07s -> 0.04s), but
+`model_dump()` got slower: 5 dumps of 50 pipelines + 100 jobs 0.51s -> 0.85s (~70ms more per dump
+of that stack). The wrap serializer exists so that a `${...}` string in a non-string field (e.g.
+`int`) doesn't trigger Pydantic serializer warnings.
+
+Options: a serializer that stays in Rust (e.g. a union serialization schema of `T` and `str`),
+or a wrap serializer only on fields whose type isn't already a string. Measure on a real stack
+(`to_terraform`, `validate_parameters` and job config dumps) before choosing; not a 1.0 blocker.
+
+## A18 — CLI: format stack validation errors raised during variable injection
+
+Found 2026-11-14 in the final A7 branch review. `CLIController.stack_errors()` formats validation
+errors of the stack file and of environment overrides (locations under `environments`), and
+re-raises any other `ValidationError` with its traceback (narrowed on purpose in the A7 review).
+Errors that only surface when variables are injected also come from stack content, e.g.
+`sinks: [${vars.sink}]` where `vars.sink` resolves to a sink with a typo (`modee`): they are raised
+from `inject_vars()` with a location relative to the injected model (`sinks.0.UnityCatalogDataSink.modee`),
+so the user gets a raw traceback.
+
+Fix: catch `ValidationError` around the CLI `inject_vars()` call and report it as an invalid stack,
+ideally with the location prefixed by the model path in the stack (e.g.
+`resources.pipelines.my-pipeline.nodes.0.sinks.0...`), which `inject_vars()` doesn't track today.

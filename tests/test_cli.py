@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from typer.testing import CliRunner
 
 from laktory._settings import settings
@@ -144,6 +145,101 @@ def test_validate_invalid_model(tmp_path):
     bad.write_text("name:\n  - not_a_string\norganization: o\n")
     result = runner.invoke(app, ["validate", "--filepath", str(bad)])
     assert result.exit_code != 0
+
+
+def test_validate_invalid_stack_output(tmp_path, capsys):
+    # Validation errors are printed without traceback; `app()` (not CliRunner,
+    # which bypasses `LaktoryTyper.__call__`)
+    bad = tmp_path / "stack.yaml"
+    bad.write_text(
+        """
+name: s
+resources:
+  pipelines:
+    pl:
+      name: pl
+      nodes:
+        - name: brz
+          sinks:
+            - table_name: brz
+              modee: APPEND
+"""
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        app(["validate", "--filepath", str(bad)])
+    assert excinfo.value.code == 1
+    err = capsys.readouterr().err
+    assert err.startswith(f"Invalid stack '{bad}': 1 validation error")
+    assert "resources.pipelines.pl.nodes.0.sinks.0.UnityCatalogDataSink.modee" in err
+    assert "Extra inputs are not permitted (got 'APPEND')" in err
+    assert "errors.pydantic.dev" not in err
+
+
+def test_validate_invalid_env_override_output(tmp_path, capsys):
+    bad = tmp_path / "stack.yaml"
+    bad.write_text(
+        """
+name: s
+resources:
+  databricks_catalogs:
+    cat:
+      name: cat
+environments:
+  dev:
+    resources:
+      databricks_catalogs:
+        cat:
+          commment: dev
+"""
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        app(["validate", "--env", "dev", "--filepath", str(bad)])
+    assert excinfo.value.code == 1
+    err = capsys.readouterr().err
+    assert err.startswith(f"Invalid stack '{bad}': 1 validation error")
+    assert "environments.dev.resources.databricks_catalogs.cat.commment" in err
+
+
+def test_non_stack_validation_error_traceback(monkeypatch, tmp_path):
+    # A validation error not raised by reading or building the stack (e.g. a
+    # model built at runtime) is not reported as an invalid stack
+    from pydantic import BaseModel
+    from pydantic import ValidationError
+
+    from laktory.cli._common import CLIController
+
+    class Runtime(BaseModel):
+        x: int
+
+    def validate(self):
+        Runtime(x="not an int")
+
+    monkeypatch.setattr(CLIController, "validate_stack", validate)
+    stack = tmp_path / "stack.yaml"
+    stack.write_text("name: s\n")
+    with pytest.raises(ValidationError):
+        app(["validate", "--filepath", str(stack)])
+
+
+def test_build_validation_error_traceback(monkeypatch, tmp_path):
+    # A validation error raised while building the stack, other than an
+    # environment override error, is not reported as an invalid stack
+    from pydantic import BaseModel
+    from pydantic import ValidationError
+
+    from laktory.models import Stack
+
+    class Runtime(BaseModel):
+        x: int
+
+    def to_terraform(self, *args, **kwargs):
+        Runtime(x="not an int")
+
+    monkeypatch.setattr(Stack, "to_terraform", to_terraform)
+    stack = tmp_path / "stack.yaml"
+    stack.write_text("name: s\n")
+    with pytest.raises(ValidationError):
+        app(["validate", "--filepath", str(stack)])
 
 
 def test_validate_bad_env(monkeypatch, tmp_path):

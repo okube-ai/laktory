@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import ClassVar
 from typing import Literal
 
 import networkx as nx
@@ -46,6 +47,7 @@ from laktory.models.pipeline.pipelineparameter import PipelineParameter
 from laktory.models.pipelinechild import PipelineChild
 from laktory.models.resources.virtualterraformresource import VirtualTerraformResource
 from laktory.typing import AnyFrame
+from laktory.typing import tagged_union
 
 if TYPE_CHECKING:
     from databricks.sdk import WorkspaceClient
@@ -54,6 +56,18 @@ if TYPE_CHECKING:
     from laktory.models.pipeline.pipelineexecutionplan import PipelineExecutionPlan
 
 logger = get_logger(__name__)
+
+PipelineOrchestrator = tagged_union(
+    [
+        LakeflowJobOrchestrator,
+        LakeflowDeclarativePipelineOrchestrator,
+        SparkDeclarativePipelineOrchestrator,
+        AirflowOrchestrator,
+    ],
+    lambda data: None,  # selected through `type` only
+    "orchestrator",
+    nullable=True,
+)
 
 # --------------------------------------------------------------------------- #
 # Helper Functions                                                            #
@@ -283,12 +297,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
         List of pipeline nodes. Each node defines a data source, a series of transformations and optionally a sink.
         """,
     )
-    orchestrator: (
-        LakeflowJobOrchestrator
-        | LakeflowDeclarativePipelineOrchestrator
-        | SparkDeclarativePipelineOrchestrator
-        | AirflowOrchestrator
-    ) = Field(
+    orchestrator: PipelineOrchestrator = Field(
         None,
         description="""
         Orchestrator used for scheduling and executing the pipeline. The
@@ -306,8 +315,6 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
           native `spark` `read` and `read_stream` functions to define the
           interdependencies between the tables as in a standard declarative pipeline.
         """,
-        # discriminator="type",  # discriminator can't be used because BaseModel adds
-        # str to Literal type to support variables
     )
     parameters: dict[str, PipelineParameter | None] = Field(
         {},
@@ -327,6 +334,9 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
     )
     _imports_imported: bool = False
     _plan: "PipelineExecutionPlan" = None
+    _uncopied_private: ClassVar[frozenset[str]] = BaseModel._uncopied_private | {
+        "_plan"
+    }
     _parameter_values: dict[str, str] | None = None
 
     @model_validator(mode="before")
@@ -423,6 +433,7 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
     @model_validator(mode="after")
     def validate_sinks(self) -> Any:
+        from laktory.models.datasinks.basedatasink import BaseDataSink
         from laktory.models.datasinks.hivemetastoredatasink import HiveMetastoreDataSink
         from laktory.models.datasinks.pipelineviewdatasink import PipelineViewDataSink
         from laktory.models.datasinks.unitycatalogdatasink import UnityCatalogDataSink
@@ -431,7 +442,10 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
         for n in self.nodes:
             if isinstance(o, LakeflowDeclarativePipelineOrchestrator):
-                for i, s in enumerate(n.sinks):
+                for i, s in enumerate(n.sinks or []):
+                    if not isinstance(s, BaseDataSink):
+                        # `${...}` placeholder, validated once injected
+                        continue
                     if not isinstance(
                         s,
                         (
@@ -672,6 +686,26 @@ class Pipeline(BaseModel, VirtualTerraformResource, PipelineChild):
 
     def _inject_vars_objs(self) -> dict:
         return {"pipeline": self}
+
+    def _execution_plan_signature(self) -> list:
+        # Node properties the execution plan (and orchestrator tasks) is built from
+        return [(n._dag_signature, n.is_sql_expressible) for n in self.nodes]
+
+    def _before_inject_vars(self) -> tuple:
+        has_placeholders = any(n._has_placeholders for n in self.nodes)
+        return self._execution_plan_signature(), has_placeholders
+
+    def _after_inject_vars(self, state: tuple, vars: dict, objs: dict) -> None:
+        signature, had_placeholders = state
+        if not had_placeholders and self._execution_plan_signature() == signature:
+            return
+        # Variables resolved into sources, sinks or transformer nodes (e.g.
+        # `sinks: [${vars.sink}]`) or changed the DAG: re-assign the nodes to
+        # validate the pipeline again and rebuild the state derived from them
+        # at construction (e.g. job tasks, sinks catalog and schema defaults)
+        self.nodes = self.nodes
+        if isinstance(self.orchestrator, BaseModel):
+            self.orchestrator.inject_vars(inplace=True, vars=vars, objs=objs)
 
     # ----------------------------------------------------------------------- #
     # ID                                                                      #

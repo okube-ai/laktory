@@ -85,12 +85,9 @@ class DbfsFile(RenderableFileMixin, DbfsFileBase):
             return self.path_
 
         # dir
-        if self.dirpath is None:
-            self.dirpath = ""
-        if self.dirpath.startswith("/"):
-            self.dirpath = self.dirpath[1:]
+        dirpath = (self.dirpath or "").removeprefix("/")
 
-        path = Path("/") / self.dirpath / self.filename
+        path = Path("/") / dirpath / self.filename
         return path.as_posix()
 
     @computed_field(description="source")

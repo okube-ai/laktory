@@ -48,3 +48,12 @@ def test_workspacefile_additional_resources():
 def test_terraform_plan():
     skip_terraform_plan()
     plan_resource(get_workspace_file())
+
+
+def test_workspace_file_dump_does_not_mutate():
+    for dirpath in [None, "/init_scripts/", "\\scripts"]:
+        kwargs = {} if dirpath is None else {"dirpath": dirpath}
+        f = WorkspaceFile(source="./test_workspacefile.py", **kwargs)
+        dump0 = f.model_dump()
+        assert f.dirpath == dirpath
+        assert f.model_dump() == dump0

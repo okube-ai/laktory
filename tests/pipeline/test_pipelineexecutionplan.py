@@ -1,5 +1,6 @@
 """Tests for PipelineExecutionPlan - node selection, task grouping, and task DAG."""
 
+import networkx as nx
 import pytest
 
 from laktory import models
@@ -191,6 +192,42 @@ def test_task_dag_edges_with_selects(pl):
     upstreams = {task.name: task.upstream_task_names for task in plan.tasks}
     assert tasks == {"slv_a": ["slv_a1", "slv_a2"], "slv_b": ["slv_b2", "slv_b1"]}
     assert upstreams == {"slv_a": [], "slv_b": []}
+
+
+def test_task_dag_edges_newer_plan(pl):
+    # Tasks keep using the plan that created them
+    plan = models.PipelineExecutionPlan(pipeline=pl)
+    tasks = plan.tasks_dict
+    pl.get_execution_plan(selects=["slv_a"])
+    assert tasks["slv_a"].upstream_task_names == ["node-brz_a"]
+
+
+def test_task_dag_cache_invalidation(pl):
+    plan = pl.get_execution_plan()
+    dag = plan.dag
+    assert plan.dag is dag
+
+    # Node added after the plan was created
+    pl.nodes.append(
+        models.PipelineNode(
+            name="plt_a",
+            sources=[{"node_name": "gld_a"}],
+            sinks=[_sink("plt_a")],
+        )
+    )
+    assert plan.tasks_dict["node-plt_a"].upstream_task_names == ["node-gld_a"]
+
+    # Node source modified in place
+    pl.nodes_dict["plt_a"].sources[0].node_name = "gld_b"
+    assert plan.tasks_dict["node-plt_a"].upstream_task_names == ["node-gld_b"]
+
+    # Selects modified
+    plan.selects = ["slv_a"]
+    assert list(plan.dag.nodes) == ["slv_a"]
+
+    # Cached DAG can't be modified
+    with pytest.raises(nx.NetworkXError):
+        plan.dag.add_node("x")
 
 
 def test_task_dag_partial_downstream(pl):

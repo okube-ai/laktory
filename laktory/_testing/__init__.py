@@ -36,10 +36,11 @@ def skip_terraform_plan(extras=None):
 def _get_stack_resource_key(resource) -> str:
     """Derive the StackResources field name for a resource instance by inspecting StackResources annotations.
 
-    Annotation shape: Union[dict[str | VariableType, ResourceClass | VariableType], VariableType]
+    Annotation shape: Union[dict[variable_or(str), variable_or(ResourceClass)], VariableType]
     We navigate: outer Union → dict (args[0]) → dict value type (dict_args[1]) → inner Union args.
     """
     from laktory.models.stacks.stack import StackResources
+    from laktory.typing import unwrap_variable_or
 
     resource_type = type(resource)
 
@@ -63,7 +64,7 @@ def _get_stack_resource_key(resource) -> str:
         dict_args = typing.get_args(dict_type)
         if len(dict_args) < 2:
             continue
-        value_type = dict_args[1]
+        value_type = unwrap_variable_or(dict_args[1])
 
         origin = typing.get_origin(value_type)
         is_union = origin is typing.Union or (

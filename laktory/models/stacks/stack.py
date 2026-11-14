@@ -16,6 +16,7 @@ from pydantic import model_validator
 from laktory._current_user import current_user
 from laktory._logger import get_logger
 from laktory._settings import settings
+from laktory.models.basechild import BaseChild
 from laktory.models.basemodel import BaseModel
 from laktory.models.pipeline.pipeline import Pipeline
 from laktory.models.resources.databricks._renderablefile import RenderableFileMixin
@@ -686,6 +687,29 @@ class EnvironmentSettings(BaseModel):
     terraform: Terraform = Field(Terraform(), description="Terraform-specific settings")
 
 
+def _deep_copy(model: BaseModel) -> BaseModel:
+    if isinstance(model, BaseChild):
+        # Skips `update_from_parent()`, costly for pipelines (job tasks)
+        return model._copy_tree()
+    return model.model_copy(deep=True)
+
+
+def _copy_overridden_resources(
+    resources: StackResources, overrides: dict
+) -> StackResources:
+    """Copy of `resources` with a deep copy of each resource in `overrides`."""
+    update = {}
+    for rtype, roverrides in overrides.items():
+        current = getattr(resources, rtype, None)
+        if not isinstance(current, dict) or not isinstance(roverrides, dict):
+            continue
+        update[rtype] = {
+            k: _deep_copy(r) if k in roverrides and isinstance(r, BaseModel) else r
+            for k, r in current.items()
+        }
+    return resources.model_copy(update=update)
+
+
 class Stack(BaseModel):
     """
     The Stack defines a collection of deployable resources, the deployment
@@ -972,7 +996,9 @@ class Stack(BaseModel):
 
         logger.info("Build completed.")
 
-    def _apply_env_overrides(self, env: EnvironmentSettings) -> "Stack":
+    def _apply_env_overrides(
+        self, env: EnvironmentSettings, env_name: str | None = None
+    ) -> "Stack":
         """
         Return a new Stack where *env*'s settings are merged on top of this
         stack's defaults.
@@ -986,9 +1012,22 @@ class Stack(BaseModel):
         - All other fields (``resources``, ``terraform``, …): env value
           replaces the stack default entirely when set.
         - ``environments`` is cleared on the returned copy (already resolved).
+
+        Overrides are merged in place, so the overridden models (resources,
+        ``terraform``, ...) are deep copied first: the stack itself, and the
+        other environments built from it, are left untouched.
         """
-        merged = self._copy(update={"environments": {}})
-        merged.update(env.model_dump(exclude_unset=True))
+        overrides = env.model_dump(exclude_unset=True)
+        update = {"environments": {}}
+        for key, value in overrides.items():
+            current = getattr(self, key, None)
+            if key == "resources" and isinstance(value, dict) and current is not None:
+                update[key] = _copy_overridden_resources(current, value)
+            elif isinstance(current, BaseModel) and key != "settings":
+                update[key] = current.model_copy(deep=True)
+        merged = self._copy(update=update)
+        loc = ("environments", env_name) if env_name else ()
+        merged.update(overrides, _loc=loc)
         return merged
 
     def _copy(self, update: dict | None = None) -> "Stack":
@@ -1023,7 +1062,7 @@ class Stack(BaseModel):
         if env_name not in self.environments.keys():
             raise ValueError(f"Environment '{env_name}' is not declared in the stack.")
 
-        return self._apply_env_overrides(self.environments[env_name])
+        return self._apply_env_overrides(self.environments[env_name], env_name)
 
     # ----------------------------------------------------------------------- #
     # Helpers                                                                 #

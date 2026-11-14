@@ -7,10 +7,8 @@ from typing import Literal
 import narwhals as nw
 from pydantic import AliasChoices
 from pydantic import Field
-from pydantic import ValidationError
 from pydantic import computed_field
 from pydantic import field_serializer
-from pydantic import field_validator
 from pydantic import model_validator
 
 from laktory._logger import get_logger
@@ -21,6 +19,7 @@ from laktory.exceptions import DataQualityExpectationsNotSupported
 from laktory.models.basemodel import BaseModel
 from laktory.models.dataframe.dataframetransformer import DataFrameTransformer
 from laktory.models.dataquality.expectation import DataQualityExpectation
+from laktory.models.datasinks import BaseDataSink
 from laktory.models.datasinks import DataSinksUnion
 from laktory.models.datasinks import TableDataSink
 from laktory.models.datasinks.basedatasink import purge_checkpoint
@@ -212,90 +211,11 @@ class PipelineNode(BaseModel, PipelineChild):
                 data["sources"] = [source]
         return data
 
-    @field_validator("sources", mode="before")
-    @classmethod
-    def _validate_sources_types(cls, v):
-        from laktory.models.datasources.customdatasource import CustomDataSource
-        from laktory.models.datasources.dataframedatasource import DataFrameDataSource
-        from laktory.models.datasources.filedatasource import FileDataSource
-        from laktory.models.datasources.hivemetastoredatasource import (
-            HiveMetastoreDataSource,
-        )
-        from laktory.models.datasources.pipelinenodedatasource import (
-            PipelineNodeDataSource,
-        )
-        from laktory.models.datasources.unitycatalogdatasource import (
-            UnityCatalogDataSource,
-        )
-
-        _source_map = {
-            "CUSTOM": CustomDataSource,
-            "DATAFRAME": DataFrameDataSource,
-            "FILE": FileDataSource,
-            "HIVE_METASTORE": HiveMetastoreDataSource,
-            "PIPELINE_NODE": PipelineNodeDataSource,
-            "UNITY_CATALOG": UnityCatalogDataSource,
-        }
-
-        if not isinstance(v, list):
-            return v
-
-        result = []
-        for i, item in enumerate(v):
-            if not isinstance(item, dict):
-                result.append(item)
-                continue
-            source_type = item.get("type")
-            if source_type is None:
-                result.append(item)
-                continue
-            target_cls = _source_map.get(source_type)
-            if target_cls is None:
-                result.append(item)
-                continue
-            try:
-                result.append(target_cls.model_validate(item))
-            except ValidationError as e:
-                raise ValueError(f"sources[{i}]: {e}") from None
-        return result
-
-    @field_validator("sinks", mode="before")
-    @classmethod
-    def _validate_sink_types(cls, v):
-        if not isinstance(v, list):
-            return v
-        from laktory.models.datasinks.filedatasink import FileDataSink
-        from laktory.models.datasinks.hivemetastoredatasink import HiveMetastoreDataSink
-        from laktory.models.datasinks.pipelineviewdatasink import PipelineViewDataSink
-        from laktory.models.datasinks.unitycatalogdatasink import UnityCatalogDataSink
-
-        _sink_map = {
-            "FILE": FileDataSink,
-            "HIVE_METASTORE": HiveMetastoreDataSink,
-            "PIPELINE_VIEW": PipelineViewDataSink,
-            "UNITY_CATALOG": UnityCatalogDataSink,
-        }
-        result = []
-        for i, item in enumerate(v):
-            if not isinstance(item, dict):
-                result.append(item)
-                continue
-            sink_type = item.get("type")
-            target_cls = _sink_map.get(sink_type)
-            if target_cls is None:
-                result.append(item)
-                continue
-            try:
-                result.append(target_cls.model_validate(item))
-            except ValidationError as e:
-                raise ValueError(f"sinks[{i}]: {e}") from None
-        return result
-
     @model_validator(mode="after")
     def push_primary_keys(self) -> Any:
         # Assign primary keys
-        if self.primary_keys and self.sinks:
-            for s in self.sinks:
+        if self.primary_keys:
+            for s in self._sinks:
                 if s.is_cdc:
                     if s.merge_cdc_options.primary_keys is None:
                         s.merge_cdc_options.primary_keys = self.primary_keys
@@ -323,7 +243,7 @@ class PipelineNode(BaseModel, PipelineChild):
             return self
 
         # Validate Sources
-        for isource, source in enumerate(self.sources):
+        for isource, source in enumerate(self._sources):
             label = source.name or str(isource)
             if not (
                 isinstance(source, TableDataSource)
@@ -341,12 +261,10 @@ class PipelineNode(BaseModel, PipelineChild):
         # Validate Sinks
         m = f"node '{self.name}': "
 
-        # Validate Transformer
-        if not self.transformer:
-            raise ValueError(
-                f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
-            )
-        if not self.transformer.is_sql_expressible:
+        # Validate Transformer (a `${...}` placeholder is validated once injected)
+        if isinstance(self.transformer, str):
+            pass
+        elif not self.transformer or not self.transformer.is_sql_expressible:
             raise ValueError(
                 f"{m}VIEW sink requires a transformer with single node expressed as SQL statement."
             )
@@ -358,16 +276,45 @@ class PipelineNode(BaseModel, PipelineChild):
         return self
 
     @property
+    def _sources(self) -> list[BaseDataSource]:
+        # Skip `${...}` placeholders (the list or an item) not yet injected
+        return [s for s in self.sources if isinstance(s, BaseDataSource)]
+
+    @property
+    def _sinks(self) -> list[BaseDataSink]:
+        # Skip `${...}` placeholders (the list or an item) not yet injected
+        return [s for s in self.sinks or [] if isinstance(s, BaseDataSink)]
+
+    @property
+    def _transformer(self) -> DataFrameTransformer | None:
+        # Skip a `${...}` placeholder transformer not yet injected
+        if isinstance(self.transformer, DataFrameTransformer):
+            return self.transformer
+        return None
+
+    @property
+    def _has_placeholders(self) -> bool:
+        # Sources, sinks or transformer nodes not yet injected
+        t = self._transformer
+        if t is not None and len(t._resolved_nodes) != len(t.nodes):
+            return True
+        return (
+            isinstance(self.transformer, str)
+            or len(self._sources) != len(self.sources)
+            or len(self._sinks) != len(self.sinks or [])
+        )
+
+    @property
     def has_streaming_source(self) -> bool:
         """True if any declared source is read as a stream."""
-        return any(s.as_stream for s in self.sources)
+        return any(s.as_stream for s in self._sources)
 
     @property
     def view_definition(self):
         """Transformer View Definition (when applicable)"""
-        if self.transformer is None:
+        if self._transformer is None:
             return None
-        return self.transformer.view_definition
+        return self._transformer.view_definition
 
     # ----------------------------------------------------------------------- #
     # Children                                                                #
@@ -454,10 +401,8 @@ class PipelineNode(BaseModel, PipelineChild):
 
     @property
     def is_view(self) -> bool:
-        if not self.sinks:
-            return False
         is_view = False
-        for s in self.sinks:
+        for s in self._sinks:
             if isinstance(s, TableDataSink) and s.table_type == "VIEW":
                 is_view = True
                 break
@@ -466,12 +411,12 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def is_sql_expressible(self) -> bool:
         """`True` if the node can be executed on a SQL warehouse."""
-        if self.transformer is None:
+        if self._transformer is None:
             return False
-        if not self.sinks:
+        if not self.sinks or len(self._sinks) != len(self.sinks):
             return False
-        return self.transformer.is_sql_expressible and all(
-            s.is_sql_expressible for s in self.sinks
+        return self._transformer.is_sql_expressible and all(
+            s.is_sql_expressible for s in self._sinks
         )
 
     @property
@@ -526,20 +471,18 @@ class PipelineNode(BaseModel, PipelineChild):
     def output_sinks(self) -> list[DataSinksUnion]:
         """List of sinks writing the output DataFrame"""
         sinks = []
-        if self.sinks:
-            for s in self.sinks:
-                if not s.is_quarantine:
-                    sinks += [s]
+        for s in self._sinks:
+            if not s.is_quarantine:
+                sinks += [s]
         return sinks
 
     @property
     def quarantine_sinks(self) -> list[DataSinksUnion]:
         """List of sinks writing the quarantine DataFrame"""
         sinks = []
-        if self.sinks:
-            for s in self.sinks:
-                if s.is_quarantine:
-                    sinks += [s]
+        for s in self._sinks:
+            if s.is_quarantine:
+                sinks += [s]
         return sinks
 
     @property
@@ -647,6 +590,17 @@ class PipelineNode(BaseModel, PipelineChild):
     # ----------------------------------------------------------------------- #
 
     @property
+    def _dag_signature(self) -> tuple:
+        # Node properties the pipeline execution plan DAG is built from
+        return (
+            self.name,
+            self.execution_task_name,
+            tuple(self.upstream_node_names),
+            self.has_sinks,
+            tuple(self.tags),
+        )
+
+    @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to execute current node."""
         names = [
@@ -655,8 +609,8 @@ class PipelineNode(BaseModel, PipelineChild):
             if isinstance(src, PipelineNodeDataSource)
         ]
         names += self.depends_on
-        if self.transformer:
-            names += self.transformer.upstream_node_names
+        if self._transformer:
+            names += self._transformer.upstream_node_names
         return list(dict.fromkeys(names))  # deduplicate, preserve order
 
     # ----------------------------------------------------------------------- #
@@ -666,9 +620,9 @@ class PipelineNode(BaseModel, PipelineChild):
     @property
     def data_sources(self) -> list[BaseDataSource]:
         """Get all sources feeding the pipeline node: explicit sources and {nodes.X} transformer references."""
-        sources = list(self.sources)
-        if self.transformer:
-            sources += self.transformer.data_sources
+        sources = list(self._sources)
+        if self._transformer:
+            sources += self._transformer.data_sources
         seen = set()
         unique = []
         for s in sources:

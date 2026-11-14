@@ -9,6 +9,30 @@ It is generally used as a component of a [pipeline](pipeline.md) node. In this
 context, the sink may be used to store the output of the node or some
 quarantined data if [expectations](dataquality.md) are set and not met.
 
+#### Source Type
+In a pipeline node `sources` list, the kind of each source is set with `type`, or inferred from its keys when
+`type` is omitted:
+
+| `type`           | Inferred from   | Model                     |
+|------------------|-----------------|---------------------------|
+| `PIPELINE_NODE`  | `node_name`     | `PipelineNodeDataSource`  |
+| `CUSTOM`         | `custom_reader` | `CustomDataSource`        |
+| `DATAFRAME`      | `df` or `data`  | `DataFrameDataSource`     |
+| `FILE`           | `path`          | `FileDataSource`          |
+| `UNITY_CATALOG`  | default         | `UnityCatalogDataSource`  |
+| `HIVE_METASTORE` | -               | `HiveMetastoreDataSource` |
+
+```yaml
+sources:
+- node_name: brz_stock_prices      # PIPELINE_NODE
+- type: FILE
+  path: /Volumes/dev/sources/landing/events/
+  format: JSON
+```
+
+A validation error is reported against the selected model only, e.g.
+`sources.0.FileDataSource.fromat: Extra inputs are not permitted`. Future source kinds will require `type`.
+
 #### Naming Sources
 A pipeline node can declare one or more sources via its `sources` list. Each source accepts an optional `name` field.
 The name is used to reference that source inside [transformer](transformer.md) expressions using the
@@ -160,6 +184,16 @@ Data sinks also support the merge of a [Change Data Capture (CDC)](cdc.md).
 On a full refresh, sinks are reset according to their `reset_mode` (see
 [Refresh and Reset](refresh.md)). A sink written by multiple nodes or pipelines is a shared sink
 (see [Shared Sinks](sharedsinks.md)).
+
+#### Sink Type
+As for sources, the kind of each sink is set with `type`, or inferred from its keys when `type` is omitted:
+
+| `type`           | Inferred from        | Model                   |
+|------------------|----------------------|-------------------------|
+| `PIPELINE_VIEW`  | `pipeline_view_name` | `PipelineViewDataSink`  |
+| `FILE`           | `path`               | `FileDataSink`          |
+| `UNITY_CATALOG`  | default              | `UnityCatalogDataSink`  |
+| `HIVE_METASTORE` | -                    | `HiveMetastoreDataSink` |
 
 #### File Data Sink
 ??? "API Documentation"

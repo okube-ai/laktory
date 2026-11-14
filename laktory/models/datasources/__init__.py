@@ -1,3 +1,5 @@
+from laktory.typing import tagged_union
+
 from .basedatasource import BaseDataSource
 from .customdatasource import CustomDataSource
 from .customreader import CustomReader
@@ -17,11 +19,18 @@ classes = [
     PipelineNodeDataSource,
 ]
 
-DataSourcesUnion = (
-    CustomDataSource
-    | FileDataSource
-    | UnityCatalogDataSource
-    | HiveMetastoreDataSource
-    | DataFrameDataSource
-    | PipelineNodeDataSource
-)
+
+def _infer_source(data: dict) -> type:
+    # Frozen: new source kinds must be selected through their `type`
+    if "node_name" in data:
+        return PipelineNodeDataSource
+    if "custom_reader" in data:
+        return CustomDataSource
+    if "df" in data or "data" in data:
+        return DataFrameDataSource
+    if "path" in data:
+        return FileDataSource
+    return UnityCatalogDataSource
+
+
+DataSourcesUnion = tagged_union(classes, _infer_source, "source")
