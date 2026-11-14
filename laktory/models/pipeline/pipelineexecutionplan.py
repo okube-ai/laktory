@@ -50,6 +50,7 @@ class PipelineExecutionPlan(BaseModel):
         - `*{node_name}*`: Execute the node, its upstream, and downstream dependencies.
         """,
     )
+    _dag: tuple[tuple, nx.DiGraph] = None
 
     @model_validator(mode="after")
     def update_pipeline(self) -> Any:
@@ -179,6 +180,14 @@ class PipelineExecutionPlan(BaseModel):
     # Tasks                                                                            #
     # -------------------------------------------------------------------------------- #
 
+    def _dag_key(self) -> tuple:
+        # Everything the DAG is built from. Compared on each access so that
+        # nodes added or modified after the plan was created invalidate it.
+        return (
+            tuple(self.selects or ()),
+            tuple(n._dag_signature for n in self.pipeline.nodes),
+        )
+
     @property
     def dag(self) -> nx.DiGraph:
         """
@@ -189,11 +198,19 @@ class PipelineExecutionPlan(BaseModel):
         Pipeline nodes without sink(s) are omitted unless they are leaf (terminal) nodes
         as they will be executed implicitly when executing their downstream nodes.
 
+        The DAG is cached (and frozen) until the pipeline nodes change.
+
         Returns
         -------
         nx.DiGraph
             A directed acyclic graph representing the execution plan.
         """
+        key = self._dag_key()
+        if self._dag is None or self._dag[0] != key:
+            self._dag = (key, nx.freeze(self._build_dag()))
+        return self._dag[1]
+
+    def _build_dag(self) -> nx.DiGraph:
         nodes_dag = self.nodes_dag
         nodes_dict = self.nodes_dict
 
@@ -283,14 +300,18 @@ class PipelineExecutionPlan(BaseModel):
         output: list[PipelineTask]
         """
         tasks = []
-        for dag_node, attr in self.dag.nodes(data=True):
-            tasks += [
-                PipelineTask(
-                    name=dag_node,
-                    pipeline=self.pipeline,
-                    node_names=attr["node_names"],
-                )
+        dag = self.dag
+        for dag_node, attr in dag.nodes(data=True):
+            task = PipelineTask(
+                name=dag_node,
+                pipeline=self.pipeline,
+                node_names=attr["node_names"],
+            )
+            # Like `node_names`, a snapshot of the plan DAG
+            task._upstream_task_names = [
+                u for u, _ in dag.in_edges(dag_node) if u != dag_node
             ]
+            tasks += [task]
 
         return tasks
 

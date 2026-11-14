@@ -34,7 +34,7 @@ dependencies = [
     "platformdirs",
     "prompt_toolkit",
     "pyyaml",
-    "pydantic>=2",
+    "pydantic>=2.10",
     "pydantic-settings",
     # "python-dateutil",
     "sqlglot",

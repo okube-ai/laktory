@@ -8,12 +8,23 @@ from laktory.models.dataframe.dataframeexpr import DataFrameExpr
 from laktory.models.dataframe.dataframemethod import DataFrameMethod
 from laktory.models.pipelinechild import PipelineChild
 from laktory.typing import AnyFrame
+from laktory.typing import tagged_union
 
 if TYPE_CHECKING:
     pass
 
 logger = get_logger(__name__)
 
+
+def _infer_transformer_node(data: dict) -> type:
+    if "expr" in data:
+        return DataFrameExpr
+    return DataFrameMethod
+
+
+DataFrameTransformerNode = tagged_union(
+    [DataFrameMethod, DataFrameExpr], _infer_transformer_node, "transformer node"
+)
 
 # --------------------------------------------------------------------------- #
 # Main Class                                                                  #
@@ -68,15 +79,20 @@ class DataFrameTransformer(BaseModel, PipelineChild):
     * [Data Transformer](https://www.laktory.ai/concepts/transformer/)
     """
 
-    nodes: list[DataFrameMethod | DataFrameExpr] = Field(
+    nodes: list[DataFrameTransformerNode] = Field(
         ..., description="List of transformations"
     )
+
+    @property
+    def _resolved_nodes(self) -> list[BaseModel]:
+        # Skip `${...}` placeholders (the list or an item) not yet injected
+        return [n for n in self.nodes if isinstance(n, BaseModel)]
 
     @property
     def upstream_node_names(self) -> list[str]:
         """Pipeline node names required to apply transformer"""
         names = []
-        for node in self.nodes:
+        for node in self._resolved_nodes:
             names += node.upstream_node_names
         return names
 
@@ -85,7 +101,7 @@ class DataFrameTransformer(BaseModel, PipelineChild):
         """Get all sources feeding the Transformer"""
 
         sources = []
-        for node in self.nodes:
+        for node in self._resolved_nodes:
             sources += node.data_sources
 
         return sources
@@ -98,7 +114,7 @@ class DataFrameTransformer(BaseModel, PipelineChild):
 
     @property
     def is_sql_expressible(self) -> bool:
-        if len(self.nodes) != 1:
+        if len(self.nodes) != 1 or len(self._resolved_nodes) != 1:
             return False
         if not self.nodes[0].is_sql_expressible:
             return False

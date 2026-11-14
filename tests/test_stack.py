@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 import laktory as lk
 from laktory import models
@@ -971,6 +972,255 @@ def test_get_env():
 
     prd = stack.get_env("prd").inject_vars()
     assert prd.name == "stack-value0-prd"
+
+
+def test_get_env_does_not_leak():
+    # Overrides are merged into copies: neither the stack nor the other
+    # environments see them
+    stack = models.Stack(
+        name="s",
+        resources={"databricks_catalogs": {"cat": {"name": "cat", "comment": "base"}}},
+        environments={
+            "dev": {"resources": {"databricks_catalogs": {"cat": {"comment": "dev"}}}},
+            "prd": {},
+        },
+    )
+
+    assert stack.get_env("dev").resources.databricks_catalogs["cat"].comment == "dev"
+    assert stack.resources.databricks_catalogs["cat"].comment == "base"
+    assert stack.get_env("prd").resources.databricks_catalogs["cat"].comment == "base"
+
+
+def test_get_env_pipeline_override_copy():
+    # Pipelines are copied without rebuilding their children (`_copy_tree`):
+    # parents must point to the copies
+    stack = models.Stack(
+        name="s",
+        resources={
+            "pipelines": {
+                "pl": {
+                    "name": "pl",
+                    "orchestrator": {
+                        "type": "LAKEFLOW_JOB",
+                        "serverless_environment_version": "3",
+                    },
+                    "nodes": [
+                        {"name": "brz", "sinks": [{"table_name": "brz"}]},
+                        {
+                            "name": "slv",
+                            "sources": [{"node_name": "brz"}],
+                            "sinks": [{"table_name": "slv"}],
+                        },
+                    ],
+                }
+            }
+        },
+        environments={
+            "dev": {
+                "resources": {
+                    "pipelines": {"pl": {"orchestrator": {"max_concurrent_runs": 2}}}
+                }
+            },
+        },
+    )
+    base = stack.resources.pipelines["pl"]
+
+    pl = stack.get_env("dev").resources.pipelines["pl"]
+    assert pl is not base
+    assert pl.orchestrator.max_concurrent_runs == 2
+    assert base.orchestrator.max_concurrent_runs is None
+    assert pl.orchestrator.parent is pl
+    for node in pl.nodes:
+        assert node.parent is pl
+        assert node.sinks[0].parent is node
+    assert [t.task_key for t in pl.orchestrator.task] == ["node-brz", "node-slv"]
+    for node in base.nodes:
+        assert node.parent is base
+
+
+def test_get_env_override_aliases():
+    # Overrides accept the same keys as the stack, e.g. a plural alias (`tasks`
+    # for `task`) or an `AliasChoices` alias (`path` for `path_`)
+    stack = models.Stack(
+        name="s",
+        resources={
+            "databricks_jobs": {
+                "job": {
+                    "name": "job",
+                    "tasks": [
+                        {"task_key": "a", "notebook_task": {"notebook_path": "/a"}}
+                    ],
+                }
+            },
+            "databricks_notebooks": {"nb": {"source": "./nb.py", "path": "/a/nb.py"}},
+        },
+        environments={
+            "dev": {
+                "resources": {
+                    "databricks_jobs": {
+                        "job": {
+                            "tasks": [
+                                {
+                                    "task_key": "b",
+                                    "notebook_task": {"notebook_path": "/b"},
+                                }
+                            ]
+                        }
+                    },
+                    "databricks_notebooks": {"nb": {"path": "/b/nb.py"}},
+                }
+            },
+        },
+    )
+    env = stack.get_env("dev")
+    assert [t.task_key for t in env.resources.databricks_jobs["job"].task] == ["b"]
+    assert env.resources.databricks_notebooks["nb"].path == "/b/nb.py"
+    assert [t.task_key for t in stack.resources.databricks_jobs["job"].task] == ["a"]
+    assert stack.resources.databricks_notebooks["nb"].path == "/a/nb.py"
+
+
+def test_get_env_override_alias_error_loc():
+    # Errors of an aliased field are located under the key used in the YAML
+    stack = models.Stack(
+        name="s",
+        resources={"databricks_jobs": {"job": {"name": "job"}}},
+        environments={
+            "dev": {
+                "resources": {
+                    "databricks_jobs": {
+                        "job": {"tasks": [{"task_key": "a", "max_retries": "x"}]}
+                    }
+                }
+            },
+        },
+    )
+    with pytest.raises(ValidationError) as excinfo:
+        stack.get_env("dev")
+    locs = [e["loc"] for e in excinfo.value.errors()]
+    assert locs == [
+        (
+            "environments",
+            "dev",
+            "resources",
+            "databricks_jobs",
+            "job",
+            "tasks",
+            0,
+            "max_retries",
+        )
+    ]
+
+
+def test_get_env_after_inject_vars():
+    # Environment overrides are applied after a previous injection of the stack
+    stack = models.Stack(
+        name="s",
+        resources={"databricks_catalogs": {"cat": {"name": "c"}}},
+        environments={
+            "dev": {"resources": {"databricks_catalogs": {"cat": {"name": "dev_c"}}}}
+        },
+    )
+    stack.inject_vars()
+    stack.resources.databricks_catalogs["cat"].inject_vars()
+    env = stack.get_env("dev").inject_vars()
+    assert env.resources.databricks_catalogs["cat"].name == "dev_c"
+    assert (
+        stack.get_env(None).inject_vars().resources.databricks_catalogs["cat"].name
+        == "c"
+    )
+
+
+def test_get_env_resources_without_stack_resources():
+    stack = models.Stack(
+        name="s",
+        resources=None,
+        environments={
+            "dev": {"resources": {"databricks_catalogs": {"cat": {"name": "cat"}}}}
+        },
+    )
+    env = stack.get_env("dev")
+    assert list(env.resources.databricks_catalogs) == ["cat"]
+    assert stack.resources is None
+
+
+def test_inject_vars_copy_parents():
+    # A deep copy (e.g. `inject_vars()` without `inplace`) must re-point the
+    # parent back-references to the copies, not to detached duplicates
+    stack = models.Stack(
+        name="s",
+        variables={"env": "dev"},
+        resources={
+            "pipelines": {
+                "pl": {
+                    "name": "pl",
+                    "orchestrator": {
+                        "type": "LAKEFLOW_JOB",
+                        "serverless_environment_version": "3",
+                    },
+                    "nodes": [
+                        {
+                            "name": "brz",
+                            "sources": [{"table_name": "src"}],
+                            "sinks": [{"table_name": "brz_${vars.env}"}],
+                        },
+                    ],
+                }
+            }
+        },
+    )
+    base = stack.resources.pipelines["pl"]
+
+    pl = stack.inject_vars().resources.pipelines["pl"]
+    node = pl.nodes[0]
+    assert pl is not base
+    assert pl.orchestrator.parent is pl
+    assert node.parent is pl
+    assert node.sources[0].parent is node
+    assert node.sinks[0].parent is node
+    assert node.sinks[0].table_name == "brz_dev"
+    assert base.nodes[0].sinks[0].parent is base.nodes[0]
+
+
+def test_get_env_invalid_override():
+    stack = models.Stack(
+        name="s",
+        resources={"databricks_catalogs": {"cat": {"name": "cat"}}},
+        environments={
+            "dev": {"resources": {"databricks_catalogs": {"cat": {"commment": "dev"}}}},
+            "prd": {
+                "resources": {"databricks_catalogs": {"cat": {"isolation_mode": "X"}}}
+            },
+        },
+    )
+
+    # Unknown field
+    with pytest.raises(ValidationError) as excinfo:
+        stack.get_env("dev")
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["type"] == "extra_forbidden"
+    assert errors[0]["loc"] == (
+        "environments",
+        "dev",
+        "resources",
+        "databricks_catalogs",
+        "cat",
+        "commment",
+    )
+
+    # Invalid value
+    with pytest.raises(ValidationError) as excinfo:
+        stack.get_env("prd")
+    errors = excinfo.value.errors()
+    assert len(errors) == 1
+    assert errors[0]["loc"] == (
+        "environments",
+        "prd",
+        "resources",
+        "databricks_catalogs",
+        "cat",
+        "isolation_mode",
+    )
 
 
 _DB_PROVIDER = {

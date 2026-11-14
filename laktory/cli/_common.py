@@ -1,7 +1,9 @@
 import os
 import subprocess
+from contextlib import contextmanager
 from typing import Any
 
+import pydantic
 import yaml
 from prompt_toolkit.validation import ValidationError
 from prompt_toolkit.validation import Validator
@@ -61,6 +63,35 @@ def parse_cli_vars(
         result[key.strip()] = value
 
     return result
+
+
+class InvalidStackError(Exception):
+    """Stack file failing validation, reported by the CLI without a traceback."""
+
+    def __init__(self, filepath: str, error: pydantic.ValidationError):
+        self.filepath = filepath
+        self.error = error
+        super().__init__(format_validation_error(error, filepath))
+
+
+def format_validation_error(
+    error: pydantic.ValidationError, filepath: str | None = None
+) -> str:
+    """
+    Format a validation error as one location / message pair per error, without
+    Pydantic documentation links and dumps of the (possibly large) input dicts.
+    """
+    n = error.error_count()
+    source = f"stack '{filepath}'" if filepath else "stack"
+    lines = [f"Invalid {source}: {n} validation error{'s' if n > 1 else ''}"]
+    for e in error.errors(include_url=False):
+        loc = ".".join(str(x) for x in e["loc"]) or "(root)"
+        msg = e["msg"].removeprefix("Value error, ")
+        value = e.get("input")
+        if e["type"] != "missing" and isinstance(value, (str, int, float, bool)):
+            msg += f" (got {value!r})"
+        lines += ["", f"  {loc}", f"    {msg}"]
+    return "\n".join(lines)
 
 
 class TemplateValidator(Validator):
@@ -140,8 +171,6 @@ class CLIController(BaseModel):
                 )
                 self.env = env_names[0]
 
-        logger.info("Stack validation completed.")
-
         # Resolve CLI vars now that env is known
         stack_dir = os.path.dirname(os.path.abspath(self.stack_filepath))
         self.cli_vars = parse_cli_vars(
@@ -158,7 +187,30 @@ class CLIController(BaseModel):
                 if self.env is not None
                 else dict(self.cli_vars) or None
             )
-            self.stack = Stack.model_validate_yaml(fp, vars=vars or None)
+            with self.stack_errors(overrides_only=False):
+                self.stack = Stack.model_validate_yaml(fp, vars=vars or None)
+        logger.info("Stack loaded.")
+
+    @contextmanager
+    def stack_errors(self, overrides_only: bool = True):
+        """
+        Report validation errors of the stack file as invalid stack errors.
+
+        Parameters
+        ----------
+        overrides_only:
+            Only report errors of environment overrides (merged when the stack
+            is built for an environment, located under `environments`). Other
+            errors (e.g. of a model built at runtime) keep their traceback.
+        """
+        try:
+            yield
+        except pydantic.ValidationError as e:
+            if overrides_only and not all(
+                err["loc"][:1] == ("environments",) for err in e.errors()
+            ):
+                raise
+            raise InvalidStackError(self.stack_filepath, e) from None
 
     @property
     def iac_backend(self) -> str:
@@ -179,12 +231,22 @@ class CLIController(BaseModel):
 
         return options
 
+    def validate_stack(self):
+        # Builds the environment stack and checks resources cross-references
+        # (_check_depends_on)
+        with self.stack_errors():
+            self.stack.to_terraform(env_name=self.env, vars=self.cli_vars or None)
+
     def terraform_call(self, cmd):
-        pstack = self.stack.to_terraform(env_name=self.env, vars=self.cli_vars or None)
+        with self.stack_errors():
+            pstack = self.stack.to_terraform(
+                env_name=self.env, vars=self.cli_vars or None
+            )
         getattr(pstack, cmd)(flags=self.terraform_options)
 
     def build(self):
-        self.stack.build(env_name=self.env, vars=self.cli_vars or None)
+        with self.stack_errors():
+            self.stack.build(env_name=self.env, vars=self.cli_vars or None)
 
 
 class Worker:

@@ -14,8 +14,9 @@ pydantic.BaseModel
                     └── Xyz(XyzBase) - hand-written override (e.g. catalog.py)
 ```
 
-- `BaseModel` uses a custom metaclass (`ModelMetaclass`) that injects `VariableType` into every field, enabling `${vars.x}` substitution in all string values.
+- `BaseModel` uses a custom metaclass (`ModelMetaclass`) that injects `VariableType` into every field, enabling `${vars.x}` substitution in all string values. Each field becomes `Annotated[Union[T, VariableType], VARIABLE_OR]` (`laktory/typing.py`): a `${...}` string is kept as-is, anything else is validated against `T` only, so a validation error is reported once with a short path. Sources, sinks, transformer nodes and orchestrators are discriminated unions (`tagged_union()`) carrying `VariableType` as a member.
 - `BaseChild` adds `_parent` tracking and propagates parent assignments down the tree.
+- `BaseModel.__deepcopy__` memoizes the copy before copying its fields, so a deep copy keeps `_parent` back-references inside the copy (pydantic's own `__deepcopy__` duplicated the parent instead). `BaseChild.model_copy` additionally re-runs `update_from_parent()`; `BaseChild._copy_tree()` is the cheap copy that skips it. Private attributes listed in `_uncopied_private` (the `inject_vars` cache, `Pipeline._plan`) are reset instead of copied, since a copy is often modified next (environment overrides); `update()` also clears the `inject_vars` cache.
 - `BaseResource` adds `options`, `lookup_existing`, and `resource_type_id` fields present on all cloud resources.
 
 Key files: `laktory/models/basemodel.py`, `laktory/models/basechild.py`, `laktory/models/resources/baseresource.py`
@@ -117,6 +118,13 @@ Usage pattern in YAML configs:
 name: cluster-${vars.env}
 num_workers: ${{ 4 if vars.env == 'prod' else 1 }}
 ```
+
+Exceptions and placeholder lifecycle:
+- A single-literal `type` field (`Literal["FILE"]`: sources, sinks, orchestrators, `DataFrameExpr`) never accepts a placeholder (`_is_type_selector` in `basemodel.py`): it selects the union member at parse time.
+- Before injection, a list of models may hold a placeholder string (the whole list or an item). Code that runs at construction iterates the resolved models only (`PipelineNode._sources` / `_sinks`, `DataFrameTransformer._resolved_nodes`).
+- `inject_vars` re-assigns a list/dict field whose `${...}` items resolved to a dict or list, so they are validated into models (and get their parent). Plain string items (e.g. `dependencies: [laktory==${vars.v}]`) are resolved in place without re-validation.
+- `BaseModel._before_inject_vars()` / `_after_inject_vars()` hooks run around the field injection (not on a cache hit). `Pipeline` uses them: when a node had placeholder sources/sinks/transformer (nodes or the whole transformer, `PipelineNode._transformer` skips it) (`PipelineNode._has_placeholders`) or the `_execution_plan_signature()` changed (built from `PipelineNode._dag_signature`, shared with the `PipelineExecutionPlan.dag` cache key), it re-assigns `nodes` (re-running the pipeline validators and `update_from_parent()`: job tasks, declarative catalog/schema defaults, supported sink types) and re-injects its orchestrator.
+- `inject_vars` copies with the plain `BaseModel.model_copy(deep=True)`, not `BaseChild.model_copy`: the copy keeps its parents and derived state, so no `update_from_parent()` rebuild.
 
 ---
 
