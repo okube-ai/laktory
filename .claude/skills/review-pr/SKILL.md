@@ -52,9 +52,15 @@ result.
 
 ## Step 3 - Relay the review
 
-Read the posted review on GitHub (`gh api repos/{owner}/{repo}/pulls/<n>/reviews`
-and `.../comments`) rather than trusting only the agent's summary, and
-present it to the user:
+Read the posted review on GitHub rather than trusting only the agent's
+summary (`gh api` returns 30 items per call without `--paginate`):
+
+```sh
+gh api --paginate repos/okube-ai/laktory/pulls/<n>/reviews
+gh api --paginate repos/okube-ai/laktory/pulls/<n>/comments
+```
+
+Present it to the user:
 
 - the review link;
 - the findings by number, grouped as posted (**Fix**, **Your call**,
@@ -65,6 +71,16 @@ This session may disagree with a finding: say so in the proposal, labelled as
 the author session's view, with the reason. Never drop or soften a finding in
 the relay; the user decides.
 
+Then remove the reviewer's worktree: the agent leaves it behind because
+it checked out the PR and created a `.venv`. The completion notification
+gives its path and branch (`.claude/worktrees/agent-<id>`,
+`worktree-agent-<id>`):
+
+```sh
+git worktree remove --force <worktree path>
+git branch -D <worktree branch>
+```
+
 ## Step 4 - Wait for decisions
 
 Stop and wait for an explicit decision per finding (or a rule such as "fix
@@ -74,7 +90,8 @@ reply, or a question; answer it first.
 ## Step 5 - Apply the decisions
 
 - **Fix**: implement with tests. Each new test must fail without the fix:
-  run it against a `git archive origin/main laktory` copy, or temporarily
+  run it against a copy of the current `main` (`git fetch origin main`, then
+  `git archive FETCH_HEAD laktory` into the scratchpad), or temporarily
   patch the old behaviour back. Update the CHANGELOG bullet the fix belongs
   to, or add one.
 - **Log**: add a `## A<n> - <title>` section at the end of
@@ -104,10 +121,10 @@ with its outcome, and resolve the threads of fixed findings:
 
 ```sh
 # reply: fixed in <sha> / logged as A<n> in todo.md / kept as is: <reason>
-gh api repos/{owner}/{repo}/pulls/<n>/comments/<comment_id>/replies --method POST -f body="<outcome>"
+gh api repos/okube-ai/laktory/pulls/<n>/comments/<comment_id>/replies --method POST -f body="<outcome>"
 
 # thread ids, then resolve
-gh api graphql -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){reviewThreads(first:100){nodes{id isResolved comments(first:1){nodes{databaseId}}}}}}}' -F o=<owner> -F r=<repo> -F n=<n>
+gh api graphql -f query='query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){reviewThreads(first:100){nodes{id isResolved comments(first:1){nodes{databaseId}}}}}}}' -F o=okube-ai -F r=laktory -F n=<n>
 gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' -F id=<thread id>
 ```
 

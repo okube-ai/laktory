@@ -9,6 +9,12 @@ Inputs (given in your prompt): the PR number, an effort level (`medium`,
 your worktree: use it for `scripts/diff_lines.py`) and a scratchpad directory
 for temporary files. Work from your worktree's root.
 
+Write commands with literal values: the repository is `okube-ai/laktory`
+(not `{owner}/{repo}`), and paths are spelled out rather than held in shell
+variables. Run them one at a time instead of chaining them with `&&` or `;`:
+the worktree session may refuse commands with placeholders, variables or
+chains.
+
 Your job ends when the review is posted to GitHub and you have returned the
 findings list (Step 7). Do not change the code, commit, push, or edit files in
 the repo: fixes are decided by the user afterwards, in another session.
@@ -22,23 +28,39 @@ gh pr checks <n>
 ```
 
 You run in your own git worktree: check out the PR head there with
-`gh pr checkout <n> --detach` (the first `uv run` syncs the worktree's
-environment). Never `git stash`, commit or push.
+`gh pr checkout <n> --detach`, then install every extra with
+`uv sync --all-extras` (`uv.lock` isn't tracked and the default sync has no
+polars, pyspark, pytest or mkdocs). Run everything with `uv run` from the
+worktree root, so it uses the worktree's `.venv`, not the main checkout's.
+Never `git stash`, commit or push.
 
-Export `main` to compare against, outside the repo:
+Export the current `main` to compare against, outside the repo. Fetch it
+first: the worktree's `origin/main` is whatever was last fetched, possibly
+several merges behind.
 
 ```sh
-mkdir -p <scratchpad>/main && git archive origin/main laktory | tar -x -C <scratchpad>/main
-# run a script against main (from the scratchpad, so the repo's laktory isn't imported):
-cd <scratchpad> && PYTHONPATH=<scratchpad>/main uv run --project <repo> python script.py
+git fetch origin main
+mkdir -p <scratchpad>/main
+git archive FETCH_HEAD laktory | tar -x -C <scratchpad>/main
+# run a script against main (from the scratchpad, so the worktree's laktory isn't imported):
+PYTHONPATH=<scratchpad>/main uv run --directory <scratchpad> --project <worktree root> python script.py
 ```
 
 Read what the PR declares as intentional: its body, its `CHANGELOG.md` diff
 (`### Breaking changes` in particular) and the `.claude/docs/todo.md` items it
-references. Read earlier reviews of the PR and their replies
-(`gh api repos/{owner}/{repo}/pulls/<n>/comments`, `.../reviews`): a finding
-already answered there ("fixed in", "logged as", "kept as is") is not
-reported again unless the code it points at changed since.
+references. Read earlier reviews of the PR and the answers to them: inline
+comments and their replies, review bodies, and PR comments (where the
+outcomes of review-body findings are posted). `gh api` returns 30 items per
+call without `--paginate`:
+
+```sh
+gh api --paginate repos/okube-ai/laktory/pulls/<n>/comments
+gh api --paginate repos/okube-ai/laktory/pulls/<n>/reviews
+gh api --paginate repos/okube-ai/laktory/issues/<n>/comments
+```
+
+A finding already answered there ("fixed in", "logged as", "kept as is") is
+not reported again unless the code it points at changed since.
 
 Read `CLAUDE.md` and the `.claude/docs/` files its table points to for the
 areas the diff touches (`architectural_patterns.md`,
@@ -210,7 +232,7 @@ Write the payload to a file and post it:
 ```
 
 ```sh
-gh api repos/{owner}/{repo}/pulls/<n>/reviews --method POST --input <scratchpad>/review.json
+gh api repos/okube-ai/laktory/pulls/<n>/reviews --method POST --input <scratchpad>/review.json
 ```
 
 ## Step 7 - Return
